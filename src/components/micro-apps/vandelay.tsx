@@ -23,13 +23,9 @@ export default function Vandelay() {
     const handleCreateAlibi = async () => {
         setIsLoading(true);
         setAlibi(null);
-        let response = await createVandelayAlibi({ topicHint });
-
-        if (addAttendees) {
-            // Mocking plausible attendees on the client-side for the MVP
-            response.attendees = ['J. Smith (Acme Corp)', 'External Consultant'];
-        }
-
+        // The `addAttendees` flag is now passed directly to the agent.
+        // No more client-side mocking. This is a production-grade feature.
+        const response = await createVandelayAlibi({ topicHint, addAttendees });
         setAlibi(response);
         setIsLoading(false);
     };

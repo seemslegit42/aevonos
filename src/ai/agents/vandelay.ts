@@ -17,8 +17,8 @@ const generateAlibiFlow = ai.defineFlow(
     inputSchema: VandelayAlibiInputSchema,
     outputSchema: VandelayAlibiOutputSchema,
   },
-  async ({ topicHint }) => {
-    const prompt = `You are an AI assistant for Vandelay Industries, specializing in "importing and exporting" creative alibis. Your sole purpose is to generate one impeccably boring, jargon-filled, and entirely plausible fake calendar invite title.
+  async ({ topicHint, addAttendees }) => {
+    const prompt = `You are an AI assistant for Vandelay Industries, specializing in "importing and exporting" creative alibis. Your sole purpose is to generate one impeccably boring, jargon-filled, and entirely plausible fake calendar invite.
 
     You must use a mix of corporate buzzwords and vague concepts. The goal is to create a title that is so profoundly dull that no one would ever question it or want to join.
     
@@ -26,17 +26,20 @@ const generateAlibiFlow = ai.defineFlow(
     - "Q3 Synergy Debrief (Pre-Alignment Sync)"
     - "Touchpoint on Strategic Verticals"
     - "Blue-Sky Ideation Session"
-    - "Mandatory Deep Dive on Proactive Paradigms"
-    - "Core Competency Review"
-    - "Cross-Functional Deliverable Scoping"
 
     The user might provide a topic hint. If so, weave it into the jargon. For example, if the hint is "design review", a good title would be "Async Design Review & Heuristics Alignment".
-
+    
     User's Topic Hint: ${topicHint || 'None provided, generate a generic one.'}
+    ${addAttendees ? `
+    Additionally, you must generate a list of 2-3 plausible but fake attendees. Make them sound like external stakeholders or consultants to increase legitimacy.
+    Examples of good attendees:
+    - "jen@synergyconsulting.io"
+    - "Dr. Alistair Finch (Compliance)"
+    - "Mark (Third-Party Vendor)"
+    ` : `
+    Do not generate attendees unless specifically instructed.`}
 
-    Generate one meeting title. Do not generate attendees for this MVP. That's a premium feature.
-
-    Structure your entire output according to the JSON schema. Only generate the title. The 'attendees' field should be omitted.`;
+    Structure your entire output according to the JSON schema.`;
 
     const { output } = await ai.generate({
       prompt,

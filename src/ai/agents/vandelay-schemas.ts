@@ -2,6 +2,7 @@ import { z } from 'zod';
 
 export const VandelayAlibiInputSchema = z.object({
   topicHint: z.string().optional().describe('An optional hint for the topic of the meeting, e.g., "design review".'),
+  addAttendees: z.boolean().optional().describe('Whether to add plausible but fake attendees to the invite.'),
 });
 export type VandelayAlibiInput = z.infer<typeof VandelayAlibiInputSchema>;
 
