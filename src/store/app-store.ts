@@ -1,3 +1,4 @@
+
 import { create } from 'zustand';
 import { arrayMove } from '@dnd-kit/sortable';
 import type { DragEndEvent } from '@dnd-kit/core';
@@ -11,6 +12,7 @@ import { DrSyntaxReportToast } from '@/components/dr-syntax-report-toast';
 import type { SessionRecallOutput } from '@/ai/agents/echo';
 import type { DrSyntaxOutput } from '@/ai/agents/dr-syntax-schemas';
 import type { Contact } from '@/ai/tools/crm-schemas';
+import { UserCommandOutput, AgentReportSchema } from '@/ai/agents/beep-schemas';
 
 
 // Define the types of MicroApps available in the OS
@@ -70,237 +72,230 @@ const appActionRegistry: Record<string, (get: () => AppState, set: (fn: (state: 
 };
 
 
-export const useAppStore = create<AppState>((set, get) => ({
-  apps: [
-    {
-      id: 'echo-control-initial',
-      type: 'echo-control',
-      title: 'Recall Session',
-      description: "Click to have Echo summarize the last session's activity.",
-    },
-  ],
-  isLoading: false,
-
-  handleDragEnd: (event: DragEndEvent) => {
-    const { active, over } = event;
-    if (over && active.id !== over.id) {
-      set((state) => {
-        const oldIndex = state.apps.findIndex((item) => item.id === active.id);
-        const newIndex = state.apps.findIndex((item) => item.id === over.id);
-        return { apps: arrayMove(state.apps, oldIndex, newIndex) };
-      });
-    }
-  },
-
-  triggerAppAction: (appId: string) => {
-    const app = get().apps.find(a => a.id === appId);
-    if (!app) return;
-    const action = appActionRegistry[app.type];
-    if (action) {
-      action(get, set, app);
-    }
-  },
-
-  handleSessionRecall: async () => {
-    set({ isLoading: true });
-    const { toast } = useToast.getState();
-    try {
-      // Dummy data for now. In a real scenario, this would come from a persisted log.
-      const dummyActivity = `User opened File Explorer.
-User ran 'critique this copy' in Dr. Syntax.
-User ran an Aegis scan at 14:32.
-User launched Loom Studio to inspect 'Client Onboarding' workflow.`;
-
-      const result: SessionRecallOutput = await recallSessionAction({ sessionActivity: dummyActivity });
-      
-      toast({
-        title: 'Echo Remembers',
-        description: React.createElement(EchoRecallToast, result),
-      });
-    } catch (error) {
-      console.error('Error recalling session:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Echo could not recall the session.',
-      });
-    } finally {
-      set({ isLoading: false });
-    }
-  },
-
-  handleCommandSubmit: async (command: string) => {
-    if (!command) return;
-    set({ isLoading: true });
+export const useAppStore = create<AppState>((set, get) => {
     
-    // Clear previous suggestions before executing a new command.
-    set(state => ({
-        apps: state.apps.filter(app => app.type !== 'ai-suggestion')
-    }));
+  // === PRIVATE HELPERS (scoped to the store closure) ===
 
-    try {
-      const result = await processUserCommand({ userCommand: command });
+  /**
+   * Updates an existing MicroApp or inserts a new one into the state.
+   * This is a core utility for handling dynamic app manifestations.
+   * @param newApp The MicroApp object to upsert.
+   * @param position Optional: Where to insert the new app relative to another type.
+   * @param relativeToType The type of app to position against.
+   */
+  const upsertMicroApp = (newApp: MicroApp, position?: 'after' | 'before', relativeToType?: MicroAppType) => {
+    set(state => {
+      const existingIndex = state.apps.findIndex(a => a.id === newApp.id);
       
-      const { toast } = useToast.getState();
-      if (result.responseText) {
-          toast({ title: 'BEEP', description: result.responseText });
+      if (existingIndex > -1) {
+        // Update existing app in-place
+        const updatedApps = [...state.apps];
+        updatedApps[existingIndex] = newApp;
+        return { apps: updatedApps };
+      }
+      
+      // Insert new app at a specific position if requested
+      if (position && relativeToType) {
+        const relativeIndex = state.apps.findIndex(a => a.type === relativeToType);
+        if (relativeIndex > -1) {
+          const newApps = [...state.apps];
+          newApps.splice(relativeIndex + (position === 'after' ? 1 : 0), 0, newApp);
+          return { apps: newApps };
+        }
       }
 
-      const appsToLaunch: MicroApp[] = result.appsToLaunch.map((appInfo) => {
-        const defaults = defaultAppDetails[appInfo.type];
-        return {
-          id: generateId(),
-          type: appInfo.type,
-          title: appInfo.title || defaults.title,
-          description: appInfo.description || defaults.description,
+      // Fallback: add to the end
+      return { apps: [...state.apps, newApp] };
+    });
+  };
+
+  /**
+   * Handles the various response types from the CRM agent.
+   * @param crmReport The report object from the CRM agent.
+   */
+  const processCrmReport = (crmReport: Extract<AgentReportSchema, { agent: 'crm' }>['report']) => {
+    const { toast } = useToast.getState();
+    const crmAppId = 'contact-list-main';
+
+    switch (crmReport.action) {
+      case 'create':
+        toast({ title: 'CRM Agent', description: `Contact "${crmReport.report.firstName} ${crmReport.report.lastName}" created successfully.` });
+        // Re-fetch the list to show the new contact. A more optimized approach might add it directly.
+        get().handleCommandSubmit('list all contacts');
+        break;
+      
+      case 'update':
+        const updatedContact = crmReport.report;
+        toast({ title: 'CRM Agent', description: `Contact "${updatedContact.firstName} ${updatedContact.lastName}" was updated.` });
+        set(state => ({
+          apps: state.apps.map(app => 
+            (app.id === crmAppId && app.contentProps?.contacts)
+              ? { ...app, contentProps: { ...app.contentProps, contacts: app.contentProps.contacts.map((c: Contact) => c.id === updatedContact.id ? updatedContact : c) } }
+              : app
+          )
+        }));
+        break;
+
+      case 'list':
+        const contacts = crmReport.report;
+        const contactListApp: MicroApp = {
+          id: crmAppId,
+          type: 'contact-list',
+          title: 'Contact List',
+          description: 'A list of your contacts.',
+          contentProps: { contacts },
         };
-      });
+        upsertMicroApp(contactListApp);
+        break;
 
-      // Handle agent reports
-      if (result.agentReports) {
-        // First, find and process the Aegis report to create or update its micro-app
-        const aegisReport = result.agentReports.find(r => r.agent === 'aegis')?.report;
-
-        if (aegisReport) {
-            const aegisAppId = 'aegis-report-main';
-            const newAegisApp: MicroApp = {
-                id: aegisAppId,
-                type: 'aegis-control',
-                title: defaultAppDetails['aegis-control'].title,
-                description: '', // Description is handled by the content component
-                contentProps: { ...aegisReport }
-            };
-
-            set(state => {
-                const existingApp = state.apps.find(a => a.id === aegisAppId);
-                if (existingApp) {
-                    return { apps: state.apps.map(a => a.id === aegisAppId ? newAegisApp : a) };
-                } else {
-                    const echoIndex = state.apps.findIndex(a => a.type === 'echo-control');
-                    const newApps = [...state.apps];
-                    newApps.splice(echoIndex !== -1 ? echoIndex + 1 : 0, 0, newAegisApp);
-                    return { apps: newApps };
-                }
-            });
-
-            // Also show a toast, but only if anomalous
-            if (aegisReport.isAnomalous) {
-                toast({
-                    title: 'Aegis Alert',
-                    description: aegisReport.anomalyExplanation,
-                    variant: 'destructive',
-                });
-            }
+      case 'delete':
+        const { id: deletedId, success } = crmReport.report;
+        if (success) {
+          toast({ title: 'CRM Agent', description: 'Contact deleted successfully.' });
+          set(state => ({
+            apps: state.apps.map(app =>
+              (app.id === crmAppId && app.contentProps?.contacts)
+                ? { ...app, contentProps: { ...app.contentProps, contacts: app.contentProps.contacts.filter((c: Contact) => c.id !== deletedId) } }
+                : app
+            )
+          }));
+        } else {
+          toast({ variant: 'destructive', title: 'CRM Agent Error', description: 'Failed to delete contact.' });
         }
-
-        for (const agentReport of result.agentReports) {
-          if (agentReport.agent === 'aegis') {
-            continue; // Handled above
-          }
-          if (agentReport.agent === 'dr-syntax') {
-            const report: DrSyntaxOutput = agentReport.report;
-            toast({
-                title: `Dr. Syntax's Verdict (Rating: ${report.rating}/10)`,
-                description: React.createElement(DrSyntaxReportToast, report)
-            });
-          }
-          if (agentReport.agent === 'crm') {
-            const crmReport = agentReport.report;
-            if (crmReport.action === 'create') {
-                toast({
-                  title: 'CRM Agent',
-                  description: `Contact "${crmReport.report.firstName} ${crmReport.report.lastName}" created successfully.`,
-                });
-            } else if (crmReport.action === 'update') {
-                const updatedContact = crmReport.report;
-                toast({
-                    title: 'CRM Agent',
-                    description: `Contact "${updatedContact.firstName} ${updatedContact.lastName}" was updated.`,
-                });
-                set(state => ({
-                    apps: state.apps.map(app => {
-                        if (app.type === 'contact-list' && app.contentProps?.contacts) {
-                            return {
-                                ...app,
-                                contentProps: {
-                                    ...app.contentProps,
-                                    contacts: app.contentProps.contacts.map((c: Contact) => c.id === updatedContact.id ? updatedContact : c)
-                                }
-                            };
-                        }
-                        return app;
-                    })
-                }));
-            } else if (crmReport.action === 'list') {
-                const contacts = crmReport.report;
-                const appId = 'contact-list-main';
-                set(state => {
-                    const existingApp = state.apps.find(a => a.id === appId);
-                    if (existingApp) {
-                        return {
-                            apps: state.apps.map(a => a.id === appId ? {...a, title: "Contact List", description: "A list of your contacts.", contentProps: { contacts }} : a)
-                        };
-                    } else {
-                        const newApp: MicroApp = {
-                            id: appId,
-                            type: 'contact-list',
-                            title: 'Contact List',
-                            description: 'A list of your contacts.',
-                            contentProps: { contacts },
-                        };
-                        return { apps: [...state.apps, newApp] };
-                    }
-                });
-            } else if (crmReport.action === 'delete') {
-                const { id: deletedId, success } = crmReport.report;
-                if (success) {
-                    toast({ title: 'CRM Agent', description: 'Contact deleted successfully.' });
-                    set(state => ({
-                        apps: state.apps.map(app => {
-                            if (app.type === 'contact-list' && app.contentProps?.contacts) {
-                                return {
-                                    ...app,
-                                    contentProps: {
-                                        ...app.contentProps,
-                                        contacts: app.contentProps.contacts.filter((c: Contact) => c.id !== deletedId)
-                                    }
-                                };
-                            }
-                            return app;
-                        })
-                    }));
-                } else {
-                    toast({
-                        variant: 'destructive',
-                        title: 'CRM Agent Error',
-                        description: 'Failed to delete contact.',
-                    });
-                }
-            }
-          }
-        }
-      }
-
-      const suggestionApps: MicroApp[] = result.suggestedCommands.map((cmd) => ({
-        id: generateId(),
-        type: 'ai-suggestion',
-        title: cmd,
-        description: defaultAppDetails['ai-suggestion'].description,
-      }));
-
-      set(state => ({
-        apps: [...state.apps, ...appsToLaunch, ...suggestionApps],
-      }));
-
-    } catch (error) {
-      console.error('Error handling command:', error);
-      useToast.getState().toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Could not process command.',
-      });
-    } finally {
-      set({ isLoading: false });
+        break;
     }
-  },
-}));
+  };
+
+  /**
+   * Processes an array of agent reports, dispatching toasts or updating app states.
+   * @param reports The array of agent reports from BEEP.
+   */
+  const processAgentReports = (reports: UserCommandOutput['agentReports']) => {
+    if (!reports) return;
+    const { toast } = useToast.getState();
+
+    for (const report of reports) {
+      switch (report.agent) {
+        case 'aegis':
+          const aegisApp: MicroApp = {
+            id: 'aegis-report-main',
+            type: 'aegis-control',
+            title: defaultAppDetails['aegis-control'].title,
+            description: '',
+            contentProps: { ...report.report }
+          };
+          upsertMicroApp(aegisApp, 'after', 'echo-control');
+          if (report.report.isAnomalous) {
+            toast({ title: 'Aegis Alert', description: report.report.anomalyExplanation, variant: 'destructive' });
+          }
+          break;
+
+        case 'dr-syntax':
+          const drSyntaxReport: DrSyntaxOutput = report.report;
+          toast({ title: `Dr. Syntax's Verdict (Rating: ${drSyntaxReport.rating}/10)`, description: React.createElement(DrSyntaxReportToast, drSyntaxReport) });
+          break;
+
+        case 'crm':
+          processCrmReport(report.report);
+          break;
+      }
+    }
+  };
+
+  // === PUBLIC API of the store ===
+  return {
+    apps: [
+      {
+        id: 'echo-control-initial',
+        type: 'echo-control',
+        title: 'Recall Session',
+        description: "Click to have Echo summarize the last session's activity.",
+      },
+    ],
+    isLoading: false,
+
+    handleDragEnd: (event: DragEndEvent) => {
+      const { active, over } = event;
+      if (over && active.id !== over.id) {
+        set((state) => {
+          const oldIndex = state.apps.findIndex((item) => item.id === active.id);
+          const newIndex = state.apps.findIndex((item) => item.id === over.id);
+          return { apps: arrayMove(state.apps, oldIndex, newIndex) };
+        });
+      }
+    },
+
+    triggerAppAction: (appId: string) => {
+      const app = get().apps.find(a => a.id === appId);
+      if (!app) return;
+      const action = appActionRegistry[app.type];
+      if (action) {
+        action(get, set, app);
+      }
+    },
+
+    handleSessionRecall: async () => {
+      set({ isLoading: true });
+      const { toast } = useToast.getState();
+      try {
+        const dummyActivity = `User opened File Explorer.\nUser ran 'critique this copy' in Dr. Syntax.\nUser ran an Aegis scan at 14:32.\nUser launched Loom Studio to inspect 'Client Onboarding' workflow.`;
+        const result: SessionRecallOutput = await recallSessionAction({ sessionActivity: dummyActivity });
+        toast({ title: 'Echo Remembers', description: React.createElement(EchoRecallToast, result) });
+      } catch (error) {
+        console.error('Error recalling session:', error);
+        toast({ variant: 'destructive', title: 'Error', description: 'Echo could not recall the session.' });
+      } finally {
+        set({ isLoading: false });
+      }
+    },
+
+    handleCommandSubmit: async (command: string) => {
+      if (!command) return;
+      set({ isLoading: true });
+      
+      // Clear previous suggestions before executing a new command.
+      set(state => ({
+          apps: state.apps.filter(app => app.type !== 'ai-suggestion')
+      }));
+
+      try {
+        const result = await processUserCommand({ userCommand: command });
+        const { toast } = useToast.getState();
+        
+        if (result.responseText) {
+            toast({ title: 'BEEP', description: result.responseText });
+        }
+
+        processAgentReports(result.agentReports);
+
+        const appsToLaunch = result.appsToLaunch.map((appInfo) => {
+          const defaults = defaultAppDetails[appInfo.type];
+          return { id: generateId(), type: appInfo.type, title: appInfo.title || defaults.title, description: appInfo.description || defaults.description };
+        });
+
+        const suggestionApps = result.suggestedCommands.map((cmd) => ({
+          id: generateId(),
+          type: 'ai-suggestion',
+          title: cmd,
+          description: defaultAppDetails['ai-suggestion'].description,
+        }));
+        
+        if (appsToLaunch.length > 0 || suggestionApps.length > 0) {
+            set(state => ({
+                apps: [...state.apps, ...appsToLaunch, ...suggestionApps],
+            }));
+        }
+
+      } catch (error) {
+        console.error('Error handling command:', error);
+        useToast.getState().toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: 'Could not process command.',
+        });
+      } finally {
+        set({ isLoading: false });
+      }
+    },
+  };
+});
