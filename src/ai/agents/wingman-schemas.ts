@@ -1,15 +1,24 @@
 import { z } from 'zod';
 
 export const WingmanInputSchema = z.object({
-  targetDescription: z.string().describe('A brief description of the dating profile, including name, interests, and any bio text.'),
-  persona: z.enum(['sapiosexual', 'alpha-hustler', 'chill-demon', 'awkward-sweetheart'])
-    .describe('The persona the wingman agent should adopt for the message.'),
+  situationContext: z.string().describe("A description of the situation: who you're talking to, your relationship, and what you want to achieve."),
+  messageMode: z.enum([
+      'Cool & Collected', 
+      'Charming AF', 
+      'Roast w/ Precision', 
+      'Protective Custody', 
+      'Make Me Seem Smarter', 
+      'Help Me Say No'
+    ]).describe("The desired tone and style of the message."),
 });
 export type WingmanInput = z.infer<typeof WingmanInputSchema>;
 
 export const WingmanOutputSchema = z.object({
-  openingMessage: z.string().describe('The generated opening message designed to start a conversation.'),
-  cringeScore: z.number().min(0).max(100).describe('A score from 0 (suave) to 100 (cringe-worthy) based on the Cringe Detection Engine™. Be brutally honest.'),
-  analysis: z.string().describe('A brief, brutally honest analysis explaining *why* the message received its cringe score.'),
+  suggestedMessage: z.string().describe("The single best message crafted by Wingman for the situation."),
+  cringeScore: z.number().min(0).max(100).describe('A score from 0 (suave) to 100 (cringe-worthy) based on the Cringe Detection Engine™.'),
+  vibe: z.enum(['Smooth', 'Slightly Risky', 'You Will Regret This']).describe('An assessment of the social risk of sending this message.'),
+  analysis: z.string().describe('A brief, brutally honest analysis explaining the score and vibe.'),
+  regretShieldTriggered: z.boolean().describe("True if the Regret Shield™ recommends delaying the send due to high emotional charge or risk."),
+  regretShieldReason: z.string().describe("The reason why the Regret Shield™ was triggered. Explains the risks of sending immediately."),
 });
 export type WingmanOutput = z.infer<typeof WingmanOutputSchema>;
