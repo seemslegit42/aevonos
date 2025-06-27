@@ -45,7 +45,7 @@ export default function MicroAppCard({ app, index }: MicroAppCardProps) {
   }
 
   const hasContent = !!ContentComponent;
-  const isActionable = ['aegis-control', 'ai-suggestion'].includes(app.type) && !hasContent;
+  const isActionable = ['echo-control', 'aegis-control', 'ai-suggestion'].includes(app.type) && !hasContent;
 
   const handleCardClick = () => {
     if (isDragging) return;

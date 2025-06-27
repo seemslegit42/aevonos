@@ -1,4 +1,3 @@
-
 import { create } from 'zustand';
 import { arrayMove } from '@dnd-kit/sortable';
 import type { DragEndEvent } from '@dnd-kit/core';
@@ -18,7 +17,8 @@ export type MicroAppType =
   | 'file-explorer' 
   | 'terminal' 
   | 'ai-suggestion'
-  | 'echo-control';
+  | 'echo-control'
+  | 'aegis-control';
 
 // Define the shape of a MicroApp instance
 export interface MicroApp {
@@ -39,6 +39,7 @@ const defaultAppDetails: Record<MicroAppType, Omit<MicroApp, 'id' | 'contentProp
   'terminal': { type: 'terminal', title: 'Terminal', description: 'Direct command-line access.' },
   'ai-suggestion': { type: 'ai-suggestion', title: 'AI Suggestion', description: 'Click to execute this command.' },
   'echo-control': { type: 'echo-control', title: 'Recall Session', description: "Click to have Echo summarize the last session's activity." },
+  'aegis-control': { type: 'aegis-control', title: 'Aegis Scan', description: 'Click to run a manual security scan.' },
 };
 
 
@@ -57,6 +58,9 @@ const appActionRegistry: Record<string, (get: () => AppState, set: (fn: (state: 
   'ai-suggestion': (get, set, app) => {
     get().handleCommandSubmit(app.title);
   },
+  'aegis-control': (get) => {
+    get().handleCommandSubmit('run a manual security scan');
+  },
 };
 
 
@@ -67,6 +71,12 @@ export const useAppStore = create<AppState>((set, get) => ({
       type: 'echo-control',
       title: 'Recall Session',
       description: "Click to have Echo summarize the last session's activity.",
+    },
+    {
+      id: 'aegis-control-initial',
+      type: 'aegis-control',
+      title: 'Run Security Scan',
+      description: 'Manually trigger a full system threat scan.',
     },
   ],
   isLoading: false,
