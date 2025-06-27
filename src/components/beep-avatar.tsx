@@ -116,7 +116,7 @@ export default function BeepAvatar({ isLoading, beepOutput }: BeepAvatarProps) {
             audioRef.current.src = beepOutput.responseAudioUri;
             audioRef.current.play().catch(e => console.error("Audio playback failed:", e));
         }
-    }, [avatarState, beepOutput]);
+    }, [avatarState, beepOutput?.responseAudioUri]);
 
     const handleAudioEnd = () => {
         setAvatarState('idle');
