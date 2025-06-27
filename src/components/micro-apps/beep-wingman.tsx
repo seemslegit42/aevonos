@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState } from 'react';
@@ -12,7 +13,6 @@ import { Label } from '../ui/label';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '../ui/tooltip';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ScrollArea } from '@/components/ui/scroll-area';
-
 import { handleGenerateWingmanMessage } from '@/app/actions';
 import type { WingmanInput } from '@/ai/agents/wingman-schemas';
 
@@ -24,7 +24,7 @@ export default function BeepWingman() {
     const [targetDescription, setTargetDescription] = useState('');
     const [persona, setPersona] = useState<WingmanInput['persona']>('alpha-hustler');
     const [burnerMode, setBurnerMode] = useState(false);
-    
+
     const handleGenerate = async () => {
         if (!targetDescription) {
             setResult("Error: Target profile description cannot be empty.");
@@ -35,7 +35,7 @@ export default function BeepWingman() {
         const response = await handleGenerateWingmanMessage({ targetDescription, persona });
         setResult(response.openingMessage);
         
-        if (!response.openingMessage.startsWith("Error:")) {
+        if (response.openingMessage && !response.openingMessage.startsWith("Error:")) {
             setHistory(prev => [response.openingMessage, ...prev].slice(0, 10));
         }
         setIsLoading(false);
@@ -49,28 +49,33 @@ export default function BeepWingman() {
                     <CardDescription className="text-xs">"RicoSuave-bot deployed. Initiating Phase 1: Compliment, then confuse."</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-3 p-2">
-                    <label className="text-sm font-medium">Persona Tuning</label>
-                    <Select value={persona} onValueChange={(v: WingmanInput['persona']) => setPersona(v)} disabled={isLoading}>
-                        <SelectTrigger>
-                            <SelectValue placeholder="Select dating persona..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="alpha-hustler">💼 RicoSuaveBot™</SelectItem>
-                            <SelectItem value="chill-demon">😏 Savage</SelectItem>
-                            <SelectItem value="awkward-sweetheart">🥰 Sweetheart</SelectItem>
-                            <SelectItem value="sapiosexual">🤖 Turing-Tested Seducer</SelectItem>
-                        </SelectContent>
-                    </Select>
+                    <div className="space-y-1">
+                        <Label htmlFor="persona-select">Persona Tuning</Label>
+                        <Select value={persona} onValueChange={(v: WingmanInput['persona']) => setPersona(v)} disabled={isLoading}>
+                            <SelectTrigger id="persona-select">
+                                <SelectValue placeholder="Select dating persona..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="alpha-hustler">💼 RicoSuaveBot™</SelectItem>
+                                <SelectItem value="chill-demon">😏 Savage</SelectItem>
+                                <SelectItem value="awkward-sweetheart">🥰 Sweetheart</SelectItem>
+                                <SelectItem value="sapiosexual">🤖 Turing-Tested Seducer</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
 
-                    <label className="text-sm font-medium">Target Profile</label>
-                     <Textarea 
-                        placeholder="Describe the target's profile (e.g., 'Name is Sarah, bio says \"fluent in sarcasm and movie quotes\", has a picture with a golden retriever...')" 
-                        value={targetDescription}
-                        onChange={(e) => setTargetDescription(e.target.value)}
-                        disabled={isLoading}
-                        className="bg-background/80"
-                        rows={4}
-                    />
+                    <div className="space-y-1">
+                        <Label htmlFor="target-profile">Target Profile</Label>
+                        <Textarea 
+                            id="target-profile"
+                            placeholder="Describe the target's profile (e.g., 'Name is Sarah, bio says \"fluent in sarcasm and movie quotes\", has a picture with a golden retriever...')" 
+                            value={targetDescription}
+                            onChange={(e) => setTargetDescription(e.target.value)}
+                            disabled={isLoading}
+                            className="bg-background/80"
+                            rows={4}
+                        />
+                    </div>
 
                     <Button className="w-full" onClick={handleGenerate} disabled={isLoading}>
                         {isLoading ? <Loader2 className="animate-spin" /> : <><Bot className="mr-2 h-4 w-4" /> Generate Opener</>}

@@ -34,7 +34,8 @@ import {
     analyzeCandidate,
     handleInfidelityAnalysis,
     handleGenerateWingmanMessage,
-    handleVinDieselValidation
+    handleVinDieselValidation,
+    scanEvidence
 } from '@/app/actions';
 import {
   DrSyntaxInputSchema,
@@ -48,6 +49,7 @@ import { VinDieselInputSchema } from './vin-diesel-schemas';
 import { WinstonWolfeInputSchema } from './winston-wolfe-schemas';
 import { KifKrokerAnalysisInputSchema } from './kif-kroker-schemas';
 import { VandelayAlibiInputSchema } from './vandelay-schemas';
+import { PaperTrailScanInputSchema } from './paper-trail-schemas';
 import { LumberghAnalysisInputSchema } from './lumbergh-schemas';
 import { LucilleBluthInputSchema } from './lucille-bluth-schemas';
 import { RolodexAnalysisInputSchema } from './rolodex-schemas';
@@ -234,6 +236,18 @@ class VandelayTool extends Tool {
   }
 }
 
+class PaperTrailTool extends Tool {
+    name = 'scanReceipt';
+    description = 'Scans a photo of a receipt to extract details. Use this when a user asks to "scan a receipt" or "log an expense from a photo". The user must provide the receipt image as a data URI.';
+    schema = PaperTrailScanInputSchema;
+
+    async _call(input: z.infer<typeof PaperTrailScanInputSchema>) {
+        const result = await scanEvidence(input);
+        const report: z.infer<typeof AgentReportSchema> = { agent: 'paper-trail', report: result };
+        return JSON.stringify(report);
+    }
+}
+
 class LumberghTool extends Tool {
   name = 'analyzeMeetingInvite';
   description = 'Analyzes a meeting invite for red flags (no agenda, too many attendees, buzzwords) and suggests passive-aggressive decline memos. Use for "check this meeting invite", "should I go to this meeting?".';
@@ -299,7 +313,7 @@ const tools: Tool[] = [
     new FinalAnswerTool(), new DrSyntaxTool(), 
     new CreateContactTool(), new UpdateContactTool(), new ListContactsTool(), new DeleteContactTool(), 
     new GetUsageTool(), new VinDieselTool(), new WinstonWolfeTool(), new KifKrokerTool(),
-    new VandelayTool(), new LumberghTool(), new LucilleBluthTool(), new RolodexTool(),
+    new VandelayTool(), new PaperTrailTool(), new LumberghTool(), new LucilleBluthTool(), new RolodexTool(),
     new InfidelityRadarTool(), new WingmanTool()
 ];
 
@@ -395,7 +409,7 @@ export async function processUserCommand(input: UserCommandInput): Promise<UserC
 
   Your process:
   1.  Analyze the user's command and the mandatory `AEGIS_INTERNAL_REPORT` provided in a System Message. If Aegis detects a threat, your tone must become clinical and serious, dropping your usual banter.
-  2.  Based on the command and the tool descriptions provided, decide which specialized agents or tools to call. You can call multiple tools in parallel if needed.
+  2.  Based on the command and the tool descriptions provided, decide which specialized agents or tools to call. You can call multiple tools in parallel if needed. For image-based tools like 'scanReceipt', you cannot use them unless the user has explicitly provided an image data URI.
   3.  If the user's command is to launch an app (e.g., "launch the terminal", "open the file explorer"), you MUST use the 'appsToLaunch' array in your final answer. Do NOT use a tool for a simple app launch.
   4.  When you have gathered all necessary information from your delegated agents and are ready to provide the final response, you MUST call the 'final_answer' tool. This is your final action.
   5.  Your 'responseText' should be in character—witty, confident, and direct. It should confirm the actions taken and what the user should expect next.
