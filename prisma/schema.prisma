@@ -2,13 +2,14 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
 }
 
 datasource db {
   provider  = "postgresql"
   url       = env("DATABASE_URL")
-  directUrl = env("DATABASE_DIRECT_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model Contact {
@@ -19,4 +20,45 @@ model Contact {
   phone     String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model Workspace {
+  id               Int           @id @default(autoincrement())
+  uuid             String        @unique @default(uuid())
+  name             String
+  planTier         String        @default("Artisan")
+  agentActionsUsed Int           @default(0)
+  overageEnabled   Boolean       @default(false)
+  workflows        Workflow[]
+  workflowRuns     WorkflowRun[]
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+}
+
+model Workflow {
+  id          Int           @id @default(autoincrement())
+  uuid        String        @unique @default(uuid())
+  tenantId    Int?
+  workspace   Workspace?    @relation(fields: [tenantId], references: [id])
+  name        String
+  isActive    Boolean       @default(true)
+  triggerType String        @default("api")
+  definition  Json
+  runs        WorkflowRun[]
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+}
+
+model WorkflowRun {
+  id             Int        @id @default(autoincrement())
+  uuid           String     @unique @default(uuid())
+  tenantId       Int?
+  workspace      Workspace? @relation(fields: [tenantId], references: [id])
+  workflowId     Int
+  workflow       Workflow   @relation(fields: [workflowId], references: [id])
+  status         String     @default("pending")
+  triggerPayload Json?
+  output         Json?
+  startedAt      DateTime   @default(now())
+  finishedAt     DateTime?
 }
