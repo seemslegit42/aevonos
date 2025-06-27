@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Sparkles, ShieldCheck, LogOut, Settings } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { logout } from '@/app/auth/actions';
 
 interface TopBarProps {
   onCommandSubmit: (command: string) => void;
@@ -73,14 +74,10 @@ export default function TopBar({ onCommandSubmit, isLoading }: TopBarProps) {
                     <span>Workspace Settings</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <form action="/api/auth/logout" method="post" className="w-full">
-                  <button type="submit" className="w-full">
-                    <DropdownMenuItem>
-                        <LogOut className="mr-2 h-4 w-4" />
-                        <span>Log out</span>
-                    </DropdownMenuItem>
-                  </button>
-                </form>
+                <DropdownMenuItem onSelect={() => logout()} className="cursor-pointer">
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Log out</span>
+                </DropdownMenuItem>
             </DropdownMenuContent>
         </DropdownMenu>
       </div>
