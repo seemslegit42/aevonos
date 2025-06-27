@@ -1,5 +1,8 @@
+
 'use client';
 
+import React from 'react';
+import { usePathname } from 'next/navigation';
 import TopBar from '@/components/layout/top-bar';
 import { useAppStore } from '@/store/app-store';
 import dynamic from 'next/dynamic';
@@ -12,6 +15,14 @@ const BeepAvatar = dynamic(() => import('@/components/beep-avatar'), {
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const { isLoading, handleCommandSubmit, beepOutput } = useAppStore();
+  const pathname = usePathname();
+
+  const publicPaths = ['/login', '/register'];
+  const isPublicPage = publicPaths.some(p => pathname.startsWith(p));
+
+  if (isPublicPage) {
+    return <>{children}</>;
+  }
 
   return (
     <div className="flex flex-col h-screen p-4 gap-4">
