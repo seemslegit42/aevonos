@@ -6,7 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { ShieldAlert, Bot, FileDown, Drama } from 'lucide-react';
+import { ShieldAlert, Bot, FileDown, Swords, HeartCrack } from 'lucide-react';
+import { Badge } from '../ui/badge';
 
 const ActivityHeatmap = () => (
   <Card className="bg-background/50">
@@ -59,6 +60,25 @@ const DecoyDeploymentPanel = () => (
     </Card>
 );
 
+const AshleyMadisonPanel = () => (
+    <Card className="bg-destructive/10 border-destructive/50">
+        <CardHeader>
+            <CardTitle className="text-sm text-destructive flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                    <HeartCrack className="h-4 w-4" />
+                    <span>External Signal: AM Scan</span>
+                </div>
+                <Badge variant="destructive">Black Label</Badge>
+            </CardTitle>
+            <CardDescription className="text-xs">Intelligence operations for when you need to be sure.</CardDescription>
+        </CardHeader>
+        <CardContent>
+            <Button variant="destructive" className="w-full">Run AM Scan</Button>
+        </CardContent>
+    </Card>
+);
+
+
 const AgentAnalysisLog = () => (
     <Alert variant="destructive">
         <ShieldAlert className="h-4 w-4" />
@@ -86,11 +106,12 @@ export default function InfidelityRadar() {
             <ActivityHeatmap />
             <SuspiciousPatternsList />
             <DecoyDeploymentPanel />
+            <AshleyMadisonPanel />
         </div>
 
         <div className="flex-shrink-0 grid grid-cols-2 gap-2 pt-2 border-t border-border">
             <Button variant="outline"><FileDown /> Export Report</Button>
-            <Button variant="secondary"><Drama /> Confront w/ AI Draft</Button>
+            <Button variant="secondary"><Swords /> Confront w/ AI Draft</Button>
         </div>
         <div className="pt-2">
              <Button className="w-full">Run Full Scan</Button>
