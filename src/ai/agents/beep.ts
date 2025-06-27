@@ -41,6 +41,21 @@ import {
 
 
 // LangChain Tool Definitions
+
+// This tool is a container for the final structured output.
+// The model is instructed to call this tool when its work is complete.
+class FinalAnswerTool extends Tool {
+  name = 'final_answer';
+  description = 'Call this tool when you have gathered all necessary information and are ready to provide the final response to the user. The output should conform to the UserCommandOutputSchema.';
+  schema = UserCommandOutputSchema;
+  
+  async _call(input: z.infer<typeof UserCommandOutputSchema>) {
+    // This tool doesn't "do" anything except structure the output.
+    // The return value is not used in the main graph loop.
+    return JSON.stringify(input);
+  }
+}
+
 class DrSyntaxTool extends Tool {
   name = 'critiqueContent';
   description = 'Sends content to Dr. Syntax for a harsh but effective critique. Use this when a user asks for a review, critique, or feedback on a piece of text, code, or a prompt. Extract the content and content type from the user command.';
@@ -97,7 +112,7 @@ class DeleteContactTool extends Tool {
 }
 
 
-const tools = [new DrSyntaxTool(), new CreateContactTool(), new UpdateContactTool(), new ListContactsTool(), new DeleteContactTool()];
+const tools = [new FinalAnswerTool(), new DrSyntaxTool(), new CreateContactTool(), new UpdateContactTool(), new ListContactsTool(), new DeleteContactTool()];
 const modelWithTools = geminiModel.bind({
   tools: tools.map(tool => ({
     type: 'function',
@@ -147,8 +162,14 @@ const shouldContinue = (state: AgentState) => {
     lastMessage.tool_calls &&
     lastMessage.tool_calls.length > 0
   ) {
+    // If the model decides to call the final_answer tool, we end the graph.
+    if (lastMessage.tool_calls[0].name === 'final_answer') {
+        return 'end';
+    }
+    // Otherwise, we call the requested tools.
     return 'tools';
   }
+  // If there are no tool calls, we end the graph.
   return 'end';
 };
 
@@ -170,7 +191,7 @@ workflow.addNode('tools', toolNode);
 workflow.setEntryPoint('aegis');
 workflow.addEdge('aegis', 'agent');
 workflow.addConditionalEdges('agent', shouldContinue, {
-  continue: 'tools',
+  tools: 'tools',
   end: END,
 });
 workflow.addEdge('tools', 'agent');
@@ -180,17 +201,16 @@ const app = workflow.compile();
 
 // Public-facing function to process user commands
 export async function processUserCommand(input: UserCommandInput): Promise<UserCommandOutput> {
-  const initialPrompt = `You are BEEP (Behavioral Event & Execution Processor), the central orchestrator of ΛΞVON OS. Your primary function is to interpret user commands, use tools to delegate to other agents, and translate the results into a final JSON object conforming to the UserCommandOutputSchema.
+  const initialPrompt = `You are BEEP (Behavioral Event & Execution Processor), the central orchestrator of ΛΞVON OS. Your primary function is to interpret user commands, use tools to delegate to other agents, and provide a final, structured response.
   
-  You will receive a System Message starting with 'AEGIS_INTERNAL_REPORT::'. This is a security analysis from our primordial bodyguard, Aegis. You MUST parse this JSON, understand it, and incorporate its findings into your final response. The full Aegis report MUST be added to the 'agentReports' array of your final JSON output under the agent name 'aegis'. If the report indicates anomalous activity, you must proceed with caution.
-
+  You will receive a System Message starting with 'AEGIS_INTERNAL_REPORT::'. This is a security analysis from our primordial bodyguard, Aegis. You MUST parse this JSON, understand it, and incorporate its findings into your final response. 
+  
   Your process:
   1. Analyze the user's command AND the Aegis security report from the System Message.
-  2. If the command requires a tool (e.g., creating a contact, listing contacts, getting a critique), you MUST use the appropriate tool.
-  3. If the user is asking to open an app (e.g., "open terminal"), populate the 'appsToLaunch' array in your final JSON output. The available apps are: 'file-explorer', 'terminal', 'echo-control'.
-  4. After all tools have been called and you have all the information, construct a final, single JSON object that strictly follows this schema: ${JSON.stringify(zodToJsonSchema(UserCommandOutputSchema))}.
-  5. Your final response MUST be ONLY this JSON object. Do not add any conversational text around it.
-  6. The 'agentReports' array in the JSON output must be populated with the results of any tool calls you made, AND the Aegis report from the initial system message.
+  2. If the command requires a tool (e.g., creating a contact, listing contacts, getting a critique), you MUST use the appropriate tool. You can call multiple tools in parallel.
+  3. If the user is asking to open an app (e.g., "open terminal"), you must include this in the 'appsToLaunch' array when you call the 'final_answer' tool. The available apps are: 'file-explorer', 'terminal', 'echo-control', 'pam-poovey-onboarding', 'beep-wingman', 'infidelity-radar'.
+  4. When you have gathered all necessary information from other tools and are ready to respond to the user, you MUST call the 'final_answer' tool. This should be your final action.
+  5. Populate the arguments for the 'final_answer' tool according to the UserCommandOutputSchema. Ensure the 'agentReports' array includes the initial Aegis report and any reports from tools you called.
 
   User Command: ${input.userCommand}`;
 
@@ -231,35 +251,38 @@ export async function processUserCommand(input: UserCommandInput): Promise<UserC
   }
 
 
-  // Take the last AIMessage, which should be the final JSON object.
-  const lastMessage = result.messages[result.messages.length - 1];
-  if (lastMessage._getType() === 'ai' && typeof lastMessage.content === 'string') {
-      try {
-          const parsed = UserCommandOutputSchema.parse(JSON.parse(lastMessage.content));
-          // Inject the agent reports gathered from the tool calls, ensuring no duplicates
-          const existingReports = new Set(parsed.agentReports?.map(r => JSON.stringify(r)) || []);
-          const allReports = [...(parsed.agentReports || []), ...agentReports.filter(r => !existingReports.has(JSON.stringify(r)))];
-          
-          parsed.agentReports = allReports;
-          return parsed;
+  // Find the last AIMessage that contains the 'final_answer' tool call.
+  const lastMessage = result.messages.findLast(m => m._getType() === 'ai' && m.tool_calls && m.tool_calls.some(tc => tc.name === 'final_answer')) as AIMessage | undefined;
 
-      } catch (e) {
-          console.error("Failed to parse final AI message into UserCommandOutputSchema", e);
-          // Fallback if parsing fails
-          return {
-              responseText: lastMessage.content || "I apologize, but I encountered an issue processing the final response.",
-              appsToLaunch: [],
-              agentReports: agentReports, // Still return reports if we have them
-              suggestedCommands: ["Try rephrasing your command."],
-          };
+  if (lastMessage && lastMessage.tool_calls) {
+      const finalAnswerCall = lastMessage.tool_calls.find(tc => tc.name === 'final_answer');
+      if (finalAnswerCall) {
+          try {
+              const parsed = UserCommandOutputSchema.parse(finalAnswerCall.args);
+              // Inject the agent reports gathered from all tool calls into the final response
+              const existingReports = new Set(parsed.agentReports?.map(r => JSON.stringify(r)) || []);
+              const allReports = [...(parsed.agentReports || []), ...agentReports.filter(r => !existingReports.has(JSON.stringify(r)))];
+              
+              parsed.agentReports = allReports;
+              return parsed;
+          } catch (e) {
+              console.error("Failed to parse final_answer tool arguments:", e);
+              // Fallback if parsing the arguments fails
+              return {
+                  responseText: "I apologize, but I encountered an issue constructing the final response.",
+                  appsToLaunch: [],
+                  agentReports: agentReports, // Still return reports if we have them
+                  suggestedCommands: ["Try rephrasing your command."],
+              };
+          }
       }
   }
 
-  // Final fallback
+  // Final fallback if the model fails to call the final_answer tool.
   return {
     responseText: "My apologies, I was unable to produce a valid response.",
     appsToLaunch: [],
-    agentReports: [],
+    agentReports: agentReports, // Still return reports if we have them
     suggestedCommands: ["Please try again."],
   };
 }
