@@ -22,6 +22,7 @@ import type { DecoyOutput } from '@/ai/agents/decoy-schemas';
 import type { JrocOutput } from '@/ai/agents/jroc-schemas';
 import type { SterileishAnalysisOutput } from '@/ai/agents/sterileish-schemas';
 import type { PaperTrailScanOutput } from '@/ai/agents/paper-trail-schemas';
+import type { DossierOutput } from '@/ai/agents/dossier-schemas';
 
 
 // Define the types of MicroApps available in the OS
@@ -344,6 +345,14 @@ export const useAppStore = create<AppState>((set, get) => {
             upsertApp('echo-recall', {
                 id: 'echo-recall-main',
                 contentProps: report.report as SessionRecallOutput,
+            });
+            break;
+        
+        case 'dossier':
+            const dossierReport: DossierOutput = report.report;
+            upsertApp('infidelity-radar', {
+                id: 'infidelity-radar-main',
+                contentProps: { dossierReport: dossierReport }
             });
             break;
       }

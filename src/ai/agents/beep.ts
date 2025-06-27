@@ -69,6 +69,8 @@ import { InfidelityAnalysisInputSchema } from '@/ai/agents/infidelity-analysis-s
 import { deployDecoy } from '@/ai/agents/decoy';
 import { DecoyInputSchema } from '@/ai/agents/decoy-schemas';
 import { recallSession } from '@/ai/agents/echo';
+import { generateDossier } from '@/ai/agents/dossier-agent';
+import { DossierInputSchema } from './dossier-schemas';
 
 
 import {
@@ -457,6 +459,22 @@ class EchoTool extends Tool {
   }
 }
 
+class DossierTool extends Tool {
+    name = 'generateDossier';
+    description = 'Generates a dossier report in Markdown format based on provided intelligence. This is the first step before exporting to PDF or JSON. Use this when the user asks to "export a dossier", "create a report", etc. You must have data from other tools first, like OSINT or behavioral analysis.';
+    schema = DossierInputSchema;
+
+    async _call(input: z.infer<typeof DossierInputSchema>) {
+        const result = await generateDossier(input);
+        const report: z.infer<typeof AgentReportSchema> = {
+            agent: 'dossier',
+            report: result,
+        };
+        return JSON.stringify(report);
+    }
+}
+
+
 const tools: Tool[] = [
     new FinalAnswerTool(), new DrSyntaxTool(), 
     new CreateContactTool(), new UpdateContactTool(), new ListContactsTool(), new DeleteContactTool(), 
@@ -467,7 +485,7 @@ const tools: Tool[] = [
     new WingmanTool(), new OsintScanTool(),
     new LumberghTool(), new LucilleBluthTool(), new RolodexTool(),
     new PamPooveyTool(), new InfidelityAnalysisTool(), new DecoyTool(),
-    new EchoTool(),
+    new EchoTool(), new DossierTool(),
 ];
 
 const modelWithTools = geminiModel.bind({

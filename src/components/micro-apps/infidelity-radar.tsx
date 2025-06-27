@@ -5,12 +5,13 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { ShieldAlert, Bot, Loader2, ChevronRight, EyeOff, Search, Globe, Linkedin, Twitter as XIcon, Instagram, VenetianMask, FileQuestion, BadgeAlert, PhoneOff, Skull } from 'lucide-react';
+import { ShieldAlert, Bot, Loader2, ChevronRight, EyeOff, Search, Globe, Linkedin, Twitter as XIcon, Instagram, VenetianMask, FileQuestion, BadgeAlert, PhoneOff, Skull, FileDown, FileJson, Lock, Unlock } from 'lucide-react';
 import { Textarea } from '../ui/textarea';
 import type { InfidelityAnalysisOutput } from '@/ai/agents/infidelity-analysis-schemas';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '../ui/select';
 import type { DecoyInput, DecoyOutput } from '@/ai/agents/decoy-schemas';
 import type { OsintOutput } from '@/ai/agents/osint-schemas';
+import type { DossierOutput } from '@/ai/agents/dossier-schemas';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
@@ -20,10 +21,120 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { Separator } from '../ui/separator';
 import { Input } from '../ui/input';
 import { Badge } from '../ui/badge';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../ui/card';
 import { ScrollArea } from '../ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { useAppStore } from '@/store/app-store';
+
+const DossierExportPanel = ({ report, osintReport, analysisResult, decoyResult, targetName }: { report: DossierOutput, osintReport: OsintOutput | null, analysisResult: InfidelityAnalysisOutput | null, decoyResult: DecoyOutput | null, targetName: string }) => {
+    const { toast } = useToast();
+    const [isExporting, setIsExporting] = useState(false);
+    const [isEncrypted, setIsEncrypted] = useState(false);
+    const [password, setPassword] = useState('');
+
+    const handleExport = async (format: 'pdf' | 'json') => {
+        setIsExporting(true);
+        try {
+            if (isEncrypted && !password) {
+                toast({ variant: 'destructive', title: 'Encryption Error', description: 'A password is required to encrypt the dossier.' });
+                setIsExporting(false);
+                return;
+            }
+            
+            const response = await fetch('/api/export/dossier', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    format,
+                    encrypt: isEncrypted,
+                    password: password,
+                    dossierInput: {
+                        targetName,
+                        osintReport,
+                        analysisResult,
+                        decoyResult,
+                        redacted: false, // For now, hardcode this
+                    }
+                }),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || `Failed to export ${format}.`);
+            }
+            
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            const contentDisposition = response.headers.get('content-disposition');
+            let fileName = `dossier.${format}`;
+            if (contentDisposition) {
+                const fileNameMatch = contentDisposition.match(/filename="(.+)"/);
+                if (fileNameMatch && fileNameMatch.length === 2) {
+                    fileName = fileNameMatch[1];
+                }
+            }
+            a.download = fileName;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            window.URL.revokeObjectURL(url);
+            
+            toast({ title: "Export Successful", description: `${fileName} has been downloaded.`});
+
+        } catch (error) {
+            toast({ variant: 'destructive', title: 'Export Failed', description: (error as Error).message });
+        } finally {
+            setIsExporting(false);
+        }
+    };
+
+
+    return (
+        <Card className="bg-primary/10 border-primary/50">
+            <CardHeader className="p-2">
+                <CardTitle className="text-base text-primary">Dossier Ready for Export</CardTitle>
+                <CardDescription className="text-xs">"When suspicion becomes evidence, it gets a cover page."</CardDescription>
+            </CardHeader>
+            <CardContent className="p-2 space-y-3">
+                <div className="bg-background/80 p-2 rounded-md max-h-40 overflow-y-auto border border-dashed backdrop-blur-sm filter blur-sm select-none pointer-events-none">
+                    <pre className="text-xs whitespace-pre-wrap font-sans opacity-50">
+                        {report.markdownContent.substring(0, 500)}...
+                    </pre>
+                </div>
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                        <Switch id="encrypt-switch" checked={isEncrypted} onCheckedChange={setIsEncrypted} />
+                        <Label htmlFor="encrypt-switch" className="flex items-center gap-1">
+                            {isEncrypted ? <Lock className="h-3 w-3" /> : <Unlock className="h-3 w-3" />}
+                             Encrypt
+                        </Label>
+                    </div>
+                     {isEncrypted && (
+                        <Input 
+                            type="password"
+                            placeholder="Encryption Password..."
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            className="h-8 w-40 bg-background/80"
+                        />
+                    )}
+                </div>
+                 <div className="flex gap-2">
+                    <Button variant="secondary" className="w-full" disabled={isExporting} onClick={() => handleExport('pdf')}>
+                        {isExporting ? <Loader2 className="animate-spin" /> : <><FileDown className="mr-2" /> Unlock PDF ($19.99)</>}
+                    </Button>
+                     <Button variant="outline" className="w-full" disabled={isExporting} onClick={() => handleExport('json')}>
+                        {isExporting ? <Loader2 className="animate-spin" /> : <><FileJson className="mr-2" /> + JSON ($29.99)</>}
+                    </Button>
+                </div>
+            </CardContent>
+        </Card>
+    )
+};
+
 
 const DecoyDeploymentPanel = ({ decoyResult }: { decoyResult: DecoyOutput | null }) => {
     const { handleCommandSubmit, isLoading } = useAppStore(state => ({
@@ -183,35 +294,35 @@ const OsintReportPanel = ({ report }: { report: OsintOutput }) => {
     )
 }
 
-export default function InfidelityRadar(props: { osintReport?: OsintOutput, analysisResult?: InfidelityAnalysisOutput, decoyResult?: DecoyOutput } | {}) {
+export default function InfidelityRadar(props: { osintReport?: OsintOutput, analysisResult?: InfidelityAnalysisOutput, decoyResult?: DecoyOutput, dossierReport?: DossierOutput } | {}) {
   const isMobile = useIsMobile();
   const { toast } = useToast();
-  const { handleCommandSubmit, isLoading } = useAppStore(state => ({
+  const { handleCommandSubmit, isLoading, apps } = useAppStore(state => ({
     handleCommandSubmit: state.handleCommandSubmit,
-    isLoading: state.isLoading
+    isLoading: state.isLoading,
+    apps: state.apps,
   }));
+  
+  const thisAppProps = apps.find(app => app.type === 'infidelity-radar')?.contentProps || {};
 
   const [analysisInput, setAnalysisInput] = useState('');
-  const [analysisResult, setAnalysisResult] = useState<InfidelityAnalysisOutput | null>(props && 'analysisResult' in props ? props.analysisResult : null);
+  const [analysisResult, setAnalysisResult] = useState<InfidelityAnalysisOutput | null>(thisAppProps.analysisResult || null);
   
   const [osintTarget, setOsintTarget] = useState('');
   const [osintContext, setOsintContext] = useState('');
-  const [osintReport, setOsintReport] = useState<OsintOutput | null>(props && 'osintReport' in props ? props.osintReport : null);
-  const [decoyResult, setDecoyResult] = useState<DecoyOutput | null>(props && 'decoyResult' in props ? props.decoyResult : null);
+  const [osintReport, setOsintReport] = useState<OsintOutput | null>(thisAppProps.osintReport || null);
+  const [decoyResult, setDecoyResult] = useState<DecoyOutput | null>(thisAppProps.decoyResult || null);
+  const [dossierReport, setDossierReport] = useState<DossierOutput | null>(thisAppProps.dossierReport || null);
 
   const [isDecoyPanelOpen, setIsDecoyPanelOpen] = useState(false);
 
   useEffect(() => {
-    if (props && 'osintReport' in props && props.osintReport) {
-        setOsintReport(props.osintReport);
-    }
-    if (props && 'analysisResult' in props && props.analysisResult) {
-        setAnalysisResult(props.analysisResult);
-    }
-     if (props && 'decoyResult' in props && props.decoyResult) {
-        setDecoyResult(props.decoyResult);
-    }
-  }, [props]);
+    const currentProps = apps.find(app => app.type === 'infidelity-radar')?.contentProps || {};
+    if (currentProps.osintReport) setOsintReport(currentProps.osintReport);
+    if (currentProps.analysisResult) setAnalysisResult(currentProps.analysisResult);
+    if (currentProps.decoyResult) setDecoyResult(currentProps.decoyResult);
+    if (currentProps.dossierReport) setDossierReport(currentProps.dossierReport);
+  }, [apps]);
 
 
   const handleRunScan = async () => {
@@ -228,6 +339,24 @@ export default function InfidelityRadar(props: { osintReport?: OsintOutput, anal
       const command = `perform an osint scan on "${osintTarget}" with the following context: "${osintContext}"`;
       handleCommandSubmit(command);
   }
+  
+  const handleCompileDossier = async () => {
+      if (!osintReport && !analysisResult) {
+          toast({ variant: 'destructive', title: "No Data", description: "Need to run at least one scan before creating a dossier." });
+          return;
+      }
+      const target = osintTarget || "Unnamed Subject";
+      
+      const dossierInputPayload = {
+          targetName: target,
+          osintReport: osintReport || undefined,
+          analysisResult: analysisResult || undefined,
+          decoyResult: decoyResult || undefined,
+      };
+
+      const command = `generate a dossier for target "${target}" with the following data: ${JSON.stringify(dossierInputPayload)}`;
+      handleCommandSubmit(command);
+  };
 
   const riskScore = analysisResult?.riskScore ?? -1;
 
@@ -337,6 +466,17 @@ export default function InfidelityRadar(props: { osintReport?: OsintOutput, anal
                   </Collapsible>
                 )}
              </div>
+
+            <Separator className="my-3" />
+            
+             <div className="space-y-2 p-2 border border-dashed rounded-lg">
+                <h3 className="font-semibold text-primary">Dossier Export</h3>
+                 <Button onClick={handleCompileDossier} disabled={isLoading || (!osintReport && !analysisResult)} className="w-full bg-primary text-primary-foreground">
+                    {isLoading ? <Loader2 className="animate-spin" /> : <><FileDown className="mr-2"/>Compile Dossier</>}
+                </Button>
+                {dossierReport && <DossierExportPanel report={dossierReport} osintReport={osintReport} analysisResult={analysisResult} decoyResult={decoyResult} targetName={osintTarget || 'Unnamed Subject'} />}
+             </div>
+
 
         </ScrollArea>
         {/* MonetizationHook */}

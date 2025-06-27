@@ -23,6 +23,7 @@ import { PamAudioOutputSchema } from './pam-poovey-schemas';
 import { InfidelityAnalysisOutputSchema } from './infidelity-analysis-schemas';
 import { DecoyOutputSchema } from './decoy-schemas';
 import { SessionRecallOutputSchema } from '@/ai/agents/echo-schemas';
+import { DossierOutputSchema } from './dossier-schemas';
 
 
 // Schemas from the original BEEP agent, preserved for the public contract.
@@ -194,6 +195,10 @@ export const AgentReportSchema = z.discriminatedUnion('agent', [
   z.object({
     agent: z.literal('echo'),
     report: SessionRecallOutputSchema.describe('The full report from the Echo agent.'),
+  }),
+  z.object({
+    agent: z.literal('dossier'),
+    report: DossierOutputSchema.describe('The full dossier generation report.'),
   }),
 ]);
 
