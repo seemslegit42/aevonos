@@ -8,22 +8,13 @@
  */
 
 import {ai} from '@/ai/genkit';
-import {z} from 'zod';
+import {
+    AegisAnomalyScanInputSchema, 
+    AegisAnomalyScanOutputSchema,
+    type AegisAnomalyScanInput,
+    type AegisAnomalyScanOutput
+} from './aegis-schemas';
 
-const AegisAnomalyScanInputSchema = z.object({
-  activityDescription: z
-    .string()
-    .describe('Description of user activity, including commands and data access.'),
-});
-export type AegisAnomalyScanInput = z.infer<typeof AegisAnomalyScanInputSchema>;
-
-const AegisAnomalyScanOutputSchema = z.object({
-  isAnomalous: z.boolean().describe('Whether the activity is anomalous.'),
-  anomalyExplanation: z
-    .string()
-    .describe('A clear, concise, and human-readable explanation of why the activity is considered anomalous. Frame it from the perspective of a vigilant security agent.'),
-});
-export type AegisAnomalyScanOutput = z.infer<typeof AegisAnomalyScanOutputSchema>;
 
 export async function aegisAnomalyScan(input: AegisAnomalyScanInput): Promise<AegisAnomalyScanOutput> {
   return aegisAnomalyScanFlow(input);

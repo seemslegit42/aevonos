@@ -6,7 +6,6 @@ import React from 'react';
 import { processUserCommand } from '@/ai/agents/beep';
 import { recallSessionAction } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
-import { checkForAnomalies } from '@/app/actions';
 import { EchoRecallToast } from '@/components/echo-recall-toast';
 import { DrSyntaxReportToast } from '@/components/dr-syntax-report-toast';
 import type { SessionRecallOutput } from '@/ai/agents/echo';
@@ -15,10 +14,8 @@ import type { DrSyntaxOutput } from '@/ai/agents/dr-syntax-schemas';
 
 // Define the types of MicroApps available in the OS
 export type MicroAppType = 
-  | 'loom-studio' 
   | 'file-explorer' 
   | 'terminal' 
-  | 'aegis-control' 
   | 'ai-suggestion'
   | 'echo-control';
 
@@ -32,10 +29,8 @@ export interface MicroApp {
 }
 
 const defaultAppDetails: Record<MicroAppType, Omit<MicroApp, 'id' | 'contentProps'>> = {
-  'loom-studio': { type: 'loom-studio', title: 'Loom Studio', description: 'Visual command center for AI workflows.' },
   'file-explorer': { type: 'file-explorer', title: 'File Explorer', description: 'Access and manage your files.' },
   'terminal': { type: 'terminal', title: 'Terminal', description: 'Direct command-line access.' },
-  'aegis-control': { type: 'aegis-control', title: 'Aegis Control', description: 'Run a sample security scan.' },
   'ai-suggestion': { type: 'ai-suggestion', title: 'AI Suggestion', description: 'Click to execute this command.' },
   'echo-control': { type: 'echo-control', title: 'Recall Session', description: "Click to have Echo summarize the last session's activity." },
 };
@@ -45,7 +40,6 @@ interface AppState {
   apps: MicroApp[];
   isLoading: boolean;
   handleDragEnd: (event: DragEndEvent) => void;
-  runAnomalyCheck: () => void;
   handleCommandSubmit: (command: string) => void;
   triggerAppAction: (appId: string) => void;
   handleSessionRecall: () => void;
@@ -53,7 +47,6 @@ interface AppState {
 
 // A registry for app actions, decoupling them from the component.
 const appActionRegistry: Record<string, (get: () => AppState, set: (fn: (state: AppState) => AppState) => void, app: MicroApp) => void> = {
-  'aegis-control': (get) => get().runAnomalyCheck(),
   'echo-control': (get) => get().handleSessionRecall(),
   'ai-suggestion': (get, set, app) => {
     get().handleCommandSubmit(app.title);
@@ -63,12 +56,6 @@ const appActionRegistry: Record<string, (get: () => AppState, set: (fn: (state: 
 
 export const useAppStore = create<AppState>((set, get) => ({
   apps: [
-    {
-      id: '1',
-      type: 'loom-studio',
-      title: 'Loom Studio',
-      description: 'Visual command center for AI workflows.',
-    },
     {
       id: '2',
       type: 'file-explorer',
@@ -80,12 +67,6 @@ export const useAppStore = create<AppState>((set, get) => ({
       type: 'echo-control',
       title: 'Recall Session',
       description: "Click to have Echo summarize the last session's activity.",
-    },
-    {
-      id: '4',
-      type: 'aegis-control',
-      title: 'Aegis Control',
-      description: 'Run a sample security scan.',
     },
   ],
   isLoading: false,
@@ -107,36 +88,6 @@ export const useAppStore = create<AppState>((set, get) => ({
     const action = appActionRegistry[app.type];
     if (action) {
       action(get, set, app);
-    }
-  },
-
-  runAnomalyCheck: async () => {
-    set({ isLoading: true });
-    const { toast } = useToast.getState();
-    try {
-      const result = await checkForAnomalies('User accessed financial_records.csv and project_phoenix.docx then initiated a data transfer to an external IP.');
-      
-      if (result.isAnomalous) {
-          toast({
-              title: 'Aegis Alert',
-              description: result.anomalyExplanation,
-              variant: 'destructive',
-          });
-      } else {
-        toast({
-          title: 'Aegis Scan Complete',
-          description: result.anomalyExplanation || 'No anomalies detected in the simulated activity.',
-        });
-      }
-    } catch (error) {
-      console.error('Error running anomaly check:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Could not complete Aegis scan.',
-      });
-    } finally {
-      set({ isLoading: false });
     }
   },
 
@@ -204,6 +155,21 @@ User launched Loom Studio to inspect 'Client Onboarding' workflow.`;
                 description: React.createElement(DrSyntaxReportToast, report)
             });
           }
+          if (agentReport.agent === 'aegis') {
+            const report = agentReport.report;
+            if (report.isAnomalous) {
+                toast({
+                    title: 'Aegis Alert',
+                    description: report.anomalyExplanation,
+                    variant: 'destructive',
+                });
+            } else {
+              toast({
+                title: 'Aegis Scan Complete',
+                description: report.anomalyExplanation || 'No anomalies detected.',
+              });
+            }
+        }
         }
       }
 

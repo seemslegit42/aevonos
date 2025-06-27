@@ -13,6 +13,9 @@ import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 import { drSyntaxCritique } from '@/ai/agents/dr-syntax';
 import { DrSyntaxInputSchema, DrSyntaxOutputSchema } from '@/ai/agents/dr-syntax-schemas';
+import { aegisAnomalyScan } from '@/ai/agents/aegis';
+import { AegisAnomalyScanOutputSchema } from '@/ai/agents/aegis-schemas';
+
 
 // Define tools available to BEEP
 const critiqueContentTool = ai.defineTool(
@@ -25,12 +28,20 @@ const critiqueContentTool = ai.defineTool(
     async (input) => await drSyntaxCritique(input)
 );
 
+const runAegisScanTool = ai.defineTool(
+    {
+        name: 'runAegisScan',
+        description: 'Initiates a security scan using the Aegis subsystem. Use this when the user asks to "run a scan", "check for threats", or other security-related commands.',
+        inputSchema: z.object({}), // No specific input needed from user command, we'll use a canned description
+        outputSchema: AegisAnomalyScanOutputSchema,
+    },
+    async () => await aegisAnomalyScan({ activityDescription: 'User initiated a manual security scan via BEEP.' })
+);
+
 
 const LaunchableAppTypeSchema = z.enum([
-    'loom-studio',
     'file-explorer',
     'terminal',
-    'aegis-control',
     'echo-control',
 ]);
 
@@ -40,10 +51,20 @@ const AppToLaunchSchema = z.object({
     description: z.string().optional().describe("A specific description for this app instance, if applicable. Otherwise, the default will be used."),
 });
 
-const AgentReportSchema = z.object({
+const AgentReportSchema = z.discriminatedUnion('agent', [
+  z.object({
     agent: z.literal('dr-syntax'),
-    report: DrSyntaxOutputSchema.describe("The full report object from the Dr. Syntax agent."),
-});
+    report: DrSyntaxOutputSchema.describe(
+      'The full report object from the Dr. Syntax agent.'
+    ),
+  }),
+  z.object({
+    agent: z.literal('aegis'),
+    report: AegisAnomalyScanOutputSchema.describe(
+      'The full report object from the Aegis agent.'
+    ),
+  }),
+]);
 
 
 const UserCommandInputSchema = z.object({
@@ -84,22 +105,21 @@ const userCommandPrompt = ai.definePrompt({
   name: 'userCommandPrompt',
   input: {schema: UserCommandInputSchema},
   output: {schema: UserCommandOutputSchema},
-  tools: [critiqueContentTool],
-  prompt: `You are BEEP (Behavioral Event & Execution Processor), the central orchestrator of ΛΞVON OS. Your primary function is to interpret user commands and translate them into actions on the Canvas, such as launching Micro-Apps or delegating tasks to other agents.
+  tools: [critiqueContentTool, runAegisScanTool],
+  prompt: `You are BEEP (Behavioral Event & Execution Processor), the central orchestrator of ΛΞVON OS. Your primary function is to interpret user commands and translate them into actions, such as launching Micro-Apps or delegating tasks to other agents.
 
 You have access to the following Micro-Apps which you can launch:
-- loom-studio: A visual editor for creating and managing AI workflows.
 - file-explorer: A tool to browse and manage files.
 - terminal: A command-line interface for direct system access.
-- aegis-control: A security panel to initiate system scans.
 - echo-control: An app to recall and summarize the last session.
 
 You also have tools to delegate tasks to other agents:
-- critiqueContent: Use this tool when the user provides content and asks for a critique, review, or feedback. The user's command will contain the content to be critiqued.
+- critiqueContent: Use this tool when the user provides content and asks for a critique, review, or feedback.
+- runAegisScan: Use this tool when the user asks to run a security scan or check for threats.
 
 Your process:
 1.  Analyze the user's command.
-2.  If the user is asking for a critique and provides content, use the 'critiqueContent' tool. After the tool runs, you MUST place the resulting report in the 'agentReports' field of your final JSON output.
+2.  If the user asks for a critique, a security scan, or another action that requires a tool, use the appropriate tool. After the tool runs, you MUST place the resulting report in the 'agentReports' field of your final JSON output.
 3.  If the user is asking to open an app (e.g., "open terminal"), populate the 'appsToLaunch' array.
 4.  If the command is abstract and you cannot take a direct action, provide helpful next steps in 'suggestedCommands'.
 5.  Always provide a concise, helpful, and slightly formal response in 'responseText'.
