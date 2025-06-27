@@ -4,7 +4,7 @@
 import React from 'react';
 import { useDroppable, useDraggable } from '@dnd-kit/core';
 import type { Node, Edge } from '@/app/loom/page';
-import { Bot, PlayCircle, GitBranch, LucideProps } from 'lucide-react';
+import { Bot, PlayCircle, GitBranch, LucideProps, FileUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { WinstonWolfeIcon } from '../icons/WinstonWolfeIcon';
 import { KifKrokerIcon } from '../icons/KifKrokerIcon';
@@ -22,6 +22,7 @@ const nodeIcons: Record<string, React.ComponentType<any>> = {
     'tool-vandelay': VandelayIcon,
     'tool-dr-syntax': DrSyntaxIcon,
     'tool-crm': AddressBookIcon,
+    'tool-paper-trail': FileUp,
     'tool-final-answer': CrystalIcon,
 };
 

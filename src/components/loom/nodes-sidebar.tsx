@@ -4,7 +4,7 @@
 import React from 'react';
 import { useDraggable } from '@dnd-kit/core';
 import { Card } from '@/components/ui/card';
-import { Bot, PlayCircle, GitBranch, LucideProps } from 'lucide-react';
+import { Bot, PlayCircle, GitBranch, LucideProps, FileUp } from 'lucide-react';
 import { WinstonWolfeIcon } from '../icons/WinstonWolfeIcon';
 import { KifKrokerIcon } from '../icons/KifKrokerIcon';
 import { VandelayIcon } from '../icons/VandelayIcon';
@@ -22,6 +22,7 @@ export type NodeType =
     | 'tool-vandelay'
     | 'tool-dr-syntax'
     | 'tool-crm'
+    | 'tool-paper-trail'
     | 'tool-final-answer';
 
 
@@ -41,6 +42,7 @@ const nodeTypes: NodeInfo[] = [
     { type: 'tool-vandelay', label: 'Vandelay', description: 'Generates alibis', icon: VandelayIcon },
     { type: 'tool-dr-syntax', label: 'Dr. Syntax', description: 'Critiques content harshly', icon: DrSyntaxIcon },
     { type: 'tool-crm', label: 'CRM Tool', description: 'Manages contacts', icon: AddressBookIcon },
+    { type: 'tool-paper-trail', label: 'Paper Trail', description: 'Scans evidence', icon: FileUp },
     { type: 'tool-final-answer', label: 'Final Answer', description: 'Outputs final response', icon: CrystalIcon },
 ];
 

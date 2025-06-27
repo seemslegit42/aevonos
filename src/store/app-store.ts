@@ -33,7 +33,8 @@ export type MicroAppType =
   | 'winston-wolfe'
   | 'kif-kroker'
   | 'vandelay'
-  | 'oracle';
+  | 'oracle'
+  | 'paper-trail';
 
 // Define the shape of a MicroApp instance
 export interface MicroApp {
@@ -67,6 +68,7 @@ const defaultAppDetails: Record<MicroAppType, Omit<MicroApp, 'id' | 'contentProp
   'kif-kroker': { type: 'kif-kroker', title: 'The Kif Kroker', description: "Sigh. The team's conflict metrics are escalating again." },
   'vandelay': { type: 'vandelay', title: 'Vandelay Industries', description: 'Importing, exporting, and ghosting.' },
   'oracle': { type: 'oracle', title: 'The Oracle', description: 'Agentic pulse network status.' },
+  'paper-trail': { type: 'paper-trail', title: 'Paper Trail P.I.', description: 'The receipts don\'t lie.' },
 };
 
 

@@ -23,6 +23,8 @@ const LaunchableAppTypeSchema = z.enum([
   'winston-wolfe',
   'kif-kroker',
   'vandelay',
+  'paper-trail',
+  'oracle',
 ]);
 
 export const AppToLaunchSchema = z.object({

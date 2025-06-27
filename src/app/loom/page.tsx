@@ -31,6 +31,7 @@ const initialNodes: Node[] = [
     { id: 'tool-wolfe', type: 'tool-winston-wolfe', position: { x: 600, y: 250 }, data: { label: 'Winston Wolfe', service: 'Reputation' } },
     { id: 'tool-kif', type: 'tool-kif-kroker', position: { x: 600, y: 350 }, data: { label: 'Kif Kroker', service: 'Comms' } },
     { id: 'tool-vandelay', type: 'tool-vandelay', position: { x: 600, y: 450 }, data: { label: 'Vandelay', service: 'Calendar' } },
+    { id: 'tool-paper-trail', type: 'tool-paper-trail', position: { x: 600, y: 550 }, data: { label: 'Paper Trail', service: 'Expenses' } },
     
     { id: 'tool-final-answer', type: 'tool-final-answer', position: { x: 900, y: 350 }, data: { label: 'Final Answer', schema: 'UserCommandOutput' } },
 ];
@@ -42,6 +43,7 @@ const initialEdges: Edge[] = [
     { id: 'e-agent-wolfe', source: 'agent-1', target: 'tool-wolfe' },
     { id: 'e-agent-kif', source: 'agent-1', target: 'tool-kif' },
     { id: 'e-agent-vandelay', source: 'agent-1', target: 'tool-vandelay' },
+    { id: 'e-agent-paper-trail', source: 'agent-1', target: 'tool-paper-trail' },
     { id: 'e-agent-final', source: 'agent-1', target: 'tool-final-answer' },
 ];
 

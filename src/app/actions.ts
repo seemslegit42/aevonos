@@ -8,7 +8,7 @@ import { revalidatePath } from 'next/cache';
 import { drSyntaxCritique } from '@/ai/agents/dr-syntax';
 import type { DrSyntaxInput, DrSyntaxOutput } from '@/ai/agents/dr-syntax-schemas';
 import { recallSession, type SessionRecallInput, type SessionRecallOutput } from '@/ai/agents/echo';
-import { generatePamRant as generatePamRantFlow } from '@/ai/agents/pam-poovey-onboarding';
+import { generatePamRant as generatePamRantFlow } from '@/ai/agents/pam-poovey';
 import type { PamScriptInput, PamAudioOutput } from '@/ai/agents/pam-poovey-schemas';
 import { deployDecoy as deployDecoyFlow } from '@/ai/agents/decoy';
 import type { DecoyInput, DecoyOutput } from '@/ai/agents/decoy-schemas';
@@ -30,6 +30,9 @@ import { analyzeComms as analyzeCommsFlow } from '@/ai/agents/kif-kroker';
 import type { KifKrokerAnalysisInput, KifKrokerAnalysisOutput } from '@/ai/agents/kif-kroker-schemas';
 import { createVandelayAlibi as createVandelayAlibiFlow } from '@/ai/agents/vandelay';
 import type { VandelayAlibiInput, VandelayAlibiOutput } from '@/ai/agents/vandelay-schemas';
+import { scanEvidence as scanEvidenceFlow } from '@/ai/agents/paper-trail';
+import type { PaperTrailScanInput, PaperTrailScanOutput } from '@/ai/agents/paper-trail-schemas';
+
 
 export async function handleCommand(command: string): Promise<UserCommandOutput> {
   try {
@@ -225,6 +228,23 @@ export async function createVandelayAlibi(input: VandelayAlibiInput): Promise<Va
     console.error('Error in Vandelay alibi flow:', error);
     return {
       title: "Error: Could not generate alibi due to a critical synergy failure.",
+      attendees: [],
     };
   }
+}
+
+export async function scanEvidence(input: PaperTrailScanInput): Promise<PaperTrailScanOutput> {
+    try {
+        const result = await scanEvidenceFlow(input);
+        return result;
+    } catch (error) {
+        console.error('Error in Paper Trail scan flow:', error);
+        return {
+            vendor: 'Unknown',
+            amount: 0,
+            date: new Date().toISOString().split('T')[0],
+            lead: "The informant went dark. Call couldn't go through. Probably a server error.",
+            isEvidenceValid: false,
+        }
+    }
 }
