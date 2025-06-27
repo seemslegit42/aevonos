@@ -37,7 +37,9 @@ export type MicroAppType =
   | 'jroc-business-kit'
   | 'lahey-surveillance'
   | 'the-foremanator'
-  | 'sterileish';
+  | 'sterileish'
+  | 'dr-syntax'
+  | 'beep-wingman';
 
 // Define the shape of a MicroApp instance
 export interface MicroApp {
@@ -77,6 +79,8 @@ const defaultAppDetails: Record<MicroAppType, Omit<MicroApp, 'id' | 'position' |
   'lahey-surveillance': { type: 'lahey-surveillance', title: 'Lahey Surveillance', description: 'I am the liquor. And I am watching.' },
   'the-foremanator': { type: 'the-foremanator', title: 'The Foremanator', description: 'He doesn’t sleep. He doesn’t eat. He just yells about deadlines.' },
   'sterileish': { type: 'sterileish', title: 'STERILE-ish™', description: 'We’re basically compliant.' },
+  'dr-syntax': { type: 'dr-syntax', title: 'Dr. Syntax', description: 'Harsh but effective structural critiques.' },
+  'beep-wingman': { type: 'beep-wingman', title: 'BEEP Wingman', description: 'Generates compelling opening messages for dating apps.' },
 };
 
 

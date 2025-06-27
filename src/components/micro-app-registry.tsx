@@ -21,6 +21,8 @@ import { JrocIcon } from './icons/JrocIcon';
 import { LaheyIcon } from './icons/LaheyIcon';
 import { ForemanatorIcon } from './icons/ForemanatorIcon';
 import { SterileishIcon } from './icons/SterileishIcon';
+import { DrSyntaxIcon } from './icons/DrSyntaxIcon';
+import { BeepWingmanIcon } from './icons/BeepWingmanIcon';
 
 
 import { type MicroAppType } from '@/store/app-store';
@@ -128,7 +130,13 @@ export const microAppRegistry: Record<MicroAppType, ComponentRegistry> = {
   'sterileish': {
       icon: SterileishIcon,
       content: Sterileish,
-  }
+  },
+  'dr-syntax': {
+    icon: DrSyntaxIcon,
+  },
+  'beep-wingman': {
+    icon: BeepWingmanIcon,
+  },
 };
 
 export const getAppIcon = (type: MicroAppType) => {
