@@ -31,6 +31,11 @@ const vinDieselValidationFlow = ai.defineFlow(
           model: 'Charger R/T',
           year: 1970,
         },
+        complianceReport: {
+            registration: 'Current',
+            customs: 'Cleared',
+            inspection: 'Passed',
+        }
       };
     }
     if (vin === 'BADVIN1234567890') {
@@ -39,6 +44,11 @@ const vinDieselValidationFlow = ai.defineFlow(
         isValid: false,
         statusMessage: "Whoa, that VIN looks like it took a detour through Siberia. Let's not.",
         decodedInfo: {},
+        complianceReport: {
+            registration: 'Flagged',
+            customs: 'Flagged',
+            inspection: 'Failed',
+        }
       };
     }
     if (vin.length !== 17) {
@@ -69,6 +79,11 @@ const vinDieselValidationFlow = ai.defineFlow(
         make: 'Unknown',
         model: 'Unknown',
         year: 2024
+      },
+      complianceReport: {
+        registration: 'Pending',
+        customs: 'Pending',
+        inspection: 'Required',
       }
     };
   }
