@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useCallback } from 'react';
@@ -60,6 +59,7 @@ export default function LoomPage() {
     const [nodes, setNodes] = useState<Node[]>(initialNodes);
     const [edges, setEdges] = useState<Edge[]>(initialEdges);
     const [selectedNode, setSelectedNode] = useState<Node | null>(null);
+    const [connection, setConnection] = useState<{ sourceId: string; } | null>(null);
 
     const sensors = useSensors(useSensor(PointerSensor, {
       activationConstraint: {
@@ -72,24 +72,24 @@ export default function LoomPage() {
     };
 
     const handleDragEnd = useCallback((event: DragEndEvent) => {
+        if (connection) return; // Don't move nodes while making a connection
+
         const { active, delta } = event;
         const nodeId = active.id as string;
         
         if (active.data.current?.isDraggableNode) {
-            // A new node was dropped from the sidebar
             const type = active.data.current.type as NodeType;
             const label = active.data.current.label as string;
             
             const newNode: Node = {
-                id: `${type}-${new Date().getTime()}`, // Simple unique ID
+                id: `${type}-${new Date().getTime()}`,
                 type,
-                position: { x: 250, y: 150 }, // Default position, user can move it
+                position: { x: 250, y: 150 },
                 data: { label: label },
             };
             
             setNodes((nds) => [...nds, newNode]);
         } else {
-            // An existing node was moved
             setNodes((nds) =>
                 nds.map((node) => {
                     if (node.id === nodeId) {
@@ -99,7 +99,7 @@ export default function LoomPage() {
                 })
             );
         }
-    }, []);
+    }, [connection]);
 
     const updateNodeData = (nodeId: string, newData: any) => {
         const newNodes = nodes.map(n => {
@@ -114,13 +114,43 @@ export default function LoomPage() {
         }
     };
 
+    const onConnectStart = useCallback((sourceId: string) => {
+        setConnection({ sourceId });
+    }, []);
+
+    const onConnectEnd = useCallback((targetId: string | null) => {
+        if (!connection || !targetId || connection.sourceId === targetId) {
+            setConnection(null);
+            return;
+        }
+
+        const newEdge: Edge = {
+            id: `e-${connection.sourceId}-${targetId}`,
+            source: connection.sourceId,
+            target: targetId,
+        };
+
+        if (!edges.some(e => e.id === newEdge.id)) {
+            setEdges((eds) => [...eds, newEdge]);
+        }
+        
+        setConnection(null);
+    }, [connection, edges]);
 
   return (
     <div className="flex flex-col h-full">
         <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
             <div className="flex-grow flex gap-4 min-h-0">
                 <NodesSidebar />
-                <WorkflowCanvas nodes={nodes} edges={edges} onNodeClick={handleNodeClick} selectedNodeId={selectedNode?.id} />
+                <WorkflowCanvas 
+                    nodes={nodes} 
+                    edges={edges} 
+                    onNodeClick={handleNodeClick} 
+                    selectedNodeId={selectedNode?.id}
+                    onConnectStart={onConnectStart}
+                    onConnectEnd={onConnectEnd}
+                    connectionSourceId={connection?.sourceId}
+                />
                 <PropertyInspector node={selectedNode} onUpdate={updateNodeData} />
             </div>
         </DndContext>
