@@ -10,7 +10,6 @@ import { z } from 'zod';
 import { OsintInputSchema, OsintOutputSchema, type OsintInput, type OsintOutput } from './osint-schemas';
 import {
     checkEmailBreaches,
-    scrapeSocialMediaProfile,
     checkBurnerPhoneNumber,
     searchIntelX,
 } from '../tools/osint-tools';
@@ -42,9 +41,8 @@ const performOsintScanFlow = ai.defineFlow(
   },
   async ({ targetName, context }) => {
     const contextData = extractContextData(context || '');
-    let toolResults = {} as Partial<OsintOutput>;
+    let toolResults: Partial<OsintOutput> = {};
     
-    // Run tools in parallel where possible
     const promises = [];
 
     if (contextData.email) {
@@ -55,22 +53,18 @@ const performOsintScanFlow = ai.defineFlow(
         promises.push(checkBurnerPhoneNumber({ phoneNumber: contextData.phone }).then(r => toolResults.burnerPhoneCheck = r));
     }
     if (contextData.socialUrls.length > 0) {
-        const socialPromises = contextData.socialUrls.map(url => scrapeSocialMediaProfile({ profileUrl: url }));
-        promises.push(Promise.all(socialPromises).then(r => toolResults.socialProfiles = r));
+        // Use Firecrawler to scrape the provided social URLs
+        const firecrawlerPromises = contextData.socialUrls.map(url => runFirecrawlerScan({ url }));
+        promises.push(Promise.all(firecrawlerPromises).then(r => toolResults.firecrawlerReports = r));
     }
     
-    // Add Firecrawler scan
-    const firecrawlerQuery = contextData.email || contextData.socialUrls[0] || targetName;
-    promises.push(runFirecrawlerScan({ query: firecrawlerQuery }).then(r => toolResults.firecrawlerReport = r));
-
-
     await Promise.all(promises);
     
     // Now, synthesize the results with an LLM call.
     const prompt = `You are an OSINT (Open-Source Intelligence) analysis agent. Your callsign is "Bloodhound". You synthesize raw data from various sources into a coherent intelligence report. Your tone is factual, analytical, and direct.
 
-    You have been provided with raw data findings for a target from multiple OSINT tools. Your task is to review this raw data and populate all fields of the OsintOutputSchema correctly and professionally.
-    You must create a high-level summary and identify key risk factors based on the combined data. Pay special attention to the 'firecrawlerReport' for hidden connections or metadata.
+    You have been provided with raw data findings for a target from multiple OSINT tools. This includes data breaches, IntelX leaks, burner phone checks, and raw scrapes from social media URLs using Firecrawler. Your task is to review this raw data and populate all fields of the OsintOutputSchema correctly and professionally.
+    You must create a high-level summary and identify key risk factors based on the combined data. Pay special attention to the 'firecrawlerReports' to extract profile information like bios, usernames, and recent activity, then populate the 'socialProfiles' array in the final output. The content from Firecrawler is markdown.
 
     Target Name: ${targetName}
     User-provided context: ${context || 'None'}
@@ -80,7 +74,7 @@ const performOsintScanFlow = ai.defineFlow(
     ${JSON.stringify(toolResults, null, 2)}
     """
 
-    Synthesize this raw data into the final intelligence report. Ensure the summary is concise and the risk factors are clearly stated. Determine the overall digital visibility.
+    Synthesize this raw data into the final intelligence report. Ensure the summary is concise and the risk factors are clearly stated. Determine the overall digital visibility. For socialProfiles, extract follower counts if available, otherwise default to 0.
     `;
 
     const { output } = await ai.generate({
@@ -89,11 +83,14 @@ const performOsintScanFlow = ai.defineFlow(
         model: 'googleai/gemini-2.0-flash',
     });
     
-    // Ensure tool results are included even if LLM misses them
-    return {
-        ...toolResults,
-        ...output!,
-    };
+    // The LLM does the synthesis, we just pass the raw data it might have missed.
+    const synthesizedOutput = output!;
+    synthesizedOutput.breaches = toolResults.breaches || [];
+    synthesizedOutput.intelXLeaks = toolResults.intelXLeaks || [];
+    synthesizedOutput.burnerPhoneCheck = toolResults.burnerPhoneCheck;
+    synthesizedOutput.firecrawlerReports = toolResults.firecrawlerReports; // Pass along raw reports for transparency
+
+    return synthesizedOutput;
   }
 );
 

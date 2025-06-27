@@ -1,13 +1,14 @@
 
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import crypto from 'crypto';
 import { encrypt } from '@/lib/auth';
+import prisma from '@/lib/prisma';
+import bcrypt from 'bcryptjs';
 
 // Schema from api-spec.md
 const RegisterRequestSchema = z.object({
   email: z.string().email(),
-  password: z.string(),
+  password: z.string().min(8, "Password must be at least 8 characters long"),
   firstName: z.string().optional(),
   lastName: z.string().optional(),
   workspaceName: z.string(),
@@ -23,35 +24,60 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid registration request.', issues: validation.error.issues }, { status: 400 });
     }
     
-    // In a real application, you would create the user and workspace in the database.
+    const { email, password, firstName, lastName, workspaceName } = validation.data;
     
-    const mockUser = {
-        id: 2, // new user
-        uuid: crypto.randomUUID(),
-        email: validation.data.email,
-        firstName: validation.data.firstName || "New",
-        lastName: validation.data.lastName || "User",
-        lastLoginAt: new Date().toISOString(),
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-    };
+    const existingUser = await prisma.user.findUnique({
+        where: { email },
+    });
+    
+    if (existingUser) {
+        return NextResponse.json({ error: 'User with email already exists.'}, { status: 409 });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Use a transaction to ensure both user and workspace are created successfully
+    const { user, workspace } = await prisma.$transaction(async (tx) => {
+        const newUser = await tx.user.create({
+            data: {
+                email,
+                password: hashedPassword,
+                firstName,
+                lastName,
+            }
+        });
+        
+        const newWorkspace = await tx.workspace.create({
+            data: {
+                name: workspaceName,
+                ownerId: newUser.id,
+                members: {
+                    connect: { id: newUser.id }
+                }
+            }
+        });
+        
+        return { user: newUser, workspace: newWorkspace };
+    });
+
 
     const sessionPayload = {
-        userId: mockUser.uuid,
-        workspaceId: crypto.randomUUID(), // new workspace
+        userId: user.id,
+        workspaceId: workspace.id,
         expires: new Date(Date.now() + 3600 * 1000),
     };
 
     const token = await encrypt(sessionPayload);
 
+    const { password: _, ...userResponse } = user;
+    
     const mockAuthResponse = {
       accessToken: token,
       tokenType: "Bearer",
       expiresIn: 3600,
-      user: mockUser
+      user: userResponse
     };
 
-    // Note: The spec says to return AuthResponse with status 201.
     return NextResponse.json(mockAuthResponse, { status: 201 });
 
   } catch (error) {

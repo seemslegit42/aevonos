@@ -24,6 +24,7 @@ import { Badge } from '../ui/badge';
 import { ScrollArea } from '../ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import type { FirecrawlerReport } from '@/ai/tools/firecrawler-schemas';
 
 const DecoyDeploymentPanel = () => {
     const [isLoading, setIsLoading] = useState(false);
@@ -102,18 +103,27 @@ const OsintReportPanel = ({ report }: { report: OsintOutput }) => {
                     </ul>
                 </div>
 
-                {report.firecrawlerReport && report.firecrawlerReport.findings && (
+                {report.firecrawlerReports && report.firecrawlerReports.length > 0 && (
                     <>
                         <Separator />
                         <div>
                             <h4 className="font-bold text-blue-400 flex items-center gap-2">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.59a2 2 0 0 1-2.83-2.83l.79-.79"></path></svg>
-                                Firecrawler Intelligence
+                                Raw Scraped Data (Firecrawler)
                             </h4>
-                            <div className="text-xs p-2 border border-blue-400/50 rounded-md bg-background/50 mt-1">
-                                <pre className="whitespace-pre-wrap font-mono text-xs break-all">
-                                    {JSON.stringify(report.firecrawlerReport.findings, null, 2)}
-                                </pre>
+                            <div className="space-y-2 mt-1">
+                                {report.firecrawlerReports.map((fireReport, index) => (
+                                    <div key={index} className="text-xs p-2 border border-blue-400/50 rounded-md bg-background/50">
+                                        {(fireReport as any).success ? (
+                                            <>
+                                                <p className="font-bold text-blue-400">Scan of: {(fireReport as any).data.metadata?.sourceURL || 'a tracked URL'}</p>
+                                                <pre className="whitespace-pre-wrap font-mono text-xs break-words">{(fireReport as any).data.markdown}</pre>
+                                            </>
+                                        ) : (
+                                            <p className="text-destructive">Failed to scrape a URL: {(fireReport as any).error}</p>
+                                        )}
+                                    </div>
+                                ))}
                             </div>
                         </div>
                     </>

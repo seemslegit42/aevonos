@@ -7,7 +7,6 @@ import { ai } from '@/ai/genkit';
 import { z } from 'zod';
 import {
   PwnedCheckInputSchema, PwnedCheckOutputSchema,
-  SocialScrapeInputSchema, SocialScrapeOutputSchema,
   BurnerCheckInputSchema, BurnerCheckOutputSchema,
   IntelXSearchInputSchema, IntelXSearchOutputSchema,
 } from './osint-schemas';
@@ -68,32 +67,6 @@ export const checkEmailBreaches = ai.defineTool(
       return [];
     }
   }
-);
-
-// Social Media Scraping Tool
-export const scrapeSocialMediaProfile = ai.defineTool(
-    {
-      name: 'scrapeSocialMediaProfile',
-      description: 'Scrapes a public social media profile (Instagram, TikTok, GitHub, LinkedIn) for key information.',
-      inputSchema: SocialScrapeInputSchema,
-      outputSchema: SocialScrapeOutputSchema,
-    },
-    async ({ profileUrl }) => {
-        let platform = 'Unknown';
-        if (profileUrl.includes('instagram')) platform = 'Instagram';
-        if (profileUrl.includes('tiktok')) platform = 'TikTok';
-        if (profileUrl.includes('github')) platform = 'GitHub';
-        if (profileUrl.includes('linkedin')) platform = 'LinkedIn';
-        
-        return {
-            platform,
-            username: `mockuser_${platform.toLowerCase()}`,
-            fullName: 'Mock User',
-            bio: 'This is a mock bio from a scraped social media profile. Living my best life. #blessed',
-            recentPosts: ['Posted a picture of a cat.', 'Shared a motivational quote.', 'Checked in at a local coffee shop.'],
-            followerCount: 1234,
-        }
-    }
 );
 
 // Burner Phone Check Tool

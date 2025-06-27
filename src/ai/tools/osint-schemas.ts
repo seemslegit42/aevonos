@@ -58,9 +58,9 @@ export const OsintOutputSchema = z.object({
   riskFactors: z.array(z.string()).describe('A list of specific OSINT-derived risk factors.'),
   breaches: z.array(BreachSchema).optional().describe('A list of discovered data breaches.'),
   intelXLeaks: z.array(IntelXLeakSchema).optional().describe('A list of discovered leaks from IntelX.'),
-  socialProfiles: z.array(SocialScrapeOutputSchema).optional().describe('A list of discovered and scraped social media profiles.'),
+  socialProfiles: z.array(SocialScrapeOutputSchema).optional().describe('A list of social media profiles synthesized from scraped data.'),
   burnerPhoneCheck: BurnerCheckOutputSchema.optional().describe('The result of a burner phone number check.'),
-  firecrawlerReport: FirecrawlerReportSchema.optional().describe('The raw intelligence report from the Firecrawler scan.'),
+  firecrawlerReports: z.array(FirecrawlerReportSchema).optional().describe('Raw intelligence reports from the Firecrawler scans.'),
   digitalFootprint: z.object({
       overallVisibility: z.enum(['Low', 'Medium', 'High', 'Ghost']),
       keyObservations: z.array(z.string()),

@@ -2,6 +2,7 @@
 import { NextResponse, NextRequest } from 'next/server';
 import { z } from 'zod';
 import { getSession } from '@/lib/auth';
+import prisma from '@/lib/prisma';
 
 // Schema from api-spec.md for updating a user
 const UserUpdateRequestSchema = z.object({
@@ -14,31 +15,27 @@ const UserUpdateRequestSchema = z.object({
 export async function GET(request: NextRequest) {
   // Protect the route
   const session = await getSession(request);
-  if (!session) {
+  if (!session?.userId) {
     return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 });
   }
 
-  // In a real application, you'd fetch the user from the database using session.userId
-  // For now, we return a mock user associated with the session.
-  const mockUser = {
-    id: 1,
-    uuid: session.userId, // Use the ID from the session
-    email: 'user@aevonos.com',
-    firstName: "Jane",
-    lastName: "Doe",
-    lastLoginAt: new Date(Date.now() - 3600 * 1000).toISOString(),
-    createdAt: new Date(Date.now() - 30 * 24 * 3600 * 1000).toISOString(),
-    updatedAt: new Date().toISOString(),
-  };
+  const user = await prisma.user.findUnique({
+    where: { id: session.userId },
+  });
 
-  return NextResponse.json(mockUser);
+  if (!user) {
+    return NextResponse.json({ error: 'User not found.' }, { status: 404 });
+  }
+
+  const { password, ...userResponse } = user;
+  return NextResponse.json(userResponse);
 }
 
 // Corresponds to operationId `updateCurrentUser`
 export async function PUT(request: NextRequest) {
   // Protect the route
   const session = await getSession(request);
-  if (!session) {
+  if (!session?.userId) {
     return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 });
   }
 
@@ -50,20 +47,13 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid input.', issues: validation.error.issues }, { status: 400 });
     }
 
-    // In a real application, you would update the user in the database.
-    // For now, we return the mock user with the updated fields applied.
-    const updatedUser = {
-        id: 1,
-        uuid: session.userId,
-        email: validation.data.email || 'user@aevonos.com',
-        firstName: validation.data.firstName || "Jane",
-        lastName: validation.data.lastName || "Doe",
-        lastLoginAt: new Date(Date.now() - 3600 * 1000).toISOString(),
-        createdAt: new Date(Date.now() - 30 * 24 * 3600 * 1000).toISOString(),
-        updatedAt: new Date().toISOString(),
-    };
-
-    return NextResponse.json(updatedUser);
+    const user = await prisma.user.update({
+        where: { id: session.userId },
+        data: validation.data
+    });
+    
+    const { password, ...userResponse } = user;
+    return NextResponse.json(userResponse);
 
   } catch (error) {
     console.error('[API /users/me PUT]', error);

@@ -1,8 +1,9 @@
 
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import crypto from 'crypto';
 import { encrypt } from '@/lib/auth';
+import prisma from '@/lib/prisma';
+import bcrypt from 'bcryptjs';
 
 // Schema from api-spec.md
 const LoginRequestSchema = z.object({
@@ -20,35 +21,46 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid login request.', issues: validation.error.issues }, { status: 400 });
     }
 
-    // In a real application, you would validate the user's credentials against the database.
-    // For this demo, we assume the login is successful if the email is provided.
-    // Here we'll create a session payload for the JWT.
+    const { email, password } = validation.data;
+
+    const user = await prisma.user.findUnique({
+        where: { email },
+    });
+
+    if (!user) {
+        return NextResponse.json({ error: 'Invalid credentials.' }, { status: 401 });
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, user.password || '');
+    if (!isPasswordValid) {
+        return NextResponse.json({ error: 'Invalid credentials.' }, { status: 401 });
+    }
     
-    const mockUser = {
-        id: 1,
-        uuid: crypto.randomUUID(),
-        email: validation.data.email,
-        firstName: "Jane",
-        lastName: "Doe",
-        lastLoginAt: new Date().toISOString(),
-        createdAt: new Date(Date.now() - 30 * 24 * 3600 * 1000).toISOString(),
-        updatedAt: new Date().toISOString(),
-    };
+    const workspace = await prisma.workspace.findUnique({
+        where: { ownerId: user.id }
+    });
+    
+    if (!workspace) {
+        return NextResponse.json({ error: 'User does not have a primary workspace.' }, { status: 403 });
+    }
 
     // Create the session payload
     const sessionPayload = {
-        userId: mockUser.uuid,
-        workspaceId: 'w1a2b3c4-d5e6-f789-0123-456789abcdef', // Mock workspace ID for the demo user
+        userId: user.id,
+        workspaceId: workspace.id,
         expires: new Date(Date.now() + 3600 * 1000), // 1 hour from now
     };
 
     const token = await encrypt(sessionPayload);
+    
+    // We don't want to send the password hash back to the client
+    const { password: _, ...userResponse } = user;
 
     const authResponse = {
       accessToken: token,
       tokenType: "Bearer",
       expiresIn: 3600,
-      user: mockUser
+      user: userResponse
     };
 
     return NextResponse.json(authResponse);
