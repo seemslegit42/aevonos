@@ -24,6 +24,7 @@ import { InfidelityAnalysisOutputSchema } from './infidelity-analysis-schemas';
 import { DecoyOutputSchema } from './decoy-schemas';
 import { SessionRecallOutputSchema } from '@/ai/agents/echo-schemas';
 import { DossierOutputSchema } from './dossier-schemas';
+import { KendraOutputSchema } from './kendra-schemas';
 
 
 // Schemas from the original BEEP agent, preserved for the public contract.
@@ -51,6 +52,7 @@ const LaunchableAppTypeSchema = z.enum([
   'dr-syntax',
   'aegis-command',
   'usage-monitor',
+  'kendra',
 ]);
 
 export const AppToLaunchSchema = z.object({
@@ -199,6 +201,10 @@ export const AgentReportSchema = z.discriminatedUnion('agent', [
   z.object({
     agent: z.literal('dossier'),
     report: DossierOutputSchema.describe('The full dossier generation report.'),
+  }),
+  z.object({
+    agent: z.literal('kendra'),
+    report: KendraOutputSchema.describe('The full marketing campaign report from the KENDRA.exe agent.'),
   }),
 ]);
 

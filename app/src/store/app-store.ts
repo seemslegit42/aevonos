@@ -3,7 +3,7 @@ import { create } from 'zustand';
 import type { DragEndEvent } from '@dnd-kit/core';
 import React from 'react';
 
-import { processUserCommand } from '@/ai/agents/beep';
+import { handleCommand } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
 import type { SessionRecallOutput } from '@/ai/agents/echo-schemas';
 import type { DrSyntaxOutput } from '@/ai/agents/dr-syntax-schemas';
@@ -23,7 +23,7 @@ import type { JrocOutput } from '@/ai/agents/jroc-schemas';
 import type { SterileishAnalysisOutput } from '@/ai/agents/sterileish-schemas';
 import type { PaperTrailScanOutput } from '@/ai/agents/paper-trail-schemas';
 import type { DossierOutput } from '@/ai/agents/dossier-schemas';
-import type { KendraOutput } from './agents/kendra-schemas';
+import type { KendraOutput } from '@/ai/agents/kendra-schemas';
 
 
 // Define the types of MicroApps available in the OS
@@ -410,7 +410,7 @@ export const useAppStore = create<AppState>((set, get) => {
       }));
 
       try {
-        const result = await processUserCommand({ userCommand: command });
+        const result = await handleCommand(command);
         set({ beepOutput: result });
         const { toast } = useToast.getState();
         

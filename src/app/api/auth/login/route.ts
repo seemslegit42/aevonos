@@ -45,10 +45,11 @@ export async function POST(request: Request) {
     }
 
     // Create the session payload
+    const expires = new Date(Date.now() + 3600 * 1000); // 1 hour from now
     const sessionPayload = {
         userId: user.id,
         workspaceId: workspace.id,
-        expires: new Date(Date.now() + 3600 * 1000), // 1 hour from now
+        expires: expires,
     };
 
     const token = await encrypt(sessionPayload);
@@ -71,7 +72,7 @@ export async function POST(request: Request) {
         value: token,
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
-        maxAge: 60 * 60, // 1 hour
+        expires: expires, // Use expires instead of maxAge
         path: '/',
     });
 

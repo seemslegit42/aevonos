@@ -1,7 +1,7 @@
 
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { decrypt } from '@/lib/auth';
+import { decrypt, encrypt } from '@/lib/auth';
 
 export async function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname;
@@ -35,8 +35,26 @@ export async function middleware(request: NextRequest) {
     if (!session?.userId) {
         throw new Error('Invalid session token');
     }
-    // If the token is valid, continue to the requested path
-    return NextResponse.next();
+    
+    // Token is valid, refresh the session by creating a new token
+    // and setting it in the response cookies. This creates a sliding session.
+    const response = NextResponse.next();
+    
+    // Create a new expiration time
+    const newExpires = new Date(Date.now() + 3600 * 1000); // 1 hour from now
+    session.expires = newExpires;
+    
+    response.cookies.set({
+        name: 'session',
+        value: await encrypt(session), // encrypt will use the new expiration
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        expires: newExpires, // Set cookie expiration
+        path: '/',
+    });
+
+    return response;
+
   } catch (e) {
     // If token is invalid or expired, clear the cookie and redirect/return error
     const response = isApiRoute 

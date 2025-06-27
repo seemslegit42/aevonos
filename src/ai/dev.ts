@@ -31,3 +31,4 @@ import '@/ai/tools/firecrawler-tools.ts';
 import '@/ai/flows/tts-flow.ts';
 import '@/ai/flows/tts-schemas.ts';
 import '@/ai/agents/dossier-agent.ts';
+import '@/ai/agents/kendra.ts';

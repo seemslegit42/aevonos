@@ -9,11 +9,11 @@ if (!secretKey) {
 }
 const key = new TextEncoder().encode(secretKey);
 
-export async function encrypt(payload: any) {
+export async function encrypt(payload: { expires: Date, [key: string]: any }) {
   return await new SignJWT(payload)
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
-    .setExpirationTime('1h') // Token expires in 1 hour
+    .setExpirationTime(Math.floor(payload.expires.getTime() / 1000))
     .sign(key);
 }
 

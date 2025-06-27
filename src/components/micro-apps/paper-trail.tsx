@@ -16,9 +16,9 @@ import { Separator } from '../ui/separator';
 
 const caseFileId = `CASE-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
 
-export default function PaperTrail() {
+export default function PaperTrail(props: { evidenceLog?: PaperTrailScanOutput[] } | {}) {
   const [isLoading, setIsLoading] = useState(false);
-  const [evidenceLog, setEvidenceLog] = useState<PaperTrailScanOutput[]>([]);
+  const [evidenceLog, setEvidenceLog] = useState<PaperTrailScanOutput[]>(props && 'evidenceLog' in props ? props.evidenceLog! : []);
   const [preview, setPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();

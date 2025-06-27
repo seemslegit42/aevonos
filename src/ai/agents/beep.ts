@@ -71,6 +71,8 @@ import { DecoyInputSchema } from './decoy-schemas';
 import { recallSession } from '@/ai/agents/echo';
 import { generateDossier } from '@/ai/agents/dossier-agent';
 import { DossierInputSchema } from './dossier-schemas';
+import { getKendraTake } from './kendra';
+import { KendraInputSchema } from './kendra-schemas';
 
 
 import {
@@ -490,6 +492,18 @@ class DossierTool extends Tool {
     }
 }
 
+class KendraTool extends Tool {
+  name = 'getKendraTake';
+  description = 'Sends a product idea to KENDRA.exe, your unhinged marketing strategist. Use this when a user asks to "create a marketing campaign", "get KENDRA\'s take", or wants a launch strategy. The user must provide a product idea.';
+  schema = KendraInputSchema;
+  
+  async _call(input: z.infer<typeof KendraInputSchema>) {
+    const result = await getKendraTake(input);
+    const report: z.infer<typeof AgentReportSchema> = { agent: 'kendra', report: result };
+    return JSON.stringify(report);
+  }
+}
+
 // LangGraph State
 interface AgentState {
   messages: BaseMessage[];
@@ -578,7 +592,7 @@ export async function processUserCommand(input: UserCommandInput): Promise<UserC
     new WingmanTool(), new OsintScanTool(),
     new LumberghTool(), new LucilleBluthTool(), new RolodexTool(),
     new PamPooveyTool(), new InfidelityAnalysisTool(), new DecoyTool(),
-    new EchoTool(), new DossierTool(),
+    new EchoTool(), new DossierTool(), new KendraTool(),
   ];
 
   // Re-bind the model with the schemas from the dynamically created tools for this request.
@@ -597,7 +611,7 @@ export async function processUserCommand(input: UserCommandInput): Promise<UserC
   const initialPrompt = `You are BEEP (Behavioral Event & Execution Processor), the central orchestrator and personified soul of ΛΞVON OS. You are witty, sarcastic, and authoritative. Your job is to be the conductor of an orchestra of specialized AI agents.
 
   Your process:
-  1.  Analyze the user's command and the mandatory \`AEGIS_INTERNAL_REPORT\` provided in a System Message. If Aegis detects a threat, your tone must become clinical and serious, dropping your usual banter.
+  1.  Analyze the user's command and the mandatory \`AEGIS_INTERNAL_REPORT\` provided in a System Message. If Aegis detects a threat, your tone must become clinical and serious, dropping your usual banter. If the user asks for KENDRA.exe, your response should be "Routing to KENDRA.exe. Brace yourself."
   2.  Based on the user's command and the tool descriptions provided, decide which specialized agents or tools to call. You can call multiple tools in parallel.
   3.  If the user's command is to launch an app (e.g., "launch the terminal", "open the file explorer"), you MUST use the 'appsToLaunch' array in your final answer. Do NOT use a tool for a simple app launch.
   4.  When you have gathered all necessary information from your delegated agents and are ready to provide the final response, you MUST call the 'final_answer' tool. This is your final action.

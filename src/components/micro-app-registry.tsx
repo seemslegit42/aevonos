@@ -27,6 +27,7 @@ import { BeepWingmanIcon } from './icons/BeepWingmanIcon';
 import { AegisThreatScopeIcon } from './icons/AegisThreatScopeIcon';
 import { AegisCommandIcon } from './icons/AegisCommandIcon';
 import { UsageMonitorIcon } from './icons/UsageMonitorIcon';
+import { KendraIcon } from './icons/KendraIcon';
 
 
 import { type MicroAppType } from '@/store/app-store';
@@ -48,11 +49,12 @@ import JrocBusinessKit from './micro-apps/jroc-business-kit';
 import LaheyCommander from './micro-apps/lahey-commander';
 import TheForemanator from './micro-apps/the-foremanator';
 import Sterileish from './micro-apps/sterileish';
-import AegisThreatScope from './micro-apps/aegis-threatscope';
 import DrSyntax from './micro-apps/dr-syntax';
+import AegisThreatScope from './micro-apps/aegis-threatscope';
 import AegisCommand from './micro-apps/aegis-command';
 import UsageMonitor from './micro-apps/usage-monitor';
 import EchoRecall from './micro-apps/echo-recall';
+import Kendra from './micro-apps/kendra';
 
 
 type ComponentRegistry = {
@@ -161,6 +163,10 @@ export const microAppRegistry: Record<MicroAppType, ComponentRegistry> = {
   'usage-monitor': {
     icon: UsageMonitorIcon,
     content: UsageMonitor,
+  },
+  'kendra': {
+    icon: KendraIcon,
+    content: Kendra,
   },
 };
 

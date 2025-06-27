@@ -251,5 +251,18 @@ export const microAppManifests: MicroAppManifest[] = [
     routingPath: '/usage-monitor',
     contextAwareCapabilities: ['billing_update_event'],
     isFeatured: false,
+  },
+  {
+    id: 'kendra',
+    name: 'KENDRA.exe',
+    author: 'The Algorithm',
+    description: 'Kendall Roy’s delusion. Kris Jenner’s strategy. Your unhinged marketing agent. This is branding with beef.',
+    price: '$99/mo',
+    imageUrl: 'https://placehold.co/600x400.png',
+    imageHint: 'fashion high-heels neon',
+    permissionsRequired: [],
+    routingPath: '/kendra',
+    contextAwareCapabilities: [],
+    isFeatured: false,
   }
 ];
