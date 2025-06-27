@@ -17,6 +17,19 @@ export type MicroAppManifest = {
 
 export const microAppManifests: MicroAppManifest[] = [
   {
+    id: 'aegis-threatscope',
+    name: 'Aegis ThreatScope',
+    author: 'ΛΞVON OS',
+    description: 'A real-time threat feed and alert dashboard for the Aegis subsystem, providing constant vigilance over your digital domain.',
+    price: 'Included',
+    imageUrl: 'https://placehold.co/600x400.png',
+    imageHint: 'radar security shield',
+    permissionsRequired: ['read:security_alerts'],
+    routingPath: '/aegis-threatscope',
+    contextAwareCapabilities: ['security_alert_stream'],
+    isFeatured: false,
+  },
+  {
     id: 'oracle',
     name: 'The Oracle',
     author: 'ΛΞVON OS',

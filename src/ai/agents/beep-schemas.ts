@@ -36,6 +36,7 @@ const LaunchableAppTypeSchema = z.enum([
   'the-foremanator',
   'sterileish',
   'beep-wingman',
+  'aegis-threatscope',
 ]);
 
 export const AppToLaunchSchema = z.object({

@@ -23,6 +23,7 @@ import { ForemanatorIcon } from './icons/ForemanatorIcon';
 import { SterileishIcon } from './icons/SterileishIcon';
 import { DrSyntaxIcon } from './icons/DrSyntaxIcon';
 import { BeepWingmanIcon } from './icons/BeepWingmanIcon';
+import { AegisThreatScopeIcon } from './icons/AegisThreatScopeIcon';
 
 
 import { type MicroAppType } from '@/store/app-store';
@@ -44,6 +45,7 @@ import JrocBusinessKit from './micro-apps/jroc-business-kit';
 import LaheyCommander from './micro-apps/lahey-commander';
 import TheForemanator from './micro-apps/the-foremanator';
 import Sterileish from './micro-apps/sterileish';
+import AegisThreatScope from './micro-apps/aegis-threatscope';
 
 
 type ComponentRegistry = {
@@ -67,6 +69,10 @@ export const microAppRegistry: Record<MicroAppType, ComponentRegistry> = {
   'aegis-control': {
     icon: AegisIcon,
     content: AegisReport,
+  },
+  'aegis-threatscope': {
+    icon: AegisThreatScopeIcon,
+    content: AegisThreatScope,
   },
   'contact-list': {
     icon: AddressBookIcon,

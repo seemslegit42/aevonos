@@ -39,7 +39,8 @@ export type MicroAppType =
   | 'the-foremanator'
   | 'sterileish'
   | 'dr-syntax'
-  | 'beep-wingman';
+  | 'beep-wingman'
+  | 'aegis-threatscope';
 
 // Define the shape of a MicroApp instance
 export interface MicroApp {
@@ -63,6 +64,7 @@ const defaultAppDetails: Record<MicroAppType, Omit<MicroApp, 'id' | 'position' |
   'ai-suggestion': { type: 'ai-suggestion', title: 'AI Suggestion', description: 'Click to execute this command.' },
   'echo-control': { type: 'echo-control', title: 'Recall Session', description: "Click to have Echo summarize the last session's activity." },
   'aegis-control': { type: 'aegis-control', title: 'Aegis Security Report', description: "Analysis of the last command's security profile." },
+  'aegis-threatscope': { type: 'aegis-threatscope', title: 'Aegis ThreatScope', description: 'Real-time security threat feed.' },
   'contact-list': { type: 'contact-list', title: 'Contact List', description: 'A list of your contacts.' },
   'pam-poovey-onboarding': { type: 'pam-poovey-onboarding', title: 'Pam Poovey: HR', description: 'Onboarding, complaints, and questionable life advice.' },
   'infidelity-radar': { type: 'infidelity-radar', title: 'Infidelity Radar', description: 'Because intuition deserves evidence.' },
