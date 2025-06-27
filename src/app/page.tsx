@@ -1,6 +1,8 @@
+
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import {
   DndContext,
   closestCenter,
@@ -26,6 +28,8 @@ export default function Home() {
 
   useEffect(() => {
     setIsMounted(true);
+    // Initial action on load can be placed here if needed.
+    // For example, to welcome the user or recall the last session.
   }, []);
 
   const sensors = useSensors(
@@ -35,13 +39,30 @@ export default function Home() {
     })
   );
 
-  const initialAppCount = 2; // Default to a base number for skeleton
+  const initialAppCount = useAppStore.getState().apps.length || 1;
+
+  if (!isMounted) {
+    return (
+      <div className="flex flex-col h-screen p-4 gap-4">
+        <TopBar onCommandSubmit={() => {}} isLoading={true} />
+        <div className="flex-grow p-4 rounded-lg">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+            {[...Array(initialAppCount)].map((_, i) => (
+              <Skeleton key={i} className="h-40 w-full" />
+            ))}
+          </div>
+        </div>
+         <footer className="text-center text-xs text-muted-foreground">
+            <p>ΛΞVON OS - All rights reserved. | <Link href="/armory" className="hover:text-primary underline">Visit the Armory</Link></p>
+        </footer>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-screen p-4 gap-4">
       <TopBar onCommandSubmit={handleCommandSubmit} isLoading={isLoading} />
       <div className="flex-grow p-4 rounded-lg">
-        {isMounted ? (
             <DndContext
               sensors={sensors}
               collisionDetection={closestCenter}
@@ -51,16 +72,9 @@ export default function Home() {
                 <MicroAppGrid apps={apps} />
               </SortableContext>
             </DndContext>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-            {[...Array(initialAppCount)].map((_, i) => (
-              <Skeleton key={i} className="h-40 w-full" />
-            ))}
-          </div>
-        )}
       </div>
        <footer className="text-center text-xs text-muted-foreground">
-        <p>ΛΞVON OS - All rights reserved.</p>
+        <p>ΛΞVON OS - All rights reserved. | <Link href="/armory" className="hover:text-primary underline">Visit the Armory</Link></p>
       </footer>
     </div>
   );

@@ -1,3 +1,4 @@
+
 import { create } from 'zustand';
 import { arrayMove } from '@dnd-kit/sortable';
 import type { DragEndEvent } from '@dnd-kit/core';
@@ -28,6 +29,11 @@ export interface MicroApp {
   contentProps?: any; // Props for content components, e.g., report data
 }
 
+// A simple, non-react-based unique ID generator for new app instances.
+let appInstanceId = 0;
+const generateId = () => `app-instance-${++appInstanceId}`;
+
+
 const defaultAppDetails: Record<MicroAppType, Omit<MicroApp, 'id' | 'contentProps'>> = {
   'file-explorer': { type: 'file-explorer', title: 'File Explorer', description: 'Access and manage your files.' },
   'terminal': { type: 'terminal', title: 'Terminal', description: 'Direct command-line access.' },
@@ -57,13 +63,7 @@ const appActionRegistry: Record<string, (get: () => AppState, set: (fn: (state: 
 export const useAppStore = create<AppState>((set, get) => ({
   apps: [
     {
-      id: '2',
-      type: 'file-explorer',
-      title: 'File Explorer',
-      description: 'Access and manage your files.',
-    },
-    {
-      id: '3',
+      id: 'echo-control-initial',
       type: 'echo-control',
       title: 'Recall Session',
       description: "Click to have Echo summarize the last session's activity.",
@@ -123,6 +123,7 @@ User launched Loom Studio to inspect 'Client Onboarding' workflow.`;
     if (!command) return;
     set({ isLoading: true });
     
+    // Clear previous suggestions before executing a new command.
     set(state => ({
         apps: state.apps.filter(app => app.type !== 'ai-suggestion')
     }));
@@ -138,7 +139,7 @@ User launched Loom Studio to inspect 'Client Onboarding' workflow.`;
       const appsToLaunch: MicroApp[] = result.appsToLaunch.map((appInfo) => {
         const defaults = defaultAppDetails[appInfo.type];
         return {
-          id: `${appInfo.type}-${Date.now()}`,
+          id: generateId(),
           type: appInfo.type,
           title: appInfo.title || defaults.title,
           description: appInfo.description || defaults.description,
@@ -180,8 +181,8 @@ User launched Loom Studio to inspect 'Client Onboarding' workflow.`;
         }
       }
 
-      const suggestionApps: MicroApp[] = result.suggestedCommands.map((cmd, index) => ({
-        id: `ai-${Date.now()}-${index}`,
+      const suggestionApps: MicroApp[] = result.suggestedCommands.map((cmd) => ({
+        id: generateId(),
         type: 'ai-suggestion',
         title: cmd,
         description: defaultAppDetails['ai-suggestion'].description,
