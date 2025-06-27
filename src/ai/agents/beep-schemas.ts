@@ -17,6 +17,7 @@ const LaunchableAppTypeSchema = z.enum([
   'project-lumbergh',
   'lucille-bluth',
   'rolodex',
+  'winston-wolfe',
 ]);
 
 export const AppToLaunchSchema = z.object({

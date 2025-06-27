@@ -29,7 +29,8 @@ export type MicroAppType =
   | 'vin-diesel'
   | 'project-lumbergh'
   | 'lucille-bluth'
-  | 'rolodex';
+  | 'rolodex'
+  | 'winston-wolfe';
 
 // Define the shape of a MicroApp instance
 export interface MicroApp {
@@ -59,6 +60,7 @@ const defaultAppDetails: Record<MicroAppType, Omit<MicroApp, 'id' | 'contentProp
   'project-lumbergh': { type: 'project-lumbergh', title: 'Project Lumbergh', description: 'Yeah, about those meetings...' },
   'lucille-bluth': { type: 'lucille-bluth', title: 'The Lucille Bluth', description: 'Judgmental budgeting for your allowance.' },
   'rolodex': { type: 'rolodex', title: 'The Rolodex', description: "Let's put a pin in that candidate." },
+  'winston-wolfe': { type: 'winston-wolfe', title: 'The Winston Wolfe', description: "Bad review? Thirty minutes away. I'll be there in ten." },
 };
 
 

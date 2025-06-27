@@ -12,6 +12,7 @@ import { VinDieselIcon } from '@/components/icons/VinDieselIcon';
 import { LumberghIcon } from '@/components/icons/LumberghIcon';
 import { LucilleBluthIcon } from '@/components/icons/LucilleBluthIcon';
 import { RolodexIcon } from '@/components/icons/RolodexIcon';
+import { WinstonWolfeIcon } from '@/components/icons/WinstonWolfeIcon';
 import { EyeOff } from 'lucide-react';
 
 import { type MicroAppType } from '@/store/app-store';
@@ -24,6 +25,7 @@ import VinDiesel from './micro-apps/vin-diesel';
 import ProjectLumbergh from './micro-apps/project-lumbergh';
 import TheLucilleBluth from './micro-apps/lucille-bluth';
 import TheRolodex from './micro-apps/rolodex';
+import TheWinstonWolfe from './micro-apps/winston-wolfe';
 
 type ComponentRegistry = {
     icon: React.ComponentType<any>;
@@ -78,6 +80,10 @@ export const microAppRegistry: Record<MicroAppType, ComponentRegistry> = {
   'rolodex': {
     icon: RolodexIcon,
     content: TheRolodex,
+  },
+  'winston-wolfe': {
+    icon: WinstonWolfeIcon,
+    content: TheWinstonWolfe,
   },
 };
 

@@ -23,6 +23,8 @@ import { analyzeExpense as analyzeExpenseLucilleFlow } from '@/ai/agents/lucille
 import type { LucilleBluthInput, LucilleBluthOutput } from '@/ai/agents/lucille-bluth-schemas';
 import { analyzeCandidate as analyzeCandidateFlow } from '@/ai/agents/rolodex';
 import type { RolodexAnalysisInput, RolodexAnalysisOutput } from '@/ai/agents/rolodex-schemas';
+import { generateSolution as generateSolutionFlow } from '@/ai/agents/winston-wolfe';
+import type { WinstonWolfeInput, WinstonWolfeOutput } from '@/ai/agents/winston-wolfe-schemas';
 
 export async function handleCommand(command: string): Promise<UserCommandOutput> {
   try {
@@ -179,6 +181,18 @@ export async function analyzeCandidate(input: RolodexAnalysisInput): Promise<Rol
             fitScore: 0,
             icebreaker: "Analysis failed. Let's put a pin in that.",
             summary: "Could not generate summary due to a server error.",
+        };
+    }
+}
+
+export async function generateSolution(input: WinstonWolfeInput): Promise<WinstonWolfeOutput> {
+    try {
+        const result = await generateSolutionFlow(input);
+        return result;
+    } catch (error) {
+        console.error('Error in Winston Wolfe solution flow:', error);
+        return {
+            suggestedResponse: "I seem to have encountered a problem of my own. A server error. I'll handle it.",
         };
     }
 }

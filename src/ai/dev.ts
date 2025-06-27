@@ -15,3 +15,4 @@ import '@/ai/agents/vin-diesel.ts';
 import '@/ai/agents/lumbergh.ts';
 import '@/ai/agents/lucille-bluth.ts';
 import '@/ai/agents/rolodex.ts';
+import '@/ai/agents/winston-wolfe.ts';
