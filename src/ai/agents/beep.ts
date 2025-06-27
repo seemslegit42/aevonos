@@ -31,6 +31,7 @@ import {
     createVandelayAlibi,
     analyzeInvite,
     handleVinDieselValidation,
+    generateBusinessKit,
 } from '@/app/actions';
 import {
   DrSyntaxInputSchema,
@@ -44,6 +45,7 @@ import { VinDieselInputSchema } from './vin-diesel-schemas';
 import { WinstonWolfeInputSchema } from './winston-wolfe-schemas';
 import { KifKrokerAnalysisInputSchema } from './kif-kroker-schemas';
 import { VandelayAlibiInputSchema } from './vandelay-schemas';
+import { JrocInputSchema } from './jroc-schemas';
 
 import {
     type UserCommandInput,
@@ -225,12 +227,24 @@ class VandelayTool extends Tool {
   }
 }
 
+class JrocTool extends Tool {
+  name = 'generateBusinessKit';
+  description = 'Generates a business name, tagline, and logo concept. Use this when the user asks to "start a business", "get legit", "make a company", etc. They need to provide the type of business and a logo style.';
+  schema = JrocInputSchema;
+  
+  async _call(input: z.infer<typeof JrocInputSchema>) {
+    const result = await generateBusinessKit(input);
+    const report: z.infer<typeof AgentReportSchema> = { agent: 'jroc', report: result };
+    return JSON.stringify(report);
+  }
+}
+
 
 const tools: Tool[] = [
     new FinalAnswerTool(), new DrSyntaxTool(), 
     new CreateContactTool(), new UpdateContactTool(), new ListContactsTool(), new DeleteContactTool(), 
     new GetUsageTool(), new VinDieselTool(), new WinstonWolfeTool(), new KifKrokerTool(),
-    new VandelayTool()
+    new VandelayTool(), new JrocTool(),
 ];
 
 const modelWithTools = geminiModel.bind({

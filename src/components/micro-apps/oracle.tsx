@@ -12,6 +12,7 @@ const agents: MicroAppType[] = [
   'beep-wingman',
   'echo-control',
   'infidelity-radar',
+  'jroc-business-kit',
   'kif-kroker',
   'lucille-bluth',
   'lumbergh',

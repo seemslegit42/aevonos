@@ -34,7 +34,8 @@ export type MicroAppType =
   | 'kif-kroker'
   | 'vandelay'
   | 'oracle'
-  | 'paper-trail';
+  | 'paper-trail'
+  | 'jroc-business-kit';
 
 // Define the shape of a MicroApp instance
 export interface MicroApp {
@@ -69,6 +70,7 @@ const defaultAppDetails: Record<MicroAppType, Omit<MicroApp, 'id' | 'contentProp
   'vandelay': { type: 'vandelay', title: 'Vandelay Industries', description: 'Importing, exporting, and ghosting.' },
   'oracle': { type: 'oracle', title: 'The Oracle', description: 'Agentic pulse network status.' },
   'paper-trail': { type: 'paper-trail', title: 'Paper Trail P.I.', description: 'The receipts don\'t lie.' },
+  'jroc-business-kit': { type: 'jroc-business-kit', title: "J-ROC'S BIZ KIT™", description: 'Get dat cheddar legit, my dawg.' },
 };
 
 
@@ -247,6 +249,10 @@ export const useAppStore = create<AppState>((set, get) => {
         
         case 'vandelay':
             launchAppForReport('vandelay', 'Vandelay Industries', 'Alibi Generated', report.report);
+            break;
+        
+        case 'jroc':
+            launchAppForReport('jroc-business-kit', `Biz Kit: ${report.report.businessName}`, 'Your legit-as-frig business kit.', report.report);
             break;
       }
     }

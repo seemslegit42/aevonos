@@ -19,3 +19,4 @@ import '@/ai/agents/winston-wolfe.ts';
 import '@/ai/agents/kif-kroker.ts';
 import '@/ai/agents/vandelay.ts';
 import '@/ai/agents/paper-trail.ts';
+import '@/ai/agents/jroc.ts';

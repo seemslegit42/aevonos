@@ -32,6 +32,8 @@ import { createVandelayAlibi as createVandelayAlibiFlow } from '@/ai/agents/vand
 import type { VandelayAlibiInput, VandelayAlibiOutput } from '@/ai/agents/vandelay-schemas';
 import { scanEvidence as scanEvidenceFlow } from '@/ai/agents/paper-trail';
 import type { PaperTrailScanInput, PaperTrailScanOutput } from '@/ai/agents/paper-trail-schemas';
+import { generateBusinessKit as generateBusinessKitFlow } from '@/ai/agents/jroc';
+import type { JrocInput, JrocOutput } from '@/ai/agents/jroc-schemas';
 
 
 export async function handleCommand(command: string): Promise<UserCommandOutput> {
@@ -135,6 +137,7 @@ export async function handleGenerateWingmanMessage(input: WingmanInput): Promise
     console.error('Error in wingman message generation:', error);
     return {
       openingMessage: "The agent is currently overthinking its pickup line. There might have been a server error.",
+      cringeScore: 0,
     };
   }
 }
@@ -246,5 +249,19 @@ export async function scanEvidence(input: PaperTrailScanInput): Promise<PaperTra
             lead: "The informant went dark. Call couldn't go through. Probably a server error.",
             isEvidenceValid: false,
         }
+    }
+}
+
+export async function generateBusinessKit(input: JrocInput): Promise<JrocOutput> {
+    try {
+        const result = await generateBusinessKitFlow(input);
+        return result;
+    } catch (error) {
+        console.error('Error in J-ROC flow:', error);
+        return {
+            businessName: "Rock Pile Pictures",
+            tagline: "It's not a rock pile, it's a rock-solid business, know'm sayin'?",
+            logoDescription: "Aight check it, server's down, so this logo is just a drawing of a microphone on a napkin. It's abstract, aight?",
+        };
     }
 }

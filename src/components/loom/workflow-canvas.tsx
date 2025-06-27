@@ -12,6 +12,7 @@ import { VandelayIcon } from '../icons/VandelayIcon';
 import { DrSyntaxIcon } from '../icons/DrSyntaxIcon';
 import { AddressBookIcon } from '../icons/AddressBookIcon';
 import { CrystalIcon } from '../icons/CrystalIcon';
+import { JrocIcon } from '../icons/JrocIcon';
 
 const nodeIcons: Record<string, React.ComponentType<any>> = {
     trigger: PlayCircle,
@@ -24,6 +25,7 @@ const nodeIcons: Record<string, React.ComponentType<any>> = {
     'tool-crm': AddressBookIcon,
     'tool-paper-trail': FileUp,
     'tool-final-answer': CrystalIcon,
+    'tool-jroc': JrocIcon,
 };
 
 function WorkflowNodeItem({ node, onClick, isSelected }: { node: Node, onClick: (node: Node) => void, isSelected: boolean }) {

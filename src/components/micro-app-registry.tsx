@@ -18,6 +18,7 @@ import { VandelayIcon } from '@/components/icons/VandelayIcon';
 import { EyeOff } from 'lucide-react';
 import { OracleIcon } from './icons/OracleIcon';
 import { PaperTrailIcon } from './icons/PaperTrailIcon';
+import { JrocIcon } from './icons/JrocIcon';
 
 
 import { type MicroAppType } from '@/store/app-store';
@@ -35,6 +36,7 @@ import TheKifKroker from './micro-apps/kif-kroker';
 import Vandelay from './micro-apps/vandelay';
 import Oracle from './micro-apps/oracle';
 import PaperTrail from './micro-apps/paper-trail';
+import JrocBusinessKit from './micro-apps/jroc-business-kit';
 
 
 type ComponentRegistry = {
@@ -110,6 +112,10 @@ export const microAppRegistry: Record<MicroAppType, ComponentRegistry> = {
   'paper-trail': {
       icon: PaperTrailIcon,
       content: PaperTrail,
+  },
+  'jroc-business-kit': {
+      icon: JrocIcon,
+      content: JrocBusinessKit,
   }
 };
 
