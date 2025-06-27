@@ -9,6 +9,7 @@ const LaunchableAppTypeSchema = z.enum([
   'terminal',
   'echo-control',
   'pam-poovey-onboarding',
+  'beep-wingman',
 ]);
 
 export const AppToLaunchSchema = z.object({
