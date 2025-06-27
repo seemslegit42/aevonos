@@ -13,6 +13,8 @@ import WorkflowList from '@/components/loom/workflow-list';
 import WorkflowRunHistory from '@/components/loom/workflow-run-history';
 import { useToast } from '@/hooks/use-toast';
 import { useAppStore } from '@/store/app-store';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+
 
 export interface Node {
   id: string;
@@ -65,6 +67,7 @@ export default function LoomPage() {
     const [isSaving, setIsSaving] = useState(false);
     const [isRunning, setIsRunning] = useState(false);
     const [listRefreshTrigger, setListRefreshTrigger] = useState(0);
+    const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
     const { toast } = useToast();
     const router = useRouter();
@@ -180,10 +183,9 @@ export default function LoomPage() {
         setIsRunning(false);
     };
 
-    const handleDelete = async () => {
+    const handleDeleteConfirm = async () => {
         if (!activeWorkflow?.id) return;
-        if (!confirm(`Are you sure you want to delete "${activeWorkflow.name}"? This cannot be undone.`)) return;
-
+        
         try {
             const response = await fetch(`/api/workflows/${activeWorkflow.id}`, { method: 'DELETE' });
             if (response.status !== 204) throw new Error('Failed to delete workflow.');
@@ -193,6 +195,8 @@ export default function LoomPage() {
             setListRefreshTrigger(val => val + 1);
         } catch (e) {
              toast({ variant: 'destructive', title: 'Error', description: 'Could not delete workflow.' });
+        } finally {
+            setIsDeleteDialogOpen(false);
         }
     }
 
@@ -270,7 +274,7 @@ export default function LoomPage() {
             onWorkflowNameChange={handleWorkflowNameChange}
             onSave={handleSave}
             onRun={handleRun}
-            onDelete={handleDelete}
+            onDelete={() => setIsDeleteDialogOpen(true)}
             isSaving={isSaving}
             isRunning={isRunning}
         />
@@ -300,6 +304,23 @@ export default function LoomPage() {
                 </div>
             </DndContext>
         </div>
+        <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                <AlertDialogDescription>
+                    This action cannot be undone. This will permanently delete the
+                    workflow "{activeWorkflow?.name}".
+                </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={handleDeleteConfirm} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                    Delete
+                </AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
     </div>
   );
 }
