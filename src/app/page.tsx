@@ -52,7 +52,7 @@ export default function Home() {
           </div>
         </div>
          <footer className="text-center text-xs text-muted-foreground flex-shrink-0">
-            <p>ΛΞVON OS - All rights reserved. | <Link href="/armory" className="hover:text-primary underline">Visit the Armory</Link> | <Link href="/loom" className="hover:text-primary underline">Enter Loom Studio</Link></p>
+            <p>ΛΞVON OS - All rights reserved. | <Link href="/armory" className="hover:text-primary underline">Visit the Armory</Link> | <Link href="/loom" className="hover:text-primary underline">Enter Loom Studio</Link> | <Link href="/validator" className="hover:text-primary underline">Verify Dossier</Link></p>
         </footer>
       </div>
     );
@@ -70,7 +70,7 @@ export default function Home() {
         </DndContext>
       </div>
       <footer className="text-center text-xs text-muted-foreground flex-shrink-0">
-        <p>ΛΞVON OS - All rights reserved. | <Link href="/armory" className="hover:text-primary underline">Visit the Armory</Link> | <Link href="/loom" className="hover:text-primary underline">Enter Loom Studio</Link></p>
+        <p>ΛΞVON OS - All rights reserved. | <Link href="/armory" className="hover:text-primary underline">Visit the Armory</Link> | <Link href="/loom" className="hover:text-primary underline">Enter Loom Studio</Link> | <Link href="/validator" className="hover:text-primary underline">Verify Dossier</Link></p>
       </footer>
     </div>
   );
