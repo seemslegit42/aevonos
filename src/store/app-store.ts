@@ -12,7 +12,7 @@ import { DrSyntaxReportToast } from '@/components/dr-syntax-report-toast';
 import type { SessionRecallOutput } from '@/ai/agents/echo';
 import type { DrSyntaxOutput } from '@/ai/agents/dr-syntax-schemas';
 import type { Contact } from '@/ai/tools/crm-schemas';
-import { UserCommandOutput, AgentReportSchema } from '@/ai/agents/beep-schemas';
+import type { UserCommandOutput, AgentReportSchema } from '@/ai/agents/beep-schemas';
 
 
 // Define the types of MicroApps available in the OS
@@ -253,9 +253,9 @@ export const useAppStore = create<AppState>((set, get) => {
       if (!command) return;
       set({ isLoading: true });
       
-      // Clear previous suggestions before executing a new command.
+      // Clear previous suggestions and reports before executing a new command.
       set(state => ({
-          apps: state.apps.filter(app => app.type !== 'ai-suggestion')
+          apps: state.apps.filter(app => app.type !== 'ai-suggestion' && app.id !== 'aegis-report-main')
       }));
 
       try {
