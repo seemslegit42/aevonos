@@ -14,7 +14,8 @@ const generateDossierFlow = ai.defineFlow(
   },
   async (input) => {
     const today = format(new Date(), 'yyyy-MM-dd');
-    const caseFile = (input.targetName || 'UNKNOWN_SUBJECT').toUpperCase().replace(/\s/g, '_');
+    const caseFileName = (input.targetName || 'UNKNOWN_SUBJECT').toLowerCase().replace(/\s/g, '-');
+    const fileName = `dossier-${caseFileName}${input.mode === 'legal' ? '-legal' : ''}.pdf`;
     
     const standardPrompt = `You are a professional intelligence analyst AI. Your task is to compile a formal dossier from the provided data. The output must be perfectly structured Markdown, adhering strictly to the template. Do not include any conversational text, introductions, or conclusions outside of the Markdown structure.
 
@@ -22,7 +23,7 @@ const generateDossierFlow = ai.defineFlow(
     
 ---
     
-# CASE FILE: ${input.redacted ? 'TARGET-001' : caseFile}
+# CASE FILE: ${input.redacted ? 'TARGET-001' : caseFileName.toUpperCase()}
     
 - **SUBJECT**: ${input.redacted ? 'TARGET-001' : input.targetName}
 - **DATE OF COMPILATION**: ${today}
@@ -78,7 +79,7 @@ ${input.decoyResult
 *Compiled via Agentic Analysis – BEEP v2.1*
 `;
 
-    const legalPrompt = `You are an AI intelligence suite preparing a formal dossier for legal review. The output must be perfectly structured Markdown. The tone is formal, objective, and clinical. All sections must be present, even if data is not available (in which case, state "No data available" or similar).
+    const legalPrompt = `You are an AI intelligence suite preparing a formal dossier for legal review. The output must be perfectly structured Markdown. The tone is formal, objective, and clinical. All sections must be present, even if data is not available (in which case, state "No data available for this section" or similar). Do not add any conversational text.
 
 # INFIDELITY INTELLIGENCE DOSSIER
 
@@ -94,34 +95,67 @@ ${input.decoyResult
 This report presents behavioral and digital evidence suggesting a pattern of infidelity by the subject, ${input.targetName}. Compiled using the ΛΞVON OS Intelligence Engine, the dossier aggregates OSINT, metadata analysis, and AI behavioral review.
 
 **Key Findings:**
-${input.analysisResult && input.analysisResult.keyFactors.length > 0 ? input.analysisResult.keyFactors.map(f => `- ${f}`).join('\n') : '- No significant findings from behavioral analysis.'}
-${input.osintReport && (input.osintReport.breaches?.length || 0) > 0 ? '- Presence in publicly indexed data breaches.' : ''}
+${
+  input.analysisResult && input.analysisResult.keyFactors.length > 0
+    ? input.analysisResult.keyFactors.map((f) => `- ${f}`).join('\n')
+    : '- No significant findings from behavioral analysis.'
+}
+${(input.osintReport?.breaches?.length || 0) > 0 ? '- Presence in publicly indexed data breaches.' : ''}
+${input.decoyResult ? '- Subject engaged in flirtatious communication with AI decoy.' : ''}
 
 ---
 
 ## 2. Subject Overview
 
 - **Full Name**: ${input.targetName}
-- **Known Emails**: ${input.osintReport?.socialProfiles?.map(p => p.username).join(', ') || 'N/A'}
-- **Known Phone Numbers**: ${input.osintReport?.burnerPhoneCheck ? (input.osintReport.burnerPhoneCheck.isBurner ? 'Number flagged as burner service.' : 'Standard carrier number identified.') : 'N/A'}
+- **Known Emails**: ${input.osintReport?.socialProfiles?.map((p) => p.username).join(', ') || 'N/A'}
+- **Known Phone Numbers**: ${
+  input.osintReport?.burnerPhoneCheck
+    ? input.osintReport.burnerPhoneCheck.isBurner
+      ? 'Number flagged as burner service.'
+      : 'Standard carrier number identified.'
+    : 'N/A'
+}
+- **Known Social Handles**: ${
+  input.osintReport?.socialProfiles?.map((p) => `@${p.username} (${p.platform})`).join(', ') || 'N/A'
+}
 
 ---
 
-## 3. Behavioral Timeline
+## 3. Behavioral Timeline & Analysis
 
-${input.analysisResult && input.analysisResult.keyFactors.length > 0 ? input.analysisResult.keyFactors.map(f => ` - ${today}: ${f}`).join('\n') : 'No specific behavioral events were logged for this report.'}
+A review of available data indicates the following events of interest:
+
+${
+  input.analysisResult && input.analysisResult.keyFactors.length > 0
+    ? input.analysisResult.keyFactors.map((f) => `- **${today}**: ${f}`).join('\n')
+    : 'No specific behavioral events were logged for this report.'
+}
+
+**Analysis**: ${input.analysisResult?.riskSummary || 'No behavioral analysis was conducted.'}
 
 ---
 
 ## 4. Open-Source Intelligence (OSINT) Summary
 
-${input.osintReport ? `Data has been verified from public breach indexes as of ${today}. The subject was found in ${input.osintReport.breaches?.length || 0} known data breaches.` : 'No OSINT analysis was performed for this report.'}
+Data has been verified from public breach indexes and other open sources as of ${today}.
+
+- **Data Breaches**: Subject's email associated with ${
+  input.osintReport?.breaches?.length || 0
+} known data breaches.
+- **Digital Footprint**: Visibility rated as ${
+  input.osintReport?.digitalFootprint.overallVisibility || 'N/A'
+}. ${input.osintReport?.digitalFootprint.keyObservations.join(' ')}
 
 ---
 
 ## 5. Communications Record (Decoy Interaction)
 
-${input.decoyResult ? `The following is a simulated transcript of an interaction with an AI decoy agent.\n\n[Decoy]: “Hey, you look familiar...”\n[Subject]: “Haha, maybe I’m just your type?”\n[Decoy]: “Maybe...you single?”\n[Subject]: “It’s... complicated.”` : 'No decoy agent was deployed for this investigation.'}
+${
+  input.decoyResult
+    ? `An AI decoy agent using the persona "${input.decoyResult.persona}" initiated contact. The following interaction was recorded:\n\n**[Decoy]**: "${input.decoyResult.decoyMessage}"\n\n**[Subject's Response]**: (Simulated) "It’s... complicated."`
+    : 'No decoy agent was deployed for this investigation.'
+}
 
 ---
 
@@ -143,7 +177,7 @@ The subject demonstrates a consistent pattern of concealment, behavioral inconsi
     const { output } = await ai.generate({
       prompt: prompt,
       model: 'googleai/gemini-2.0-flash',
-      output: { schema: DossierOutputSchema },
+      output: { schema: z.object({ markdownContent: z.string() }) },
     });
     
     if (!output) {
@@ -154,6 +188,7 @@ The subject demonstrates a consistent pattern of concealment, behavioral inconsi
 
     return {
         ...output,
+        fileName,
         reportHash: hash,
         mode: input.mode || 'standard',
     };

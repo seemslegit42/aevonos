@@ -9,5 +9,7 @@ export type DecoyInput = z.infer<typeof DecoyInputSchema>;
 
 export const DecoyOutputSchema = z.object({
   decoyMessage: z.string().describe('The generated decoy message designed to elicit a response.'),
+  persona: z.enum(['sapiosexual', 'alpha-hustler', 'chill-demon', 'awkward-sweetheart'])
+    .describe('The persona the decoy agent adopted for the message.'),
 });
 export type DecoyOutput = z.infer<typeof DecoyOutputSchema>;

@@ -5,7 +5,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { ShieldAlert, Bot, Loader2, ChevronRight, EyeOff, Search, Globe, Linkedin, Twitter as XIcon, Instagram, VenetianMask, FileQuestion, BadgeAlert, PhoneOff, Skull, FileDown, FileJson, Lock, Unlock, Gavel } from 'lucide-react';
+import { ShieldAlert, Bot, Loader2, ChevronRight, EyeOff, Search, Globe, Linkedin, Twitter as XIcon, Instagram, VenetianMask, FileQuestion, BadgeAlert, PhoneOff, Skull, FileDown, FileJson, Lock, Unlock, Gavel, Copy } from 'lucide-react';
 import { Textarea } from '../ui/textarea';
 import type { InfidelityAnalysisOutput } from '@/ai/agents/infidelity-analysis-schemas';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '../ui/select';
@@ -100,9 +100,16 @@ const DossierExportPanel = ({ report, osintReport, analysisResult, decoyResult, 
         }
     };
 
+    const handleCopyHash = () => {
+        if (report.reportHash) {
+            navigator.clipboard.writeText(report.reportHash);
+            toast({ title: "Hash Copied", description: "SHA256 integrity hash copied to clipboard."});
+        }
+    }
+
 
     return (
-        <Card className={cn("border-primary/50", isLegal ? "bg-destructive/10" : "bg-primary/10")}>
+        <Card className={cn("border-primary/50", isLegal ? "bg-destructive/10 border-destructive/50" : "bg-primary/10")}>
             <CardHeader className="p-2">
                 <CardTitle className={cn("text-base flex items-center gap-2", isLegal ? "text-destructive" : "text-primary")}>
                     {isLegal && <Gavel />}
@@ -141,15 +148,20 @@ const DossierExportPanel = ({ report, osintReport, analysisResult, decoyResult, 
                         {isExporting ? <Loader2 className="animate-spin" /> : <><FileDown className="mr-2" /> {isLegal ? 'Unlock Legal PDF ($49.99)' : 'Unlock PDF ($19.99)'}</>}
                     </Button>
                      <Button variant="outline" className="w-full" disabled={isExporting} onClick={() => handleExport('json')}>
-                        {isExporting ? <Loader2 className="animate-spin" /> : <><FileJson className="mr-2" /> + JSON ($29.99)</>}
+                        {isExporting ? <Loader2 className="animate-spin" /> : <><FileJson className="mr-2" /> {isLegal ? '+ Forensic JSON ($29.99)' : '+ JSON ($9.99)'}</>}
                     </Button>
                 </div>
             </CardContent>
             {report.reportHash && (
                  <CardFooter className="p-2">
-                    <p className="text-xs text-muted-foreground font-mono w-full truncate" title={report.reportHash}>
-                        SHA256: {report.reportHash}
-                    </p>
+                    <div className="flex items-center gap-2 w-full">
+                        <p className="text-xs text-muted-foreground font-mono w-full truncate" title={report.reportHash}>
+                            SHA256: {report.reportHash}
+                        </p>
+                        <Button variant="ghost" size="icon" className="h-6 w-6 flex-shrink-0" onClick={handleCopyHash}>
+                            <Copy className="h-3 w-3" />
+                        </Button>
+                    </div>
                 </CardFooter>
             )}
         </Card>
