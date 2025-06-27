@@ -1,6 +1,22 @@
 'use client';
 
 import React, { useState, useTransition } from 'react';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  rectSortingStrategy,
+} from '@dnd-kit/sortable';
+
 import TopBar from '@/components/layout/top-bar';
 import MicroAppGrid from '@/components/micro-app-grid';
 import { handleCommand, checkForAnomalies } from '@/app/actions';
@@ -29,27 +45,6 @@ export default function Home() {
   const [isPending, startTransition] = useTransition();
   const [aegisStatus, setAegisStatus] = useState<'Secure' | 'Anomaly Detected' | 'Scanning...'>('Secure');
   const [activeApp, setActiveApp] = useState<string | null>(null);
-
-  const runAnomalyCheck = () => {
-    startTransition(async () => {
-      setAegisStatus('Scanning...');
-      const result = await checkForAnomalies('User accessed financial_records.csv and project_phoenix.docx then initiated a data transfer to an external IP.');
-      if (result.isAnomalous) {
-        setAegisStatus('Anomaly Detected');
-        toast({
-          variant: 'destructive',
-          title: 'Aegis Alert: Anomaly Detected',
-          description: result.anomalyExplanation,
-        });
-      } else {
-        setAegisStatus('Secure');
-        toast({
-          title: 'Aegis Scan Complete',
-          description: 'No anomalies detected in the simulated activity.',
-        });
-      }
-    });
-  };
 
   const [apps, setApps] = useState<MicroApp[]>([
     {
@@ -86,6 +81,46 @@ export default function Home() {
     },
   ]);
 
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      setApps((items) => {
+        const oldIndex = items.findIndex((item) => item.id === active.id);
+        const newIndex = items.findIndex((item) => item.id === over.id);
+        return arrayMove(items, oldIndex, newIndex);
+      });
+    }
+  };
+
+  const runAnomalyCheck = () => {
+    startTransition(async () => {
+      setAegisStatus('Scanning...');
+      const result = await checkForAnomalies('User accessed financial_records.csv and project_phoenix.docx then initiated a data transfer to an external IP.');
+      if (result.isAnomalous) {
+        setAegisStatus('Anomaly Detected');
+        toast({
+          variant: 'destructive',
+          title: 'Aegis Alert: Anomaly Detected',
+          description: result.anomalyExplanation,
+        });
+      } else {
+        setAegisStatus('Secure');
+        toast({
+          title: 'Aegis Scan Complete',
+          description: 'No anomalies detected in the simulated activity.',
+        });
+      }
+    });
+  };
+
   const handleCommandSubmit = (command: string) => {
     if (!command) return;
     startTransition(async () => {
@@ -121,7 +156,15 @@ export default function Home() {
     <div className="flex flex-col h-screen p-4 gap-4">
       <TopBar onCommandSubmit={handleCommandSubmit} isLoading={isPending} aegisStatus={aegisStatus} />
       <div className="flex-grow p-4 rounded-lg">
-        <MicroAppGrid apps={apps} />
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+        >
+          <SortableContext items={apps.map((app) => app.id)} strategy={rectSortingStrategy}>
+            <MicroAppGrid apps={apps} />
+          </SortableContext>
+        </DndContext>
       </div>
        <footer className="text-center text-xs text-muted-foreground">
         <p>ΛΞVON OS - All rights reserved.</p>

@@ -3,6 +3,8 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { type MicroApp } from '@/app/page';
+import { useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 interface MicroAppCardProps {
   app: MicroApp;
@@ -12,10 +14,31 @@ interface MicroAppCardProps {
 export default function MicroAppCard({ app, index }: MicroAppCardProps) {
   const Icon = app.icon;
 
-  const cardStyle = {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: app.id });
+
+  const cardAnimationStyle = {
     animation: `fadeInUp 0.5s ${index * 0.1}s ease-out forwards`,
     opacity: 0,
   };
+
+  const sortableStyle = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    zIndex: isDragging ? 10 : 'auto',
+    opacity: isDragging ? 0.5 : undefined,
+  };
+  
+  const style = { ...cardAnimationStyle, ...sortableStyle };
+  if(isDragging){
+      style.opacity = 0.5;
+  }
 
   const css = `
     @keyframes fadeInUp {
@@ -34,9 +57,12 @@ export default function MicroAppCard({ app, index }: MicroAppCardProps) {
     <>
       <style>{css}</style>
       <Card
-        style={cardStyle}
-        className="bg-foreground/15 backdrop-blur-[20px] border border-foreground/30 shadow-[0_8px_32px_0_rgba(28,25,52,0.1)] hover:border-primary transition-all duration-300 flex flex-col cursor-pointer group"
-        onClick={app.action}
+        ref={setNodeRef}
+        style={style}
+        {...attributes}
+        {...listeners}
+        className="bg-foreground/15 backdrop-blur-[20px] border border-foreground/30 shadow-[0_8px_32px_0_rgba(28,25,52,0.1)] hover:border-primary transition-all duration-300 flex flex-col cursor-grab group"
+        onClick={isDragging ? undefined : app.action}
       >
         <CardHeader className="flex flex-col items-center text-center p-4">
           <div className="w-20 h-20 mb-4 flex items-center justify-center">
