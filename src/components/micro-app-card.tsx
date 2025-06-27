@@ -6,6 +6,7 @@ import { type MicroApp, useAppStore } from '@/store/app-store';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { getAppIcon, getAppContent } from './micro-app-registry';
+import { cn } from '@/lib/utils';
 
 interface MicroAppCardProps {
   app: MicroApp;
@@ -43,12 +44,12 @@ export default function MicroAppCard({ app, index }: MicroAppCardProps) {
       style.opacity = 0.5;
   }
 
-  const isActionable = ['aegis-control', 'ai-suggestion'].includes(app.type);
   const hasContent = !!ContentComponent;
+  const isActionable = ['aegis-control', 'ai-suggestion'].includes(app.type) && !hasContent;
 
   const handleCardClick = () => {
     if (isDragging) return;
-    if (isActionable && !hasContent) {
+    if (isActionable) {
       triggerAppAction(app.id);
     }
   };
@@ -73,7 +74,10 @@ export default function MicroAppCard({ app, index }: MicroAppCardProps) {
         ref={setNodeRef}
         style={style}
         {...attributes}
-        className="bg-foreground/15 backdrop-blur-[20px] border border-foreground/30 shadow-[0_8px_32px_0_rgba(28,25,52,0.1)] hover:border-primary transition-all duration-300 flex flex-col group"
+        className={cn(
+          "bg-foreground/15 backdrop-blur-[20px] border border-foreground/30 shadow-[0_8px_32px_0_rgba(28,25,52,0.1)] hover:border-primary transition-all duration-300 flex flex-col group",
+          isActionable && "cursor-pointer"
+        )}
         onClick={handleCardClick}
       >
         <CardHeader

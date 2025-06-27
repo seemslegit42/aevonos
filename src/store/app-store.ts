@@ -32,7 +32,7 @@ const defaultAppDetails: Record<MicroAppType, Omit<MicroApp, 'id' | 'contentProp
   'aegis-control': { type: 'aegis-control', title: 'Aegis Control', description: 'Run a sample security scan.' },
   'dr-syntax': { type: 'dr-syntax', title: 'Dr. Syntax', description: 'Get your content critiqued. Brutally.' },
   'aegis-report': { type: 'aegis-report', title: 'Aegis Scan Report', description: 'Security scan result.'},
-  'ai-suggestion': { type: 'ai-suggestion', title: 'AI Suggestion', description: 'AI-suggested micro-app.'},
+  'ai-suggestion': { type: 'ai-suggestion', title: 'AI Suggestion', description: 'Click to execute this command.' },
 };
 
 
@@ -46,10 +46,10 @@ interface AppState {
 }
 
 // A registry for app actions, decoupling them from the component.
-const appActionRegistry: Record<string, (get: () => AppState, set: (fn: (state: AppState) => AppState) => void) => void> = {
+const appActionRegistry: Record<string, (get: () => AppState, set: (fn: (state: AppState) => AppState) => void, app: MicroApp) => void> = {
   'aegis-control': (get) => get().runAnomalyCheck(),
-  'ai-suggestion': (get, set) => {
-      useToast.getState().toast({ title: 'Notice', description: `This is an AI-suggested app. To take action, you could type this command into the TopBar.` });
+  'ai-suggestion': (get, set, app) => {
+    get().handleCommandSubmit(app.title);
   },
 };
 
@@ -105,7 +105,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     if (!app) return;
     const action = appActionRegistry[app.type];
     if (action) {
-      action(get, set);
+      action(get, set, app);
     }
   },
 
@@ -145,6 +145,12 @@ export const useAppStore = create<AppState>((set, get) => ({
   handleCommandSubmit: async (command: string) => {
     if (!command) return;
     set({ isLoading: true });
+    
+    // Clear previous suggestions before processing a new command
+    set(state => ({
+        apps: state.apps.filter(app => app.type !== 'ai-suggestion')
+    }));
+
     try {
       const result = await handleCommand(command);
       
@@ -167,7 +173,7 @@ export const useAppStore = create<AppState>((set, get) => ({
         id: `ai-${Date.now()}-${index}`,
         type: 'ai-suggestion',
         title: cmd,
-        description: 'AI-suggested micro-app.',
+        description: defaultAppDetails['ai-suggestion'].description,
       }));
 
       set(state => ({
