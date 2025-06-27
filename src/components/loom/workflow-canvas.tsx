@@ -13,6 +13,7 @@ import { DrSyntaxIcon } from '../icons/DrSyntaxIcon';
 import { AddressBookIcon } from '../icons/AddressBookIcon';
 import { CrystalIcon } from '../icons/CrystalIcon';
 import { JrocIcon } from '../icons/JrocIcon';
+import { LaheyIcon } from '../icons/LaheyIcon';
 
 const nodeIcons: Record<string, React.ComponentType<any>> = {
     trigger: PlayCircle,
@@ -26,6 +27,7 @@ const nodeIcons: Record<string, React.ComponentType<any>> = {
     'tool-paper-trail': FileUp,
     'tool-final-answer': CrystalIcon,
     'tool-jroc': JrocIcon,
+    'tool-lahey': LaheyIcon,
 };
 
 function WorkflowNodeItem({ node, onClick, isSelected }: { node: Node, onClick: (node: Node) => void, isSelected: boolean }) {

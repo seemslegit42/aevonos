@@ -36,7 +36,8 @@ export type MicroAppType =
   | 'oracle'
   | 'paper-trail'
   | 'jroc-business-kit'
-  | 'lahey-surveillance';
+  | 'lahey-surveillance'
+  | 'the-foremanator';
 
 // Define the shape of a MicroApp instance
 export interface MicroApp {
@@ -73,6 +74,7 @@ const defaultAppDetails: Record<MicroAppType, Omit<MicroApp, 'id' | 'contentProp
   'paper-trail': { type: 'paper-trail', title: 'Paper Trail P.I.', description: 'The receipts don\'t lie.' },
   'jroc-business-kit': { type: 'jroc-business-kit', title: "J-ROC'S BIZ KIT™", description: 'Get dat cheddar legit, my dawg.' },
   'lahey-surveillance': { type: 'lahey-surveillance', title: 'Lahey Surveillance', description: 'I am the liquor. And I am watching.' },
+  'the-foremanator': { type: 'the-foremanator', title: 'The Foremanator', description: 'He doesn’t sleep. He doesn’t eat. He just yells about deadlines.' },
 };
 
 
@@ -260,6 +262,10 @@ export const useAppStore = create<AppState>((set, get) => {
         case 'lahey':
              launchAppForReport('lahey-surveillance', 'Lahey Surveillance', 'Shit-storm report.', report.report);
              break;
+        
+        case 'foremanator':
+            launchAppForReport('the-foremanator', 'Foremanator Site Log', 'Daily report processed.', report.report);
+            break;
       }
     }
   };

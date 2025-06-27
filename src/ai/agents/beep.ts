@@ -33,6 +33,7 @@ import {
     handleVinDieselValidation,
     generateBusinessKit,
     analyzeLaheyLog,
+    handleForemanatorLog,
 } from '@/app/actions';
 import {
   DrSyntaxInputSchema,
@@ -48,6 +49,8 @@ import { KifKrokerAnalysisInputSchema } from './kif-kroker-schemas';
 import { VandelayAlibiInputSchema } from './vandelay-schemas';
 import { JrocInputSchema } from './jroc-schemas';
 import { LaheyAnalysisInputSchema } from './lahey-schemas';
+import { ForemanatorLogInputSchema } from './foremanator-schemas';
+
 
 import {
     type UserCommandInput,
@@ -253,12 +256,24 @@ class LaheyTool extends Tool {
   }
 }
 
+class ForemanatorTool extends Tool {
+    name = 'logDailyReport';
+    description = 'Logs a daily report for a construction site. Takes raw text and structures it. Use for commands like "log daily report for construction."';
+    schema = ForemanatorLogInputSchema;
+    
+    async _call(input: z.infer<typeof ForemanatorLogInputSchema>) {
+        const result = await handleForemanatorLog(input);
+        const report: z.infer<typeof AgentReportSchema> = { agent: 'foremanator', report: result };
+        return JSON.stringify(report);
+    }
+}
+
 
 const tools: Tool[] = [
     new FinalAnswerTool(), new DrSyntaxTool(), 
     new CreateContactTool(), new UpdateContactTool(), new ListContactsTool(), new DeleteContactTool(), 
     new GetUsageTool(), new VinDieselTool(), new WinstonWolfeTool(), new KifKrokerTool(),
-    new VandelayTool(), new JrocTool(), new LaheyTool(),
+    new VandelayTool(), new JrocTool(), new LaheyTool(), new ForemanatorTool(),
 ];
 
 const modelWithTools = geminiModel.bind({

@@ -10,6 +10,7 @@ import { WinstonWolfeOutputSchema } from './winston-wolfe-schemas';
 import { KifKrokerAnalysisOutputSchema } from './kif-kroker-schemas';
 import { JrocOutputSchema } from './jroc-schemas';
 import { LaheyAnalysisOutputSchema } from './lahey-schemas';
+import { ForemanatorLogOutputSchema } from './foremanator-schemas';
 
 // Schemas from the original BEEP agent, preserved for the public contract.
 const LaunchableAppTypeSchema = z.enum([
@@ -30,6 +31,7 @@ const LaunchableAppTypeSchema = z.enum([
   'oracle',
   'jroc-business-kit',
   'lahey-surveillance',
+  'the-foremanator',
 ]);
 
 export const AppToLaunchSchema = z.object({
@@ -117,6 +119,10 @@ export const AgentReportSchema = z.discriminatedUnion('agent', [
   z.object({
     agent: z.literal('lahey'),
     report: LaheyAnalysisOutputSchema.describe('The full report from the Lahey Surveillance agent.'),
+  }),
+  z.object({
+    agent: z.literal('foremanator'),
+    report: ForemanatorLogOutputSchema.describe('The full report from The Foremanator agent.'),
   }),
 ]);
 

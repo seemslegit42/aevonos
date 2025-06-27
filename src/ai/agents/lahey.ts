@@ -43,6 +43,11 @@ const analyzeLogFlow = ai.defineFlow(
         safetySettings: [{ category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' }]
       }
     });
+    
+    // The model sometimes struggles with the timestamp, so we'll ensure it's always valid.
+    if(output && isNaN(Date.parse(output.timestamp))) {
+        output.timestamp = new Date().toISOString();
+    }
 
     return output!;
   }

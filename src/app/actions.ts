@@ -36,6 +36,8 @@ import { generateBusinessKit as generateBusinessKitFlow } from '@/ai/agents/jroc
 import type { JrocInput, JrocOutput } from '@/ai/agents/jroc-schemas';
 import { analyzeLaheyLog as analyzeLaheyLogFlow } from '@/ai/agents/lahey';
 import type { LaheyAnalysisInput, LaheyAnalysisOutput } from '@/ai/agents/lahey-schemas';
+import { processDailyLog } from '@/ai/agents/foremanator';
+import type { ForemanatorLogInput, ForemanatorLogOutput } from '@/ai/agents/foremanator-schemas';
 
 
 export async function handleCommand(command: string): Promise<UserCommandOutput> {
@@ -280,6 +282,22 @@ export async function analyzeLaheyLog(input: LaheyAnalysisInput): Promise<LaheyA
             event: 'Surveillance feed corrupted.',
             shitstorm_index: 100,
             lahey_commentary: "The liquor couldn't process the signal, bud. The shit-hawks might have gotten to the servers."
+        };
+    }
+}
+
+export async function handleForemanatorLog(input: ForemanatorLogInput): Promise<ForemanatorLogOutput> {
+    try {
+        const result = await processDailyLog(input);
+        return result;
+    } catch (error) {
+        console.error('Error in Foremanator log processing:', error);
+        return {
+            summary: "Report machine's broken. Get back to work.",
+            tasksCompleted: [],
+            materialsUsed: [],
+            blockers: ['Server error.'],
+            foremanatorCommentary: "You think these reports write themselves? Fix the server."
         };
     }
 }
