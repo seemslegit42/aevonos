@@ -5,7 +5,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { ShieldAlert, Bot, Loader2, ChevronRight, EyeOff, Search, Globe, Linkedin, Twitter as XIcon, Instagram, VenetianMask, FileQuestion, BadgeAlert, PhoneOff, Skull, FileDown, FileJson, Lock, Unlock } from 'lucide-react';
+import { ShieldAlert, Bot, Loader2, ChevronRight, EyeOff, Search, Globe, Linkedin, Twitter as XIcon, Instagram, VenetianMask, FileQuestion, BadgeAlert, PhoneOff, Skull, FileDown, FileJson, Lock, Unlock, Gavel } from 'lucide-react';
 import { Textarea } from '../ui/textarea';
 import type { InfidelityAnalysisOutput } from '@/ai/agents/infidelity-analysis-schemas';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '../ui/select';
@@ -21,13 +21,20 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { Separator } from '../ui/separator';
 import { Input } from '../ui/input';
 import { Badge } from '../ui/badge';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../ui/card';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '../ui/card';
 import { ScrollArea } from '../ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { useAppStore } from '@/store/app-store';
 
-const DossierExportPanel = ({ report, osintReport, analysisResult, decoyResult, targetName }: { report: DossierOutput, osintReport: OsintOutput | null, analysisResult: InfidelityAnalysisOutput | null, decoyResult: DecoyOutput | null, targetName: string }) => {
+const DossierExportPanel = ({ report, osintReport, analysisResult, decoyResult, targetName, isLegal = false }: { 
+    report: DossierOutput, 
+    osintReport: OsintOutput | null, 
+    analysisResult: InfidelityAnalysisOutput | null, 
+    decoyResult: DecoyOutput | null, 
+    targetName: string,
+    isLegal?: boolean,
+}) => {
     const { toast } = useToast();
     const [isExporting, setIsExporting] = useState(false);
     const [isEncrypted, setIsEncrypted] = useState(false);
@@ -54,7 +61,9 @@ const DossierExportPanel = ({ report, osintReport, analysisResult, decoyResult, 
                         osintReport,
                         analysisResult,
                         decoyResult,
-                        redacted: false, // For now, hardcode this
+                        redacted: false,
+                        mode: isLegal ? 'legal' : 'standard',
+                        preparedFor: isLegal ? "Attorney Review // Case #AR-2024-889" : undefined,
                     }
                 }),
             });
@@ -93,10 +102,15 @@ const DossierExportPanel = ({ report, osintReport, analysisResult, decoyResult, 
 
 
     return (
-        <Card className="bg-primary/10 border-primary/50">
+        <Card className={cn("border-primary/50", isLegal ? "bg-destructive/10" : "bg-primary/10")}>
             <CardHeader className="p-2">
-                <CardTitle className="text-base text-primary">Dossier Ready for Export</CardTitle>
-                <CardDescription className="text-xs">"When suspicion becomes evidence, it gets a cover page."</CardDescription>
+                <CardTitle className={cn("text-base flex items-center gap-2", isLegal ? "text-destructive" : "text-primary")}>
+                    {isLegal && <Gavel />}
+                    {isLegal ? "Legal Dossier Ready" : "Dossier Ready for Export"}
+                </CardTitle>
+                <CardDescription className="text-xs">
+                     {isLegal ? "“Prepared for legal review.”" : "“When suspicion becomes evidence, it gets a cover page.”"}
+                </CardDescription>
             </CardHeader>
             <CardContent className="p-2 space-y-3">
                 <div className="bg-background/80 p-2 rounded-md max-h-40 overflow-y-auto border border-dashed backdrop-blur-sm filter blur-sm select-none pointer-events-none">
@@ -106,8 +120,8 @@ const DossierExportPanel = ({ report, osintReport, analysisResult, decoyResult, 
                 </div>
                 <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
-                        <Switch id="encrypt-switch" checked={isEncrypted} onCheckedChange={setIsEncrypted} />
-                        <Label htmlFor="encrypt-switch" className="flex items-center gap-1">
+                        <Switch id={`encrypt-switch-${isLegal}`} checked={isEncrypted} onCheckedChange={setIsEncrypted} />
+                        <Label htmlFor={`encrypt-switch-${isLegal}`} className="flex items-center gap-1">
                             {isEncrypted ? <Lock className="h-3 w-3" /> : <Unlock className="h-3 w-3" />}
                              Encrypt
                         </Label>
@@ -123,14 +137,21 @@ const DossierExportPanel = ({ report, osintReport, analysisResult, decoyResult, 
                     )}
                 </div>
                  <div className="flex gap-2">
-                    <Button variant="secondary" className="w-full" disabled={isExporting} onClick={() => handleExport('pdf')}>
-                        {isExporting ? <Loader2 className="animate-spin" /> : <><FileDown className="mr-2" /> Unlock PDF ($19.99)</>}
+                    <Button variant={isLegal ? "destructive" : "secondary"} className="w-full" disabled={isExporting} onClick={() => handleExport('pdf')}>
+                        {isExporting ? <Loader2 className="animate-spin" /> : <><FileDown className="mr-2" /> {isLegal ? 'Unlock Legal PDF ($49.99)' : 'Unlock PDF ($19.99)'}</>}
                     </Button>
                      <Button variant="outline" className="w-full" disabled={isExporting} onClick={() => handleExport('json')}>
                         {isExporting ? <Loader2 className="animate-spin" /> : <><FileJson className="mr-2" /> + JSON ($29.99)</>}
                     </Button>
                 </div>
             </CardContent>
+            {report.reportHash && (
+                 <CardFooter className="p-2">
+                    <p className="text-xs text-muted-foreground font-mono w-full truncate" title={report.reportHash}>
+                        SHA256: {report.reportHash}
+                    </p>
+                </CardFooter>
+            )}
         </Card>
     )
 };
@@ -294,7 +315,7 @@ const OsintReportPanel = ({ report }: { report: OsintOutput }) => {
     )
 }
 
-export default function InfidelityRadar(props: { osintReport?: OsintOutput, analysisResult?: InfidelityAnalysisOutput, decoyResult?: DecoyOutput, dossierReport?: DossierOutput } | {}) {
+export default function InfidelityRadar(props: { osintReport?: OsintOutput, analysisResult?: InfidelityAnalysisOutput, decoyResult?: DecoyOutput, dossierReport?: DossierOutput, legalDossierReport?: DossierOutput } | {}) {
   const isMobile = useIsMobile();
   const { toast } = useToast();
   const { handleCommandSubmit, isLoading, apps } = useAppStore(state => ({
@@ -313,6 +334,8 @@ export default function InfidelityRadar(props: { osintReport?: OsintOutput, anal
   const [osintReport, setOsintReport] = useState<OsintOutput | null>(thisAppProps.osintReport || null);
   const [decoyResult, setDecoyResult] = useState<DecoyOutput | null>(thisAppProps.decoyResult || null);
   const [dossierReport, setDossierReport] = useState<DossierOutput | null>(thisAppProps.dossierReport || null);
+  const [legalDossierReport, setLegalDossierReport] = useState<DossierOutput | null>(thisAppProps.legalDossierReport || null);
+
 
   const [isDecoyPanelOpen, setIsDecoyPanelOpen] = useState(false);
 
@@ -322,6 +345,7 @@ export default function InfidelityRadar(props: { osintReport?: OsintOutput, anal
     if (currentProps.analysisResult) setAnalysisResult(currentProps.analysisResult);
     if (currentProps.decoyResult) setDecoyResult(currentProps.decoyResult);
     if (currentProps.dossierReport) setDossierReport(currentProps.dossierReport);
+    if (currentProps.legalDossierReport) setLegalDossierReport(currentProps.legalDossierReport);
   }, [apps]);
 
 
@@ -340,7 +364,7 @@ export default function InfidelityRadar(props: { osintReport?: OsintOutput, anal
       handleCommandSubmit(command);
   }
   
-  const handleCompileDossier = async () => {
+  const handleCompileDossier = async (mode: 'standard' | 'legal' = 'standard') => {
       if (!osintReport && !analysisResult) {
           toast({ variant: 'destructive', title: "No Data", description: "Need to run at least one scan before creating a dossier." });
           return;
@@ -352,9 +376,11 @@ export default function InfidelityRadar(props: { osintReport?: OsintOutput, anal
           osintReport: osintReport || undefined,
           analysisResult: analysisResult || undefined,
           decoyResult: decoyResult || undefined,
+          mode: mode,
+          preparedFor: mode === 'legal' ? "Attorney Review // Case #AR-2024-889" : undefined
       };
 
-      const command = `generate a dossier for target "${target}" with the following data: ${JSON.stringify(dossierInputPayload)}`;
+      const command = `generate a ${mode} dossier for target "${target}" with the following data: ${JSON.stringify(dossierInputPayload)}`;
       handleCommandSubmit(command);
   };
 
@@ -471,10 +497,16 @@ export default function InfidelityRadar(props: { osintReport?: OsintOutput, anal
             
              <div className="space-y-2 p-2 border border-dashed rounded-lg">
                 <h3 className="font-semibold text-primary">Dossier Export</h3>
-                 <Button onClick={handleCompileDossier} disabled={isLoading || (!osintReport && !analysisResult)} className="w-full bg-primary text-primary-foreground">
-                    {isLoading ? <Loader2 className="animate-spin" /> : <><FileDown className="mr-2"/>Compile Dossier</>}
-                </Button>
+                 <div className="flex gap-2">
+                    <Button onClick={() => handleCompileDossier('standard')} disabled={isLoading || (!osintReport && !analysisResult)} className="w-full bg-primary text-primary-foreground">
+                        {isLoading ? <Loader2 className="animate-spin" /> : <><FileDown className="mr-2"/>Compile Dossier</>}
+                    </Button>
+                    <Button onClick={() => handleCompileDossier('legal')} disabled={isLoading || (!osintReport && !analysisResult)} className="w-full bg-destructive text-destructive-foreground">
+                        {isLoading ? <Loader2 className="animate-spin" /> : <><Gavel className="mr-2"/>Compile Legal Dossier</>}
+                    </Button>
+                 </div>
                 {dossierReport && <DossierExportPanel report={dossierReport} osintReport={osintReport} analysisResult={analysisResult} decoyResult={decoyResult} targetName={osintTarget || 'Unnamed Subject'} />}
+                {legalDossierReport && <DossierExportPanel report={legalDossierReport} isLegal={true} osintReport={osintReport} analysisResult={analysisResult} decoyResult={decoyResult} targetName={osintTarget || 'Unnamed Subject'} />}
              </div>
 
 

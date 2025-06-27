@@ -350,9 +350,13 @@ export const useAppStore = create<AppState>((set, get) => {
         
         case 'dossier':
             const dossierReport: DossierOutput = report.report;
+            const contentProp = dossierReport.mode === 'legal' 
+                ? { legalDossierReport: dossierReport }
+                : { dossierReport: dossierReport };
+
             upsertApp('infidelity-radar', {
                 id: 'infidelity-radar-main',
-                contentProps: { dossierReport: dossierReport }
+                contentProps: contentProp
             });
             break;
       }
