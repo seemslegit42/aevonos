@@ -1,7 +1,9 @@
 
 import { NextResponse, NextRequest } from 'next/server';
 import { z } from 'zod';
-import crypto from 'crypto';
+import prisma from '@/lib/prisma';
+import { getSession } from '@/lib/auth';
+
 
 interface RouteParams {
   params: {
@@ -9,82 +11,95 @@ interface RouteParams {
   };
 }
 
-const mockIntegrationInstance = {
-    id: 'int-1234-uuid',
-    tenantId: 1,
-    integrationTypeId: 'f9d1b1e0-5a3d-4e8c-9b1a-2c6f8d7e4a5b', // Mock Slack integrationTypeId
-    name: "My Marketing Slack",
-    status: "active",
-    configDetails: { webhookUrl: "https://hooks.slack.com/services/..." },
-    createdAt: new Date(Date.now() - 5 * 24 * 3600 * 1000).toISOString(),
-    updatedAt: new Date().toISOString()
-};
-
 // Based on IntegrationConfigurationRequest schema from api-spec.md
-const IntegrationConfigurationRequestSchema = z.object({
-  integrationTypeId: z.string().uuid(),
-  name: z.string(),
-  configDetails: z.record(z.any()),
+const IntegrationUpdateRequestSchema = z.object({
+  name: z.string().optional(),
+  configDetails: z.record(z.any()).optional(),
+  status: z.enum(["active", "inactive", "error"]).optional(),
 });
 
 // Corresponds to operationId `getIntegration`
-export async function GET(request: Request, { params }: RouteParams) {
-  const { integrationId } = params;
-  
-  // In a real app, find by ID. Here, we return a mock if the ID format is ok.
-  if (!integrationId) {
-      return NextResponse.json({ error: 'Integration ID is required.' }, { status: 400 });
-  }
+export async function GET(request: NextRequest, { params }: RouteParams) {
+    const session = await getSession(request);
+    if (!session?.workspaceId) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
 
-  // To make it slightly more realistic, we'll "find" our mock instance
-  if (integrationId === mockIntegrationInstance.id) {
-    return NextResponse.json(mockIntegrationInstance);
-  }
+    try {
+        const { integrationId } = params;
+        const integration = await prisma.integration.findFirst({
+            where: { id: integrationId, workspaceId: session.workspaceId },
+        });
 
-  return NextResponse.json({ error: 'Integration not found.' }, { status: 404 });
+        if (!integration) {
+            return NextResponse.json({ error: 'Integration not found.' }, { status: 404 });
+        }
+
+        return NextResponse.json(integration);
+    } catch (error) {
+        console.error(`[API /integrations/{id} GET]`, error);
+        return NextResponse.json({ error: 'Failed to retrieve integration.' }, { status: 500 });
+    }
 }
 
 // Corresponds to operationId `updateIntegration`
-export async function PUT(request: Request, { params }: RouteParams) {
-  try {
-    const { integrationId } = params;
-    const body = await request.json();
-    const validation = IntegrationConfigurationRequestSchema.safeParse(body);
-
-    if (!validation.success) {
-      return NextResponse.json({ error: 'Invalid integration data.', issues: validation.error.issues }, { status: 400 });
+export async function PUT(request: NextRequest, { params }: RouteParams) {
+    const session = await getSession(request);
+    if (!session?.workspaceId) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+    try {
+        const { integrationId } = params;
+        const body = await request.json();
+        const validation = IntegrationUpdateRequestSchema.safeParse(body);
 
-    if (integrationId !== mockIntegrationInstance.id) {
-        return NextResponse.json({ error: 'Integration not found.' }, { status: 404 });
+        if (!validation.success) {
+            return NextResponse.json({ error: 'Invalid integration data.', issues: validation.error.issues }, { status: 400 });
+        }
+
+        const updatedIntegration = await prisma.integration.updateMany({
+            where: { id: integrationId, workspaceId: session.workspaceId },
+            data: validation.data,
+        });
+
+        if (updatedIntegration.count === 0) {
+            return NextResponse.json({ error: 'Integration not found or you do not have permission to update it.' }, { status: 404 });
+        }
+
+        const returnedIntegration = await prisma.integration.findUnique({ where: { id: integrationId } });
+        return NextResponse.json(returnedIntegration);
+
+    } catch (error) {
+        console.error('[API /integrations/{id} PUT]', error);
+        if (error instanceof SyntaxError) {
+        return NextResponse.json({ error: 'Invalid JSON in request body.' }, { status: 400 });
+        }
+        return NextResponse.json({ error: 'Failed to update integration.' }, { status: 500 });
     }
-
-    const updatedInstance = {
-        ...mockIntegrationInstance,
-        ...validation.data,
-        updatedAt: new Date().toISOString(),
-    };
-
-    return NextResponse.json(updatedInstance);
-  } catch (error) {
-    console.error('[API /integrations/{id} PUT]', error);
-    if (error instanceof SyntaxError) {
-      return NextResponse.json({ error: 'Invalid JSON in request body.' }, { status: 400 });
-    }
-    return NextResponse.json({ error: 'Failed to update integration.' }, { status: 500 });
-  }
 }
 
 // Corresponds to operationId `deleteIntegration`
-export async function DELETE(request: Request, { params }: RouteParams) {
-    const { integrationId } = params;
-
-    if (integrationId !== mockIntegrationInstance.id) {
-        return NextResponse.json({ error: 'Integration not found.' }, { status: 404 });
+export async function DELETE(request: NextRequest, { params }: RouteParams) {
+    const session = await getSession(request);
+    if (!session?.workspaceId) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-    
-    // In a real app, you would delete from the database.
-    console.log(`Integration ${integrationId} deleted.`);
 
-    return new NextResponse(null, { status: 204 });
+    try {
+        const { integrationId } = params;
+        
+        const result = await prisma.integration.deleteMany({
+          where: { id: integrationId, workspaceId: session.workspaceId },
+        });
+    
+        if (result.count === 0) {
+            return NextResponse.json({ error: 'Integration not found.' }, { status: 404 });
+        }
+    
+        return new NextResponse(null, { status: 204 });
+
+    } catch (error) {
+        console.error(`[API /integrations/{id} DELETE]`, error);
+        return NextResponse.json({ error: 'Failed to delete integration.' }, { status: 500 });
+    }
 }
