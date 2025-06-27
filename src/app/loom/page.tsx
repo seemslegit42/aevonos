@@ -2,6 +2,7 @@
 'use client';
 
 import React, { useState, useCallback, useRef, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { DndContext, DragEndEvent, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 
 import NodesSidebar, { NodeType } from '@/components/loom/nodes-sidebar';
@@ -11,6 +12,7 @@ import LoomHeader from '@/components/loom/loom-header';
 import WorkflowList from '@/components/loom/workflow-list';
 import WorkflowRunHistory from '@/components/loom/workflow-run-history';
 import { useToast } from '@/hooks/use-toast';
+import { useAppStore } from '@/store/app-store';
 
 export interface Node {
   id: string;
@@ -39,12 +41,12 @@ const BLANK_WORKFLOW: Workflow = {
   definition: {
     nodes: [
         { id: 'trigger-1', type: 'trigger', position: { x: 50, y: 150 }, data: { label: 'BEEP Command Received' } },
-        { id: 'agent-1', type: 'agent', position: { x: 350, y: 150 }, data: { label: 'BEEP Agent Kernel' } },
+        { id: 'tool-crm', type: 'tool-crm', position: { x: 350, y: 150 }, data: { label: 'CRM: List Contacts', action: 'list' } },
         { id: 'tool-final-answer', type: 'tool-final-answer', position: { x: 650, y: 150 }, data: { label: 'Final Answer' } },
     ],
     edges: [
-        { id: 'e-trigger-agent', source: 'trigger-1', target: 'agent-1' },
-        { id: 'e-agent-final', source: 'agent-1', target: 'tool-final-answer' },
+        { id: 'e-trigger-agent', source: 'trigger-1', target: 'tool-crm' },
+        { id: 'e-agent-final', source: 'tool-crm', target: 'tool-final-answer' },
     ],
   },
 };
@@ -65,10 +67,14 @@ export default function LoomPage() {
     const [listRefreshTrigger, setListRefreshTrigger] = useState(0);
 
     const { toast } = useToast();
+    const router = useRouter();
+    const handleCommandSubmit = useAppStore(state => state.handleCommandSubmit);
+
 
     useEffect(() => {
         setNodes(activeWorkflow.definition.nodes);
         setEdges(activeWorkflow.definition.edges);
+        setSelectedNode(null);
     }, [activeWorkflow]);
     
     const handleSelectWorkflow = async (id: string | null) => {
@@ -128,27 +134,50 @@ export default function LoomPage() {
             setIsSaving(false);
         }
     };
+
+    const translateWorkflowToCommand = (workflow: Workflow): string => {
+        const crmNode = workflow.definition.nodes.find(n => n.type === 'tool-crm');
+        if (!crmNode) {
+            // A simple fallback if no recognizable action node is found
+            return "show suggested commands for managing contacts";
+        }
+
+        const action = crmNode.data.action || 'list';
+        
+        switch (action) {
+            case 'create':
+                let cmd = `create a new contact`;
+                if (crmNode.data.firstName) cmd += ` named ${crmNode.data.firstName}`;
+                if (crmNode.data.lastName) cmd += ` ${crmNode.data.lastName}`;
+                if (crmNode.data.email) cmd += ` with email ${crmNode.data.email}`;
+                if (crmNode.data.phone) cmd += ` and phone ${crmNode.data.phone}`;
+                return cmd;
+            case 'list':
+            default:
+                return "list all contacts";
+        }
+    };
     
     const handleRun = async () => {
-        if (!activeWorkflow?.id) return;
+        if (!activeWorkflow) return;
         setIsRunning(true);
-        toast({ title: 'Executing...', description: `Triggering workflow: ${activeWorkflow.name}` });
+        toast({ title: 'Translating Workflow...', description: `Compiling graph into a BEEP command.` });
         
-        try {
-             const response = await fetch(`/api/workflows/${activeWorkflow.id}/run`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ triggeredBy: 'LoomUI' }) // Example payload
-            });
-            if (response.status !== 202) throw new Error('Failed to trigger workflow run.');
-            const runSummary = await response.json();
-            toast({ title: 'Workflow Run Initiated', description: `Run ID: ${runSummary.runId}` });
-            setListRefreshTrigger(val => val + 1); // Refresh history
-        } catch(e) {
-            toast({ variant: 'destructive', title: 'Error', description: 'Could not trigger workflow.' });
-        } finally {
-            setIsRunning(false);
-        }
+        await new Promise(resolve => setTimeout(resolve, 1000)); // simulate compilation
+
+        const command = translateWorkflowToCommand({ ...activeWorkflow, definition: { nodes, edges }});
+        
+        toast({ title: 'Executing Command', description: `BEEP is running: "${command}"` });
+
+        handleCommandSubmit(command);
+
+        // After submitting, redirect back to the canvas to see the result
+        setTimeout(() => {
+            router.push('/');
+        }, 1500);
+
+        // We don't wait for the result here, so set isRunning to false
+        setIsRunning(false);
     };
 
     const handleDelete = async () => {
@@ -193,7 +222,13 @@ export default function LoomPage() {
                 };
             }
             
-            const newNode: Node = { id: `${type}-${new Date().getTime()}`, type, position, data: { label } };
+            const newNodeData: Node['data'] = { label };
+            if (type === 'tool-crm') {
+                newNodeData.action = 'list';
+                newNodeData.label = 'CRM: List Contacts';
+            }
+
+            const newNode: Node = { id: `${type}-${new Date().getTime()}`, type, position, data: newNodeData };
             setNodes((nds) => [...nds, newNode]);
             setSelectedNode(newNode);
         } else if (over) {
