@@ -28,7 +28,7 @@ export default function RootLayout({
             className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-transparent"
           />
           <div 
-            className="absolute inset-0 animate-aurora bg-[linear-gradient(135deg,hsl(var(--primary)/0.2),hsl(var(--accent)/0.2)_50%,hsl(var(--primary)/0.2)_100%)] bg-[length:400%_400%]"
+            className="absolute inset-0 animate-aurora bg-[linear-gradient(135deg,hsl(var(--primary)/0.2),hsl(var(--patina-green)/0.2)_50%,hsl(var(--accent)/0.2)_100%)] bg-[length:400%_400%]"
           />
         </div>
         

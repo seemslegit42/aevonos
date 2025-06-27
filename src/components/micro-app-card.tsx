@@ -35,7 +35,7 @@ export default function MicroAppCard({ app, index }: MicroAppCardProps) {
       <style>{css}</style>
       <Card
         style={cardStyle}
-        className="bg-card/50 backdrop-blur-sm border-gray-700/50 hover:border-primary/50 transition-all duration-300 flex flex-col cursor-pointer group"
+        className="bg-foreground/15 backdrop-blur-[20px] border border-foreground/30 shadow-[0_8px_32px_0_rgba(28,25,52,0.1)] hover:border-primary transition-all duration-300 flex flex-col cursor-pointer group"
         onClick={app.action}
       >
         <CardHeader className="flex flex-col items-center text-center p-4">

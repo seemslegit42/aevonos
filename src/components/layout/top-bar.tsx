@@ -25,18 +25,18 @@ export default function TopBar({ onCommandSubmit, isLoading, aegisStatus }: TopB
   const AegisStatusIcon = () => {
     switch(aegisStatus) {
       case 'Secure':
-        return <ShieldCheck className="w-4 h-4 text-green-400" />;
+        return <ShieldCheck className="w-4 h-4 text-[#3EB991]" />;
       case 'Anomaly Detected':
-        return <ShieldAlert className="w-4 h-4 text-red-500" />;
+        return <ShieldAlert className="w-4 h-4 text-destructive" />;
       case 'Scanning...':
-        return <Sparkles className="w-4 h-4 text-yellow-400 animate-pulse" />;
+        return <Sparkles className="w-4 h-4 text-[#FFD700] animate-pulse" />;
     }
   };
 
   return (
-    <header className="flex items-center justify-between w-full px-4 py-2 bg-black/10 backdrop-blur-md rounded-lg border border-gray-700/50 shadow-lg">
+    <header className="flex items-center justify-between w-full px-4 py-2 bg-foreground/15 backdrop-blur-[20px] rounded-lg border border-foreground/30 shadow-[0_8px_32px_0_rgba(28,25,52,0.1)]">
       <div className="flex items-center">
-        <h1 className="text-xl font-headline font-bold text-gray-200 tracking-widest">
+        <h1 className="text-xl font-headline font-bold text-foreground tracking-widest">
           <span className="text-primary">ΛΞ</span>VON
         </h1>
       </div>
@@ -46,7 +46,7 @@ export default function TopBar({ onCommandSubmit, isLoading, aegisStatus }: TopB
             name="command"
             type="text"
             placeholder="BEEP: Tell me what you want to achieve..."
-            className="w-full bg-input border-0 focus-visible:ring-1 focus-visible:ring-primary focus-visible:ring-offset-0 pl-10 h-10"
+            className="w-full bg-input/10 border border-foreground/20 focus-visible:ring-1 focus-visible:ring-primary focus-visible:ring-offset-0 pl-10 h-10"
             disabled={isLoading}
           />
           <Sparkles className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-primary/70" />

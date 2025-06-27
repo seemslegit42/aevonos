@@ -27,33 +27,36 @@
   }
  
   .dark {
-    --background: 260 20% 5%;
-    --foreground: 260 50% 95%;
+    --background: 247 36% 15%; /* Obsidian Black */
+    --foreground: 150 100% 98%; /* Vitreous White */
 
-    --card: 260 20% 15% / 0.1;
-    --card-foreground: 260 50% 95%;
+    --card: 150 100% 98%; /* Vitreous White, used with alpha */
+    --card-foreground: 150 100% 98%; /* Vitreous White */
 
-    --popover: 260 20% 5%;
-    --popover-foreground: 260 50% 95%;
+    --popover: 150 100% 98%; /* Vitreous White, used with alpha */
+    --popover-foreground: 150 100% 98%; /* Vitreous White */
 
-    --primary: 280 100% 70%;
-    --primary-foreground: 280 100% 10%;
+    --primary: 275 86% 37%; /* Imperial Purple */
+    --primary-foreground: 150 100% 98%; /* Vitreous White */
 
-    --secondary: 260 20% 12%;
-    --secondary-foreground: 260 50% 95%;
+    --secondary: 247 36% 25%; /* Slightly lighter Obsidian Black */
+    --secondary-foreground: 150 100% 98%; /* Vitreous White */
 
-    --muted: 260 20% 12%;
-    --muted-foreground: 260 20% 50%;
+    --muted: 247 36% 25%;
+    --muted-foreground: 223 14% 60%; /* Conchoidal Gray */
 
-    --accent: 180 100% 60%;
-    --accent-foreground: 180 100% 10%;
+    --accent: 177 69% 41%; /* Roman Aqua */
+    --accent-foreground: 247 36% 15%; /* Obsidian Black for contrast on accent bg */
 
     --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 208 100% 97%;
+    --destructive-foreground: 0 0% 98%;
 
-    --border: 260 20% 30%;
-    --input: 260 20% 20% / 0.3;
-    --ring: 180 100% 60%;
+    --border: 223 14% 60%; /* Conchoidal Gray */
+    --input: 150 100% 98%; /* Vitreous White */
+    --ring: 51 100% 50%; /* Gilded Accent */
+    
+    /* For Iridescent Aurora background */
+    --patina-green: 158 49% 48%;
   }
 }
  
