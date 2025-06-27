@@ -16,6 +16,9 @@ import { OsintOutput } from '@/ai/agents/osint-schemas';
 import type { WinstonWolfeOutput } from '@/ai/agents/winston-wolfe-schemas';
 import type { KifKrokerAnalysisOutput } from '@/ai/agents/kif-kroker-schemas';
 import type { VandelayAlibiOutput } from '@/ai/agents/vandelay-schemas';
+import type { LumberghAnalysisOutput } from '@/ai/agents/lumbergh-schemas';
+import type { LucilleBluthOutput } from '@/ai/agents/lucille-bluth-schemas';
+import type { RolodexAnalysisOutput } from '@/ai/agents/rolodex-schemas';
 
 
 // Define the types of MicroApps available in the OS
@@ -249,18 +252,15 @@ export const useAppStore = create<AppState>((set, get) => {
             break;
         
         case 'winston-wolfe':
-             const winstonReport: WinstonWolfeOutput = report.report;
-            upsertApp('winston-wolfe', { id: 'winston-wolfe-main', contentProps: winstonReport });
+            upsertApp('winston-wolfe', { id: 'winston-wolfe-main', contentProps: report.report });
             break;
 
         case 'kif-kroker':
-            const kifReport: KifKrokerAnalysisOutput = report.report;
-            upsertApp('kif-kroker', { id: 'kif-kroker-main', contentProps: kifReport });
+            upsertApp('kif-kroker', { id: 'kif-kroker-main', contentProps: report.report });
             break;
         
         case 'vandelay':
-             const vandelayReport: VandelayAlibiOutput = report.report;
-            upsertApp('vandelay', { id: 'vandelay-main', contentProps: { alibi: vandelayReport } });
+            upsertApp('vandelay', { id: 'vandelay-main', contentProps: { alibi: report.report } });
             break;
         
         case 'jroc':
@@ -289,6 +289,18 @@ export const useAppStore = create<AppState>((set, get) => {
         
         case 'osint':
             upsertApp('infidelity-radar', { id: 'infidelity-radar-main', contentProps: { osintReport: report.report }});
+            break;
+            
+        case 'lumbergh':
+             upsertApp('project-lumbergh', { id: 'lumbergh-main', contentProps: { ...report.report } });
+             break;
+        
+        case 'lucille':
+            upsertApp('lucille-bluth', { id: 'lucille-bluth-main', contentProps: { ...report.report } });
+            break;
+
+        case 'rolodex':
+            upsertApp('rolodex', { id: 'rolodex-main', contentProps: { ...report.report } });
             break;
       }
     }

@@ -1,32 +1,39 @@
 
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Clipboard, ThumbsDown, Loader2, Save } from 'lucide-react';
-import { analyzeInvite } from '@/app/actions';
 import type { LumberghAnalysisOutput } from '@/ai/agents/lumbergh-schemas';
 import { useToast } from '@/hooks/use-toast';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 import { Label } from '../ui/label';
 import { Switch } from '../ui/switch';
 import { cn } from '@/lib/utils';
+import { useAppStore } from '@/store/app-store';
 
-export default function ProjectLumbergh() {
-  const [isLoading, setIsLoading] = useState(false);
+export default function ProjectLumbergh(props: LumberghAnalysisOutput | {}) {
+  const { handleCommandSubmit, isLoading } = useAppStore(state => ({
+    handleCommandSubmit: state.handleCommandSubmit,
+    isLoading: state.isLoading
+  }));
+  
   const [inviteText, setInviteText] = useState('');
   const [result, setResult] = useState<LumberghAnalysisOutput | null>(null);
   const { toast } = useToast();
 
+  useEffect(() => {
+    if (props && 'isFlagged' in props) {
+        setResult(props);
+    }
+  }, [props]);
+
   const handleAnalysis = async () => {
     if (!inviteText) return;
-    setIsLoading(true);
-    setResult(null);
-    const response = await analyzeInvite({ inviteText });
-    setResult(response);
-    setIsLoading(false);
+    const command = `analyze this meeting invite: "${inviteText}"`;
+    handleCommandSubmit(command);
   };
 
   const handleCopy = (text: string) => {

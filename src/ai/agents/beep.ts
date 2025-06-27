@@ -30,6 +30,8 @@ import {
     analyzeComms,
     createVandelayAlibi,
     analyzeInvite,
+    analyzeExpense,
+    analyzeCandidate,
     handleVinDieselValidation,
     generateBusinessKit,
     analyzeLaheyLog,
@@ -60,6 +62,9 @@ import { SterileishAnalysisInputSchema } from './sterileish-schemas';
 import { PaperTrailScanInputSchema } from './paper-trail-schemas';
 import { WingmanInputSchema } from './wingman-schemas';
 import { OsintInputSchema } from './osint-schemas';
+import { LumberghAnalysisInputSchema } from './lumbergh-schemas';
+import { LucilleBluthInputSchema } from './lucille-bluth-schemas';
+import { RolodexAnalysisInputSchema } from './rolodex-schemas';
 import { generateSpeech } from '@/ai/flows/tts-flow';
 
 
@@ -351,6 +356,42 @@ class OsintScanTool extends Tool {
     }
 }
 
+class LumberghTool extends Tool {
+  name = 'analyzeMeetingInvite';
+  description = 'Analyzes a meeting invite for pointlessness and generates passive-aggressive decline memos. Use this when a user asks to "check a meeting invite" or "analyze this invite".';
+  schema = LumberghAnalysisInputSchema;
+  
+  async _call(input: z.infer<typeof LumberghAnalysisInputSchema>) {
+    const result = await analyzeInvite(input);
+    const report: z.infer<typeof AgentReportSchema> = { agent: 'lumbergh', report: result };
+    return JSON.stringify(report);
+  }
+}
+
+class LucilleBluthTool extends Tool {
+  name = 'analyzeExpense';
+  description = 'Provides judgmental and condescending analysis of a user\'s expense. Use this when the user says "log an expense" or "analyze this purchase".';
+  schema = LucilleBluthInputSchema;
+  
+  async _call(input: z.infer<typeof LucilleBluthInputSchema>) {
+    const result = await analyzeExpense(input);
+    const report: z.infer<typeof AgentReportSchema> = { agent: 'lucille', report: result };
+    return JSON.stringify(report);
+  }
+}
+
+class RolodexTool extends Tool {
+  name = 'analyzeCandidate';
+  description = 'Analyzes a candidate\'s resume summary against a job description to determine fit and generate outreach assets. Use this when the user wants to "analyze a candidate", "check resume", or "review applicant".';
+  schema = RolodexAnalysisInputSchema;
+  
+  async _call(input: z.infer<typeof RolodexAnalysisInputSchema>) {
+    const result = await analyzeCandidate(input);
+    const report: z.infer<typeof AgentReportSchema> = { agent: 'rolodex', report: result };
+    return JSON.stringify(report);
+  }
+}
+
 const tools: Tool[] = [
     new FinalAnswerTool(), new DrSyntaxTool(), 
     new CreateContactTool(), new UpdateContactTool(), new ListContactsTool(), new DeleteContactTool(), 
@@ -359,6 +400,7 @@ const tools: Tool[] = [
     new VandelayTool(), new JrocTool(), new LaheyTool(), new ForemanatorTool(),
     new SterileishTool(), new PaperTrailTool(),
     new WingmanTool(), new OsintScanTool(),
+    new LumberghTool(), new LucilleBluthTool(), new RolodexTool(),
 ];
 
 const modelWithTools = geminiModel.bind({

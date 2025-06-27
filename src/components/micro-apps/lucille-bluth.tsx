@@ -1,41 +1,47 @@
 
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Loader2, DollarSign, Send } from 'lucide-react';
-import { analyzeExpense } from '@/app/actions';
 import type { LucilleBluthOutput } from '@/ai/agents/lucille-bluth-schemas';
 import { Label } from '../ui/label';
 import { Switch } from '../ui/switch';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
+import { useAppStore } from '@/store/app-store';
+import { useToast } from '@/hooks/use-toast';
 
-export default function TheLucilleBluth() {
-  const [isLoading, setIsLoading] = useState(false);
+export default function TheLucilleBluth(props: LucilleBluthOutput | {}) {
+  const { handleCommandSubmit, isLoading } = useAppStore(state => ({
+    handleCommandSubmit: state.handleCommandSubmit,
+    isLoading: state.isLoading
+  }));
+  const { toast } = useToast();
+
   const [expenseDescription, setExpenseDescription] = useState('');
   const [expenseAmount, setExpenseAmount] = useState('');
   const [result, setResult] = useState<LucilleBluthOutput | null>(null);
 
+  useEffect(() => {
+      if (props && 'judgmentalRemark' in props) {
+          setResult(props);
+      }
+  }, [props]);
+
+
   const handleAnalysis = async () => {
     const amount = parseFloat(expenseAmount);
     if (!expenseDescription || isNaN(amount)) {
-      setResult({ judgmentalRemark: "I can't judge you if you don't give me anything to work with. It's like you're not even trying to disappoint me." });
+      toast({ variant: 'destructive', title: "Lucille is waiting...", description: "I can't judge you if you don't give me anything to work with. It's like you're not even trying to disappoint me." });
       return;
     }
-    setIsLoading(true);
-    setResult(null);
-    const response = await analyzeExpense({
-      expenseDescription,
-      expenseAmount: amount,
-      category: 'General', // Simplified for this MVP
-    });
-    setResult(response);
+    const command = `log an expense for ${expenseDescription} that cost ${amount}`;
+    handleCommandSubmit(command);
     setExpenseDescription('');
     setExpenseAmount('');
-    setIsLoading(false);
   };
 
   return (
@@ -60,7 +66,7 @@ export default function TheLucilleBluth() {
                 disabled={isLoading}
               />
             </div>
-            <Button className="w-full" onClick={handleAnalysis} disabled={isLoading}>
+            <Button className="w-full" onClick={handleAnalysis} disabled={isLoading || !expenseDescription || !expenseAmount}>
               {isLoading ? <Loader2 className="animate-spin" /> : <><Send className="mr-2" /> Log Expense</>}
             </Button>
           </CardContent>

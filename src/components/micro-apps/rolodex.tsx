@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Loader2, Sparkles, Clipboard, FileText, UserPlus, UserCheck } from 'lucide-react';
-import { analyzeCandidate as analyzeCandidateAction } from '@/app/actions';
 import type { RolodexAnalysisOutput } from '@/ai/agents/rolodex-schemas';
 import { useToast } from '@/hooks/use-toast';
 import { Input } from '../ui/input';
@@ -15,6 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { Contact } from '@/ai/tools/crm-schemas';
 import { Skeleton } from '../ui/skeleton';
+import { useAppStore } from '@/store/app-store';
 
 function RolodexResult({ result }: { result: RolodexAnalysisOutput }) {
     const { toast } = useToast();
@@ -57,20 +57,28 @@ function RolodexResult({ result }: { result: RolodexAnalysisOutput }) {
     )
 }
 
-export default function TheRolodex() {
-  const [isLoading, setIsLoading] = useState(false);
+export default function TheRolodex(props: RolodexAnalysisOutput | {}) {
+  const { handleCommandSubmit, isLoading } = useAppStore(state => ({
+    handleCommandSubmit: state.handleCommandSubmit,
+    isLoading: state.isLoading
+  }));
   const [jobDescription, setJobDescription] = useState('');
   const [result, setResult] = useState<RolodexAnalysisOutput | null>(null);
   const [activeTab, setActiveTab] = useState("new");
   
-  // State for New Candidate tab
   const [candidateName, setCandidateName] = useState('');
   const [candidateSummary, setCandidateSummary] = useState('');
 
-  // State for Existing Contact tab
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [isContactLoading, setIsContactLoading] = useState(false);
   const [selectedContactId, setSelectedContactId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (props && 'fitScore' in props) {
+      setResult(props);
+    }
+  }, [props]);
+
 
   useEffect(() => {
     async function fetchContacts() {
@@ -90,17 +98,10 @@ export default function TheRolodex() {
     }
   }, [activeTab]);
 
-  const handleAnalysis = async (name: string, summary: string) => {
+  const handleAnalysis = (name: string, summary: string) => {
     if (!summary || !jobDescription) return;
-    setIsLoading(true);
-    setResult(null);
-    const response = await analyzeCandidateAction({ 
-        candidateName: name, 
-        candidateSummary: summary, 
-        jobDescription 
-    });
-    setResult(response);
-    setIsLoading(false);
+    const command = `analyze candidate "${name}" with summary "${summary}" for the job description: "${jobDescription}"`;
+    handleCommandSubmit(command);
   };
   
   const handleNewCandidateAnalysis = () => {
