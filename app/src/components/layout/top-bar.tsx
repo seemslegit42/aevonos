@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useRef } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -9,6 +9,8 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { Sparkles, ShieldCheck, LogOut, Settings } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { logout } from '@/app/auth/actions';
+import { getCurrentUser } from '@/app/actions';
+import type { User } from '@prisma/client';
 
 interface TopBarProps {
   onCommandSubmit: (command: string) => void;
@@ -18,6 +20,27 @@ interface TopBarProps {
 export default function TopBar({ onCommandSubmit, isLoading }: TopBarProps) {
   const formRef = useRef<HTMLFormElement>(null);
   const isMobile = useIsMobile();
+  const [user, setUser] = useState<Pick<User, 'email' | 'firstName' | 'lastName'> | null>(null);
+
+  useEffect(() => {
+    async function fetchUser() {
+        try {
+            const currentUser = await getCurrentUser();
+            setUser(currentUser);
+        } catch (error) {
+            console.error("Failed to fetch user:", error);
+        }
+    }
+    fetchUser();
+  }, []);
+
+  const getInitials = () => {
+    if (!user) return 'A';
+    const first = user.firstName ? user.firstName.charAt(0) : '';
+    const last = user.lastName ? user.lastName.charAt(0) : '';
+    return `${first}${last}`.toUpperCase() || 'A';
+  }
+
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -55,16 +78,16 @@ export default function TopBar({ onCommandSubmit, isLoading }: TopBarProps) {
             <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                     <Avatar className="h-8 w-8">
-                        <AvatarFallback>A</AvatarFallback>
+                        <AvatarFallback>{getInitials()}</AvatarFallback>
                     </Avatar>
                 </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-56" align="end" forceMount>
                 <DropdownMenuLabel className="font-normal">
                     <div className="flex flex-col space-y-1">
-                        <p className="text-sm font-medium leading-none">The Architect</p>
+                        <p className="text-sm font-medium leading-none">{user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() : 'The Architect'}</p>
                         <p className="text-xs leading-none text-muted-foreground">
-                            architect@aevonos.com
+                            {user?.email || 'architect@aevonos.com'}
                         </p>
                     </div>
                 </DropdownMenuLabel>
@@ -74,14 +97,10 @@ export default function TopBar({ onCommandSubmit, isLoading }: TopBarProps) {
                     <span>Workspace Settings</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <form action={logout} className="w-full">
-                  <button type="submit" className="w-full text-left">
-                    <DropdownMenuItem>
-                        <LogOut />
-                        <span>Log out</span>
-                    </DropdownMenuItem>
-                  </button>
-                </form>
+                <DropdownMenuItem onSelect={() => logout()} className="cursor-pointer">
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Log out</span>
+                </DropdownMenuItem>
             </DropdownMenuContent>
         </DropdownMenu>
       </div>
