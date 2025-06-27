@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster"
+import { AppLayout } from '@/components/layout/app-layout';
 
 export const metadata: Metadata = {
   title: 'ΛΞVON OS',
@@ -32,9 +33,10 @@ export default function RootLayout({
           />
         </div>
         
-        <main className="min-h-screen flex flex-col">
+        <AppLayout>
           {children}
-        </main>
+        </AppLayout>
+
         <Toaster />
       </body>
     </html>

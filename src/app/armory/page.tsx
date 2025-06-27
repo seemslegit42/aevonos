@@ -1,8 +1,6 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
 import { MicroAppListingCard } from '@/components/armory/micro-app-listing-card';
 
 const mockApps = [
@@ -64,23 +62,15 @@ const mockApps = [
 
 export default function ArmoryPage() {
   return (
-    <div className="flex flex-col min-h-screen p-4 sm:p-6 lg:p-8 gap-4">
-      <header className="flex items-center justify-between w-full flex-wrap gap-4">
-         <Button asChild variant="ghost" className="text-sm">
-           <Link href="/"><ArrowLeft className="mr-2 h-4 w-4" /> Back to Canvas</Link>
-         </Button>
-         <h1 className="text-3xl font-headline font-bold text-foreground text-center">
-          The Armory
-         </h1>
-         <div className="w-[140px]"></div>
-      </header>
+    <div className="flex flex-col h-full">
       <main className="flex-grow">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 p-4">
           {mockApps.map(app => <MicroAppListingCard key={app.id} app={app} />)}
         </div>
       </main>
-      <footer className="text-center text-xs text-muted-foreground">
+      <footer className="text-center text-xs text-muted-foreground pb-4 flex-shrink-0">
         <p>All transactions are final. Choose your instruments wisely.</p>
+        <p className="mt-2"><Link href="/" className="hover:text-primary underline">Return to Canvas</Link></p>
       </footer>
     </div>
   );
