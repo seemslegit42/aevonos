@@ -24,26 +24,8 @@ import { Tool } from '@langchain/core/tools';
 import { zodToJsonSchema } from 'zod-to-json-schema';
 
 import { geminiModel } from '@/ai/genkit';
-import { 
-    handleDrSyntaxCritique, 
-    generateSolution, 
-    analyzeComms,
-    createVandelayAlibi,
-    analyzeInvite,
-    analyzeExpense,
-    analyzeCandidate,
-    handleVinDieselValidation,
-    generateBusinessKit,
-    analyzeLaheyLog,
-    handleForemanatorLog,
-    analyzeCompliance,
-    scanEvidence,
-    generateWingmanMessage,
-    handleOsintScan,
-} from '@/app/actions';
-import {
-  DrSyntaxInputSchema,
-} from '@/ai/agents/dr-syntax-schemas';
+import { drSyntaxCritique } from '@/ai/agents/dr-syntax';
+import { DrSyntaxInputSchema } from '@/ai/agents/dr-syntax-schemas';
 import { aegisAnomalyScan } from '@/ai/agents/aegis';
 import { AegisAnomalyScanOutputSchema } from './aegis-schemas';
 import { createContactInDb, listContactsFromDb, deleteContactInDb, updateContactInDb } from '@/ai/tools/crm-tools';
@@ -51,19 +33,33 @@ import { CreateContactInputSchema, DeleteContactInputSchema, UpdateContactInputS
 import { getUsageDetails } from '@/ai/tools/billing-tools';
 import { getDatingProfile } from '@/ai/tools/dating-tools';
 import { DatingProfileInputSchema } from '@/ai/tools/dating-schemas';
+import { validateVin } from '@/ai/agents/vin-diesel';
 import { VinDieselInputSchema } from './vin-diesel-schemas';
+import { generateSolution } from '@/ai/agents/winston-wolfe';
 import { WinstonWolfeInputSchema } from './winston-wolfe-schemas';
+import { analyzeComms } from '@/ai/agents/kif-kroker';
 import { KifKrokerAnalysisInputSchema } from './kif-kroker-schemas';
+import { createVandelayAlibi } from '@/ai/agents/vandelay';
 import { VandelayAlibiInputSchema } from './vandelay-schemas';
+import { generateBusinessKit } from '@/ai/agents/jroc';
 import { JrocInputSchema } from './jroc-schemas';
+import { analyzeLaheyLog } from '@/ai/agents/lahey';
 import { LaheyAnalysisInputSchema } from './lahey-schemas';
+import { processDailyLog } from '@/ai/agents/foremanator';
 import { ForemanatorLogInputSchema } from './foremanator-schemas';
+import { analyzeCompliance } from '@/ai/agents/sterileish';
 import { SterileishAnalysisInputSchema } from './sterileish-schemas';
+import { scanEvidence } from '@/ai/agents/paper-trail';
 import { PaperTrailScanInputSchema } from './paper-trail-schemas';
+import { generateWingmanMessage } from '@/ai/agents/wingman';
 import { WingmanInputSchema } from './wingman-schemas';
+import { performOsintScan } from '@/ai/agents/osint';
 import { OsintInputSchema } from './osint-schemas';
+import { analyzeInvite } from '@/ai/agents/lumbergh';
 import { LumberghAnalysisInputSchema } from './lumbergh-schemas';
+import { analyzeExpense } from '@/ai/agents/lucille-bluth';
 import { LucilleBluthInputSchema } from './lucille-bluth-schemas';
+import { analyzeCandidate } from '@/ai/agents/rolodex';
 import { RolodexAnalysisInputSchema } from './rolodex-schemas';
 import { generateSpeech } from '@/ai/flows/tts-flow';
 import { generatePamRant } from '@/ai/agents/pam-poovey';
@@ -104,7 +100,7 @@ class DrSyntaxTool extends Tool {
   schema = DrSyntaxInputSchema;
   
   async _call(input: z.infer<typeof DrSyntaxInputSchema>) {
-    const result = await handleDrSyntaxCritique(input);
+    const result = await drSyntaxCritique(input);
     const report: z.infer<typeof AgentReportSchema> = {
         agent: 'dr-syntax',
         report: result,
@@ -227,7 +223,7 @@ class VinDieselTool extends Tool {
     schema = VinDieselInputSchema;
 
     async _call(input: z.infer<typeof VinDieselInputSchema>) {
-        const result = await handleVinDieselValidation(input);
+        const result = await validateVin(input);
         const report: z.infer<typeof AgentReportSchema> = {
             agent: 'vin-diesel',
             report: result,
@@ -302,7 +298,7 @@ class ForemanatorTool extends Tool {
     schema = ForemanatorLogInputSchema;
     
     async _call(input: z.infer<typeof ForemanatorLogInputSchema>) {
-        const result = await handleForemanatorLog(input);
+        const result = await processDailyLog(input);
         const report: z.infer<typeof AgentReportSchema> = { agent: 'foremanator', report: result };
         return JSON.stringify(report);
     }
@@ -353,7 +349,7 @@ class OsintScanTool extends Tool {
     schema = OsintInputSchema;
 
     async _call(input: z.infer<typeof OsintInputSchema>) {
-        const result = await handleOsintScan(input);
+        const result = await performOsintScan(input);
         const report: z.infer<typeof AgentReportSchema> = {
             agent: 'osint',
             report: result,
