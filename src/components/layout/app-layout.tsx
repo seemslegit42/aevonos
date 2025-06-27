@@ -1,23 +1,31 @@
-
 'use client';
 
 import React from 'react';
 import { usePathname } from 'next/navigation';
-import TopBar from '@/components/layout/top-bar';
-import { useAppStore } from '@/store/app-store';
 import dynamic from 'next/dynamic';
+import { Skeleton } from '@/components/ui/skeleton';
 
-const BeepAvatar = dynamic(() => import('@/components/beep-avatar'), { 
-  ssr: false,
-  // Add a placeholder to prevent layout shift while the component loads
-  loading: () => <div className="fixed bottom-6 right-6 z-50 w-28 h-28" />
-});
+const MainLayout = dynamic(() => 
+  import('@/components/layout/main-layout').then((mod) => mod.MainLayout), 
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex flex-col h-screen p-4 gap-4">
+        <Skeleton className="h-[68px] w-full" />
+        <div className="flex-grow">
+          <Skeleton className="h-full w-full" />
+        </div>
+      </div>
+    ),
+  }
+);
+
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
-  const { isLoading, handleCommandSubmit, beepOutput } = useAppStore();
   const pathname = usePathname();
 
-  const publicPaths = ['/login', '/register'];
+  // Define public paths that don't need the main authenticated layout
+  const publicPaths = ['/login', '/register', '/validator'];
   const isPublicPage = publicPaths.some(p => pathname.startsWith(p));
 
   if (isPublicPage) {
@@ -25,12 +33,8 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="flex flex-col h-screen p-4 gap-4">
-      <TopBar onCommandSubmit={handleCommandSubmit} isLoading={isLoading} />
-      <main className="flex-grow flex flex-col min-h-0 overflow-y-auto">
+    <MainLayout>
         {children}
-      </main>
-      <BeepAvatar isLoading={isLoading} beepOutput={beepOutput} />
-    </div>
+    </MainLayout>
   );
 }
