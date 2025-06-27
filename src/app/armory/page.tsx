@@ -5,6 +5,15 @@ import { MicroAppListingCard } from '@/components/armory/micro-app-listing-card'
 
 const mockApps = [
   {
+    id: 'infidelity-radar',
+    name: 'Infidelity Radar',
+    author: 'Aegis Systems',
+    description: 'Trust is earned. So is suspicion. Tap into AI-enhanced pattern analysis, social scraping, and behavioral drift detection to finally know the truth. Scan for free. Confirm for real.',
+    price: '$19/mo',
+    imageUrl: 'https://placehold.co/600x400.png',
+    imageHint: 'private investigation security',
+  },
+  {
     id: 'rico-suave',
     name: 'Rico Suave: Vibe Check',
     author: 'ΛΞVON Labs',

@@ -22,7 +22,8 @@ export type MicroAppType =
   | 'aegis-control'
   | 'contact-list'
   | 'pam-poovey-onboarding'
-  | 'beep-wingman';
+  | 'beep-wingman'
+  | 'infidelity-radar';
 
 // Define the shape of a MicroApp instance
 export interface MicroApp {
@@ -47,6 +48,7 @@ const defaultAppDetails: Record<MicroAppType, Omit<MicroApp, 'id' | 'contentProp
   'contact-list': { type: 'contact-list', title: 'Contact List', description: 'A list of contacts from the CRM.' },
   'pam-poovey-onboarding': { type: 'pam-poovey-onboarding', title: 'Pam Poovey: HR', description: 'Onboarding, complaints, and questionable life advice.' },
   'beep-wingman': { type: 'beep-wingman', title: 'BEEP™ Wingman', description: 'Dating Automation for High-Functioning Degenerates.' },
+  'infidelity-radar': { type: 'infidelity-radar', title: 'Infidelity Radar', description: 'Because intuition deserves evidence.' },
 };
 
 

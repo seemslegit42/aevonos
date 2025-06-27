@@ -6,13 +6,14 @@ import { EchoIcon } from '@/components/icons/EchoIcon';
 import { AegisIcon } from '@/components/icons/AegisIcon';
 import { PamPooveyIcon } from '@/components/icons/PamPooveyIcon';
 import { BeepWingmanIcon } from '@/components/icons/BeepWingmanIcon';
-import { Users } from 'lucide-react';
+import { Users, EyeOff } from 'lucide-react';
 
 import { type MicroAppType } from '@/store/app-store';
 import ContactList from './micro-apps/contact-list';
 import AegisReport from './micro-apps/aegis-report';
 import PamPooveyOnboarding from './micro-apps/pam-poovey-onboarding';
 import BeepWingman from './micro-apps/beep-wingman';
+import InfidelityRadar from './micro-apps/infidelity-radar';
 
 type ComponentRegistry = {
     icon: React.ComponentType<any>;
@@ -47,6 +48,10 @@ export const microAppRegistry: Record<MicroAppType, ComponentRegistry> = {
   'beep-wingman': {
     icon: BeepWingmanIcon,
     content: BeepWingman,
+  },
+  'infidelity-radar': {
+    icon: EyeOff,
+    content: InfidelityRadar,
   },
 };
 
