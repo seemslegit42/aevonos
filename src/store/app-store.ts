@@ -13,6 +13,9 @@ import type { DrSyntaxOutput } from '@/ai/agents/dr-syntax-schemas';
 import type { Contact } from '@/ai/tools/crm-schemas';
 import type { UserCommandOutput, AgentReportSchema } from '@/ai/agents/beep-schemas';
 import { OsintOutput } from '@/ai/agents/osint-schemas';
+import type { WinstonWolfeOutput } from '@/ai/agents/winston-wolfe-schemas';
+import type { KifKrokerAnalysisOutput } from '@/ai/agents/kif-kroker-schemas';
+import type { VandelayAlibiOutput } from '@/ai/agents/vandelay-schemas';
 
 
 // Define the types of MicroApps available in the OS
@@ -229,7 +232,7 @@ export const useAppStore = create<AppState>((set, get) => {
           upsertApp('dr-syntax', { 
               id: 'dr-syntax-main',
               title: `Critique Result (Rating: ${drSyntaxReport.rating}/10)`,
-              description: `Critique for "${drSyntaxReport.suggestion.substring(0, 20)}..."`,
+              description: `Critique for a piece of content.`,
               contentProps: drSyntaxReport
           });
           break;
@@ -246,15 +249,18 @@ export const useAppStore = create<AppState>((set, get) => {
             break;
         
         case 'winston-wolfe':
-            upsertApp('winston-wolfe', { id: 'winston-wolfe-main', title: 'The Winston Wolfe', description: 'A solution is ready.', contentProps: report.report });
+             const winstonReport: WinstonWolfeOutput = report.report;
+            upsertApp('winston-wolfe', { id: 'winston-wolfe-main', contentProps: winstonReport });
             break;
 
         case 'kif-kroker':
-            upsertApp('kif-kroker', { id: 'kif-kroker-main', title: 'The Kif Kroker', description: 'Comms Analysis', contentProps: report.report });
+            const kifReport: KifKrokerAnalysisOutput = report.report;
+            upsertApp('kif-kroker', { id: 'kif-kroker-main', contentProps: kifReport });
             break;
         
         case 'vandelay':
-            upsertApp('vandelay', { id: 'vandelay-main', title: 'Vandelay Industries', description: 'Alibi Generated', contentProps: report.report });
+             const vandelayReport: VandelayAlibiOutput = report.report;
+            upsertApp('vandelay', { id: 'vandelay-main', contentProps: { alibi: vandelayReport } });
             break;
         
         case 'jroc':

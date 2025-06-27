@@ -1,33 +1,44 @@
+
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Loader2, Calendar, Users, Wand2, Copy } from 'lucide-react';
-import { createVandelayAlibi } from '@/app/actions';
 import type { VandelayAlibiOutput } from '@/ai/agents/vandelay-schemas';
 import { Label } from '../ui/label';
 import { Switch } from '../ui/switch';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 import { useToast } from '@/hooks/use-toast';
 import { Input } from '../ui/input';
+import { useAppStore } from '@/store/app-store';
 
-export default function Vandelay() {
-    const [isLoading, setIsLoading] = useState(false);
-    const [alibi, setAlibi] = useState<VandelayAlibiOutput | null>(null);
+export default function Vandelay(props: { alibi?: VandelayAlibiOutput } | {}) {
+    const { handleCommandSubmit, isLoading } = useAppStore(state => ({
+        handleCommandSubmit: state.handleCommandSubmit,
+        isLoading: state.isLoading
+    }));
+    const [alibi, setAlibi] = useState<VandelayAlibiOutput | null>(props && 'alibi' in props ? props.alibi : null);
     const [addAttendees, setAddAttendees] = useState(false);
     const [topicHint, setTopicHint] = useState('');
     const { toast } = useToast();
 
+    useEffect(() => {
+        if (props && 'alibi' in props) {
+            setAlibi(props.alibi);
+        }
+    }, [props]);
+
     const handleCreateAlibi = async () => {
-        setIsLoading(true);
-        setAlibi(null);
-        // The `addAttendees` flag is now passed directly to the agent.
-        // No more client-side mocking. This is a production-grade feature.
-        const response = await createVandelayAlibi({ topicHint, addAttendees });
-        setAlibi(response);
-        setIsLoading(false);
+        let command = `create an alibi`;
+        if (topicHint) {
+            command += ` about "${topicHint}"`;
+        }
+        if (addAttendees) {
+            command += ` and add plausible attendees`;
+        }
+        handleCommandSubmit(command);
     };
 
     const handleCopyToClipboard = (text: string) => {
