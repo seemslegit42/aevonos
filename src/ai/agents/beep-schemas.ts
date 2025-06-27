@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { DrSyntaxOutputSchema } from './dr-syntax-schemas';
 import { AegisAnomalyScanOutputSchema } from './aegis-schemas';
 import { ContactSchema, DeleteContactOutputSchema } from '@/ai/tools/crm-schemas';
+import { BillingUsageSchema } from '@/ai/tools/billing-schemas';
 
 // Schemas from the original BEEP agent, preserved for the public contract.
 const LaunchableAppTypeSchema = z.enum([
@@ -11,6 +12,7 @@ const LaunchableAppTypeSchema = z.enum([
   'pam-poovey-onboarding',
   'beep-wingman',
   'infidelity-radar',
+  'usage-monitor',
 ]);
 
 export const AppToLaunchSchema = z.object({
@@ -46,6 +48,11 @@ const CrmAgentReportSchema = z.discriminatedUnion('action', [
     CrmDeletionReportSchema,
 ]);
 
+const BillingAgentReportSchema = z.object({
+    action: z.literal('get_usage'),
+    report: BillingUsageSchema.describe('The billing usage details.'),
+});
+
 
 export const AgentReportSchema = z.discriminatedUnion('agent', [
   z.object({
@@ -63,6 +70,10 @@ export const AgentReportSchema = z.discriminatedUnion('agent', [
    z.object({
     agent: z.literal('crm'),
     report: CrmAgentReportSchema,
+  }),
+  z.object({
+    agent: z.literal('billing'),
+    report: BillingAgentReportSchema,
   }),
 ]);
 

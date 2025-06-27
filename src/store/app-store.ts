@@ -25,7 +25,8 @@ export type MicroAppType =
   | 'contact-list'
   | 'pam-poovey-onboarding'
   | 'beep-wingman'
-  | 'infidelity-radar';
+  | 'infidelity-radar'
+  | 'usage-monitor';
 
 // Define the shape of a MicroApp instance
 export interface MicroApp {
@@ -51,6 +52,7 @@ const defaultAppDetails: Record<MicroAppType, Omit<MicroApp, 'id' | 'contentProp
   'pam-poovey-onboarding': { type: 'pam-poovey-onboarding', title: 'Pam Poovey: HR', description: 'Onboarding, complaints, and questionable life advice.' },
   'beep-wingman': { type: 'beep-wingman', title: 'BEEP™ Wingman', description: 'Dating Automation for High-Functioning Degenerates.' },
   'infidelity-radar': { type: 'infidelity-radar', title: 'Infidelity Radar', description: 'Because intuition deserves evidence.' },
+  'usage-monitor': { type: 'usage-monitor', title: 'Usage Monitor', description: 'Monitor your Agent Action consumption.' },
 };
 
 
@@ -198,6 +200,19 @@ export const useAppStore = create<AppState>((set, get) => {
         case 'crm':
           processCrmReport(report.report);
           break;
+        
+        case 'billing':
+            if (report.report.action === 'get_usage') {
+                const usageApp: MicroApp = {
+                    id: 'usage-monitor-main',
+                    type: 'usage-monitor',
+                    title: 'Usage Monitor',
+                    description: 'Your current agent action usage.',
+                    contentProps: report.report.report,
+                };
+                upsertMicroApp(usageApp);
+            }
+            break;
       }
     }
   };
@@ -255,7 +270,7 @@ export const useAppStore = create<AppState>((set, get) => {
       
       // Clear previous suggestions and reports before executing a new command.
       set(state => ({
-          apps: state.apps.filter(app => app.type !== 'ai-suggestion' && app.id !== 'aegis-report-main')
+          apps: state.apps.filter(app => app.type !== 'ai-suggestion' && app.id !== 'aegis-report-main' && app.id !== 'usage-monitor-main')
       }));
 
       try {

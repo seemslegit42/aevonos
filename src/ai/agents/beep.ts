@@ -32,6 +32,7 @@ import { aegisAnomalyScan } from '@/ai/agents/aegis';
 import { AegisAnomalyScanOutputSchema } from './aegis-schemas';
 import { createContactInDb, listContactsFromDb, deleteContactInDb, updateContactInDb } from '@/ai/tools/crm-tools';
 import { CreateContactInputSchema, DeleteContactInputSchema, UpdateContactInputSchema } from '@/ai/tools/crm-schemas';
+import { getUsageDetails } from '@/ai/tools/billing-tools';
 import {
     type UserCommandInput,
     UserCommandOutputSchema,
@@ -143,8 +144,26 @@ class DeleteContactTool extends Tool {
     }
 }
 
+class GetUsageTool extends Tool {
+    name = 'getUsageDetails';
+    description = 'Gets the current billing and agent action usage details. Use this when the user asks about their usage, limits, plan, or billing.';
+    schema = z.object({}); // No input
 
-const tools = [new FinalAnswerTool(), new DrSyntaxTool(), new CreateContactTool(), new UpdateContactTool(), new ListContactsTool(), new DeleteContactTool()];
+    async _call() {
+        const result = await getUsageDetails();
+        const report: z.infer<typeof AgentReportSchema> = {
+            agent: 'billing',
+            report: {
+                action: 'get_usage',
+                report: result
+            }
+        };
+        return JSON.stringify(report);
+    }
+}
+
+
+const tools = [new FinalAnswerTool(), new DrSyntaxTool(), new CreateContactTool(), new UpdateContactTool(), new ListContactsTool(), new DeleteContactTool(), new GetUsageTool()];
 const modelWithTools = geminiModel.bind({
   tools: tools.map(tool => ({
     type: 'function',
@@ -240,8 +259,8 @@ export async function processUserCommand(input: UserCommandInput): Promise<UserC
   Your process:
   1. Analyze the user's command AND the Aegis security report from the System Message.
   2. Based on the command, decide which specialized agents or tools are needed. Delegate with authority. For example: "This smells like a social ops task. Forwarding to Wingman. I’ll be here if it backfires."
-  3. You have the following tools at your disposal: 'critiqueContent' (for Dr. Syntax), CRM tools ('createContact', 'updateContact', 'listContacts', 'deleteContact').
-  4. If the user wants to launch an application, you MUST include it in the 'appsToLaunch' array. Available apps are: 'file-explorer', 'terminal', 'echo-control', 'pam-poovey-onboarding', 'beep-wingman', 'infidelity-radar'.
+  3. You have the following tools at your disposal: 'critiqueContent' (for Dr. Syntax), CRM tools ('createContact', 'updateContact', 'listContacts', 'deleteContact'), and 'getUsageDetails'.
+  4. If the user wants to launch an application, you MUST include it in the 'appsToLaunch' array. Available apps are: 'file-explorer', 'terminal', 'echo-control', 'pam-poovey-onboarding', 'beep-wingman', 'infidelity-radar', 'usage-monitor'.
   5. When you have gathered all necessary information from your delegated agents and are ready to provide the final response to the user, you MUST call the 'final_answer' tool. This is your final, decisive action.
   6. Your 'responseText' should be in character—witty, confident, and direct. It should confirm the actions taken and what the user should expect next.
   7. Populate all arguments for the 'final_answer' tool correctly, especially the 'agentReports' array, which must include the initial Aegis report and any subsequent reports from tools you called.

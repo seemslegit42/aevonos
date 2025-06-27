@@ -94,7 +94,7 @@ const SettingsView = () => {
         const response = await handleGenerateWingmanMessage({ targetDescription, persona });
         setResult(response.openingMessage);
         setIsLoading(false);
-    }
+    };
 
     return (
         <div className="flex flex-col gap-4 p-4">
