@@ -14,7 +14,6 @@ import { formatDistanceToNow } from 'date-fns';
 
 type SecurityAlert = {
   id: string;
-  tenantId: number;
   type: string;
   explanation: string;
   riskLevel: 'low' | 'medium' | 'high' | 'critical';
@@ -44,8 +43,6 @@ function AlertCard({ alert }: { alert: SecurityAlert }) {
                 {alert.explanation}
                 <div className="text-xs text-muted-foreground mt-2 flex justify-between">
                     <span>{formatDistanceToNow(new Date(alert.timestamp), { addSuffix: true })}</span>
-                    {/* Actionable options could be buttons in a real implementation */}
-                    {/* <span>Actions: {alert.actionableOptions.join(', ')}</span> */}
                 </div>
             </AlertDescription>
         </Alert>
@@ -61,10 +58,10 @@ export default function AegisThreatScope() {
         setIsLoading(true);
         setError(null);
         try {
-            // Using the API route we created earlier
             const response = await fetch('/api/security/alerts');
             if (!response.ok) {
-                throw new Error('Failed to fetch security alerts from the Aegis network.');
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Failed to fetch security alerts from the Aegis network.');
             }
             const data = await response.json();
             setAlerts(data);
