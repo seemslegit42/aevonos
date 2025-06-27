@@ -32,6 +32,7 @@ import {
     analyzeInvite,
     handleVinDieselValidation,
     generateBusinessKit,
+    analyzeLaheyLog,
 } from '@/app/actions';
 import {
   DrSyntaxInputSchema,
@@ -46,6 +47,7 @@ import { WinstonWolfeInputSchema } from './winston-wolfe-schemas';
 import { KifKrokerAnalysisInputSchema } from './kif-kroker-schemas';
 import { VandelayAlibiInputSchema } from './vandelay-schemas';
 import { JrocInputSchema } from './jroc-schemas';
+import { LaheyAnalysisInputSchema } from './lahey-schemas';
 
 import {
     type UserCommandInput,
@@ -239,12 +241,24 @@ class JrocTool extends Tool {
   }
 }
 
+class LaheyTool extends Tool {
+  name = 'investigateLog';
+  description = 'Analyzes a log entry for suspicious activity with the cynical eye of an alcoholic ex-cop. Use this to investigate employee actions or any other log data.';
+  schema = LaheyAnalysisInputSchema;
+  
+  async _call(input: z.infer<typeof LaheyAnalysisInputSchema>) {
+    const result = await analyzeLaheyLog(input);
+    const report: z.infer<typeof AgentReportSchema> = { agent: 'lahey', report: result };
+    return JSON.stringify(report);
+  }
+}
+
 
 const tools: Tool[] = [
     new FinalAnswerTool(), new DrSyntaxTool(), 
     new CreateContactTool(), new UpdateContactTool(), new ListContactsTool(), new DeleteContactTool(), 
     new GetUsageTool(), new VinDieselTool(), new WinstonWolfeTool(), new KifKrokerTool(),
-    new VandelayTool(), new JrocTool(),
+    new VandelayTool(), new JrocTool(), new LaheyTool(),
 ];
 
 const modelWithTools = geminiModel.bind({

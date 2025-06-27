@@ -1,3 +1,4 @@
+
 import { z } from 'zod';
 import { DrSyntaxOutputSchema } from './dr-syntax-schemas';
 import { AegisAnomalyScanOutputSchema } from './aegis-schemas';
@@ -8,6 +9,7 @@ import { VandelayAlibiOutputSchema } from './vandelay-schemas';
 import { WinstonWolfeOutputSchema } from './winston-wolfe-schemas';
 import { KifKrokerAnalysisOutputSchema } from './kif-kroker-schemas';
 import { JrocOutputSchema } from './jroc-schemas';
+import { LaheyAnalysisOutputSchema } from './lahey-schemas';
 
 // Schemas from the original BEEP agent, preserved for the public contract.
 const LaunchableAppTypeSchema = z.enum([
@@ -27,6 +29,7 @@ const LaunchableAppTypeSchema = z.enum([
   'paper-trail',
   'oracle',
   'jroc-business-kit',
+  'lahey-surveillance',
 ]);
 
 export const AppToLaunchSchema = z.object({
@@ -110,6 +113,10 @@ export const AgentReportSchema = z.discriminatedUnion('agent', [
   z.object({
     agent: z.literal('jroc'),
     report: JrocOutputSchema.describe('The full report from the J-ROC agent.'),
+  }),
+  z.object({
+    agent: z.literal('lahey'),
+    report: LaheyAnalysisOutputSchema.describe('The full report from the Lahey Surveillance agent.'),
   }),
 ]);
 

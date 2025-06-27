@@ -19,6 +19,7 @@ import { EyeOff } from 'lucide-react';
 import { OracleIcon } from './icons/OracleIcon';
 import { PaperTrailIcon } from './icons/PaperTrailIcon';
 import { JrocIcon } from './icons/JrocIcon';
+import { LaheyIcon } from './icons/LaheyIcon';
 
 
 import { type MicroAppType } from '@/store/app-store';
@@ -37,6 +38,7 @@ import Vandelay from './micro-apps/vandelay';
 import Oracle from './micro-apps/oracle';
 import PaperTrail from './micro-apps/paper-trail';
 import JrocBusinessKit from './micro-apps/jroc-business-kit';
+import LaheyCommander from './micro-apps/lahey-commander';
 
 
 type ComponentRegistry = {
@@ -116,6 +118,10 @@ export const microAppRegistry: Record<MicroAppType, ComponentRegistry> = {
   'jroc-business-kit': {
       icon: JrocIcon,
       content: JrocBusinessKit,
+  },
+  'lahey-surveillance': {
+      icon: LaheyIcon,
+      content: LaheyCommander,
   }
 };
 

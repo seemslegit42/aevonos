@@ -34,6 +34,8 @@ import { scanEvidence as scanEvidenceFlow } from '@/ai/agents/paper-trail';
 import type { PaperTrailScanInput, PaperTrailScanOutput } from '@/ai/agents/paper-trail-schemas';
 import { generateBusinessKit as generateBusinessKitFlow } from '@/ai/agents/jroc';
 import type { JrocInput, JrocOutput } from '@/ai/agents/jroc-schemas';
+import { analyzeLaheyLog as analyzeLaheyLogFlow } from '@/ai/agents/lahey';
+import type { LaheyAnalysisInput, LaheyAnalysisOutput } from '@/ai/agents/lahey-schemas';
 
 
 export async function handleCommand(command: string): Promise<UserCommandOutput> {
@@ -262,6 +264,22 @@ export async function generateBusinessKit(input: JrocInput): Promise<JrocOutput>
             businessName: "Rock Pile Pictures",
             tagline: "It's not a rock pile, it's a rock-solid business, know'm sayin'?",
             logoDescription: "Aight check it, server's down, so this logo is just a drawing of a microphone on a napkin. It's abstract, aight?",
+        };
+    }
+}
+
+export async function analyzeLaheyLog(input: LaheyAnalysisInput): Promise<LaheyAnalysisOutput> {
+    try {
+        const result = await analyzeLaheyLogFlow(input);
+        return result;
+    } catch (error) {
+        console.error('Error in Lahey analysis flow:', error);
+        return {
+            employee: 'Unknown',
+            timestamp: new Date().toISOString(),
+            event: 'Surveillance feed corrupted.',
+            shitstorm_index: 100,
+            lahey_commentary: "The liquor couldn't process the signal, bud. The shit-hawks might have gotten to the servers."
         };
     }
 }
