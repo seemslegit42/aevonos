@@ -44,6 +44,7 @@ const LaunchableAppTypeSchema = z.enum([
   'beep-wingman',
   'aegis-threatscope',
   'dr-syntax',
+  'aegis-command',
 ]);
 
 export const AppToLaunchSchema = z.object({
