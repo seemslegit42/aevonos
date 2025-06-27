@@ -23,21 +23,29 @@ export interface Edge {
 }
 
 const initialNodes: Node[] = [
-    { id: 'trigger-1', type: 'trigger', position: { x: 50, y: 250 }, data: { label: 'BEEP Command Received', event: 'user_command' } },
-    { id: 'agent-1', type: 'agent', position: { x: 300, y: 250 }, data: { label: 'BEEP Agent Kernel', personality: 'witty, sarcastic', model: 'gemini-2.0-flash' } },
-    { id: 'tool-drsyntax', type: 'tool', position: { x: 600, y: 50 }, data: { label: 'Tool: critiqueContent', agent: 'Dr. Syntax' } },
-    { id: 'tool-crm-list', type: 'tool', position: { x: 600, y: 150 }, data: { label: 'Tool: listContacts', service: 'CRM' } },
-    { id: 'tool-crm-create', type: 'tool', position: { x: 600, y: 250 }, data: { label: 'Tool: createContact', service: 'CRM' } },
-    { id: 'tool-billing', type: 'tool', position: { x: 600, y: 350 }, data: { label: 'Tool: getUsageDetails', service: 'Billing' } },
-    { id: 'tool-final-answer', type: 'tool', position: { x: 900, y: 250 }, data: { label: 'Output: Final Answer', schema: 'UserCommandOutput' } },
+    { id: 'trigger-1', type: 'trigger', position: { x: 50, y: 350 }, data: { label: 'BEEP Command Received', event: 'user_command' } },
+    { id: 'agent-1', type: 'agent', position: { x: 300, y: 350 }, data: { label: 'BEEP Agent Kernel', personality: 'witty, sarcastic', model: 'gemini-2.0-flash' } },
+    
+    { id: 'tool-drsyntax', type: 'tool-dr-syntax', position: { x: 600, y: 50 }, data: { label: 'Dr. Syntax', agent: 'dr-syntax' } },
+    { id: 'tool-crm', type: 'tool-crm', position: { x: 600, y: 150 }, data: { label: 'CRM Tools', service: 'CRM' } },
+    { id: 'tool-wolfe', type: 'tool-winston-wolfe', position: { x: 600, y: 250 }, data: { label: 'Winston Wolfe', service: 'Reputation' } },
+    { id: 'tool-kif', type: 'tool-kif-kroker', position: { x: 600, y: 350 }, data: { label: 'Kif Kroker', service: 'Comms' } },
+    { id: 'tool-vandelay', type: 'tool-vandelay', position: { x: 600, y: 450 }, data: { label: 'Vandelay', service: 'Calendar' } },
+    { id: 'tool-lumbergh', type: 'tool-lumbergh', position: { x: 600, y: 550 }, data: { label: 'Project Lumbergh', service: 'Meetings' } },
+    { id: 'tool-lucille', type: 'tool-lucille-bluth', position: { x: 600, y: 650 }, data: { label: 'Lucille Bluth', service: 'Expenses' } },
+    
+    { id: 'tool-final-answer', type: 'tool-final-answer', position: { x: 900, y: 350 }, data: { label: 'Final Answer', schema: 'UserCommandOutput' } },
 ];
 
 const initialEdges: Edge[] = [
     { id: 'e-trigger-agent', source: 'trigger-1', target: 'agent-1' },
     { id: 'e-agent-drsyntax', source: 'agent-1', target: 'tool-drsyntax' },
-    { id: 'e-agent-crm-list', source: 'agent-1', target: 'tool-crm-list' },
-    { id: 'e-agent-crm-create', source: 'agent-1', target: 'tool-crm-create' },
-    { id: 'e-agent-billing', source: 'agent-1', target: 'tool-billing' },
+    { id: 'e-agent-crm', source: 'agent-1', target: 'tool-crm' },
+    { id: 'e-agent-wolfe', source: 'agent-1', target: 'tool-wolfe' },
+    { id: 'e-agent-kif', source: 'agent-1', target: 'tool-kif' },
+    { id: 'e-agent-vandelay', source: 'agent-1', target: 'tool-vandelay' },
+    { id: 'e-agent-lumbergh', source: 'agent-1', target: 'tool-lumbergh' },
+    { id: 'e-agent-lucille', source: 'agent-1', target: 'tool-lucille' },
     { id: 'e-agent-final', source: 'agent-1', target: 'tool-final-answer' },
 ];
 

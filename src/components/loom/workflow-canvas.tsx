@@ -4,15 +4,33 @@
 import React from 'react';
 import { useDroppable, useDraggable } from '@dnd-kit/core';
 import type { Node, Edge } from '@/app/loom/page';
-import { Bot, PlayCircle, GitBranch, Hammer, LucideProps } from 'lucide-react';
+import { Bot, PlayCircle, GitBranch, LucideProps } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { WinstonWolfeIcon } from '../icons/WinstonWolfeIcon';
+import { KifKrokerIcon } from '../icons/KifKrokerIcon';
+import { VandelayIcon } from '../icons/VandelayIcon';
+import { PaperTrailIcon } from '../icons/PaperTrailIcon';
+import { LumberghIcon } from '../icons/LumberghIcon';
+import { LucilleBluthIcon } from '../icons/LucilleBluthIcon';
+import { RolodexIcon } from '../icons/RolodexIcon';
+import { DrSyntaxIcon } from '../icons/DrSyntaxIcon';
+import { AddressBookIcon } from '../icons/AddressBookIcon';
+import { CrystalIcon } from '../icons/CrystalIcon';
 
-
-const nodeIcons: Record<string, React.FC<LucideProps>> = {
+const nodeIcons: Record<string, React.ComponentType<any>> = {
     trigger: PlayCircle,
     agent: Bot,
     logic: GitBranch,
-    tool: Hammer,
+    'tool-winston-wolfe': WinstonWolfeIcon,
+    'tool-kif-kroker': KifKrokerIcon,
+    'tool-vandelay': VandelayIcon,
+    'tool-paper-trail': PaperTrailIcon,
+    'tool-lumbergh': LumberghIcon,
+    'tool-lucille-bluth': LucilleBluthIcon,
+    'tool-rolodex': RolodexIcon,
+    'tool-dr-syntax': DrSyntaxIcon,
+    'tool-crm': AddressBookIcon,
+    'tool-final-answer': CrystalIcon,
 };
 
 function WorkflowNodeItem({ node, onClick, isSelected }: { node: Node, onClick: (node: Node) => void, isSelected: boolean }) {
@@ -27,7 +45,7 @@ function WorkflowNodeItem({ node, onClick, isSelected }: { node: Node, onClick: 
         zIndex: isSelected ? 10 : 1,
     };
 
-    const Icon = nodeIcons[node.type];
+    const Icon = nodeIcons[node.type] || CrystalIcon;
 
     return (
         <div ref={setNodeRef} style={style} {...listeners} {...attributes} onClick={() => onClick(node)}>
