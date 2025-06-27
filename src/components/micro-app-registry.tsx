@@ -9,6 +9,7 @@ import { PamPooveyIcon } from '@/components/icons/PamPooveyIcon';
 import { BeepWingmanIcon } from '@/components/icons/BeepWingmanIcon';
 import { AddressBookIcon } from '@/components/icons/AddressBookIcon';
 import { VinDieselIcon } from '@/components/icons/VinDieselIcon';
+import { LumberghIcon } from '@/components/icons/LumberghIcon';
 import { EyeOff } from 'lucide-react';
 
 import { type MicroAppType } from '@/store/app-store';
@@ -18,6 +19,7 @@ import PamPooveyOnboarding from './micro-apps/pam-poovey-onboarding';
 import BeepWingman from './micro-apps/beep-wingman';
 import InfidelityRadar from './micro-apps/infidelity-radar';
 import VinDiesel from './micro-apps/vin-diesel';
+import ProjectLumbergh from './micro-apps/project-lumbergh';
 
 type ComponentRegistry = {
     icon: React.ComponentType<any>;
@@ -60,6 +62,10 @@ export const microAppRegistry: Record<MicroAppType, ComponentRegistry> = {
   'vin-diesel': {
     icon: VinDieselIcon,
     content: VinDiesel,
+  },
+  'project-lumbergh': {
+    icon: LumberghIcon,
+    content: ProjectLumbergh,
   },
 };
 

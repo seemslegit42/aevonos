@@ -17,6 +17,8 @@ import { generateWingmanMessage as generateWingmanMessageFlow } from '@/ai/agent
 import type { WingmanInput, WingmanOutput } from '@/ai/agents/wingman-schemas';
 import { validateVin as validateVinFlow } from '@/ai/agents/vin-diesel';
 import type { VinDieselInput, VinDieselOutput } from '@/ai/agents/vin-diesel-schemas';
+import { analyzeInvite as analyzeInviteFlow } from '@/ai/agents/lumbergh';
+import type { LumberghAnalysisInput, LumberghAnalysisOutput } from '@/ai/agents/lumbergh-schemas';
 
 export async function handleCommand(command: string): Promise<UserCommandOutput> {
   try {
@@ -135,4 +137,18 @@ export async function handleVinDieselValidation(input: VinDieselInput): Promise<
             statusMessage: "The engine sputtered. There was a server error, try again.",
         };
     }
+}
+
+export async function analyzeInvite(input: LumberghAnalysisInput): Promise<LumberghAnalysisOutput> {
+  try {
+    const result = await analyzeInviteFlow(input);
+    return result;
+  } catch (error) {
+    console.error('Error in Project Lumbergh analysis flow:', error);
+    return {
+      isFlagged: true,
+      flagReason: "Yeeeeah, my own internal TPS reports are showing an error right now, so I can't really look at this. Mmmkay?",
+      declineMemos: [],
+    };
+  }
 }

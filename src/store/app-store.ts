@@ -26,7 +26,8 @@ export type MicroAppType =
   | 'pam-poovey-onboarding'
   | 'beep-wingman'
   | 'infidelity-radar'
-  | 'vin-diesel';
+  | 'vin-diesel'
+  | 'project-lumbergh';
 
 // Define the shape of a MicroApp instance
 export interface MicroApp {
@@ -53,6 +54,7 @@ const defaultAppDetails: Record<MicroAppType, Omit<MicroApp, 'id' | 'contentProp
   'beep-wingman': { type: 'beep-wingman', title: 'BEEP™ Wingman', description: 'Dating Automation for High-Functioning Degenerates.' },
   'infidelity-radar': { type: 'infidelity-radar', title: 'Infidelity Radar', description: 'Because intuition deserves evidence.' },
   'vin-diesel': { type: 'vin-diesel', title: 'VIN Diesel', description: 'Turbocharged compliance. For family.' },
+  'project-lumbergh': { type: 'project-lumbergh', title: 'Project Lumbergh', description: 'Yeah, about those meetings...' },
 };
 
 
