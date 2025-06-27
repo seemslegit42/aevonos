@@ -40,6 +40,8 @@ import { analyzeCompliance as analyzeComplianceFlow } from '@/ai/agents/sterilei
 import type { SterileishAnalysisInput, SterileishAnalysisOutput } from '@/ai/agents/sterileish-schemas';
 import { generateWingmanMessage as generateWingmanMessageFlow } from '@/ai/agents/wingman';
 import type { WingmanInput, WingmanOutput } from '@/ai/agents/wingman-schemas';
+import { performOsintScan as performOsintScanFlow } from '@/ai/agents/osint';
+import type { OsintInput, OsintOutput } from '@/ai/agents/osint-schemas';
 
 
 export async function handleCommand(command: string): Promise<UserCommandOutput> {
@@ -313,8 +315,31 @@ export async function generateWingmanMessage(input: WingmanInput): Promise<Wingm
   } catch (error) {
     console.error('Error in Wingman message generation flow:', error);
     return {
-      openingMessage: "My circuits must be crossed, because I can't think of a thing to say. There was a server error.",
+      suggestedMessage: "My circuits must be crossed, because I can't think of a thing to say. There was a server error.",
       cringeScore: 100,
+      vibe: 'You Will Regret This',
+      analysis: 'The agent failed to generate a response, which is maximum cringe.',
+      regretShieldTriggered: true,
+      regretShieldReason: 'Internal system error detected. Sending now would be highly unpredictable.',
+    };
+  }
+}
+
+export async function handleOsintScan(input: OsintInput): Promise<OsintOutput> {
+  try {
+    const result = await performOsintScanFlow(input);
+    return result;
+  } catch (error) {
+    console.error('Error in OSINT scan flow:', error);
+    return {
+      summary: "The agent could not complete the OSINT scan due to a system error. The digital trail went cold.",
+      riskFactors: [],
+      socialProfiles: [],
+      publicRecords: [],
+      digitalFootprint: {
+        overallVisibility: 'Low',
+        keyObservations: ["Scan failed due to an internal error."],
+      }
     };
   }
 }
