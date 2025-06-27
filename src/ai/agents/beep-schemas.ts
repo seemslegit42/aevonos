@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { DrSyntaxOutputSchema } from './dr-syntax-schemas';
 import { AegisAnomalyScanOutputSchema } from './aegis-schemas';
-import { ContactSchema } from '@/ai/tools/crm-tools';
+import { ContactSchema } from '@/ai/tools/crm-schemas';
 
 // Schemas from the original BEEP agent, preserved for the public contract.
 const LaunchableAppTypeSchema = z.enum([

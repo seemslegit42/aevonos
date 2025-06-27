@@ -30,7 +30,8 @@ import {
 } from '@/ai/agents/dr-syntax-schemas';
 import { aegisAnomalyScan } from '@/ai/agents/aegis';
 import { AegisAnomalyScanOutputSchema, type AegisAnomalyScanOutput } from './aegis-schemas';
-import { createContactInDb, CreateContactInputSchema, ContactSchema } from '@/ai/tools/crm-tools';
+import { createContactInDb } from '@/ai/tools/crm-tools';
+import { CreateContactInputSchema, ContactSchema } from '@/ai/tools/crm-schemas';
 import {
     type UserCommandInput,
     UserCommandOutputSchema,
