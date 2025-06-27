@@ -1,25 +1,36 @@
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { processUserCommand } from '@/ai/agents/beep';
+import { getSession } from '@/lib/auth';
+import { z } from 'zod';
 
-export async function POST(request: Request) {
+const BeepCommandRequestSchema = z.object({
+  command: z.string(),
+  context: z.record(z.any()).optional().nullable(),
+});
+
+
+export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { command } = body;
-
-    if (!command || typeof command !== 'string') {
-      return NextResponse.json({ error: 'Command is required and must be a string.' }, { status: 400 });
+    const session = await getSession(request);
+    if (!session?.userId || !session?.workspaceId) {
+        return NextResponse.json({ error: 'Unauthorized. A valid session token is required.' }, { status: 401 });
     }
 
-    // In a production environment, you would validate the bearer token here.
-    // const authorization = request.headers.get('Authorization');
-    // if (!authorization || !authorization.startsWith('Bearer ')) {
-    //   return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    // }
-    // const token = authorization.split(' ')[1];
-    // ... validate token and get user/tenant info ...
+    const body = await request.json();
+    const validation = BeepCommandRequestSchema.safeParse(body);
+    
+    if (!validation.success) {
+      return NextResponse.json({ error: 'Invalid command or context.', issues: validation.error.issues }, { status: 400 });
+    }
 
-    const beepResult = await processUserCommand({ userCommand: command });
+    const { command } = validation.data;
+
+    const beepResult = await processUserCommand({ 
+        userCommand: command,
+        userId: session.userId,
+        workspaceId: session.workspaceId,
+    });
 
     // Adapt the internal UserCommandOutput to the public API response schema from api-spec.md
     const apiResponse = {
@@ -28,7 +39,6 @@ export async function POST(request: Request) {
         appsToLaunch: beepResult.appsToLaunch,
         agentReports: beepResult.agentReports,
       },
-      // Note: suggestedCommands is not part of the public API spec, so it's omitted for this endpoint.
     };
 
     return NextResponse.json(apiResponse, { status: 200 });

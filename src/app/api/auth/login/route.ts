@@ -56,7 +56,15 @@ export async function POST(request: Request) {
     // We don't want to send the password hash back to the client
     const { password: _, ...userResponse } = user;
 
-    const response = NextResponse.json({ user: userResponse });
+    // Response must match AuthResponse schema in api-spec.md
+    const apiResponse = {
+        accessToken: token,
+        tokenType: 'Bearer',
+        expiresIn: 3600,
+        user: userResponse
+    };
+    
+    const response = NextResponse.json(apiResponse);
 
     response.cookies.set({
         name: 'session',

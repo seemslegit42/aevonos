@@ -71,7 +71,15 @@ export async function POST(request: Request) {
 
     const { password: _, ...userResponse } = user;
     
-    const response = NextResponse.json({ user: userResponse }, { status: 201 });
+    // Response must match AuthResponse schema in api-spec.md
+    const apiResponse = {
+        accessToken: token,
+        tokenType: 'Bearer',
+        expiresIn: 3600,
+        user: userResponse
+    };
+    
+    const response = NextResponse.json(apiResponse, { status: 201 });
 
     response.cookies.set({
         name: 'session',
