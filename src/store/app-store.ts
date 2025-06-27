@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { arrayMove } from '@dnd-kit/sortable';
 import type { DragEndEvent } from '@dnd-kit/core';
 
-import { handleCommand } from '@/app/actions';
+import { handleCommand, recallSessionAction } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
 import { checkForAnomalies } from '@/app/actions';
 
@@ -14,7 +14,9 @@ export type MicroAppType =
   | 'aegis-control' 
   | 'dr-syntax' 
   | 'aegis-report'
-  | 'ai-suggestion';
+  | 'ai-suggestion'
+  | 'echo-control'
+  | 'echo-recall';
 
 // Define the shape of a MicroApp instance
 export interface MicroApp {
@@ -33,6 +35,8 @@ const defaultAppDetails: Record<MicroAppType, Omit<MicroApp, 'id' | 'contentProp
   'dr-syntax': { type: 'dr-syntax', title: 'Dr. Syntax', description: 'Get your content critiqued. Brutally.' },
   'aegis-report': { type: 'aegis-report', title: 'Aegis Scan Report', description: 'Security scan result.'},
   'ai-suggestion': { type: 'ai-suggestion', title: 'AI Suggestion', description: 'Click to execute this command.' },
+  'echo-control': { type: 'echo-control', title: 'Recall Session', description: "Click to have Echo summarize the last session's activity." },
+  'echo-recall': { type: 'echo-recall', title: 'Session Recall', description: 'A summary of your last session.'},
 };
 
 
@@ -43,11 +47,13 @@ interface AppState {
   runAnomalyCheck: () => void;
   handleCommandSubmit: (command: string) => void;
   triggerAppAction: (appId: string) => void;
+  handleSessionRecall: () => void;
 }
 
 // A registry for app actions, decoupling them from the component.
 const appActionRegistry: Record<string, (get: () => AppState, set: (fn: (state: AppState) => AppState) => void, app: MicroApp) => void> = {
   'aegis-control': (get) => get().runAnomalyCheck(),
+  'echo-control': (get) => get().handleSessionRecall(),
   'ai-suggestion': (get, set, app) => {
     get().handleCommandSubmit(app.title);
   },
@@ -70,9 +76,9 @@ export const useAppStore = create<AppState>((set, get) => ({
     },
     {
       id: '3',
-      type: 'terminal',
-      title: 'Terminal',
-      description: 'Direct command-line access.',
+      type: 'echo-control',
+      title: 'Recall Session',
+      description: "Click to have Echo summarize the last session's activity.",
     },
     {
       id: '4',
@@ -136,6 +142,43 @@ export const useAppStore = create<AppState>((set, get) => ({
         variant: 'destructive',
         title: 'Error',
         description: 'Could not complete Aegis scan.',
+      });
+    } finally {
+      set({ isLoading: false });
+    }
+  },
+
+  handleSessionRecall: async () => {
+    set({ isLoading: true });
+    try {
+      // Dummy data for now. In a real scenario, this would come from a persisted log.
+      const dummyActivity = `User opened File Explorer.
+User ran 'critique this copy' in Dr. Syntax.
+User ran an Aegis scan at 14:32.
+User launched Loom Studio to inspect 'Client Onboarding' workflow.`;
+
+      const result = await recallSessionAction({ sessionActivity: dummyActivity });
+      
+      const recallApp: MicroApp = {
+        id: `echo-recall-${Date.now()}`,
+        type: 'echo-recall',
+        title: 'Echo: Session Recall',
+        description: `Recall from ${new Date().toLocaleTimeString()}`,
+        contentProps: { result },
+      };
+      
+      set(state => ({ apps: [...state.apps, recallApp] }));
+      
+      useToast.getState().toast({
+        title: 'Echo has remembered.',
+        description: 'A summary of your last session is now on your Canvas.',
+      });
+    } catch (error) {
+      console.error('Error recalling session:', error);
+      useToast.getState().toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Echo could not recall the session.',
       });
     } finally {
       set({ isLoading: false });

@@ -19,6 +19,7 @@ const LaunchableAppTypeSchema = z.enum([
     'terminal',
     'aegis-control',
     'dr-syntax',
+    'echo-control',
 ]);
 
 const AppToLaunchSchema = z.object({
@@ -70,8 +71,9 @@ You have access to the following Micro-Apps:
 - terminal: A command-line interface for direct system access.
 - aegis-control: A security panel to initiate system scans.
 - dr-syntax: An AI-powered tool to critique and improve text, code, or prompts.
+- echo-control: An app to recall and summarize your last session.
 
-Analyze the user's command. Determine which, if any, of these Micro-Apps should be launched.
+Analyze the user's command. Determine which, if any, of these Micro-Apps should be launched. For example, if the user says "what did I do yesterday?" or "recall my last session", you should launch 'echo-control'.
 
 If the command is a clear request to open an app (e.g., "open terminal", "launch loom studio", "I need to see my files"), populate the 'appsToLaunch' array with the corresponding app type.
 

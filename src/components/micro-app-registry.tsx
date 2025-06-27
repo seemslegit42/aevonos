@@ -5,8 +5,10 @@ import { TerminalIcon } from '@/components/icons/TerminalIcon';
 import { AegisIcon } from '@/components/icons/AegisIcon';
 import { CrystalIcon } from '@/components/icons/CrystalIcon';
 import { DrSyntaxIcon } from '@/components/icons/DrSyntaxIcon';
+import { EchoIcon } from '@/components/icons/EchoIcon';
 import { DrSyntaxApp } from '@/components/dr-syntax-app';
 import { AegisReportApp } from '@/components/aegis-report-app';
+import { EchoRecallApp } from '@/components/echo-recall-app';
 import { type MicroAppType } from '@/store/app-store';
 
 type ComponentRegistry = {
@@ -37,6 +39,13 @@ export const microAppRegistry: Record<MicroAppType, ComponentRegistry> = {
   },
   'ai-suggestion': {
       icon: CrystalIcon,
+  },
+  'echo-control': {
+    icon: EchoIcon,
+  },
+  'echo-recall': {
+    icon: EchoIcon,
+    content: EchoRecallApp,
   },
 };
 

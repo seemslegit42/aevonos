@@ -4,6 +4,7 @@ import { processUserCommand, type UserCommandOutput } from '@/ai/flows/initial-p
 import { aegisAnomalyScan } from '@/ai/agents/aegis';
 import { revalidatePath } from 'next/cache';
 import { drSyntaxCritique, type DrSyntaxInput, type DrSyntaxOutput } from '@/ai/agents/dr-syntax';
+import { recallSession, type SessionRecallInput, type SessionRecallOutput } from '@/ai/agents/echo';
 
 export async function handleCommand(command: string): Promise<UserCommandOutput> {
   try {
@@ -41,6 +42,19 @@ export async function handleDrSyntaxCritique(input: DrSyntaxInput): Promise<DrSy
       critique: "I tried to process your request, but the sheer mediocrity of the input seems to have crashed my advanced systems. Or perhaps it was just a server error. It's hard to tell the difference with this level of input.",
       suggestion: "Try again, but with a modicum of effort this time.",
       rating: 1,
+    };
+  }
+}
+
+export async function recallSessionAction(input: SessionRecallInput): Promise<SessionRecallOutput> {
+  try {
+    const result = await recallSession(input);
+    return result;
+  } catch (error) {
+    console.error('Error in Echo recall:', error);
+    return {
+      summary: "I tried to remember what happened, but the memory is fuzzy. There might have been a system error.",
+      keyPoints: ["Could not retrieve session details."],
     };
   }
 }
