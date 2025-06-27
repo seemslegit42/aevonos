@@ -2,9 +2,10 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { type MicroApp } from '@/store/app-store';
+import { type MicroApp, useAppStore } from '@/store/app-store';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { getAppIcon, getAppContent } from './micro-app-registry';
 
 interface MicroAppCardProps {
   app: MicroApp;
@@ -12,7 +13,9 @@ interface MicroAppCardProps {
 }
 
 export default function MicroAppCard({ app, index }: MicroAppCardProps) {
-  const Icon = app.icon;
+  const triggerAppAction = useAppStore((state) => state.triggerAppAction);
+  const Icon = getAppIcon(app.type);
+  const ContentComponent = getAppContent(app.type);
 
   const {
     attributes,
@@ -40,6 +43,16 @@ export default function MicroAppCard({ app, index }: MicroAppCardProps) {
       style.opacity = 0.5;
   }
 
+  const isActionable = ['aegis-control', 'ai-suggestion'].includes(app.type);
+  const hasContent = !!ContentComponent;
+
+  const handleCardClick = () => {
+    if (isDragging) return;
+    if (isActionable && !hasContent) {
+      triggerAppAction(app.id);
+    }
+  };
+
   const css = `
     @keyframes fadeInUp {
       from {
@@ -60,26 +73,28 @@ export default function MicroAppCard({ app, index }: MicroAppCardProps) {
         ref={setNodeRef}
         style={style}
         {...attributes}
-        {...listeners}
-        className="bg-foreground/15 backdrop-blur-[20px] border border-foreground/30 shadow-[0_8px_32px_0_rgba(28,25,52,0.1)] hover:border-primary transition-all duration-300 flex flex-col cursor-grab group"
-        onClick={isDragging || app.content ? undefined : app.action}
+        className="bg-foreground/15 backdrop-blur-[20px] border border-foreground/30 shadow-[0_8px_32px_0_rgba(28,25,52,0.1)] hover:border-primary transition-all duration-300 flex flex-col group"
+        onClick={handleCardClick}
       >
-        <CardHeader className="flex flex-row items-center space-x-4 p-4">
+        <CardHeader
+          {...listeners}
+          className="flex flex-row items-center space-x-4 p-4 cursor-grab"
+        >
           <div className="w-12 h-12 flex-shrink-0 items-center justify-center">
             <Icon className="w-full h-full text-primary" />
           </div>
           <div className="text-left">
             <CardTitle className="font-headline text-lg text-foreground">{app.title}</CardTitle>
-            {!app.content && (
+            {!hasContent && (
               <CardDescription className="text-left text-muted-foreground text-sm">
                 {app.description}
               </CardDescription>
             )}
           </div>
         </CardHeader>
-        {app.content && (
+        {ContentComponent && (
           <CardContent className="flex-grow p-4 pt-0">
-             {app.content}
+             <ContentComponent {...app.contentProps} />
           </CardContent>
         )}
       </Card>
