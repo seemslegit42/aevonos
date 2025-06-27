@@ -42,6 +42,4 @@ export function MicroAppListingCard({ app }: { app: AppListing }) {
         <p className="text-2xl font-bold text-primary font-headline">{app.price}</p>
         <Button><ShoppingCart className="mr-2 h-4 w-4" /> Purchase</Button>
       </CardFooter>
-    </Card>
-  );
-}
+    </Card

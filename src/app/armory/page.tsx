@@ -88,8 +88,4 @@ export default function ArmoryPage() {
       </main>
       <footer className="text-center text-xs text-muted-foreground pb-4 flex-shrink-0">
         <p>All transactions are final. Choose your instruments wisely.</p>
-        <p className="mt-2"><Link href="/" className="hover:text-primary underline">Return to Canvas</Link></p>
-      </footer>
-    </div>
-  );
-}
+        <p className="mt-2"><Link href="/" className="hover:text

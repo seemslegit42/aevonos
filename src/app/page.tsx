@@ -58,21 +58,21 @@ export default function Home() {
   }
 
   return (
-    <>
+    <div className="flex flex-col h-full">
       <div className="flex-grow p-4 rounded-lg">
-            <DndContext
-              sensors={sensors}
-              collisionDetection={closestCenter}
-              onDragEnd={handleDragEnd}
-            >
-              <SortableContext items={apps.map((app) => app.id)} strategy={rectSortingStrategy}>
-                <MicroAppGrid apps={apps} />
-              </SortableContext>
-            </DndContext>
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+        >
+          <SortableContext items={apps.map((app) => app.id)} strategy={rectSortingStrategy}>
+            <MicroAppGrid apps={apps} />
+          </SortableContext>
+        </DndContext>
       </div>
-       <footer className="text-center text-xs text-muted-foreground flex-shrink-0">
+      <footer className="text-center text-xs text-muted-foreground flex-shrink-0">
         <p>ΛΞVON OS - All rights reserved. | <Link href="/armory" className="hover:text-primary underline">Visit the Armory</Link> | <Link href="/loom" className="hover:text-primary underline">Enter Loom Studio</Link></p>
       </footer>
-    </>
+    </div>
   );
 }
