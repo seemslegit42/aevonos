@@ -7,7 +7,8 @@ import { revalidatePath } from 'next/cache';
 import { drSyntaxCritique } from '@/ai/agents/dr-syntax';
 import type { DrSyntaxInput, DrSyntaxOutput } from '@/ai/agents/dr-syntax-schemas';
 import { recallSession, type SessionRecallInput, type SessionRecallOutput } from '@/ai/agents/echo';
-import { generatePamOnboardingFlow, type PamAudioOutput } from '@/ai/agents/pam-poovey';
+import { generatePamRant as generatePamRantFlow } from '@/ai/agents/pam-poovey';
+import type { PamScriptInput, PamAudioOutput } from '@/ai/agents/pam-poovey-schemas';
 
 export async function handleCommand(command: string): Promise<UserCommandOutput> {
   try {
@@ -63,12 +64,12 @@ export async function recallSessionAction(input: SessionRecallInput): Promise<Se
   }
 }
 
-export async function generatePamOnboarding(): Promise<PamAudioOutput> {
+export async function generatePamRant(input: PamScriptInput): Promise<PamAudioOutput> {
   try {
-    const result = await generatePamOnboardingFlow();
+    const result = await generatePamRantFlow(input);
     return result;
   } catch (error) {
-    console.error('Error in Pam Poovey onboarding flow:', error);
+    console.error('Error in Pam Poovey rant flow:', error);
     return {
       script: "I'd tell you what you need to know, but my glass is empty and so is my soul. Also, there was a server error.",
       audioDataUri: '',

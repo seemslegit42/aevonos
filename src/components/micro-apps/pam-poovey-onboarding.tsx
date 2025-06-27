@@ -3,19 +3,22 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { generatePamOnboarding } from '@/app/actions';
-import { type PamAudioOutput } from '@/ai/agents/pam-poovey';
+import { generatePamRant } from '@/app/actions';
+import { type PamAudioOutput, type PamScriptInput } from '@/ai/agents/pam-poovey-schemas';
 import { Play, Loader2 } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
 
 export default function PamPooveyOnboarding() {
   const [onboardingData, setOnboardingData] = useState<PamAudioOutput | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [topic, setTopic] = useState<PamScriptInput['topic']>('onboarding');
   const audioRef = React.useRef<HTMLAudioElement>(null);
 
   const handleGenerate = async () => {
     setIsLoading(true);
     setOnboardingData(null);
-    const result = await generatePamOnboarding();
+    const result = await generatePamRant({ topic });
     setOnboardingData(result);
     setIsLoading(false);
   };
@@ -29,12 +32,23 @@ export default function PamPooveyOnboarding() {
 
   return (
     <div className="flex flex-col gap-4 p-2 h-full">
+      <Select value={topic} onValueChange={(value: PamScriptInput['topic']) => setTopic(value)} disabled={isLoading}>
+          <SelectTrigger>
+              <SelectValue placeholder="Select a topic for Pam..." />
+          </SelectTrigger>
+          <SelectContent>
+              <SelectItem value="onboarding">Onboarding Spiel</SelectItem>
+              <SelectItem value="attendance_policy">Attendance "Reminder"</SelectItem>
+              <SelectItem value="firing_someone">Termination Speech</SelectItem>
+          </SelectContent>
+      </Select>
+
       {!onboardingData && !isLoading && (
         <div className="flex flex-col items-center justify-center h-full text-center">
-          <p className="text-muted-foreground text-sm mb-4">Ready for your no-BS onboarding? Don't cry.</p>
+          <p className="text-muted-foreground text-sm mb-4">Pick a topic. Let's get this over with.</p>
           <Button onClick={handleGenerate}>
             <Play className="mr-2 h-4 w-4" />
-            Get the Lowdown
+            Get Pam's Take
           </Button>
         </div>
       )}
@@ -48,15 +62,15 @@ export default function PamPooveyOnboarding() {
 
       {onboardingData && (
         <>
-          <ScrollArea className="h-48 w-full rounded-md border p-4 bg-background/50">
+          <ScrollArea className="h-32 w-full rounded-md border p-4 bg-background/50">
             <p className="text-sm whitespace-pre-wrap">{onboardingData.script}</p>
           </ScrollArea>
           <Button onClick={handleGenerate} disabled={isLoading}>
             {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Play className="mr-2 h-4 w-4" />}
-            Regenerate Spiel
+            Get another one
           </Button>
           {onboardingData.audioDataUri && (
-            <audio ref={audioRef} src={onboardingData.audioDataUri} controls className="w-full h-10 mt-2">
+            <audio ref={audioRef} src={onboardingData.audioDataUri} controls className="w-full h-8 mt-1">
               Your browser does not support the audio element.
             </audio>
           )}
