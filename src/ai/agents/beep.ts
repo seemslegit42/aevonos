@@ -30,8 +30,8 @@ import {
 } from '@/ai/agents/dr-syntax-schemas';
 import { aegisAnomalyScan } from '@/ai/agents/aegis';
 import { AegisAnomalyScanOutputSchema, type AegisAnomalyScanOutput } from './aegis-schemas';
-import { createContactInDb } from '@/ai/tools/crm-tools';
-import { CreateContactInputSchema, ContactSchema } from '@/ai/tools/crm-schemas';
+import { createContactInDb, listContactsFromDb, deleteContactInDb } from '@/ai/tools/crm-tools';
+import { CreateContactInputSchema, ContactSchema, DeleteContactInputSchema, DeleteContactOutputSchema } from '@/ai/tools/crm-schemas';
 import {
     type UserCommandInput,
     UserCommandOutputSchema,
@@ -63,8 +63,30 @@ class CreateContactTool extends Tool {
     }
 }
 
+class ListContactsTool extends Tool {
+    name = 'listContacts';
+    description = 'Lists all contacts in the system. Use this when the user asks to "show contacts", "list all contacts", "see my contacts", etc.';
+    schema = z.object({}); // No input
 
-const tools = [new DrSyntaxTool(), new CreateContactTool()];
+    async _call() {
+        const result = await listContactsFromDb();
+        return JSON.stringify(result);
+    }
+}
+
+class DeleteContactTool extends Tool {
+    name = 'deleteContact';
+    description = 'Deletes a contact from the system by their ID. The user must provide the ID of the contact to delete. You should obtain this ID from a contact list if the user does not provide it.';
+    schema = DeleteContactInputSchema;
+
+    async _call(input: z.infer<typeof DeleteContactInputSchema>) {
+        const result = await deleteContactInDb(input);
+        return JSON.stringify(result);
+    }
+}
+
+
+const tools = [new DrSyntaxTool(), new CreateContactTool(), new ListContactsTool(), new DeleteContactTool()];
 const modelWithTools = geminiModel.bind({
   tools: tools.map(tool => ({
     type: 'function',
@@ -153,7 +175,7 @@ export async function processUserCommand(input: UserCommandInput): Promise<UserC
 
   Your process:
   1. Analyze the user's command AND the Aegis security report from the System Message.
-  2. If the command requires a tool (e.g., creating a contact, getting a critique), you MUST use the appropriate tool.
+  2. If the command requires a tool (e.g., creating a contact, listing contacts, getting a critique), you MUST use the appropriate tool.
   3. If the user is asking to open an app (e.g., "open terminal"), populate the 'appsToLaunch' array in your final JSON output. The available apps are: 'file-explorer', 'terminal', 'echo-control'.
   4. After all tools have been called and you have all the information, construct a final, single JSON object that strictly follows this schema: ${JSON.stringify(zodToJsonSchema(UserCommandOutputSchema))}.
   5. Your final response MUST be ONLY this JSON object. Do not add any conversational text around it.
@@ -183,7 +205,11 @@ export async function processUserCommand(input: UserCommandInput): Promise<UserC
               if (msg.name === 'critiqueContent') {
                   agentReports.push({ agent: 'dr-syntax', report: DrSyntaxOutputSchema.parse(toolOutput) });
               } else if (msg.name === 'createContact') {
-                  agentReports.push({ agent: 'crm', report: ContactSchema.parse(toolOutput) });
+                  agentReports.push({ agent: 'crm', report: { action: 'create', report: ContactSchema.parse(toolOutput) }});
+              } else if (msg.name === 'listContacts') {
+                  agentReports.push({ agent: 'crm', report: { action: 'list', report: z.array(ContactSchema).parse(toolOutput) }});
+              } else if (msg.name === 'deleteContact') {
+                  agentReports.push({ agent: 'crm', report: { action: 'delete', report: DeleteContactOutputSchema.parse(toolOutput) }});
               }
           } catch (e) {
               console.error("Failed to parse tool message content:", e);

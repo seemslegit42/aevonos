@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { DrSyntaxOutputSchema } from './dr-syntax-schemas';
 import { AegisAnomalyScanOutputSchema } from './aegis-schemas';
-import { ContactSchema } from '@/ai/tools/crm-schemas';
+import { ContactSchema, DeleteContactOutputSchema } from '@/ai/tools/crm-schemas';
 
 // Schemas from the original BEEP agent, preserved for the public contract.
 const LaunchableAppTypeSchema = z.enum([
@@ -16,10 +16,27 @@ export const AppToLaunchSchema = z.object({
   description: z.string().optional().describe('A specific description for this app instance, if applicable. Otherwise, the default will be used.'),
 });
 
-const CrmAgentReportSchema = z.object({
-  agent: z.literal('crm'),
-  report: ContactSchema.describe('The details of the newly created contact.'),
+const CrmCreationReportSchema = z.object({
+    action: z.literal('create'),
+    report: ContactSchema.describe('The details of the newly created contact.'),
 });
+
+const CrmListReportSchema = z.object({
+    action: z.literal('list'),
+    report: z.array(ContactSchema).describe('A list of contacts.'),
+});
+
+const CrmDeletionReportSchema = z.object({
+    action: z.literal('delete'),
+    report: DeleteContactOutputSchema.describe('The result of the deletion operation.'),
+});
+
+const CrmAgentReportSchema = z.discriminatedUnion('action', [
+    CrmCreationReportSchema,
+    CrmListReportSchema,
+    CrmDeletionReportSchema,
+]);
+
 
 export const AgentReportSchema = z.discriminatedUnion('agent', [
   z.object({
@@ -34,7 +51,10 @@ export const AgentReportSchema = z.discriminatedUnion('agent', [
       'The full report object from the Aegis agent.'
     ),
   }),
-  CrmAgentReportSchema,
+   z.object({
+    agent: z.literal('crm'),
+    report: CrmAgentReportSchema,
+  }),
 ]);
 
 export const UserCommandInputSchema = z.object({
