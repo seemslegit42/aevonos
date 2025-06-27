@@ -14,12 +14,13 @@ import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '../ui/
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { handleGenerateWingmanMessage } from '@/app/actions';
-import type { WingmanInput } from '@/ai/agents/wingman-schemas';
+import type { WingmanInput, WingmanOutput } from '@/ai/agents/wingman-schemas';
+import CringeOMeterDial from './cringe-o-meter-dial';
 
 export default function BeepWingman() {
     const [isLoading, setIsLoading] = useState(false);
-    const [result, setResult] = useState<string | null>(null);
-    const [history, setHistory] = useState<string[]>([]);
+    const [result, setResult] = useState<WingmanOutput | null>(null);
+    const [history, setHistory] = useState<WingmanOutput[]>([]);
     const [isHistoryOpen, setIsHistoryOpen] = useState(false);
     const [targetDescription, setTargetDescription] = useState('');
     const [persona, setPersona] = useState<WingmanInput['persona']>('alpha-hustler');
@@ -27,19 +28,21 @@ export default function BeepWingman() {
 
     const handleGenerate = async () => {
         if (!targetDescription) {
-            setResult("Error: Target profile description cannot be empty.");
+            setResult({ openingMessage: "Error: Target profile description cannot be empty.", cringeScore: 0 });
             return;
         }
         setIsLoading(true);
         setResult(null);
         const response = await handleGenerateWingmanMessage({ targetDescription, persona });
-        setResult(response.openingMessage);
+        setResult(response);
         
         if (response.openingMessage && !response.openingMessage.startsWith("Error:")) {
-            setHistory(prev => [response.openingMessage, ...prev].slice(0, 10));
+            setHistory(prev => [response, ...prev].slice(0, 10));
         }
         setIsLoading(false);
     };
+
+    const isError = result?.openingMessage.startsWith("Error:");
 
     return (
         <div className="flex flex-col gap-4 p-2 h-full">
@@ -81,13 +84,16 @@ export default function BeepWingman() {
                         {isLoading ? <Loader2 className="animate-spin" /> : <><Bot className="mr-2 h-4 w-4" /> Generate Opener</>}
                     </Button>
                      {result && (
-                        <Alert variant={result.startsWith("Error:") ? "destructive" : "default"} className="mt-3 bg-background/80">
-                            <Bot className="h-4 w-4" />
-                            <AlertTitle>{result.startsWith("Error:") ? "Generation Failed" : "Agent Suggestion"}</AlertTitle>
-                            <AlertDescription className={result.startsWith("Error:") ? "" : "italic"}>
-                                {result.startsWith("Error:") ? result : `"${result}"`}
-                            </AlertDescription>
-                        </Alert>
+                        <>
+                            <Alert variant={isError ? "destructive" : "default"} className="mt-3 bg-background/80">
+                                <Bot className="h-4 w-4" />
+                                <AlertTitle>{isError ? "Generation Failed" : "Agent Suggestion"}</AlertTitle>
+                                <AlertDescription className={isError ? "" : "italic"}>
+                                    {isError ? result.openingMessage : `"${result.openingMessage}"`}
+                                </AlertDescription>
+                            </Alert>
+                            {!isError && <CringeOMeterDial score={result.cringeScore} />}
+                        </>
                     )}
 
                     {history.length > 0 && (
@@ -105,7 +111,7 @@ export default function BeepWingman() {
                                 <ScrollArea className="h-24 w-full rounded-md border p-2 bg-background/50">
                                     <div className="space-y-2">
                                     {history.map((item, index) => (
-                                        <p key={index} className="text-xs text-muted-foreground italic border-b border-border/50 pb-1 last:border-b-0">"{item}"</p>
+                                        <p key={index} className="text-xs text-muted-foreground italic border-b border-border/50 pb-1 last:border-b-0">"{item.openingMessage}"</p>
                                     ))}
                                     </div>
                                 </ScrollArea>

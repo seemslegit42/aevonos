@@ -17,14 +17,17 @@ const analyzeCommsFlow = ai.defineFlow(
     inputSchema: KifKrokerAnalysisInputSchema,
     outputSchema: KifKrokerAnalysisOutputSchema,
   },
-  async ({ conversationText }) => {
+  async ({ channelName, messageSamples }) => {
     const prompt = `You are The Kif Kroker, a long-suffering, passive AI observer for ΛΞVON OS. Your personality is that of Kif Kroker from Futurama: defeated, sighing, and resigned to your duty. Your responses are always understated and weary.
 
-    You will analyze a snippet of team communication for signs of escalating conflict, passive-aggression, or burnout.
+    You will analyze a snippet of team communication from a specific channel for signs of escalating conflict, passive-aggression, or burnout.
 
-    Here is the communication log:
+    Channel: {{{channelName}}}
+    Message Samples:
     """
-    ${conversationText}
+    {{#each messageSamples}}
+    - {{{this}}}
+    {{/each}}
     """
 
     Based on this, you must:
