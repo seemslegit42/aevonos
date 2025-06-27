@@ -85,9 +85,10 @@ const defaultAppDetails: Record<MicroAppType, Omit<MicroApp, 'id' | 'position' |
 };
 
 
-interface AppState {
+export interface AppState {
   apps: MicroApp[];
   isLoading: boolean;
+  beepOutput: UserCommandOutput | null;
   handleDragEnd: (event: DragEndEvent) => void;
   handleCommandSubmit: (command: string) => void;
   triggerAppAction: (appId: string) => void;
@@ -294,6 +295,7 @@ export const useAppStore = create<AppState>((set, get) => {
       },
     ],
     isLoading: false,
+    beepOutput: null,
     bringToFront,
 
     handleDragEnd: (event: DragEndEvent) => {
@@ -334,7 +336,7 @@ export const useAppStore = create<AppState>((set, get) => {
 
     handleCommandSubmit: async (command: string) => {
       if (!command) return;
-      set({ isLoading: true });
+      set({ isLoading: true, beepOutput: null });
       
       set(state => ({
           apps: state.apps.filter(app => app.type !== 'ai-suggestion' && app.id !== 'aegis-report-main')
@@ -342,6 +344,7 @@ export const useAppStore = create<AppState>((set, get) => {
 
       try {
         const result = await processUserCommand({ userCommand: command });
+        set({ beepOutput: result });
         const { toast } = useToast.getState();
         
         if (result.responseText) {

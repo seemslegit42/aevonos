@@ -60,6 +60,7 @@ import { SterileishAnalysisInputSchema } from './sterileish-schemas';
 import { PaperTrailScanInputSchema } from './paper-trail-schemas';
 import { WingmanInputSchema } from './wingman-schemas';
 import { OsintInputSchema } from './osint-schemas';
+import { generateSpeech } from '@/ai/flows/tts-flow';
 
 
 import {
@@ -487,9 +488,10 @@ export async function processUserCommand(input: UserCommandInput): Promise<UserC
       }
   }
 
-
   // Find the last AIMessage that contains the 'final_answer' tool call.
   const lastMessage = result.messages.findLast(m => m._getType() === 'ai' && m.tool_calls && m.tool_calls.some(tc => tc.name === 'final_answer')) as AIMessage | undefined;
+
+  let finalResponse: UserCommandOutput;
 
   if (lastMessage && lastMessage.tool_calls) {
       const finalAnswerCall = lastMessage.tool_calls.find(tc => tc.name === 'final_answer');
@@ -501,25 +503,46 @@ export async function processUserCommand(input: UserCommandInput): Promise<UserC
               const allReports = [...(parsed.agentReports || []), ...agentReports.filter(r => !existingReports.has(JSON.stringify(r)))];
               
               parsed.agentReports = allReports;
-              return parsed;
+              finalResponse = parsed;
           } catch (e) {
               console.error("Failed to parse final_answer tool arguments:", e);
               // Fallback if parsing the arguments fails
-              return {
+              finalResponse = {
                   responseText: "I apologize, but I encountered an issue constructing the final response.",
                   appsToLaunch: [],
                   agentReports: agentReports, // Still return reports if we have them
                   suggestedCommands: ["Try rephrasing your command."],
               };
           }
+      } else {
+        // Fallback if final_answer not called, but other tools were
+        finalResponse = {
+            responseText: "I've completed the requested actions, but I'm having trouble forming a final summary.",
+            appsToLaunch: [],
+            agentReports: agentReports,
+            suggestedCommands: ["Please check the agent reports for results."],
+        };
       }
+  } else {
+      // Final fallback if the model fails to call the final_answer tool.
+      finalResponse = {
+        responseText: "My apologies, I was unable to produce a valid response.",
+        appsToLaunch: [],
+        agentReports: agentReports, // Still return reports if we have them
+        suggestedCommands: ["Please try again."],
+      };
   }
 
-  // Final fallback if the model fails to call the final_answer tool.
-  return {
-    responseText: "My apologies, I was unable to produce a valid response.",
-    appsToLaunch: [],
-    agentReports: agentReports, // Still return reports if we have them
-    suggestedCommands: ["Please try again."],
-  };
+  // Generate speech from the final response text
+  try {
+      const { audioDataUri } = await generateSpeech({ text: finalResponse.responseText });
+      if (audioDataUri) {
+          finalResponse.responseAudioUri = audioDataUri;
+      }
+  } catch (e) {
+      console.error("Failed to generate speech:", e);
+      // Don't crash the whole flow, just proceed without audio
+  }
+
+  return finalResponse;
 }
