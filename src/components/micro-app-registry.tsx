@@ -4,12 +4,8 @@ import { FileExplorerIcon } from '@/components/icons/FileExplorerIcon';
 import { TerminalIcon } from '@/components/icons/TerminalIcon';
 import { AegisIcon } from '@/components/icons/AegisIcon';
 import { CrystalIcon } from '@/components/icons/CrystalIcon';
-import { DrSyntaxIcon } from '@/components/icons/DrSyntaxIcon';
 import { EchoIcon } from '@/components/icons/EchoIcon';
-import { AegisReportApp } from '@/components/aegis-report-app';
-import { EchoRecallApp } from '@/components/echo-recall-app';
 import { type MicroAppType } from '@/store/app-store';
-import { DrSyntaxReportApp } from '@/components/dr-syntax-report-app';
 
 type ComponentRegistry = {
     icon: React.ComponentType<any>;
@@ -29,23 +25,11 @@ export const microAppRegistry: Record<MicroAppType, ComponentRegistry> = {
   'aegis-control': {
     icon: AegisIcon,
   },
-  'aegis-report': {
-      icon: AegisIcon,
-      content: AegisReportApp,
-  },
-  'dr-syntax-report': {
-      icon: DrSyntaxIcon,
-      content: DrSyntaxReportApp,
-  },
   'ai-suggestion': {
       icon: CrystalIcon,
   },
   'echo-control': {
     icon: EchoIcon,
-  },
-  'echo-recall': {
-    icon: EchoIcon,
-    content: EchoRecallApp,
   },
 };
 

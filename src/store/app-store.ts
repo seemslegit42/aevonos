@@ -1,11 +1,17 @@
 import { create } from 'zustand';
 import { arrayMove } from '@dnd-kit/sortable';
 import type { DragEndEvent } from '@dnd-kit/core';
+import React from 'react';
 
 import { processUserCommand } from '@/ai/agents/beep';
 import { recallSessionAction } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
 import { checkForAnomalies } from '@/app/actions';
+import { EchoRecallToast } from '@/components/echo-recall-toast';
+import { DrSyntaxReportToast } from '@/components/dr-syntax-report-toast';
+import type { SessionRecallOutput } from '@/ai/agents/echo';
+import type { DrSyntaxOutput } from '@/ai/agents/dr-syntax-schemas';
+
 
 // Define the types of MicroApps available in the OS
 export type MicroAppType = 
@@ -13,11 +19,8 @@ export type MicroAppType =
   | 'file-explorer' 
   | 'terminal' 
   | 'aegis-control' 
-  | 'aegis-report'
-  | 'dr-syntax-report'
   | 'ai-suggestion'
-  | 'echo-control'
-  | 'echo-recall';
+  | 'echo-control';
 
 // Define the shape of a MicroApp instance
 export interface MicroApp {
@@ -33,11 +36,8 @@ const defaultAppDetails: Record<MicroAppType, Omit<MicroApp, 'id' | 'contentProp
   'file-explorer': { type: 'file-explorer', title: 'File Explorer', description: 'Access and manage your files.' },
   'terminal': { type: 'terminal', title: 'Terminal', description: 'Direct command-line access.' },
   'aegis-control': { type: 'aegis-control', title: 'Aegis Control', description: 'Run a sample security scan.' },
-  'aegis-report': { type: 'aegis-report', title: 'Aegis Scan Report', description: 'Security scan result.'},
-  'dr-syntax-report': { type: 'dr-syntax-report', title: 'Dr. Syntax Report', description: 'A critique from the doctor.' },
   'ai-suggestion': { type: 'ai-suggestion', title: 'AI Suggestion', description: 'Click to execute this command.' },
   'echo-control': { type: 'echo-control', title: 'Recall Session', description: "Click to have Echo summarize the last session's activity." },
-  'echo-recall': { type: 'echo-recall', title: 'Session Recall', description: 'A summary of your last session.'},
 };
 
 
@@ -112,28 +112,25 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   runAnomalyCheck: async () => {
     set({ isLoading: true });
+    const { toast } = useToast.getState();
     try {
       const result = await checkForAnomalies('User accessed financial_records.csv and project_phoenix.docx then initiated a data transfer to an external IP.');
       
-      const reportApp: MicroApp = {
-        id: `aegis-report-${Date.now()}`,
-        type: 'aegis-report',
-        title: 'Aegis Scan Report',
-        description: `Scan from ${new Date().toLocaleTimeString()}`,
-        contentProps: { result },
-      };
-      
-      set(state => ({ apps: [...state.apps, reportApp] }));
-      
-      if (!result.isAnomalous) {
-        useToast.getState().toast({
+      if (result.isAnomalous) {
+          toast({
+              title: 'Aegis Alert',
+              description: result.anomalyExplanation,
+              variant: 'destructive',
+          });
+      } else {
+        toast({
           title: 'Aegis Scan Complete',
-          description: 'No anomalies detected in the simulated activity.',
+          description: result.anomalyExplanation || 'No anomalies detected in the simulated activity.',
         });
       }
     } catch (error) {
       console.error('Error running anomaly check:', error);
-      useToast.getState().toast({
+      toast({
         variant: 'destructive',
         title: 'Error',
         description: 'Could not complete Aegis scan.',
@@ -145,6 +142,7 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   handleSessionRecall: async () => {
     set({ isLoading: true });
+    const { toast } = useToast.getState();
     try {
       // Dummy data for now. In a real scenario, this would come from a persisted log.
       const dummyActivity = `User opened File Explorer.
@@ -152,25 +150,15 @@ User ran 'critique this copy' in Dr. Syntax.
 User ran an Aegis scan at 14:32.
 User launched Loom Studio to inspect 'Client Onboarding' workflow.`;
 
-      const result = await recallSessionAction({ sessionActivity: dummyActivity });
+      const result: SessionRecallOutput = await recallSessionAction({ sessionActivity: dummyActivity });
       
-      const recallApp: MicroApp = {
-        id: `echo-recall-${Date.now()}`,
-        type: 'echo-recall',
-        title: 'Echo: Session Recall',
-        description: `Recall from ${new Date().toLocaleTimeString()}`,
-        contentProps: { result },
-      };
-      
-      set(state => ({ apps: [...state.apps, recallApp] }));
-      
-      useToast.getState().toast({
-        title: 'Echo has remembered.',
-        description: 'A summary of your last session is now on your Canvas.',
+      toast({
+        title: 'Echo Remembers',
+        description: React.createElement(EchoRecallToast, result),
       });
     } catch (error) {
       console.error('Error recalling session:', error);
-      useToast.getState().toast({
+      toast({
         variant: 'destructive',
         title: 'Error',
         description: 'Echo could not recall the session.',
@@ -206,17 +194,14 @@ User launched Loom Studio to inspect 'Client Onboarding' workflow.`;
         };
       });
 
-      // Handle agent reports by creating report apps
-      const reportApps: MicroApp[] = [];
+      // Handle agent reports by showing toasts
       if (result.agentReports) {
         for (const agentReport of result.agentReports) {
           if (agentReport.agent === 'dr-syntax') {
-            reportApps.push({
-              id: `dr-syntax-report-${Date.now()}`,
-              type: 'dr-syntax-report',
-              title: defaultAppDetails['dr-syntax-report'].title,
-              description: `Critique from ${new Date().toLocaleTimeString()}`,
-              contentProps: { result: agentReport.report },
+            const report: DrSyntaxOutput = agentReport.report;
+            toast({
+                title: `Dr. Syntax's Verdict (Rating: ${report.rating}/10)`,
+                description: React.createElement(DrSyntaxReportToast, report)
             });
           }
         }
@@ -230,7 +215,7 @@ User launched Loom Studio to inspect 'Client Onboarding' workflow.`;
       }));
 
       set(state => ({
-        apps: [...state.apps, ...appsToLaunch, ...reportApps, ...suggestionApps],
+        apps: [...state.apps, ...appsToLaunch, ...suggestionApps],
       }));
 
     } catch (error) {
