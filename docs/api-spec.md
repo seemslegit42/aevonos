@@ -1,4 +1,5 @@
-Here is the updated document: docs/API/PUBLIC-API-SPEC.md.This document provides the formal OpenAPI 3.0 specification for the ΛΞVON OS Public API. It details the endpoints, data models, authentication methods, and error handling, serving as the definitive contract for external developers and services interacting with the platform.ΛΞVON OS: Public API SpecificationVersion: 1.0.0Description: The official Public API for ΛΞVON OS, the Intelligent Operating System for SMBs. This RESTful API allows external applications to seamlessly integrate with ΛΞVON OS functionalities, enabling AI-powered task delegation, workflow orchestration, secure data synchronization, and access to core platform intelligence.1. General API Information{
+Here is the updated document: docs/API/PUBLIC-API-SPEC.md.This document provides the formal OpenAPI 3.0 specification for the ΛΞVON OS Public API. It details the endpoints, data models, authentication methods, and error handling, serving as the definitive contract for external developers and services interacting with the platform.ΛΞVON OS: Public API SpecificationVersion: 1.0.0Description: The official Public API for ΛΞVON OS, the Intelligent Operating System for SMBs. This RESTful API allows external applications to seamlessly integrate with ΛΞVON OS functionalities, enabling AI-powered task delegation, workflow orchestration, secure data synchronization, and access to core platform intelligence.1. General API Information
+{
   "openapi": "3.0.0",
   "info": {
     "title": "ΛΞVON OS Public API",
@@ -377,7 +378,7 @@ Here is the updated document: docs/API/PUBLIC-API-SPEC.md.This document provides
           {
             "name": "status",
             "in": "query",
-            "description": "Filter runs by status (e.g., 'pending', 'running', 'completed', 'failed').",
+            "description": "Filter runs by status (e.g., 'pending', 'running', 'completed', 'failed', 'paused').",
             "required": false,
             "schema": {
               "type": "string",
@@ -1120,6 +1121,116 @@ Here is the updated document: docs/API/PUBLIC-API-SPEC.md.This document provides
           "updatedAt": {
             "type": "string",
             "format": "date-time"
+          }
+        },
+        "required": ["id", "uuid", "tenantId", "name", "isActive", "triggerType", "definition", "createdAt", "updatedAt"]
+      },
+      "WorkflowCreationRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "New Client Onboarding Process"
+          },
+          "isActive": {
+            "type": "boolean",
+            "example": true
+          },
+          "triggerType": {
+            "type": "string",
+            "enum": ["api", "schedule", "event"],
+            "example": "api"
+          },
+          "definition": {
+            "type": "object",
+            "description": "JSONB representation of the workflow graph (e.g., LangGraph JSON structure).",
+            "additionalProperties": true
+          }
+        },
+        "required": ["name", "definition"]
+      },
+      "WorkflowRunSummary": {
+        "type": "object",
+        "properties": {
+          "runId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Publicly exposed unique identifier for the workflow run."
+          },
+          "status": {
+            "type": "string",
+            "enum": ["pending", "running", "completed", "failed", "paused"],
+            "example": "pending"
+          },
+          "startedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": ["runId", "status", "startedAt"]
+      },
+      "WorkflowRunInstance": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "Internal database ID."
+          },
+          "uuid": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Publicly exposed unique identifier for the workflow run."
+          },
+          "tenantId": {
+            "type": "integer",
+            "description": "Internal database ID of the associated tenant."
+          },
+          "workflowId": {
+            "type": "integer",
+            "description": "Internal database ID of the executed workflow."
+          },
+          "status": {
+            "type": "string",
+            "enum": ["pending", "running", "completed", "failed", "paused"],
+            "example": "running"
+          },
+          "triggerPayload": {
+            "type": "object",
+            "description": "The initial data that started the run.",
+            "nullable": true,
+            "additionalProperties": true
+          },
+          "output": {
+            "type": "object",
+            "description": "The final result or error message of the run.",
+            "nullable": true,
+            "additionalProperties": true
+          },
+          "startedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "finishedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        },
+        "required": ["id", "uuid", "tenantId", "workflowId", "status"]
+      },
+      "Contact": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "Internal database ID."
+          },
+          "uuid": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Publicly exposed unique identifier for the contact."
+          },
           "tenantId": {
             "type": "integer",
             "description": "Internal database ID of the associated tenant."
