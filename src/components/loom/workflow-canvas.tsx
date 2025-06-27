@@ -1,7 +1,6 @@
-
 'use client';
 
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useMemo, forwardRef } from 'react';
 import { useDroppable, useDraggable } from '@dnd-kit/core';
 import type { Node, Edge } from '@/app/loom/page';
 import { Bot, PlayCircle, GitBranch } from 'lucide-react';
@@ -90,31 +89,47 @@ const getEdgePath = (sourceNode: Node, targetNode: Node | {position: {x:number, 
     return `M ${sourceX} ${sourceY} C ${sourceX + curve} ${sourceY}, ${targetX - curve} ${targetY}, ${targetX} ${targetY}`;
 }
 
-export default function WorkflowCanvas({ 
+
+interface WorkflowCanvasProps {
+    nodes: Node[];
+    edges: Edge[];
+    onNodeClick: (node: Node) => void;
+    selectedNodeId: string | undefined | null;
+    onConnectStart: (sourceId: string) => void;
+    onConnectEnd: (targetId: string | null) => void;
+    connectionSourceId: string | null | undefined;
+}
+
+const WorkflowCanvas = forwardRef<HTMLDivElement, WorkflowCanvasProps>(({ 
     nodes, edges, onNodeClick, selectedNodeId,
     onConnectStart, onConnectEnd, connectionSourceId 
-}: { 
-    nodes: Node[], edges: Edge[], onNodeClick: (node: Node) => void, selectedNodeId: string | undefined | null,
-    onConnectStart: (sourceId: string) => void,
-    onConnectEnd: (targetId: string | null) => void,
-    connectionSourceId: string | null | undefined,
-}) {
+}, ref) => {
     const { setNodeRef } = useDroppable({ id: 'canvas' });
-    const canvasRef = useRef<HTMLDivElement>(null);
     const [pointerPos, setPointerPos] = useState<{ x: number, y: number } | null>(null);
     
-    const nodeMap = React.useMemo(() => new Map(nodes.map(node => [node.id, node])), [nodes]);
+    const nodeMap = useMemo(() => new Map(nodes.map(node => [node.id, node])), [nodes]);
     const sourceNode = connectionSourceId ? nodeMap.get(connectionSourceId) : null;
 
     const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
-        if (!sourceNode || !canvasRef.current) return;
-        const rect = canvasRef.current.getBoundingClientRect();
+        if (!sourceNode || !e.currentTarget) return;
+        const rect = e.currentTarget.getBoundingClientRect();
         setPointerPos({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+    };
+    
+    const combinedRef = (el: HTMLDivElement | null) => {
+        if (el) {
+            setNodeRef(el);
+            if (typeof ref === 'function') {
+                ref(el);
+            } else if (ref) {
+                ref.current = el;
+            }
+        }
     };
 
     return (
         <div 
-            ref={(el) => { setNodeRef(el); if (el) canvasRef.current = el; }} 
+            ref={combinedRef} 
             className="flex-grow bg-foreground/5 backdrop-blur-sm border border-dashed border-foreground/20 rounded-lg relative overflow-hidden"
             onPointerMove={handlePointerMove}
             onPointerUp={() => onConnectEnd(null)}
@@ -151,4 +166,6 @@ export default function WorkflowCanvas({
             )}
         </div>
     );
-}
+});
+WorkflowCanvas.displayName = 'WorkflowCanvas';
+export default WorkflowCanvas;

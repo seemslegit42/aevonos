@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { DndContext, DragEndEvent, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 
@@ -60,6 +60,7 @@ export default function LoomPage() {
     const [edges, setEdges] = useState<Edge[]>(initialEdges);
     const [selectedNode, setSelectedNode] = useState<Node | null>(null);
     const [connection, setConnection] = useState<{ sourceId: string; } | null>(null);
+    const canvasRef = useRef<HTMLDivElement>(null);
 
     const sensors = useSensors(useSensor(PointerSensor, {
       activationConstraint: {
@@ -72,27 +73,40 @@ export default function LoomPage() {
     };
 
     const handleDragEnd = useCallback((event: DragEndEvent) => {
-        if (connection) return; // Don't move nodes while making a connection
+        if (connection) return;
 
-        const { active, delta } = event;
-        const nodeId = active.id as string;
+        const { active, delta, over } = event;
         
-        if (active.data.current?.isDraggableNode) {
+        // Handle dropping a new node from the sidebar
+        if (active.data.current?.isDraggableNode && over?.id === 'canvas') {
             const type = active.data.current.type as NodeType;
             const label = active.data.current.label as string;
+            
+            const canvasRect = canvasRef.current?.getBoundingClientRect();
+            let position = { x: 100, y: 100 }; // Fallback
+
+            if (canvasRect && event.active.rect.current.translated) {
+                const nodeWidth = 192; // w-48
+                const nodeHeight = 68; // approximate height
+                position = {
+                    x: event.active.rect.current.translated.left - canvasRect.left - (nodeWidth / 2),
+                    y: event.active.rect.current.translated.top - canvasRect.top - (nodeHeight / 2),
+                };
+            }
             
             const newNode: Node = {
                 id: `${type}-${new Date().getTime()}`,
                 type,
-                position: { x: 250, y: 150 },
-                data: { label: label },
+                position,
+                data: { label },
             };
             
             setNodes((nds) => [...nds, newNode]);
-        } else {
+            setSelectedNode(newNode);
+        } else if (over) { // Handle moving an existing node
             setNodes((nds) =>
                 nds.map((node) => {
-                    if (node.id === nodeId) {
+                    if (node.id === active.id) {
                         return { ...node, position: { x: node.position.x + delta.x, y: node.position.y + delta.y }};
                     }
                     return node;
@@ -143,6 +157,7 @@ export default function LoomPage() {
             <div className="flex-grow flex gap-4 min-h-0">
                 <NodesSidebar />
                 <WorkflowCanvas 
+                    ref={canvasRef}
                     nodes={nodes} 
                     edges={edges} 
                     onNodeClick={handleNodeClick} 
