@@ -30,8 +30,8 @@ import {
 } from '@/ai/agents/dr-syntax-schemas';
 import { aegisAnomalyScan } from '@/ai/agents/aegis';
 import { AegisAnomalyScanOutputSchema, type AegisAnomalyScanOutput } from './aegis-schemas';
-import { createContactInDb, listContactsFromDb, deleteContactInDb } from '@/ai/tools/crm-tools';
-import { CreateContactInputSchema, ContactSchema, DeleteContactInputSchema, DeleteContactOutputSchema } from '@/ai/tools/crm-schemas';
+import { createContactInDb, listContactsFromDb, deleteContactInDb, updateContactInDb } from '@/ai/tools/crm-tools';
+import { CreateContactInputSchema, ContactSchema, DeleteContactInputSchema, DeleteContactOutputSchema, UpdateContactInputSchema } from '@/ai/tools/crm-schemas';
 import {
     type UserCommandInput,
     UserCommandOutputSchema,
@@ -63,6 +63,17 @@ class CreateContactTool extends Tool {
     }
 }
 
+class UpdateContactTool extends Tool {
+    name = 'updateContact';
+    description = 'Updates an existing contact in the system. Use this when the user asks to "change a contact", "update details for", etc. You must provide the contact ID. If the user provides a name, use the listContacts tool first to find the correct ID.';
+    schema = UpdateContactInputSchema;
+
+    async _call(input: z.infer<typeof UpdateContactInputSchema>) {
+        const result = await updateContactInDb(input);
+        return JSON.stringify(result);
+    }
+}
+
 class ListContactsTool extends Tool {
     name = 'listContacts';
     description = 'Lists all contacts in the system. Use this when the user asks to "show contacts", "list all contacts", "see my contacts", etc.';
@@ -86,7 +97,7 @@ class DeleteContactTool extends Tool {
 }
 
 
-const tools = [new DrSyntaxTool(), new CreateContactTool(), new ListContactsTool(), new DeleteContactTool()];
+const tools = [new DrSyntaxTool(), new CreateContactTool(), new UpdateContactTool(), new ListContactsTool(), new DeleteContactTool()];
 const modelWithTools = geminiModel.bind({
   tools: tools.map(tool => ({
     type: 'function',
@@ -206,6 +217,8 @@ export async function processUserCommand(input: UserCommandInput): Promise<UserC
                   agentReports.push({ agent: 'dr-syntax', report: DrSyntaxOutputSchema.parse(toolOutput) });
               } else if (msg.name === 'createContact') {
                   agentReports.push({ agent: 'crm', report: { action: 'create', report: ContactSchema.parse(toolOutput) }});
+              } else if (msg.name === 'updateContact') {
+                  agentReports.push({ agent: 'crm', report: { action: 'update', report: ContactSchema.parse(toolOutput) }});
               } else if (msg.name === 'listContacts') {
                   agentReports.push({ agent: 'crm', report: { action: 'list', report: z.array(ContactSchema).parse(toolOutput) }});
               } else if (msg.name === 'deleteContact') {

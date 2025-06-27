@@ -8,6 +8,15 @@ export const CreateContactInputSchema = z.object({
 });
 export type CreateContactInput = z.infer<typeof CreateContactInputSchema>;
 
+export const UpdateContactInputSchema = z.object({
+  id: z.string().describe('The CUID of the contact to update.'),
+  email: z.string().email().optional(),
+  firstName: z.string().optional(),
+  lastName: z.string().optional(),
+  phone: z.string().optional(),
+});
+export type UpdateContactInput = z.infer<typeof UpdateContactInputSchema>;
+
 export const DeleteContactInputSchema = z.object({
   id: z.string().describe('The CUID of the contact to delete.'),
 });

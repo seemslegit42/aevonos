@@ -4,7 +4,7 @@
  * This is not a service. This is a collection of tools for agentic use.
  */
 import prisma from '@/lib/prisma';
-import type { CreateContactInput, Contact, DeleteContactInput, DeleteContactOutput } from './crm-schemas';
+import type { CreateContactInput, Contact, DeleteContactInput, DeleteContactOutput, UpdateContactInput } from './crm-schemas';
 
 // The schemas and Genkit tool definition were moved/removed to avoid "use server" build errors.
 // This file should only export async server functions.
@@ -20,6 +20,20 @@ export async function createContactInDb(input: CreateContactInput): Promise<Cont
   } catch (error) {
     console.error('[CRM Tool Error] Failed to create contact:', error);
     throw new Error('Failed to create the contact in the database.');
+  }
+}
+
+export async function updateContactInDb(input: UpdateContactInput): Promise<Contact> {
+  try {
+    const { id, ...dataToUpdate } = input;
+    const contact = await prisma.contact.update({
+      where: { id },
+      data: dataToUpdate,
+    });
+    return contact;
+  } catch (error) {
+    console.error(`[CRM Tool Error] Failed to update contact with ID ${input.id}:`, error);
+    throw new Error('Failed to update the contact in the database.');
   }
 }
 

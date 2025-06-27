@@ -205,6 +205,26 @@ User launched Loom Studio to inspect 'Client Onboarding' workflow.`;
                   title: 'CRM Agent',
                   description: `Contact "${crmReport.report.firstName} ${crmReport.report.lastName}" created successfully.`,
                 });
+            } else if (crmReport.action === 'update') {
+                const updatedContact = crmReport.report;
+                toast({
+                    title: 'CRM Agent',
+                    description: `Contact "${updatedContact.firstName} ${updatedContact.lastName}" was updated.`,
+                });
+                set(state => ({
+                    apps: state.apps.map(app => {
+                        if (app.type === 'contact-list' && app.contentProps?.contacts) {
+                            return {
+                                ...app,
+                                contentProps: {
+                                    ...app.contentProps,
+                                    contacts: app.contentProps.contacts.map((c: Contact) => c.id === updatedContact.id ? updatedContact : c)
+                                }
+                            };
+                        }
+                        return app;
+                    })
+                }));
             } else if (crmReport.action === 'list') {
                 const contacts = crmReport.report;
                 const appId = 'contact-list-main';

@@ -21,6 +21,11 @@ const CrmCreationReportSchema = z.object({
     report: ContactSchema.describe('The details of the newly created contact.'),
 });
 
+const CrmUpdateReportSchema = z.object({
+    action: z.literal('update'),
+    report: ContactSchema.describe('The details of the updated contact.'),
+});
+
 const CrmListReportSchema = z.object({
     action: z.literal('list'),
     report: z.array(ContactSchema).describe('A list of contacts.'),
@@ -33,6 +38,7 @@ const CrmDeletionReportSchema = z.object({
 
 const CrmAgentReportSchema = z.discriminatedUnion('action', [
     CrmCreationReportSchema,
+    CrmUpdateReportSchema,
     CrmListReportSchema,
     CrmDeletionReportSchema,
 ]);
