@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { FileExplorerIcon } from '@/components/icons/FileExplorerIcon';
 import { TerminalIcon } from '@/components/icons/TerminalIcon';
@@ -6,7 +7,8 @@ import { EchoIcon } from '@/components/icons/EchoIcon';
 import { AegisIcon } from '@/components/icons/AegisIcon';
 import { PamPooveyIcon } from '@/components/icons/PamPooveyIcon';
 import { BeepWingmanIcon } from '@/components/icons/BeepWingmanIcon';
-import { Users, EyeOff } from 'lucide-react';
+import { AddressBookIcon } from '@/components/icons/AddressBookIcon';
+import { EyeOff } from 'lucide-react';
 
 import { type MicroAppType } from '@/store/app-store';
 import ContactList from './micro-apps/contact-list';
@@ -38,7 +40,7 @@ export const microAppRegistry: Record<MicroAppType, ComponentRegistry> = {
     content: AegisReport,
   },
   'contact-list': {
-    icon: Users,
+    icon: AddressBookIcon,
     content: ContactList,
   },
   'pam-poovey-onboarding': {
