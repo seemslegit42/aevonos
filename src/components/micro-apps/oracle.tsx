@@ -7,41 +7,24 @@ import { cn } from '@/lib/utils';
 import { getAppIcon } from '@/components/micro-app-registry';
 import { type MicroAppType } from '@/store/app-store';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { type Agent as AgentData, AgentStatus } from '@prisma/client';
+import { Skeleton } from '../ui/skeleton';
+import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
+import { ServerCrash } from 'lucide-react';
 
-const agents: MicroAppType[] = [
-  'aegis-control',
-  'beep-wingman',
-  'dr-syntax',
-  'echo-control',
-  'infidelity-radar',
-  'jroc-business-kit',
-  'kif-kroker',
-  'lahey-surveillance',
-  'lucille-bluth',
-  'project-lumbergh',
-  'pam-poovey-onboarding',
-  'paper-trail',
-  'rolodex',
-  'sterileish',
-  'the-foremanator',
-  'vandelay',
-  'vin-diesel',
-  'winston-wolfe',
-];
-
-const statusColors: Record<string, string> = {
-  Nominal: 'bg-accent',
-  Active: 'bg-green-400',
-  Strained: 'bg-yellow-400',
-  Idle: 'bg-muted-foreground',
-  Cycling: 'bg-primary',
+const statusColors: Record<AgentStatus | 'default', string> = {
+  [AgentStatus.active]: 'bg-green-400',
+  [AgentStatus.processing]: 'bg-primary',
+  [AgentStatus.idle]: 'bg-muted-foreground',
+  [AgentStatus.paused]: 'bg-yellow-400',
+  [AgentStatus.error]: 'bg-destructive',
+  'default': 'bg-gray-500' // fallback
 };
-
-const agentStatuses = Object.keys(statusColors);
 
 interface AgentNode {
   type: MicroAppType;
-  status: string;
+  status: AgentStatus;
+  name: string;
   size: number;
   orbit: number;
   speed: number;
@@ -50,7 +33,9 @@ interface AgentNode {
 
 const AgentNode = ({ agent, index }: { agent: AgentNode, index: number }) => {
   const Icon = getAppIcon(agent.type);
-  const agentName = agent.type.replace(/-/g, ' ').replace('control', '').trim();
+  const agentName = agent.name;
+  const statusColorClass = (statusColors[agent.status] || statusColors.default).replace('bg-','text-');
+
 
   return (
     <motion.div
@@ -78,9 +63,9 @@ const AgentNode = ({ agent, index }: { agent: AgentNode, index: number }) => {
         <Tooltip>
           <TooltipTrigger asChild>
             <motion.div
-              className={cn("w-full h-full rounded-full flex items-center justify-center border", statusColors[agent.status])}
+              className={cn("w-full h-full rounded-full flex items-center justify-center border", statusColors[agent.status] || statusColors.default)}
               style={{
-                 borderColor: `hsl(var(--${agent.status === 'Nominal' ? 'accent' : 'primary'}))`,
+                 borderColor: `hsl(var(--${agent.status === 'active' ? 'accent' : 'primary'}))`,
               }}
               animate={{
                 scale: [1, 1.1, 1],
@@ -96,7 +81,7 @@ const AgentNode = ({ agent, index }: { agent: AgentNode, index: number }) => {
             </motion.div>
           </TooltipTrigger>
           <TooltipContent>
-            <p className="capitalize">{agentName}: <span className={cn('font-bold', `text-${statusColors[agent.status].replace('bg-','')}-400`)}>{agent.status}</span></p>
+            <p className="capitalize">{agentName}: <span className={cn('font-bold', statusColorClass)}>{agent.status}</span></p>
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
@@ -106,36 +91,61 @@ const AgentNode = ({ agent, index }: { agent: AgentNode, index: number }) => {
 
 export default function Oracle() {
   const [agentNodes, setAgentNodes] = useState<AgentNode[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Initialize agents
-    setAgentNodes(
-      agents.map((type, index) => ({
-        type,
-        status: agentStatuses[Math.floor(Math.random() * agentStatuses.length)],
-        size: 40 + Math.random() * 20,
-        orbit: 80 + index * 18,
-        speed: 20 + Math.random() * 20,
-        angle: Math.random() * 360,
-      }))
-    );
+    const fetchAgents = async () => {
+        setIsLoading(true);
+        try {
+            const response = await fetch('/api/agents');
+            if (!response.ok) {
+                throw new Error('Failed to fetch agent data from the network.');
+            }
+            const data: AgentData[] = await response.json();
+            
+            setAgentNodes(data.map((agent, index) => ({
+                type: agent.type as MicroAppType,
+                name: agent.name,
+                status: agent.status,
+                size: 40 + Math.random() * 20,
+                orbit: 80 + index * 25,
+                speed: 20 + Math.random() * 20,
+                angle: Math.random() * 360,
+            })));
+
+            setError(null);
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'An unknown error occurred');
+        } finally {
+            setIsLoading(false);
+        }
+    };
     
-    // Update statuses periodically
-    const interval = setInterval(() => {
-        setAgentNodes(prev => prev.map(agent => ({
-            ...agent,
-            status: agentStatuses[Math.floor(Math.random() * agentStatuses.length)]
-        })))
-    }, 3000);
+    fetchAgents();
+    const interval = setInterval(fetchAgents, 5000); // Poll for updates
 
     return () => clearInterval(interval);
   }, []);
 
-  return (
-    <div className="w-full h-full flex items-center justify-center p-4">
-        <div className="relative aspect-square w-full max-w-[500px]">
-            <div className="absolute inset-0 bg-radial-gradient from-primary/10 via-primary/5 to-transparent rounded-full" />
+  const renderContent = () => {
+    if (isLoading && agentNodes.length === 0) {
+        return <Skeleton className="absolute inset-0 rounded-full" />;
+    }
 
+    if (error) {
+        return (
+            <Alert variant="destructive" className="m-auto max-w-sm">
+                <ServerCrash className="h-4 w-4" />
+                <AlertTitle>Network Error</AlertTitle>
+                <AlertDescription>{error}</AlertDescription>
+            </Alert>
+        )
+    }
+
+    return (
+        <>
+            <div className="absolute inset-0 bg-radial-gradient from-primary/10 via-primary/5 to-transparent rounded-full" />
             <motion.div
                 className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 rounded-full bg-primary/50 border-2 border-primary shadow-[0_0_20px_hsl(var(--primary))]"
                 animate={{ scale: [1, 1.05, 1] }}
@@ -145,8 +155,16 @@ export default function Oracle() {
             </motion.div>
 
             {agentNodes.map((agent, index) => (
-                <AgentNode key={agent.type} agent={agent} index={index} />
+                <AgentNode key={agent.type + index} agent={agent} index={index} />
             ))}
+        </>
+    )
+  }
+
+  return (
+    <div className="w-full h-full flex items-center justify-center p-4">
+        <div className="relative aspect-square w-full max-w-[500px]">
+           {renderContent()}
         </div>
     </div>
   );
