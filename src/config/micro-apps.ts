@@ -1,3 +1,4 @@
+
 // This file serves as a non-database source of truth for micro-app manifests.
 // In a larger system, this could be stored in a database and managed via an admin interface.
 
@@ -137,7 +138,7 @@ export const microAppManifests: MicroAppManifest[] = [
     id: 'rolodex',
     name: 'The Rolodex',
     author: 'Sterling Cooper',
-    description: "Let's put a pin in that candidate. Analyzes resumes and generates non-cringey outreach icebreakers.",
+    description: "Analyzes new or existing contacts against a job description to determine fit and generate outreach assets.",
     price: '$9/mo',
     imageUrl: 'https://placehold.co/600x400.png',
     imageHint: 'vintage rolodex office',
