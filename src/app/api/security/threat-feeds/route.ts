@@ -1,13 +1,20 @@
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
+import { getSession } from '@/lib/auth';
+import prisma from '@/lib/prisma';
 
 const ThreatFeedsSchema = z.object({
   feeds: z.array(z.string().url({ message: "Each feed must be a valid URL." })),
 });
 
 // Corresponds to operationId `configureThreatFeeds`
-export async function PUT(request: Request) {
+export async function PUT(request: NextRequest) {
+  const session = await getSession(request);
+  if (!session?.workspaceId) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   try {
     const body = await request.json();
     const validation = ThreatFeedsSchema.safeParse(body);
@@ -19,9 +26,21 @@ export async function PUT(request: Request) {
       }, { status: 400 });
     }
 
-    // In a real application, you would now save these feeds to a database
-    // for the Aegis agent to consume during its analysis runs.
-    console.log('Threat intelligence feeds updated:', validation.data.feeds);
+    const { feeds } = validation.data;
+    const { workspaceId } = session;
+
+    // Use a transaction to ensure atomicity: delete old feeds and create new ones.
+    await prisma.$transaction([
+      prisma.threatFeed.deleteMany({
+        where: { workspaceId },
+      }),
+      prisma.threatFeed.createMany({
+        data: feeds.map((url) => ({
+          url: url,
+          workspaceId: workspaceId,
+        })),
+      }),
+    ]);
 
     return NextResponse.json({ message: 'Threat intelligence feeds updated successfully.' });
 
