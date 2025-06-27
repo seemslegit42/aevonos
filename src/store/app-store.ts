@@ -20,7 +20,8 @@ export type MicroAppType =
   | 'ai-suggestion'
   | 'echo-control'
   | 'aegis-control'
-  | 'contact-list';
+  | 'contact-list'
+  | 'pam-poovey-onboarding';
 
 // Define the shape of a MicroApp instance
 export interface MicroApp {
@@ -43,6 +44,7 @@ const defaultAppDetails: Record<MicroAppType, Omit<MicroApp, 'id' | 'contentProp
   'echo-control': { type: 'echo-control', title: 'Recall Session', description: "Click to have Echo summarize the last session's activity." },
   'aegis-control': { type: 'aegis-control', title: 'Aegis Security Report', description: "Analysis of the last command's security profile." },
   'contact-list': { type: 'contact-list', title: 'Contact List', description: 'A list of contacts from the CRM.' },
+  'pam-poovey-onboarding': { type: 'pam-poovey-onboarding', title: 'Pam Poovey: HR', description: 'Onboarding, complaints, and questionable life advice.' },
 };
 
 

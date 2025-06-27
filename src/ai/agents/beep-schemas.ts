@@ -8,6 +8,7 @@ const LaunchableAppTypeSchema = z.enum([
   'file-explorer',
   'terminal',
   'echo-control',
+  'pam-poovey-onboarding',
 ]);
 
 export const AppToLaunchSchema = z.object({
