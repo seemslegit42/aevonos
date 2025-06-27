@@ -13,72 +13,71 @@ const generateDossierFlow = ai.defineFlow(
   },
   async (input) => {
     const today = format(new Date(), 'yyyy-MM-dd');
-    const prompt = `You are a professional intelligence analyst tasked with compiling a formal dossier. Your output must be in well-structured Markdown format. Do not include any commentary outside of the markdown structure.
+    const caseFile = (input.targetName || 'UNKNOWN_SUBJECT').toUpperCase().replace(/\s/g, '_');
+    const prompt = `You are a professional intelligence analyst AI. Your task is to compile a formal dossier from the provided data. The output must be perfectly structured Markdown, adhering strictly to the template. Do not include any conversational text, introductions, or conclusions outside of the Markdown structure.
 
-    The dossier is for the target: **${input.redacted ? 'TARGET-001' : input.targetName}**.
-    The investigator is: **The Architect**.
-    The date is: **${today}**.
+**INTERNAL USE ONLY // ΛΞVON OS // DECLASSIFIED ${today}**
     
-    Compile all the provided intelligence into a single, cohesive Markdown document with the following sections. If a section has no data, you must explicitly state that (e.g., "No behavioral analysis conducted.").
-
-    # Infidelity Radar: Intelligence Dossier
+---
     
-    - **Subject**: ${input.redacted ? 'TARGET-001' : input.targetName}
-    - **Date Generated**: ${today}
-    - **Investigator**: The Architect
-
-    ---
-
-    ## Summary Panel
-
-    **Gut Check Synopsis**: 
-    ${input.analysisResult?.riskSummary || 'Not assessed.'}
-
-    **Infidelity Risk Score**: ${input.analysisResult?.riskScore ? `${input.analysisResult.riskScore}%` : 'N/A'}
+# CASE FILE: ${input.redacted ? 'TARGET-001' : caseFile}
     
-    **Verdict**: ${!input.analysisResult ? 'Not Assessed' : input.analysisResult.riskScore > 75 ? 'High Risk' : input.analysisResult.riskScore > 40 ? 'Medium Risk' : 'Low Risk'}
-
-    ---
-
-    ## Behavioral Analysis
+- **SUBJECT**: ${input.redacted ? 'TARGET-001' : input.targetName}
+- **DATE OF COMPILATION**: ${today}
+- **INVESTIGATOR**: The Architect (via BEEP v2.1)
     
-    ${input.analysisResult ? 
-        `**Key Factors Flagged:**\n` + input.analysisResult.keyFactors.map(f => `- ${f}`).join('\n')
-        : 'No behavioral analysis was conducted for this dossier.'
-    }
-
-    ---
-
-    ## OSINT Findings
+---
     
-    ${input.osintReport ? 
-        `**Overall Digital Visibility**: ${input.osintReport.digitalFootprint.overallVisibility}\n\n` +
-        `**Data Breaches Found**: ${input.osintReport.breaches?.length || 0}\n` +
-        `**IntelX Leaks Found**: ${input.osintReport.intelXLeaks?.length || 0}\n` +
-        `**Social Profiles Scraped**: ${input.osintReport.socialProfiles?.length || 0}\n` +
-        `**Burner Phone Check**: ${input.osintReport.burnerPhoneCheck?.isBurner ? 'Flagged as Burner' : 'Appears Normal'}`
-        : 'No OSINT data available for this dossier.'
-    }
-
-    ---
-
-    ## Decoy Interaction Transcript
-
-    ${input.decoyResult ? 
-        `**Decoy Message Deployed**: "${input.decoyResult.decoyMessage}"`
-        : 'No AI decoy was deployed in this investigation.'
-    }
-
-    ---
-
-    ## Metadata
+## ▣ INFIDELITY RISK ASSESSMENT
     
-    - **Export Timestamp**: ${new Date().toISOString()}
-    - **Agent IDs Used**: dossier-generator-v1, osint-bloodhound-v2, behavioral-spectre-v1
-    `;
+- **RISK SCORE**: ${input.analysisResult?.riskScore ? `${input.analysisResult.riskScore}%` : 'N/A'} (${!input.analysisResult ? 'Not Assessed' : input.analysisResult.riskScore > 75 ? 'HIGH' : input.analysisResult.riskScore > 40 ? 'MEDIUM' : 'LOW'})
+- **EXECUTIVE SYNOPSIS**: ${input.analysisResult?.riskSummary || 'Not assessed.'}
+    
+---
+    
+## ▣ BEHAVIORAL ANALYSIS
+    
+${input.analysisResult 
+  ? `**KEY FACTORS FLAGGED:**\n` + input.analysisResult.keyFactors.map(f => `  - ${f}`).join('\n')
+  : '**CONCLUSION**: No behavioral analysis was conducted for this dossier.'
+}
+
+---
+
+## ▣ OSINT FINDINGS
+    
+${input.osintReport 
+  ? `- **OVERALL DIGITAL VISIBILITY**: ${input.osintReport.digitalFootprint.overallVisibility}\n` +
+    `- **DATA BREACHES**: ${input.osintReport.breaches?.length || 0} found.\n` +
+    `- **INTELX LEAKS**: ${input.osintReport.intelXLeaks?.length || 0} found.\n` +
+    `- **SOCIAL PROFILES**: ${input.osintReport.socialProfiles?.length || 0} scraped.\n` +
+    `- **PHONE STATUS**: ${input.osintReport.burnerPhoneCheck?.isBurner ? 'FLAGGED AS BURNER' : 'Standard Carrier'}`
+  : '**CONCLUSION**: No OSINT data available for this dossier.'
+}
+
+---
+
+## ▣ COUNTER-INTELLIGENCE TRANSCRIPT (DECOY)
+
+${input.decoyResult 
+  ? `**MESSAGE DEPLOYED**: "${input.decoyResult.decoyMessage}"`
+  : '**CONCLUSION**: No AI decoy was deployed in this investigation.'
+}
+
+---
+
+## ▣ FILE METADATA
+
+- **EXPORT TIMESTAMP**: ${new Date().toISOString()}
+- **AGENT IDs**: dossier-generator-v1, osint-bloodhound-v2, behavioral-spectre-v1
+    
+---
+    
+*Compiled via Agentic Analysis – BEEP v2.1*
+`;
 
     const { output } = await ai.generate({
-      prompt: `Please format the following dossier content perfectly as a single Markdown block. Do not add any conversational text before or after the markdown. Content:\n\n${prompt}`,
+      prompt: prompt,
       model: 'googleai/gemini-2.0-flash',
       output: { schema: DossierOutputSchema },
     });
