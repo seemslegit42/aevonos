@@ -2,7 +2,7 @@
 
 import React from 'react';
 import MicroAppCard from './micro-app-card';
-import { type MicroApp } from '@/app/page';
+import { type MicroApp } from '@/store/app-store';
 
 interface MicroAppGridProps {
   apps: MicroApp[];
