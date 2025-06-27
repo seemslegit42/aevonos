@@ -1,35 +1,41 @@
 
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Loader2, Wand2, Star, ThumbsDown } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { handleDrSyntaxCritique } from '@/app/actions';
 import type { DrSyntaxInput, DrSyntaxOutput } from '@/ai/agents/dr-syntax-schemas';
 import { useToast } from '@/hooks/use-toast';
 import { Separator } from '../ui/separator';
+import { useAppStore } from '@/store/app-store';
 
 export default function DrSyntax(props: DrSyntaxOutput | {}) {
-    const [isLoading, setIsLoading] = useState(false);
+    const { handleCommandSubmit, isLoading } = useAppStore(state => ({
+        handleCommandSubmit: state.handleCommandSubmit,
+        isLoading: state.isLoading
+    }));
     const [content, setContent] = useState('');
     const [contentType, setContentType] = useState<DrSyntaxInput['contentType']>('prompt');
     const [result, setResult] = useState<DrSyntaxOutput | null>(props && 'critique' in props ? props : null);
     const { toast } = useToast();
+
+    useEffect(() => {
+        if (props && 'critique' in props) {
+            setResult(props);
+        }
+    }, [props]);
 
     const handleCritique = async () => {
         if (!content) {
             toast({ variant: "destructive", title: "Dr. Syntax is unimpressed.", description: "Provide some content worth my time." });
             return;
         }
-        setIsLoading(true);
-        setResult(null);
-        const response = await handleDrSyntaxCritique({ content, contentType });
-        setResult(response);
-        setIsLoading(false);
+        const command = `critique this ${contentType}: "${content}"`;
+        handleCommandSubmit(command);
     };
 
     const ratingColor = result ? (result.rating < 4 ? 'text-destructive' : result.rating < 7 ? 'text-yellow-400' : 'text-accent') : '';

@@ -1,37 +1,43 @@
 
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Loader2, Wand2, Copy, Bot, ShieldAlert, Hourglass } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { generateWingmanMessage } from '@/app/actions';
 import type { WingmanInput, WingmanOutput } from '@/ai/agents/wingman-schemas';
 import { useToast } from '@/hooks/use-toast';
 import CringeOMeterDial from './cringe-o-meter-dial';
 import { cn } from '@/lib/utils';
+import { useAppStore } from '@/store/app-store';
 
-// This is the new Wingman Micro-App, reflecting its upgraded capabilities.
-export default function BeepWingman() {
-    const [isLoading, setIsLoading] = useState(false);
+export default function BeepWingman(props: WingmanOutput | {}) {
+    const { handleCommandSubmit, isLoading } = useAppStore(state => ({
+        handleCommandSubmit: state.handleCommandSubmit,
+        isLoading: state.isLoading
+    }));
     const [situationContext, setSituationContext] = useState('');
     const [messageMode, setMessageMode] = useState<WingmanInput['messageMode']>('Cool & Collected');
-    const [result, setResult] = useState<WingmanOutput | null>(null);
+    const [result, setResult] = useState<WingmanOutput | null>(props && 'suggestedMessage' in props ? props : null);
     const { toast } = useToast();
+
+    useEffect(() => {
+        if (props && 'suggestedMessage' in props) {
+            setResult(props);
+        }
+    }, [props]);
+
 
     const handleGenerate = async () => {
         if (!situationContext) {
             toast({ variant: "destructive", title: "Wingman needs intel", description: "I can't work with nothing. What's the situation?" });
             return;
         }
-        setIsLoading(true);
-        setResult(null);
-        const response = await generateWingmanMessage({ situationContext, messageMode });
-        setResult(response);
-        setIsLoading(false);
+        const command = `Generate a wingman message with mode "${messageMode}" for the following situation: "${situationContext}"`;
+        handleCommandSubmit(command);
     };
 
     const handleCopy = (text: string) => {

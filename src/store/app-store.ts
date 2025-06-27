@@ -12,6 +12,7 @@ import type { SessionRecallOutput } from '@/ai/agents/echo';
 import type { DrSyntaxOutput } from '@/ai/agents/dr-syntax-schemas';
 import type { Contact } from '@/ai/tools/crm-schemas';
 import type { UserCommandOutput, AgentReportSchema } from '@/ai/agents/beep-schemas';
+import { OsintOutput } from '@/ai/agents/osint-schemas';
 
 
 // Define the types of MicroApps available in the OS
@@ -151,7 +152,7 @@ export const useAppStore = create<AppState>((set, get) => {
           set(state => ({
               apps: state.apps.map(app => 
                   app.id === props.id
-                  ? { ...app, ...props, zIndex: ++zIndexCounter }
+                  ? { ...app, ...props, contentProps: {...existingApp.contentProps, ...props.contentProps}, zIndex: ++zIndexCounter }
                   : app
               )
           }));
@@ -225,7 +226,8 @@ export const useAppStore = create<AppState>((set, get) => {
 
         case 'dr-syntax':
           const drSyntaxReport: DrSyntaxOutput = report.report;
-          launchApp('dr-syntax', {
+          upsertApp('dr-syntax', { 
+              id: 'dr-syntax-main',
               title: `Critique Result (Rating: ${drSyntaxReport.rating}/10)`,
               description: `Critique for "${drSyntaxReport.suggestion.substring(0, 20)}..."`,
               contentProps: drSyntaxReport
@@ -240,43 +242,47 @@ export const useAppStore = create<AppState>((set, get) => {
             break;
         
         case 'vin-diesel':
-            launchApp('vin-diesel', { title: `VIN: ...${report.report.vin.slice(-6)}`, description: 'Validation Result', contentProps: report.report });
+            upsertApp('vin-diesel', { id: 'vin-diesel-main', title: `VIN: ...${report.report.vin.slice(-6)}`, description: 'Validation Result', contentProps: report.report });
             break;
         
         case 'winston-wolfe':
-            launchApp('winston-wolfe', { title: 'The Winston Wolfe', description: 'A solution is ready.', contentProps: report.report });
+            upsertApp('winston-wolfe', { id: 'winston-wolfe-main', title: 'The Winston Wolfe', description: 'A solution is ready.', contentProps: report.report });
             break;
 
         case 'kif-kroker':
-            launchApp('kif-kroker', { title: 'The Kif Kroker', description: 'Comms Analysis', contentProps: report.report });
+            upsertApp('kif-kroker', { id: 'kif-kroker-main', title: 'The Kif Kroker', description: 'Comms Analysis', contentProps: report.report });
             break;
         
         case 'vandelay':
-            launchApp('vandelay', { title: 'Vandelay Industries', description: 'Alibi Generated', contentProps: report.report });
+            upsertApp('vandelay', { id: 'vandelay-main', title: 'Vandelay Industries', description: 'Alibi Generated', contentProps: report.report });
             break;
         
         case 'jroc':
-            launchApp('jroc-business-kit', { title: `Biz Kit: ${report.report.businessName}`, description: 'Your legit-as-frig business kit.', contentProps: report.report });
+            upsertApp('jroc-business-kit', { id: 'jroc-main', title: `Biz Kit: ${report.report.businessName}`, description: 'Your legit-as-frig business kit.', contentProps: report.report });
             break;
         
         case 'lahey':
-             launchApp('lahey-surveillance', { title: `Lahey Report`, description: 'Shit-storm report.', contentProps: report.report });
+             upsertApp('lahey-surveillance', { id: 'lahey-main', title: `Lahey Report`, description: 'Shit-storm report.', contentProps: report.report });
              break;
         
         case 'foremanator':
-            launchApp('the-foremanator', { title: 'Foremanator Site Log', description: 'Daily report processed.', contentProps: report.report });
+            upsertApp('the-foremanator', { id: 'foremanator-main', title: 'Foremanator Site Log', description: 'Daily report processed.', contentProps: report.report });
             break;
 
         case 'sterileish':
-            launchApp('sterileish', { title: 'STERILE-ish™ Report', description: 'Compliance analysis complete.', contentProps: report.report });
+            upsertApp('sterileish', { id: 'sterileish-main', title: 'STERILE-ish™ Report', description: 'Compliance analysis complete.', contentProps: report.report });
             break;
         
         case 'paper-trail':
-            launchApp('paper-trail', { title: `Case File`, description: 'Evidence processed.', contentProps: report.report });
+            upsertApp('paper-trail', { id: 'paper-trail-main', title: `Case File`, description: 'Evidence processed.', contentProps: report.report });
             break;
             
         case 'wingman':
-            launchApp('beep-wingman', { title: 'BEEP Wingman Mission', description: 'Operation: Charm', contentProps: report.report });
+            upsertApp('beep-wingman', { id: 'wingman-main', title: 'BEEP Wingman Mission', description: 'Operation: Charm', contentProps: report.report });
+            break;
+        
+        case 'osint':
+            upsertApp('infidelity-radar', { id: 'infidelity-radar-main', contentProps: { osintReport: report.report }});
             break;
       }
     }
@@ -339,7 +345,7 @@ export const useAppStore = create<AppState>((set, get) => {
       set({ isLoading: true, beepOutput: null });
       
       set(state => ({
-          apps: state.apps.filter(app => app.type !== 'ai-suggestion' && app.id !== 'aegis-report-main')
+          apps: state.apps.filter(app => app.type !== 'ai-suggestion')
       }));
 
       try {

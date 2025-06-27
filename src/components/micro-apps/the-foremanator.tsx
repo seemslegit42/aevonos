@@ -1,33 +1,39 @@
 
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Loader2, Mic, ListChecks, ChevronsRight } from 'lucide-react';
-import { handleForemanatorLog } from '@/app/actions';
 import type { ForemanatorLogOutput } from '@/ai/agents/foremanator-schemas';
 import { useToast } from '@/hooks/use-toast';
 import { Separator } from '../ui/separator';
+import { useAppStore } from '@/store/app-store';
 
-export default function TheForemanator() {
-    const [isLoading, setIsLoading] = useState(false);
+export default function TheForemanator(props: ForemanatorLogOutput | {}) {
+    const { handleCommandSubmit, isLoading } = useAppStore(state => ({
+        handleCommandSubmit: state.handleCommandSubmit,
+        isLoading: state.isLoading
+    }));
     const [logText, setLogText] = useState('');
-    const [report, setReport] = useState<ForemanatorLogOutput | null>(null);
+    const [report, setReport] = useState<ForemanatorLogOutput | null>(props && 'summary' in props ? props : null);
     const { toast } = useToast();
+    
+    useEffect(() => {
+        if (props && 'summary' in props) {
+            setReport(props);
+        }
+    }, [props]);
 
     const handleSubmitLog = async () => {
         if (!logText) {
             toast({ variant: 'destructive', title: "Get to it!", description: "Can't file a report if there's nothin' in it." });
             return;
         }
-        setIsLoading(true);
-        setReport(null);
-        const response = await handleForemanatorLog({ logText });
-        setReport(response);
-        setIsLoading(false);
+        const command = `log this construction daily report: "${logText}"`;
+        handleCommandSubmit(command);
         setLogText('');
     };
 

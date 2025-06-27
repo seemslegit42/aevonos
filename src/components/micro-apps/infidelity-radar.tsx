@@ -1,13 +1,13 @@
 
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { ShieldAlert, Bot, Loader2, ChevronRight, EyeOff, Search, Globe, Linkedin, Twitter as XIcon, Instagram, VenetianMask, FileQuestion, BadgeAlert, PhoneOff, Skull } from 'lucide-react';
 import { Textarea } from '../ui/textarea';
-import { handleInfidelityAnalysis, handleDeployDecoy, handleOsintScan } from '@/app/actions';
+import { handleInfidelityAnalysis, handleDeployDecoy } from '@/app/actions';
 import type { InfidelityAnalysisOutput } from '@/ai/agents/infidelity-analysis-schemas';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '../ui/select';
 import type { DecoyInput } from '@/ai/agents/decoy-schemas';
@@ -25,6 +25,7 @@ import { ScrollArea } from '../ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import type { FirecrawlerReport } from '@/ai/tools/firecrawler-schemas';
+import { useAppStore } from '@/store/app-store';
 
 const DecoyDeploymentPanel = () => {
     const [isLoading, setIsLoading] = useState(false);
@@ -205,28 +206,38 @@ const OsintReportPanel = ({ report }: { report: OsintOutput }) => {
     )
 }
 
-export default function InfidelityRadar() {
+export default function InfidelityRadar(props: { osintReport?: OsintOutput } | {}) {
   const isMobile = useIsMobile();
   const { toast } = useToast();
+  const { handleCommandSubmit, isLoading } = useAppStore(state => ({
+    handleCommandSubmit: state.handleCommandSubmit,
+    isLoading: state.isLoading
+  }));
 
-  const [isScanning, setIsScanning] = useState(false);
   const [analysisInput, setAnalysisInput] = useState('');
   const [analysisResult, setAnalysisResult] = useState<InfidelityAnalysisOutput | null>(null);
   
-  const [isOsintScanning, setIsOsintScanning] = useState(false);
   const [osintTarget, setOsintTarget] = useState('');
   const [osintContext, setOsintContext] = useState('');
-  const [osintReport, setOsintReport] = useState<OsintOutput | null>(null);
+  const [osintReport, setOsintReport] = useState<OsintOutput | null>(props && 'osintReport' in props ? props.osintReport : null);
 
   const [isDecoyPanelOpen, setIsDecoyPanelOpen] = useState(false);
 
+  useEffect(() => {
+    if (props && 'osintReport' in props && props.osintReport) {
+        setOsintReport(props.osintReport);
+    }
+  }, [props]);
+
+
   const handleRunScan = async () => {
       if (!analysisInput) return;
-      setIsScanning(true);
+      // This part still uses a direct action call as it's not yet integrated into BEEP
+      setIsLoading(true);
       setAnalysisResult(null);
       const result = await handleInfidelityAnalysis({ situationDescription: analysisInput });
       setAnalysisResult(result);
-      setIsScanning(false);
+      setIsLoading(false);
   }
   
   const handleRunOsintScan = async () => {
@@ -234,11 +245,8 @@ export default function InfidelityRadar() {
           toast({ variant: 'destructive', title: 'OSINT Error', description: 'Target name is required.' });
           return;
       }
-      setIsOsintScanning(true);
-      setOsintReport(null);
-      const result = await handleOsintScan({ targetName: osintTarget, context: osintContext });
-      setOsintReport(result);
-      setIsOsintScanning(false);
+      const command = `perform an osint scan on "${osintTarget}" with the following context: "${osintContext}"`;
+      handleCommandSubmit(command);
   }
 
   const riskScore = analysisResult?.riskScore ?? -1;
@@ -253,19 +261,19 @@ export default function InfidelityRadar() {
                     placeholder="Target's Name (Required)"
                     value={osintTarget}
                     onChange={(e) => setOsintTarget(e.target.value)}
-                    disabled={isOsintScanning}
+                    disabled={isLoading}
                     className="bg-background/80"
                 />
                 <Textarea 
                     placeholder="Additional Context (Optional): email, phone, social URLs..."
                     value={osintContext}
                     onChange={(e) => setOsintContext(e.target.value)}
-                    disabled={isOsintScanning}
+                    disabled={isLoading}
                     rows={2}
                     className="bg-background/80"
                 />
-                <Button onClick={handleRunOsintScan} disabled={isOsintScanning || !osintTarget} className="w-full">
-                    {isOsintScanning ? <Loader2 className="animate-spin" /> : <><Search className="mr-2"/>Run OSINT Scan</>}
+                <Button onClick={handleRunOsintScan} disabled={isLoading || !osintTarget} className="w-full">
+                    {isLoading ? <Loader2 className="animate-spin" /> : <><Search className="mr-2"/>Run OSINT Scan</>}
                 </Button>
                 {osintReport && <div className="pt-2"><OsintReportPanel report={osintReport} /></div>}
             </div>
@@ -274,17 +282,17 @@ export default function InfidelityRadar() {
         
              {/* Behavioral Analysis Section */}
             <div className="space-y-2 p-2 border border-dashed rounded-lg">
-                <h3 className="font-semibold text-primary">Behavioral Analysis</h3>
+                <h3 className="font-semibold text-primary">Behavioral Analysis (Local)</h3>
                 <Textarea 
                     placeholder="Field Report: Describe the situation for analysis. Be specific..."
                     value={analysisInput}
                     onChange={(e) => setAnalysisInput(e.target.value)}
-                    disabled={isScanning}
+                    disabled={isLoading}
                     rows={4}
                     className="bg-background/80"
                 />
-                <Button className="w-full" onClick={handleRunScan} disabled={isScanning || !analysisInput}>
-                    {isScanning ? <Loader2 className="animate-spin" /> : 'Run Behavioral Scan'}
+                <Button className="w-full" onClick={handleRunScan} disabled={isLoading || !analysisInput}>
+                    {isLoading ? <Loader2 className="animate-spin" /> : 'Run Behavioral Scan'}
                 </Button>
                 
                 {analysisResult && (
@@ -319,7 +327,7 @@ export default function InfidelityRadar() {
 
             {/* Counter-Intelligence Section */}
              <div className="space-y-2 p-2 border border-dashed rounded-lg">
-                <h3 className="font-semibold text-primary">Counter-Intelligence</h3>
+                <h3 className="font-semibold text-primary">Counter-Intelligence (Local)</h3>
                 {isMobile ? (
                   <Sheet>
                       <SheetTrigger asChild>

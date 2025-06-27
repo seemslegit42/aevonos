@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -6,7 +7,6 @@ import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Progress } from '@/components/ui/progress';
 import { Loader2, CheckCircle, XCircle, FileText, ChevronRight } from 'lucide-react';
-import { handleVinDieselValidation } from '@/app/actions';
 import type { VinDieselOutput } from '@/ai/agents/vin-diesel-schemas';
 import { cn } from '@/lib/utils';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -14,6 +14,7 @@ import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { useAppStore } from '@/store/app-store';
 
 const ComplianceStatus = ({ label, status }: { label: string; status: string }) => {
     const getStatusColor = () => {
@@ -41,15 +42,29 @@ const ComplianceStatus = ({ label, status }: { label: string; status: string }) 
 }
 
 export default function VinDiesel(props: VinDieselOutput | {}) {
+  const { handleCommandSubmit, isLoading } = useAppStore(state => ({
+    handleCommandSubmit: state.handleCommandSubmit,
+    isLoading: state.isLoading
+  }));
   const [vin, setVin] = useState(props && 'vin' in props ? props.vin : '');
-  const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<VinDieselOutput | null>(props && 'isValid' in props ? props : null);
   const [progress, setProgress] = useState(0);
-  const [isReportOpen, setIsReportOpen] = useState(false);
+  const [isReportOpen, setIsReportOpen] = useState(true);
 
   useEffect(() => {
+    if (props && 'isValid' in props) {
+        setResult(props);
+        if (props.complianceReport) {
+            setIsReportOpen(true);
+        }
+    }
+  }, [props]);
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
     if (isLoading) {
-      const timer = setInterval(() => {
+      setProgress(0);
+      timer = setInterval(() => {
         setProgress((prev) => {
           if (prev >= 100) {
             clearInterval(timer);
@@ -58,23 +73,14 @@ export default function VinDiesel(props: VinDieselOutput | {}) {
           return prev + 20;
         });
       }, 200);
-      return () => clearInterval(timer);
     }
+    return () => clearInterval(timer);
   }, [isLoading]);
 
   const handleValidate = async () => {
     if (!vin) return;
-    setIsLoading(true);
-    setProgress(0);
-    setResult(null);
-    setIsReportOpen(false);
-    const response = await handleVinDieselValidation({ vin });
-    setResult(response);
-    setIsLoading(false);
-    // Automatically open the report if the data is there
-    if (response.complianceReport) {
-        setIsReportOpen(true);
-    }
+    const command = `validate the vin "${vin}"`;
+    handleCommandSubmit(command);
   };
   
   const ResultIcon = result?.isValid ? CheckCircle : XCircle;
