@@ -19,6 +19,9 @@ import { OsintOutputSchema } from './osint-schemas';
 import { LumberghAnalysisOutputSchema } from './lumbergh-schemas';
 import { LucilleBluthOutputSchema } from './lucille-bluth-schemas';
 import { RolodexAnalysisOutputSchema } from './rolodex-schemas';
+import { PamAudioOutputSchema } from './pam-poovey-schemas';
+import { InfidelityAnalysisOutputSchema } from './infidelity-analysis-schemas';
+import { DecoyOutputSchema } from './decoy-schemas';
 
 
 // Schemas from the original BEEP agent, preserved for the public contract.
@@ -45,6 +48,7 @@ const LaunchableAppTypeSchema = z.enum([
   'aegis-threatscope',
   'dr-syntax',
   'aegis-command',
+  'usage-monitor',
 ]);
 
 export const AppToLaunchSchema = z.object({
@@ -173,6 +177,18 @@ export const AgentReportSchema = z.discriminatedUnion('agent', [
   z.object({
     agent: z.literal('rolodex'),
     report: RolodexAnalysisOutputSchema.describe('The full report from the Rolodex agent.'),
+  }),
+  z.object({
+    agent: z.literal('pam-poovey'),
+    report: PamAudioOutputSchema.describe('The full report from the Pam Poovey agent.'),
+  }),
+  z.object({
+    agent: z.literal('infidelity-analysis'),
+    report: InfidelityAnalysisOutputSchema.describe('The full report from the Infidelity Analysis agent.'),
+  }),
+  z.object({
+    agent: z.literal('decoy'),
+    report: DecoyOutputSchema.describe('The full report from the Decoy agent.'),
   }),
 ]);
 

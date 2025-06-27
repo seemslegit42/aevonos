@@ -7,10 +7,9 @@ import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { ShieldAlert, Bot, Loader2, ChevronRight, EyeOff, Search, Globe, Linkedin, Twitter as XIcon, Instagram, VenetianMask, FileQuestion, BadgeAlert, PhoneOff, Skull } from 'lucide-react';
 import { Textarea } from '../ui/textarea';
-import { handleInfidelityAnalysis, handleDeployDecoy } from '@/app/actions';
 import type { InfidelityAnalysisOutput } from '@/ai/agents/infidelity-analysis-schemas';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '../ui/select';
-import type { DecoyInput } from '@/ai/agents/decoy-schemas';
+import type { DecoyInput, DecoyOutput } from '@/ai/agents/decoy-schemas';
 import type { OsintOutput } from '@/ai/agents/osint-schemas';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -24,25 +23,29 @@ import { Badge } from '../ui/badge';
 import { ScrollArea } from '../ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
-import type { FirecrawlerReport } from '@/ai/tools/firecrawler-schemas';
 import { useAppStore } from '@/store/app-store';
 
-const DecoyDeploymentPanel = () => {
-    const [isLoading, setIsLoading] = useState(false);
-    const [result, setResult] = useState<string | null>(null);
+const DecoyDeploymentPanel = ({ decoyResult }: { decoyResult: DecoyOutput | null }) => {
+    const { handleCommandSubmit, isLoading } = useAppStore(state => ({
+        handleCommandSubmit: state.handleCommandSubmit,
+        isLoading: state.isLoading
+    }));
+    const { toast } = useToast();
+    const [result, setResult] = useState<DecoyOutput | null>(decoyResult);
     const [targetDescription, setTargetDescription] = useState('');
     const [persona, setPersona] = useState<DecoyInput['persona']>('chill-demon');
 
+    useEffect(() => {
+        setResult(decoyResult);
+    }, [decoyResult]);
+
     const handleDeploy = async () => {
       if (!targetDescription) {
-          setResult("Error: Target description cannot be empty.");
+          toast({ variant: 'destructive', title: "Intel Required", description: "The decoy needs a target description to proceed." });
           return;
       }
-      setIsLoading(true);
-      setResult(null);
-      const response = await handleDeployDecoy({ targetDescription, persona });
-      setResult(response.decoyMessage);
-      setIsLoading(false);
+      const command = `deploy a decoy with persona "${persona}" to a target described as: "${targetDescription}"`;
+      handleCommandSubmit(command);
     }
   
     return (
@@ -69,12 +72,12 @@ const DecoyDeploymentPanel = () => {
         <Button variant="secondary" className="w-full" onClick={handleDeploy} disabled={isLoading}>
             {isLoading ? <Loader2 className="animate-spin" /> : <><Bot className="mr-2 h-4 w-4" /> Deploy Decoy</>}
         </Button>
-        {result && (
-            <Alert variant={result.startsWith("Error:") ? "destructive" : "default"} className="mt-3 bg-background/80">
+        {result?.decoyMessage && (
+            <Alert variant={result.decoyMessage.startsWith("Error:") ? "destructive" : "default"} className="mt-3 bg-background/80">
                 <Bot className="h-4 w-4" />
-                <AlertTitle>{result.startsWith("Error:") ? "Deployment Failed" : "Decoy Message Generated"}</AlertTitle>
-                <AlertDescription className={result.startsWith("Error:") ? "" : "italic"}>
-                    {result.startsWith("Error:") ? result : `"${result}"`}
+                <AlertTitle>{result.decoyMessage.startsWith("Error:") ? "Deployment Failed" : "Decoy Message Generated"}</AlertTitle>
+                <AlertDescription className={result.decoyMessage.startsWith("Error:") ? "" : "italic"}>
+                    {result.decoyMessage.startsWith("Error:") ? result.decoyMessage : `"${result.decoyMessage}"`}
                 </AlertDescription>
             </Alert>
         )}
@@ -103,32 +106,6 @@ const OsintReportPanel = ({ report }: { report: OsintOutput }) => {
                         {report.riskFactors.map((factor, i) => <li key={i}>{factor}</li>)}
                     </ul>
                 </div>
-
-                {report.firecrawlerReports && report.firecrawlerReports.length > 0 && (
-                    <>
-                        <Separator />
-                        <div>
-                            <h4 className="font-bold text-blue-400 flex items-center gap-2">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.59a2 2 0 0 1-2.83-2.83l.79-.79"></path></svg>
-                                Raw Scraped Data (Firecrawler)
-                            </h4>
-                            <div className="space-y-2 mt-1">
-                                {report.firecrawlerReports.map((fireReport, index) => (
-                                    <div key={index} className="text-xs p-2 border border-blue-400/50 rounded-md bg-background/50">
-                                        {(fireReport as any).success ? (
-                                            <>
-                                                <p className="font-bold text-blue-400">Scan of: {(fireReport as any).data.metadata?.sourceURL || 'a tracked URL'}</p>
-                                                <pre className="whitespace-pre-wrap font-mono text-xs break-words">{(fireReport as any).data.markdown}</pre>
-                                            </>
-                                        ) : (
-                                            <p className="text-destructive">Failed to scrape a URL: {(fireReport as any).error}</p>
-                                        )}
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    </>
-                )}
                 
                 {report.breaches && report.breaches.length > 0 && <Separator />}
                 {report.breaches && report.breaches.length > 0 && (
@@ -206,7 +183,7 @@ const OsintReportPanel = ({ report }: { report: OsintOutput }) => {
     )
 }
 
-export default function InfidelityRadar(props: { osintReport?: OsintOutput } | {}) {
+export default function InfidelityRadar(props: { osintReport?: OsintOutput, analysisResult?: InfidelityAnalysisOutput, decoyResult?: DecoyOutput } | {}) {
   const isMobile = useIsMobile();
   const { toast } = useToast();
   const { handleCommandSubmit, isLoading } = useAppStore(state => ({
@@ -215,11 +192,12 @@ export default function InfidelityRadar(props: { osintReport?: OsintOutput } | {
   }));
 
   const [analysisInput, setAnalysisInput] = useState('');
-  const [analysisResult, setAnalysisResult] = useState<InfidelityAnalysisOutput | null>(null);
+  const [analysisResult, setAnalysisResult] = useState<InfidelityAnalysisOutput | null>(props && 'analysisResult' in props ? props.analysisResult : null);
   
   const [osintTarget, setOsintTarget] = useState('');
   const [osintContext, setOsintContext] = useState('');
   const [osintReport, setOsintReport] = useState<OsintOutput | null>(props && 'osintReport' in props ? props.osintReport : null);
+  const [decoyResult, setDecoyResult] = useState<DecoyOutput | null>(props && 'decoyResult' in props ? props.decoyResult : null);
 
   const [isDecoyPanelOpen, setIsDecoyPanelOpen] = useState(false);
 
@@ -227,17 +205,19 @@ export default function InfidelityRadar(props: { osintReport?: OsintOutput } | {
     if (props && 'osintReport' in props && props.osintReport) {
         setOsintReport(props.osintReport);
     }
+    if (props && 'analysisResult' in props && props.analysisResult) {
+        setAnalysisResult(props.analysisResult);
+    }
+     if (props && 'decoyResult' in props && props.decoyResult) {
+        setDecoyResult(props.decoyResult);
+    }
   }, [props]);
 
 
   const handleRunScan = async () => {
       if (!analysisInput) return;
-      // This part still uses a direct action call as it's not yet integrated into BEEP
-      setIsLoading(true);
-      setAnalysisResult(null);
-      const result = await handleInfidelityAnalysis({ situationDescription: analysisInput });
-      setAnalysisResult(result);
-      setIsLoading(false);
+      const command = `analyze the following situation for infidelity risk: "${analysisInput}"`;
+      handleCommandSubmit(command);
   }
   
   const handleRunOsintScan = async () => {
@@ -340,7 +320,7 @@ export default function InfidelityRadar(props: { osintReport?: OsintOutput } | {
                               <SheetTitle>Deploy AI Decoy</SheetTitle>
                           </SheetHeader>
                           <div className="overflow-y-auto flex-grow">
-                            <DecoyDeploymentPanel />
+                            <DecoyDeploymentPanel decoyResult={decoyResult} />
                           </div>
                       </SheetContent>
                   </Sheet>
@@ -352,7 +332,7 @@ export default function InfidelityRadar(props: { osintReport?: OsintOutput } | {
                           </Button>
                       </CollapsibleTrigger>
                       <CollapsibleContent className="pt-2">
-                          <DecoyDeploymentPanel />
+                          <DecoyDeploymentPanel decoyResult={decoyResult} />
                       </CollapsibleContent>
                   </Collapsible>
                 )}

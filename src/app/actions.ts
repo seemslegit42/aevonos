@@ -8,13 +8,6 @@ import { revalidatePath } from 'next/cache';
 import { drSyntaxCritique } from '@/ai/agents/dr-syntax';
 import type { DrSyntaxInput, DrSyntaxOutput } from '@/ai/agents/dr-syntax-schemas';
 import { recallSession, type SessionRecallInput, type SessionRecallOutput } from '@/ai/agents/echo';
-import { generatePamRant as generatePamRantFlow } from '@/ai/agents/pam-poovey';
-import type { PamScriptInput, PamAudioOutput } from '@/ai/agents/pam-poovey-schemas';
-import { deployDecoy as deployDecoyFlow } from '@/ai/agents/decoy';
-import type { DecoyInput, DecoyOutput } from '@/ai/agents/decoy-schemas';
-import { performInfidelityAnalysis as performInfidelityAnalysisFlow } from '@/ai/agents/infidelity-analysis';
-import type { InfidelityAnalysisInput, InfidelityAnalysisOutput } from '@/ai/agents/infidelity-analysis-schemas';
-import { validateVin as validateVinFlow } from '@/ai/agents/vin-diesel';
 import type { VinDieselInput, VinDieselOutput } from '@/ai/agents/vin-diesel-schemas';
 import { analyzeInvite as analyzeInviteFlow } from '@/ai/agents/lumbergh';
 import type { LumberghAnalysisInput, LumberghAnalysisOutput } from '@/ai/agents/lumbergh-schemas';
@@ -42,6 +35,7 @@ import { generateWingmanMessage as generateWingmanMessageFlow } from '@/ai/agent
 import type { WingmanInput, WingmanOutput } from '@/ai/agents/wingman-schemas';
 import { performOsintScan } from '@/ai/agents/osint';
 import type { OsintInput, OsintOutput } from '@/ai/agents/osint-schemas';
+import { validateVin } from '@/ai/agents/vin-diesel';
 
 
 export async function handleCommand(command: string): Promise<UserCommandOutput> {
@@ -98,48 +92,9 @@ export async function recallSessionAction(input: SessionRecallInput): Promise<Se
   }
 }
 
-export async function generatePamRant(input: PamScriptInput): Promise<PamAudioOutput> {
-  try {
-    const result = await generatePamRantFlow(input);
-    return result;
-  } catch (error) {
-    console.error('Error in Pam Poovey rant flow:', error);
-    return {
-      script: "I'd tell you what you need to know, but my glass is empty and so is my soul. Also, there was a server error.",
-      audioDataUri: '',
-    };
-  }
-}
-
-export async function handleDeployDecoy(input: DecoyInput): Promise<DecoyOutput> {
-  try {
-    const result = await deployDecoyFlow(input);
-    return result;
-  } catch (error) {
-    console.error('Error deploying decoy:', error);
-    return {
-      decoyMessage: "The agent failed to generate a message. The target's profile might be too powerful, or there was a server error.",
-    };
-  }
-}
-
-export async function handleInfidelityAnalysis(input: InfidelityAnalysisInput): Promise<InfidelityAnalysisOutput> {
-  try {
-    const result = await performInfidelityAnalysisFlow(input);
-    return result;
-  } catch (error) {
-    console.error('Error in infidelity analysis flow:', error);
-    return {
-      riskScore: -1, // Use a sentinel value for error
-      riskSummary: "The agent could not complete the analysis due to a system error. The signal may have been lost.",
-      keyFactors: [],
-    };
-  }
-}
-
 export async function handleVinDieselValidation(input: VinDieselInput): Promise<VinDieselOutput> {
     try {
-        const result = await validateVinFlow(input);
+        const result = await validateVin(input);
         return result;
     } catch (error) {
         console.error('Error in VIN Diesel validation flow:', error);

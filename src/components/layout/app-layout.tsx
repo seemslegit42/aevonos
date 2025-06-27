@@ -2,7 +2,13 @@
 
 import TopBar from '@/components/layout/top-bar';
 import { useAppStore } from '@/store/app-store';
-import BeepAvatar from '@/components/beep-avatar';
+import dynamic from 'next/dynamic';
+
+const BeepAvatar = dynamic(() => import('@/components/beep-avatar'), { 
+  ssr: false,
+  // Add a placeholder to prevent layout shift while the component loads
+  loading: () => <div className="fixed bottom-6 right-6 z-50 w-28 h-28" />
+});
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const { isLoading, handleCommandSubmit, beepOutput } = useAppStore();

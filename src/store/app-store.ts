@@ -1,5 +1,4 @@
 
-
 import { create } from 'zustand';
 import type { DragEndEvent } from '@dnd-kit/core';
 import React from 'react';
@@ -19,6 +18,9 @@ import type { VandelayAlibiOutput } from '@/ai/agents/vandelay-schemas';
 import type { LumberghAnalysisOutput } from '@/ai/agents/lumbergh-schemas';
 import type { LucilleBluthOutput } from '@/ai/agents/lucille-bluth-schemas';
 import type { RolodexAnalysisOutput } from '@/ai/agents/rolodex-schemas';
+import type { PamAudioOutput } from '@/ai/agents/pam-poovey-schemas';
+import type { InfidelityAnalysisOutput } from '@/ai/agents/infidelity-analysis-schemas';
+import type { DecoyOutput } from '@/ai/agents/decoy-schemas';
 
 
 // Define the types of MicroApps available in the OS
@@ -309,6 +311,30 @@ export const useAppStore = create<AppState>((set, get) => {
 
         case 'rolodex':
             upsertApp('rolodex', { id: 'rolodex-main', contentProps: { ...report.report } });
+            break;
+
+        case 'pam-poovey':
+            const pamReport: PamAudioOutput = report.report;
+            upsertApp('pam-poovey-onboarding', { 
+                id: 'pam-poovey-main',
+                contentProps: pamReport
+            });
+            break;
+
+        case 'infidelity-analysis':
+            const analysisReport: InfidelityAnalysisOutput = report.report;
+            upsertApp('infidelity-radar', {
+                id: 'infidelity-radar-main',
+                contentProps: { analysisResult: analysisReport }
+            });
+            break;
+
+        case 'decoy':
+            const decoyReport: DecoyOutput = report.report;
+            upsertApp('infidelity-radar', {
+                id: 'infidelity-radar-main',
+                contentProps: { decoyResult: decoyReport }
+            });
             break;
       }
     }

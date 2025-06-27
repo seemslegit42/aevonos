@@ -1,26 +1,34 @@
+
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { generatePamRant } from '@/app/actions';
 import { type PamAudioOutput, type PamScriptInput } from '@/ai/agents/pam-poovey-schemas';
 import { Play, Loader2 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useAppStore } from '@/store/app-store';
 
 
-export default function PamPooveyOnboarding() {
-  const [onboardingData, setOnboardingData] = useState<PamAudioOutput | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+export default function PamPooveyOnboarding(props: PamAudioOutput | {}) {
+  const { handleCommandSubmit, isLoading } = useAppStore(state => ({
+    handleCommandSubmit: state.handleCommandSubmit,
+    isLoading: state.isLoading
+  }));
+
+  const [onboardingData, setOnboardingData] = useState<PamAudioOutput | null>(props && 'script' in props ? props : null);
   const [topic, setTopic] = useState<PamScriptInput['topic']>('onboarding');
   const audioRef = React.useRef<HTMLAudioElement>(null);
 
+  useEffect(() => {
+    if (props && 'script' in props) {
+      setOnboardingData(props);
+    }
+  }, [props]);
+
   const handleGenerate = async () => {
-    setIsLoading(true);
-    setOnboardingData(null);
-    const result = await generatePamRant({ topic });
-    setOnboardingData(result);
-    setIsLoading(false);
+    const command = `get pam poovey's take on the topic: ${topic}`;
+    handleCommandSubmit(command);
   };
   
   React.useEffect(() => {

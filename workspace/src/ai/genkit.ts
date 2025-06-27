@@ -2,7 +2,9 @@ import {genkit} from 'genkit';
 import {googleAI} from '@genkit-ai/googleai';
 import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
 
-const apiKey = process.env.GOOGLE_API_KEY || 'YOUR_API_KEY_HERE';
+const apiKey = (process.env.GOOGLE_API_KEY && process.env.GOOGLE_API_KEY.trim() !== '') 
+    ? process.env.GOOGLE_API_KEY 
+    : 'YOUR_API_KEY_HERE';
 
 export const ai = genkit({
   plugins: [googleAI({apiKey: apiKey})],

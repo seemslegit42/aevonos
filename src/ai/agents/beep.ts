@@ -66,6 +66,12 @@ import { LumberghAnalysisInputSchema } from './lumbergh-schemas';
 import { LucilleBluthInputSchema } from './lucille-bluth-schemas';
 import { RolodexAnalysisInputSchema } from './rolodex-schemas';
 import { generateSpeech } from '@/ai/flows/tts-flow';
+import { generatePamRant } from '@/ai/agents/pam-poovey';
+import { PamScriptInputSchema } from '@/ai/agents/pam-poovey-schemas';
+import { performInfidelityAnalysis } from '@/ai/agents/infidelity-analysis';
+import { InfidelityAnalysisInputSchema } from '@/ai/agents/infidelity-analysis-schemas';
+import { deployDecoy } from '@/ai/agents/decoy';
+import { DecoyInputSchema } from '@/ai/agents/decoy-schemas';
 
 
 import {
@@ -392,6 +398,51 @@ class RolodexTool extends Tool {
   }
 }
 
+class PamPooveyTool extends Tool {
+  name = 'generatePamRant';
+  description = 'Generates a sarcastic, cynical, and vaguely unhelpful HR script and audio from Pam Poovey. Use this when the user asks for Pam\'s take on a topic like onboarding, attendance, or firing someone.';
+  schema = PamScriptInputSchema;
+  
+  async _call(input: z.infer<typeof PamScriptInputSchema>) {
+    const result = await generatePamRant(input);
+    const report: z.infer<typeof AgentReportSchema> = {
+      agent: 'pam-poovey',
+      report: result,
+    };
+    return JSON.stringify(report);
+  }
+}
+
+class InfidelityAnalysisTool extends Tool {
+  name = 'performInfidelityAnalysis';
+  description = 'Analyzes a situation for infidelity risk and provides a risk score. Use this for "run behavioral scan" or "analyze a situation for risk".';
+  schema = InfidelityAnalysisInputSchema;
+  
+  async _call(input: z.infer<typeof InfidelityAnalysisInputSchema>) {
+    const result = await performInfidelityAnalysis(input);
+    const report: z.infer<typeof AgentReportSchema> = {
+      agent: 'infidelity-analysis',
+      report: result,
+    };
+    return JSON.stringify(report);
+  }
+}
+
+class DecoyTool extends Tool {
+  name = 'deployDecoy';
+  description = 'Generates a context-aware seduction message to test a target\'s responsiveness and loyalty. Use this for "deploy decoy".';
+  schema = DecoyInputSchema;
+  
+  async _call(input: z.infer<typeof DecoyInputSchema>) {
+    const result = await deployDecoy(input);
+    const report: z.infer<typeof AgentReportSchema> = {
+      agent: 'decoy',
+      report: result,
+    };
+    return JSON.stringify(report);
+  }
+}
+
 const tools: Tool[] = [
     new FinalAnswerTool(), new DrSyntaxTool(), 
     new CreateContactTool(), new UpdateContactTool(), new ListContactsTool(), new DeleteContactTool(), 
@@ -401,6 +452,7 @@ const tools: Tool[] = [
     new SterileishTool(), new PaperTrailTool(),
     new WingmanTool(), new OsintScanTool(),
     new LumberghTool(), new LucilleBluthTool(), new RolodexTool(),
+    new PamPooveyTool(), new InfidelityAnalysisTool(), new DecoyTool(),
 ];
 
 const modelWithTools = geminiModel.bind({
