@@ -25,6 +25,8 @@ import { analyzeCandidate as analyzeCandidateFlow } from '@/ai/agents/rolodex';
 import type { RolodexAnalysisInput, RolodexAnalysisOutput } from '@/ai/agents/rolodex-schemas';
 import { generateSolution as generateSolutionFlow } from '@/ai/agents/winston-wolfe';
 import type { WinstonWolfeInput, WinstonWolfeOutput } from '@/ai/agents/winston-wolfe-schemas';
+import { analyzeComms as analyzeCommsFlow } from '@/ai/agents/kif-kroker';
+import type { KifKrokerAnalysisInput, KifKrokerAnalysisOutput } from '@/ai/agents/kif-kroker-schemas';
 
 export async function handleCommand(command: string): Promise<UserCommandOutput> {
   try {
@@ -195,4 +197,19 @@ export async function generateSolution(input: WinstonWolfeInput): Promise<Winsto
             suggestedResponse: "I seem to have encountered a problem of my own. A server error. I'll handle it.",
         };
     }
+}
+
+export async function analyzeComms(input: KifKrokerAnalysisInput): Promise<KifKrokerAnalysisOutput> {
+  try {
+    const result = await analyzeCommsFlow(input);
+    return result;
+  } catch (error) {
+    console.error('Error in Kif Kroker analysis flow:', error);
+    return {
+      moraleLevel: 'Sigh',
+      wearyNudge: "*Sigh* The sub-wave communicator seems to be malfunctioning. Probably for the best. Also, there was a server error.",
+      passiveAggressionIndex: 0,
+      burnoutProbability: 0,
+    };
+  }
 }
