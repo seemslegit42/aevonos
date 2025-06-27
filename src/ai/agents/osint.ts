@@ -14,6 +14,7 @@ import {
     checkBurnerPhoneNumber,
     searchIntelX,
 } from '../tools/osint-tools';
+import { runFirecrawlerScan } from '../tools/firecrawler-tools';
 
 // Helper function to extract potential data points from context
 const extractContextData = (context: string) => {
@@ -57,6 +58,11 @@ const performOsintScanFlow = ai.defineFlow(
         const socialPromises = contextData.socialUrls.map(url => scrapeSocialMediaProfile({ profileUrl: url }));
         promises.push(Promise.all(socialPromises).then(r => toolResults.socialProfiles = r));
     }
+    
+    // Add Firecrawler scan
+    const firecrawlerQuery = contextData.email || contextData.socialUrls[0] || targetName;
+    promises.push(runFirecrawlerScan({ query: firecrawlerQuery }).then(r => toolResults.firecrawlerReport = r));
+
 
     await Promise.all(promises);
     
@@ -64,7 +70,7 @@ const performOsintScanFlow = ai.defineFlow(
     const prompt = `You are an OSINT (Open-Source Intelligence) analysis agent. Your callsign is "Bloodhound". You synthesize raw data from various sources into a coherent intelligence report. Your tone is factual, analytical, and direct.
 
     You have been provided with raw data findings for a target from multiple OSINT tools. Your task is to review this raw data and populate all fields of the OsintOutputSchema correctly and professionally.
-    You must create a high-level summary and identify key risk factors based on the combined data.
+    You must create a high-level summary and identify key risk factors based on the combined data. Pay special attention to the 'firecrawlerReport' for hidden connections or metadata.
 
     Target Name: ${targetName}
     User-provided context: ${context || 'None'}

@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { FirecrawlerReportSchema } from './firecrawler-schemas';
 
 // Schema for HaveIBeenPwned check
 export const PwnedCheckInputSchema = z.object({
@@ -45,3 +46,24 @@ export const IntelXLeakSchema = z.object({
     details: z.string().describe('Details about the leaked information.'),
 });
 export const IntelXSearchOutputSchema = z.array(IntelXLeakSchema).describe('A list of discovered data leaks.');
+
+export const OsintInputSchema = z.object({
+  targetName: z.string().describe('The full name of the individual to investigate.'),
+  context: z.string().optional().describe('Any additional context about the target, e.g., email, known associates, last known location, phone number, social media links.'),
+});
+export type OsintInput = z.infer<typeof OsintInputSchema>;
+
+export const OsintOutputSchema = z.object({
+  summary: z.string().describe('A top-level intelligence summary of all findings from all tools.'),
+  riskFactors: z.array(z.string()).describe('A list of specific OSINT-derived risk factors.'),
+  breaches: z.array(BreachSchema).optional().describe('A list of discovered data breaches.'),
+  intelXLeaks: z.array(IntelXLeakSchema).optional().describe('A list of discovered leaks from IntelX.'),
+  socialProfiles: z.array(SocialScrapeOutputSchema).optional().describe('A list of discovered and scraped social media profiles.'),
+  burnerPhoneCheck: BurnerCheckOutputSchema.optional().describe('The result of a burner phone number check.'),
+  firecrawlerReport: FirecrawlerReportSchema.optional().describe('The raw intelligence report from the Firecrawler scan.'),
+  digitalFootprint: z.object({
+      overallVisibility: z.enum(['Low', 'Medium', 'High', 'Ghost']),
+      keyObservations: z.array(z.string()),
+  }),
+});
+export type OsintOutput = z.infer<typeof OsintOutputSchema>;
