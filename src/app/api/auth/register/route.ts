@@ -2,6 +2,7 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import crypto from 'crypto';
+import { encrypt } from '@/lib/auth';
 
 // Schema from api-spec.md
 const RegisterRequestSchema = z.object({
@@ -22,10 +23,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid registration request.', issues: validation.error.issues }, { status: 400 });
     }
     
-    // In a real application, you would check if the user already exists,
-    // then create the user and their workspace in the database.
-    // For now, we simulate success.
-
+    // In a real application, you would create the user and workspace in the database.
+    
     const mockUser = {
         id: 2, // new user
         uuid: crypto.randomUUID(),
@@ -37,8 +36,16 @@ export async function POST(request: Request) {
         updatedAt: new Date().toISOString(),
     };
 
+    const sessionPayload = {
+        userId: mockUser.uuid,
+        workspaceId: crypto.randomUUID(), // new workspace
+        expires: new Date(Date.now() + 3600 * 1000),
+    };
+
+    const token = await encrypt(sessionPayload);
+
     const mockAuthResponse = {
-      accessToken: "mock-jwt-token." + Buffer.from(JSON.stringify({userId: mockUser.uuid})).toString('base64'),
+      accessToken: token,
       tokenType: "Bearer",
       expiresIn: 3600,
       user: mockUser

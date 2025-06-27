@@ -1,16 +1,19 @@
 
-import { NextResponse } from 'next/server';
-import crypto from 'crypto';
+import { NextResponse, NextRequest } from 'next/server';
+import { getSession } from '@/lib/auth';
 
 // Corresponds to operationId `getCurrentWorkspace`
-export async function GET(request: Request) {
-  // In a real application, you'd extract the workspace ID from the JWT
-  // and fetch the workspace from the database.
-  // For now, we return a static mock workspace.
+export async function GET(request: NextRequest) {
+  // Protect the route
+  const session = await getSession(request);
+  if (!session) {
+    return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 });
+  }
 
+  // In a real application, you'd fetch the workspace from the database using session.workspaceId
   const mockWorkspace = {
     id: 1,
-    uuid: 'w1a2b3c4-d5e6-f789-0123-456789abcdef', // static UUID for mocking
+    uuid: session.workspaceId, // Use the ID from the session
     name: "Acme Inc.",
     planTier: "pro",
     createdAt: new Date(Date.now() - 30 * 24 * 3600 * 1000).toISOString(),

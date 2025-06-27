@@ -2,6 +2,7 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import crypto from 'crypto';
+import { encrypt } from '@/lib/auth';
 
 // Schema from api-spec.md
 const LoginRequestSchema = z.object({
@@ -20,8 +21,9 @@ export async function POST(request: Request) {
     }
 
     // In a real application, you would validate the user's credentials against the database.
-    // For now, we will return a mock successful response if the input is valid.
-
+    // For this demo, we assume the login is successful if the email is provided.
+    // Here we'll create a session payload for the JWT.
+    
     const mockUser = {
         id: 1,
         uuid: crypto.randomUUID(),
@@ -33,14 +35,23 @@ export async function POST(request: Request) {
         updatedAt: new Date().toISOString(),
     };
 
-    const mockAuthResponse = {
-      accessToken: "mock-jwt-token." + Buffer.from(JSON.stringify({userId: mockUser.uuid})).toString('base64'),
+    // Create the session payload
+    const sessionPayload = {
+        userId: mockUser.uuid,
+        workspaceId: 'w1a2b3c4-d5e6-f789-0123-456789abcdef', // Mock workspace ID for the demo user
+        expires: new Date(Date.now() + 3600 * 1000), // 1 hour from now
+    };
+
+    const token = await encrypt(sessionPayload);
+
+    const authResponse = {
+      accessToken: token,
       tokenType: "Bearer",
       expiresIn: 3600,
       user: mockUser
     };
 
-    return NextResponse.json(mockAuthResponse);
+    return NextResponse.json(authResponse);
 
   } catch (error) {
     console.error('[API /auth/login POST]', error);
