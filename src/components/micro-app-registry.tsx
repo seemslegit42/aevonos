@@ -1,4 +1,5 @@
 
+
 import React from 'react';
 import { FileExplorerIcon } from '@/components/icons/FileExplorerIcon';
 import { TerminalIcon } from '@/components/icons/TerminalIcon';
@@ -25,6 +26,7 @@ import { DrSyntaxIcon } from './icons/DrSyntaxIcon';
 import { BeepWingmanIcon } from './icons/BeepWingmanIcon';
 import { AegisThreatScopeIcon } from './icons/AegisThreatScopeIcon';
 import { AegisCommandIcon } from './icons/AegisCommandIcon';
+import { UsageMonitorIcon } from './icons/UsageMonitorIcon';
 
 
 import { type MicroAppType } from '@/store/app-store';
@@ -49,6 +51,7 @@ import Sterileish from './micro-apps/sterileish';
 import AegisThreatScope from './micro-apps/aegis-threatscope';
 import DrSyntax from './micro-apps/dr-syntax';
 import AegisCommand from './micro-apps/aegis-command';
+import UsageMonitor from './micro-apps/usage-monitor';
 
 
 type ComponentRegistry = {
@@ -152,6 +155,10 @@ export const microAppRegistry: Record<MicroAppType, ComponentRegistry> = {
   'dr-syntax': {
     icon: DrSyntaxIcon,
     content: DrSyntax,
+  },
+  'usage-monitor': {
+    icon: UsageMonitorIcon,
+    content: UsageMonitor,
   },
 };
 

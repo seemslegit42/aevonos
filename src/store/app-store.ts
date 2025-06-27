@@ -47,7 +47,8 @@ export type MicroAppType =
   | 'dr-syntax'
   | 'beep-wingman'
   | 'aegis-threatscope'
-  | 'aegis-command';
+  | 'aegis-command'
+  | 'usage-monitor';
 
 // Define the shape of a MicroApp instance
 export interface MicroApp {
@@ -91,6 +92,7 @@ const defaultAppDetails: Record<MicroAppType, Omit<MicroApp, 'id' | 'position' |
   'sterileish': { type: 'sterileish', title: 'STERILE-ish™', description: 'We’re basically compliant.' },
   'dr-syntax': { type: 'dr-syntax', title: 'Dr. Syntax', description: 'Harsh but effective structural critiques.' },
   'beep-wingman': { type: 'beep-wingman', title: 'BEEP Wingman', description: 'Generates compelling opening messages for dating apps.' },
+  'usage-monitor': { type: 'usage-monitor', title: 'Usage Monitor', description: 'Tracks your Agent Action usage.' },
 };
 
 
@@ -247,6 +249,10 @@ export const useAppStore = create<AppState>((set, get) => {
           break;
         
         case 'billing':
+            upsertApp('usage-monitor', {
+                id: 'usage-monitor-main',
+                contentProps: { ...report.report.report }
+            });
             break;
         
         case 'vin-diesel':

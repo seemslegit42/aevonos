@@ -1,4 +1,5 @@
 
+
 // This file serves as a non-database source of truth for micro-app manifests.
 // In a larger system, this could be stored in a database and managed via an admin interface.
 
@@ -223,6 +224,19 @@ export const microAppManifests: MicroAppManifest[] = [
     permissionsRequired: [],
     routingPath: '/vandelay',
     contextAwareCapabilities: [],
+    isFeatured: false,
+  },
+  {
+    id: 'usage-monitor',
+    name: 'Usage Monitor',
+    author: 'ΛΞVON OS',
+    description: 'Track your monthly Agent Action consumption against your plan limits. The core value metric.',
+    price: 'Included',
+    imageUrl: 'https://placehold.co/600x400.png',
+    imageHint: 'gauge chart data',
+    permissionsRequired: ['read:billing'],
+    routingPath: '/usage-monitor',
+    contextAwareCapabilities: ['billing_update_event'],
     isFeatured: false,
   }
 ];
