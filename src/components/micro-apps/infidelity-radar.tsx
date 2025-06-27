@@ -5,14 +5,14 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { ShieldAlert, Bot, Loader2 } from 'lucide-react';
+import { ShieldAlert, Bot, Loader2, ChevronRight } from 'lucide-react';
 import { Textarea } from '../ui/textarea';
 import { handleInfidelityAnalysis } from '@/app/actions';
 import type { InfidelityAnalysisOutput } from '@/ai/agents/infidelity-analysis-schemas';
-import { Separator } from '../ui/separator';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '../ui/select';
 import type { DecoyInput } from '@/ai/agents/decoy-schemas';
 import { handleDeployDecoy } from '@/app/actions';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 
 const DecoyDeploymentPanel = () => {
@@ -76,6 +76,7 @@ export default function InfidelityRadar() {
   const [isScanning, setIsScanning] = useState(false);
   const [analysisInput, setAnalysisInput] = useState('');
   const [analysisResult, setAnalysisResult] = useState<InfidelityAnalysisOutput | null>(null);
+  const [isDecoyPanelOpen, setIsDecoyPanelOpen] = useState(false);
 
   const handleRunScan = async () => {
       if (!analysisInput) return;
@@ -129,14 +130,20 @@ export default function InfidelityRadar() {
                             </ul>
                         </div>
                     )}
+
+                    <Collapsible open={isDecoyPanelOpen} onOpenChange={setIsDecoyPanelOpen} className="space-y-2">
+                        <CollapsibleTrigger asChild>
+                            <Button variant="outline" className="w-full justify-between">
+                                Deploy Counter-Intelligence
+                                <ChevronRight className={`transition-transform duration-200 ${isDecoyPanelOpen ? 'rotate-90' : ''}`} />
+                            </Button>
+                        </CollapsibleTrigger>
+                        <CollapsibleContent>
+                            <DecoyDeploymentPanel />
+                        </CollapsibleContent>
+                    </Collapsible>
                  </div>
             )}
-        </div>
-        
-        <Separator className="my-2" />
-
-        <div className="flex-shrink-0">
-            <DecoyDeploymentPanel />
         </div>
     </div>
   );
