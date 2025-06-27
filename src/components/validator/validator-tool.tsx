@@ -33,7 +33,7 @@ export default function ValidatorTool() {
       toast({
         variant: 'destructive',
         title: 'Missing Information',
-        description: 'Please provide both a file and its SHA256 hash.',
+        description: 'Provide both the file and its SHA256 hash.',
       });
       return;
     }
@@ -50,10 +50,10 @@ export default function ValidatorTool() {
 
         if (calculatedHash === inputHash.toLowerCase().trim()) {
           setResultStatus('success');
-          setResultMessage(`Hash match confirmed. Document integrity is intact. Computed hash: ${calculatedHash}`);
+          setResultMessage(`INTEGRITY CONFIRMED. This dossier is pure, uncut truth. Computed hash: ${calculatedHash}`);
         } else {
           setResultStatus('error');
-          setResultMessage(`Hash mismatch. Document may have been altered. Computed hash: ${calculatedHash}`);
+          setResultMessage(`TAMPERING DETECTED. The hash does not match. This artifact is compromised. Computed hash: ${calculatedHash}`);
         }
       } catch (error) {
         setResultStatus('error');

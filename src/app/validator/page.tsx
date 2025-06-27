@@ -8,8 +8,8 @@ export default function ValidatorPage() {
     <div className="flex flex-col items-center justify-center min-h-full p-4">
       <Card className="w-full max-w-2xl bg-foreground/10 backdrop-blur-xl border-foreground/20">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-headline tracking-wider text-primary">Dossier Integrity Validator</CardTitle>
-          <CardDescription>"Trust, but verify. Then hash it anyway."</CardDescription>
+          <CardTitle className="text-2xl font-headline tracking-wider text-primary">Uncut Truth Engine</CardTitle>
+          <CardDescription>"No tampering tolerated. The hash doesn't lie."</CardDescription>
         </CardHeader>
         <CardContent>
           <ValidatorTool />
