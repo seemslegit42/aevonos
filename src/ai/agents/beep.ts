@@ -27,12 +27,11 @@ import { geminiModel } from '@/ai/genkit';
 import { drSyntaxCritique } from '@/ai/agents/dr-syntax';
 import {
   DrSyntaxInputSchema,
-  DrSyntaxOutputSchema,
 } from '@/ai/agents/dr-syntax-schemas';
 import { aegisAnomalyScan } from '@/ai/agents/aegis';
-import { AegisAnomalyScanOutputSchema, type AegisAnomalyScanOutput } from './aegis-schemas';
+import { AegisAnomalyScanOutputSchema } from './aegis-schemas';
 import { createContactInDb, listContactsFromDb, deleteContactInDb, updateContactInDb } from '@/ai/tools/crm-tools';
-import { CreateContactInputSchema, ContactSchema, DeleteContactInputSchema, DeleteContactOutputSchema, UpdateContactInputSchema } from '@/ai/tools/crm-schemas';
+import { CreateContactInputSchema, DeleteContactInputSchema, UpdateContactInputSchema } from '@/ai/tools/crm-schemas';
 import {
     type UserCommandInput,
     UserCommandOutputSchema,
@@ -64,7 +63,11 @@ class DrSyntaxTool extends Tool {
   
   async _call(input: z.infer<typeof DrSyntaxInputSchema>) {
     const result = await drSyntaxCritique(input);
-    return JSON.stringify(result);
+    const report: z.infer<typeof AgentReportSchema> = {
+        agent: 'dr-syntax',
+        report: result,
+    };
+    return JSON.stringify(report);
   }
 }
 
@@ -75,7 +78,14 @@ class CreateContactTool extends Tool {
 
     async _call(input: z.infer<typeof CreateContactInputSchema>) {
         const result = await createContactInDb(input);
-        return JSON.stringify(result);
+        const report: z.infer<typeof AgentReportSchema> = {
+            agent: 'crm',
+            report: {
+                action: 'create',
+                report: result
+            }
+        };
+        return JSON.stringify(report);
     }
 }
 
@@ -86,7 +96,14 @@ class UpdateContactTool extends Tool {
 
     async _call(input: z.infer<typeof UpdateContactInputSchema>) {
         const result = await updateContactInDb(input);
-        return JSON.stringify(result);
+        const report: z.infer<typeof AgentReportSchema> = {
+            agent: 'crm',
+            report: {
+                action: 'update',
+                report: result
+            }
+        };
+        return JSON.stringify(report);
     }
 }
 
@@ -97,7 +114,14 @@ class ListContactsTool extends Tool {
 
     async _call() {
         const result = await listContactsFromDb();
-        return JSON.stringify(result);
+        const report: z.infer<typeof AgentReportSchema> = {
+            agent: 'crm',
+            report: {
+                action: 'list',
+                report: result
+            }
+        };
+        return JSON.stringify(report);
     }
 }
 
@@ -108,7 +132,14 @@ class DeleteContactTool extends Tool {
 
     async _call(input: z.infer<typeof DeleteContactInputSchema>) {
         const result = await deleteContactInDb(input);
-        return JSON.stringify(result);
+        const report: z.infer<typeof AgentReportSchema> = {
+            agent: 'crm',
+            report: {
+                action: 'delete',
+                report: result
+            }
+        };
+        return JSON.stringify(report);
     }
 }
 
@@ -235,20 +266,11 @@ export async function processUserCommand(input: UserCommandInput): Promise<UserC
           }
       } else if (msg instanceof ToolMessage) {
            try {
-              const toolOutput = JSON.parse(msg.content as string);
-              if (msg.name === 'critiqueContent') {
-                  agentReports.push({ agent: 'dr-syntax', report: DrSyntaxOutputSchema.parse(toolOutput) });
-              } else if (msg.name === 'createContact') {
-                  agentReports.push({ agent: 'crm', report: { action: 'create', report: ContactSchema.parse(toolOutput) }});
-              } else if (msg.name === 'updateContact') {
-                  agentReports.push({ agent: 'crm', report: { action: 'update', report: ContactSchema.parse(toolOutput) }});
-              } else if (msg.name === 'listContacts') {
-                  agentReports.push({ agent: 'crm', report: { action: 'list', report: z.array(ContactSchema).parse(toolOutput) }});
-              } else if (msg.name === 'deleteContact') {
-                  agentReports.push({ agent: 'crm', report: { action: 'delete', report: DeleteContactOutputSchema.parse(toolOutput) }});
-              }
+              // The tool's stringified JSON content is now a self-described AgentReport
+              const report = AgentReportSchema.parse(JSON.parse(msg.content as string));
+              agentReports.push(report);
           } catch (e) {
-              console.error("Failed to parse tool message content:", e);
+              console.error("Failed to parse tool message content as AgentReport:", e);
           }
       }
   }
