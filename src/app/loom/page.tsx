@@ -58,16 +58,28 @@ export default function LoomPage() {
         const nodeId = active.id as string;
         
         if (active.data.current?.isDraggableNode) {
-            // This is a placeholder for dropping a new node from the sidebar
-            console.log(`Placeholder: Add new node of type ${active.data.current.type}`);
-            // In a real implementation you would add a new node to the `nodes` state here
+            // A new node was dropped from the sidebar
+            const type = active.data.current.type as NodeType;
+            const label = active.data.current.label as string;
+            
+            const newNode: Node = {
+                id: `${type}-${new Date().getTime()}`, // Simple unique ID
+                type,
+                position: { x: 250, y: 150 }, // Default position, user can move it
+                data: { label: label },
+            };
+            
+            setNodes((nds) => [...nds, newNode]);
         } else {
-            setNodes(nodes => nodes.map(node => {
-                if (node.id === nodeId) {
-                    return { ...node, position: { x: node.position.x + delta.x, y: node.position.y + delta.y }};
-                }
-                return node;
-            }));
+            // An existing node was moved
+            setNodes((nds) =>
+                nds.map((node) => {
+                    if (node.id === nodeId) {
+                        return { ...node, position: { x: node.position.x + delta.x, y: node.position.y + delta.y }};
+                    }
+                    return node;
+                })
+            );
         }
     }, []);
 
