@@ -9,3 +9,4 @@ import '@/ai/agents/pam-poovey.ts';
 import '@/ai/tools/crm-tools.ts';
 import '@/ai/agents/decoy.ts';
 import '@/ai/agents/infidelity-analysis.ts';
+import '@/ai/agents/wingman.ts';

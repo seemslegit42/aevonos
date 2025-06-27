@@ -13,6 +13,8 @@ import { deployDecoy as deployDecoyFlow } from '@/ai/agents/decoy';
 import type { DecoyInput, DecoyOutput } from '@/ai/agents/decoy-schemas';
 import { performInfidelityAnalysis as performInfidelityAnalysisFlow } from '@/ai/agents/infidelity-analysis';
 import type { InfidelityAnalysisInput, InfidelityAnalysisOutput } from '@/ai/agents/infidelity-analysis-schemas';
+import { generateWingmanMessage as generateWingmanMessageFlow } from '@/ai/agents/wingman';
+import type { WingmanInput, WingmanOutput } from '@/ai/agents/wingman-schemas';
 
 export async function handleCommand(command: string): Promise<UserCommandOutput> {
   try {
@@ -103,6 +105,18 @@ export async function handleInfidelityAnalysis(input: InfidelityAnalysisInput): 
       riskScore: -1, // Use a sentinel value for error
       riskSummary: "The agent could not complete the analysis due to a system error. The signal may have been lost.",
       keyFactors: [],
+    };
+  }
+}
+
+export async function handleGenerateWingmanMessage(input: WingmanInput): Promise<WingmanOutput> {
+  try {
+    const result = await generateWingmanMessageFlow(input);
+    return result;
+  } catch (error) {
+    console.error('Error in wingman message generation:', error);
+    return {
+      openingMessage: "The agent is currently overthinking its pickup line. There might have been a server error.",
     };
   }
 }
