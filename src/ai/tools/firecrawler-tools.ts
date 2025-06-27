@@ -4,6 +4,8 @@
  */
 import { ai } from '@/ai/genkit';
 import { FirecrawlerScanInputSchema, FirecrawlerReportSchema } from './firecrawler-schemas';
+import FirecrawlApp from '@mendable/firecrawl-js';
+
 
 export const runFirecrawlerScan = ai.defineTool(
   {
@@ -13,23 +15,61 @@ export const runFirecrawlerScan = ai.defineTool(
     outputSchema: FirecrawlerReportSchema,
   },
   async ({ url }) => {
-    // This tool is now fully mocked to avoid installation issues with the firecrawl package.
-    console.warn('[Firecrawler Tool] This tool is currently mocked. It does not perform a live web scrape.');
+    const apiKey = process.env.FIRECRAWL_API_KEY;
 
-    // Return a generic success response to allow the OSINT agent to function.
-    return {
-        "success": true,
-        "data": {
-            "content": `# Mock Scrape of ${url}\n\nThis is placeholder content. The live Firecrawler tool has been temporarily disabled to resolve a dependency issue.`,
-            "markdown": `# Mock Scrape of ${url}\n\nThis is placeholder content. The live Firecrawler tool has been temporarily disabled to resolve a dependency issue.`,
-            "metadata": {
-                "title": `Mock Scrape of ${url}`,
-                "description": "This is a mocked response from the Firecrawler tool.",
-                "ogTitle": "Mock Scrape",
-                "ogDescription": "Content has been mocked."
-            },
-            "mode": "scrape"
+    if (!apiKey || apiKey === "YOUR_API_KEY_HERE") {
+        console.warn('[Firecrawler Tool] This tool is currently mocked because no API key was provided. It does not perform a live web scrape.');
+
+        // Return a generic success response to allow the OSINT agent to function.
+        return {
+            "success": true,
+            "data": {
+                "content": `# Mock Scrape of ${url}\n\nThis is placeholder content. The live Firecrawler tool has been temporarily disabled.`,
+                "markdown": `# Mock Scrape of ${url}\n\nThis is placeholder content. The live Firecrawler tool has been temporarily disabled.`,
+                "metadata": {
+                    "title": `Mock Scrape of ${url}`,
+                    "description": "This is a mocked response from the Firecrawler tool.",
+                    "ogTitle": "Mock Scrape",
+                    "ogDescription": "Content has been mocked."
+                },
+                "mode": "scrape"
+            }
         }
+    }
+    
+    try {
+        const app = new FirecrawlApp({ apiKey });
+        const scrapeResult = await app.scrapeUrl(url, {
+            pageOptions: {
+                onlyMainContent: true
+            }
+        });
+        
+        if (scrapeResult.success) {
+            return {
+                success: true,
+                data: {
+                    content: scrapeResult.data.content,
+                    markdown: scrapeResult.data.markdown,
+                    metadata: scrapeResult.data.metadata,
+                    mode: 'scrape',
+                }
+            };
+        } else {
+             // The type for scrapeResult is `any`, so we have to check for error structure
+            const errorMessage = (scrapeResult as any).error || "Unknown error from Firecrawler API.";
+            console.error(`[Firecrawler Tool] Failed to scrape ${url}:`, errorMessage);
+            return {
+                success: false,
+                error: errorMessage,
+            };
+        }
+    } catch (error) {
+        console.error(`[Firecrawler Tool] Exception while scraping ${url}:`, error);
+        return {
+            success: false,
+            error: error instanceof Error ? error.message : "An unknown exception occurred.",
+        };
     }
   }
 );
