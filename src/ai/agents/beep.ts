@@ -10,7 +10,8 @@
  */
 
 import { z } from 'zod';
-import { StateGraph, END, ToolNode } from '@langchain/langgraph';
+import { StateGraph, END } from '@langchain/langgraph';
+import { ToolNode } from '@langchain/langgraph/prebuilt';
 import {
   AIMessage,
   BaseMessage,

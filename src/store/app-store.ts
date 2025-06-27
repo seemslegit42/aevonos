@@ -178,7 +178,6 @@ User launched Loom Studio to inspect 'Client Onboarding' workflow.`;
             });
           }
         }
-        }
       }
 
       const suggestionApps: MicroApp[] = result.suggestedCommands.map((cmd, index) => ({
