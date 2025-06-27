@@ -10,5 +10,6 @@ export const JrocOutputSchema = z.object({
   businessName: z.string().describe("The generated, hilarious but plausible business name."),
   tagline: z.string().describe("The generated, street-smart tagline."),
   logoDescription: z.string().describe("A vivid description of the AI-generated logo, capturing the chosen style."),
+  logoDataUri: z.string().describe("The generated logo image as a data URI.").optional(),
 });
 export type JrocOutput = z.infer<typeof JrocOutputSchema>;

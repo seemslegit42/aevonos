@@ -4,17 +4,17 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Loader2, Sparkles, Share2 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { generateBusinessKit } from '@/app/actions';
 import type { JrocOutput } from '@/ai/agents/jroc-schemas';
 import { useToast } from '@/hooks/use-toast';
 import Image from 'next/image';
+import { JrocIcon } from '../icons/JrocIcon';
 
 const BoomBoxSpinner = () => (
     <div className="flex flex-col items-center justify-center gap-4 py-10">
-        <Image src="https://placehold.co/150x100.png" data-ai-hint="boombox graffiti" alt="Boombox" width={150} height={100} className="animate-pulse" />
+        <JrocIcon className="w-24 h-24 text-primary animate-pulse" />
         <p className="text-lg font-headline text-primary animate-pulse">Keepin' it Legit... Please Wait, Dawg.</p>
     </div>
 )
@@ -82,8 +82,14 @@ export default function JrocBusinessKit() {
                     </CardHeader>
                     <CardContent className="space-y-4">
                         <div className="relative aspect-video w-full overflow-hidden rounded-md border-2 border-dashed border-primary/30 bg-background/50 flex items-center justify-center">
-                            <Image src={`https://placehold.co/600x400.png`} alt={result.logoDescription} fill className="object-cover" data-ai-hint={`${logoStyle} logo`} />
-                            <p className="absolute bottom-2 left-2 right-2 text-xs bg-black/50 text-white p-1 rounded italic backdrop-blur-sm">{result.logoDescription}</p>
+                            {result.logoDataUri ? (
+                                <Image src={result.logoDataUri} alt={result.logoDescription} fill className="object-contain p-2" />
+                            ) : (
+                                <div className="flex flex-col items-center justify-center h-full text-muted-foreground p-4">
+                                    <Sparkles className="w-10 h-10 mb-2" />
+                                    <p className="text-center text-xs italic">Image generation failed. AI Description: "{result.logoDescription}"</p>
+                                </div>
+                            )}
                         </div>
                          <Button variant="secondary" className="w-full" onClick={handleShare}>
                             <Share2 className="mr-2" />
