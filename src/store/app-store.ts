@@ -169,6 +169,14 @@ User launched Loom Studio to inspect 'Client Onboarding' workflow.`;
                 description: report.anomalyExplanation || 'No anomalies detected.',
               });
             }
+          }
+          if (agentReport.agent === 'crm') {
+            const { report } = agentReport;
+            toast({
+              title: 'CRM Agent',
+              description: `Contact "${report.firstName} ${report.lastName}" created successfully.`,
+            });
+          }
         }
         }
       }

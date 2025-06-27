@@ -14,7 +14,8 @@ import {z} from 'genkit';
 import { drSyntaxCritique } from '@/ai/agents/dr-syntax';
 import { DrSyntaxInputSchema, DrSyntaxOutputSchema } from '@/ai/agents/dr-syntax-schemas';
 import { aegisAnomalyScan } from '@/ai/agents/aegis';
-import { AegisAnomalyScanOutputSchema } from '@/ai/agents/aegis-schemas';
+import { AegisAnomalyScanOutputSchema } from './aegis-schemas';
+import { createContactTool, ContactSchema } from '@/ai/tools/crm-tools';
 
 
 // Define tools available to BEEP
@@ -51,6 +52,13 @@ const AppToLaunchSchema = z.object({
     description: z.string().optional().describe("A specific description for this app instance, if applicable. Otherwise, the default will be used."),
 });
 
+const CrmAgentReportSchema = z.object({
+    agent: z.literal('crm'),
+    report: ContactSchema.describe(
+      'The details of the newly created contact.'
+    ),
+});
+
 const AgentReportSchema = z.discriminatedUnion('agent', [
   z.object({
     agent: z.literal('dr-syntax'),
@@ -64,6 +72,7 @@ const AgentReportSchema = z.discriminatedUnion('agent', [
       'The full report object from the Aegis agent.'
     ),
   }),
+  CrmAgentReportSchema,
 ]);
 
 
@@ -105,7 +114,7 @@ const userCommandPrompt = ai.definePrompt({
   name: 'userCommandPrompt',
   input: {schema: UserCommandInputSchema},
   output: {schema: UserCommandOutputSchema},
-  tools: [critiqueContentTool, runAegisScanTool],
+  tools: [critiqueContentTool, runAegisScanTool, createContactTool],
   prompt: `You are BEEP (Behavioral Event & Execution Processor), the central orchestrator of ΛΞVON OS. Your primary function is to interpret user commands and translate them into actions, such as launching Micro-Apps or delegating tasks to other agents.
 
 You have access to the following Micro-Apps which you can launch:
@@ -116,10 +125,11 @@ You have access to the following Micro-Apps which you can launch:
 You also have tools to delegate tasks to other agents:
 - critiqueContent: Use this tool when the user provides content and asks for a critique, review, or feedback.
 - runAegisScan: Use this tool when the user asks to run a security scan or check for threats.
+- createContact: Use this when the user says "create a contact for...", "add a new person...", etc. and extract their details like name, email, and phone.
 
 Your process:
 1.  Analyze the user's command.
-2.  If the user asks for a critique, a security scan, or another action that requires a tool, use the appropriate tool. After the tool runs, you MUST place the resulting report in the 'agentReports' field of your final JSON output.
+2.  If the command requires a tool (e.g., creating a contact, running a scan), use the appropriate tool. After the tool runs, you MUST place the resulting report in the 'agentReports' field of your final JSON output.
 3.  If the user is asking to open an app (e.g., "open terminal"), populate the 'appsToLaunch' array.
 4.  If the command is abstract and you cannot take a direct action, provide helpful next steps in 'suggestedCommands'.
 5.  Always provide a concise, helpful, and slightly formal response in 'responseText'.
