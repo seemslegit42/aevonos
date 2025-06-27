@@ -38,6 +38,8 @@ import { processDailyLog } from '@/ai/agents/foremanator';
 import type { ForemanatorLogInput, ForemanatorLogOutput } from '@/ai/agents/foremanator-schemas';
 import { analyzeCompliance as analyzeComplianceFlow } from '@/ai/agents/sterileish';
 import type { SterileishAnalysisInput, SterileishAnalysisOutput } from '@/ai/agents/sterileish-schemas';
+import { generateWingmanMessage as generateWingmanMessageFlow } from '@/ai/agents/wingman';
+import type { WingmanInput, WingmanOutput } from '@/ai/agents/wingman-schemas';
 
 
 export async function handleCommand(command: string): Promise<UserCommandOutput> {
@@ -302,4 +304,17 @@ export async function analyzeCompliance(input: SterileishAnalysisInput): Promise
             snarkySummary: "The system is down. Everything is probably a biohazard now."
         };
     }
+}
+
+export async function generateWingmanMessage(input: WingmanInput): Promise<WingmanOutput> {
+  try {
+    const result = await generateWingmanMessageFlow(input);
+    return result;
+  } catch (error) {
+    console.error('Error in Wingman message generation flow:', error);
+    return {
+      openingMessage: "My circuits must be crossed, because I can't think of a thing to say. There was a server error.",
+      cringeScore: 100,
+    };
+  }
 }

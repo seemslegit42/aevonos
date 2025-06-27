@@ -29,6 +29,7 @@ import { type MicroAppType } from '@/store/app-store';
 import ContactList from './micro-apps/contact-list';
 import AegisReport from './micro-apps/aegis-report';
 import PamPooveyOnboarding from './micro-apps/pam-poovey-onboarding';
+import BeepWingman from './micro-apps/beep-wingman';
 import InfidelityRadar from './micro-apps/infidelity-radar';
 import VinDiesel from './micro-apps/vin-diesel';
 import ProjectLumbergh from './micro-apps/project-lumbergh';
@@ -74,6 +75,10 @@ export const microAppRegistry: Record<MicroAppType, ComponentRegistry> = {
   'pam-poovey-onboarding': {
     icon: PamPooveyIcon,
     content: PamPooveyOnboarding,
+  },
+  'beep-wingman': {
+    icon: BeepWingmanIcon,
+    content: BeepWingman,
   },
   'infidelity-radar': {
     icon: EyeOff,

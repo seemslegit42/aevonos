@@ -38,7 +38,8 @@ export type MicroAppType =
   | 'lahey-surveillance'
   | 'the-foremanator'
   | 'sterileish'
-  | 'dr-syntax';
+  | 'dr-syntax'
+  | 'beep-wingman';
 
 // Define the shape of a MicroApp instance
 export interface MicroApp {
@@ -79,6 +80,7 @@ const defaultAppDetails: Record<MicroAppType, Omit<MicroApp, 'id' | 'position' |
   'the-foremanator': { type: 'the-foremanator', title: 'The Foremanator', description: 'He doesn’t sleep. He doesn’t eat. He just yells about deadlines.' },
   'sterileish': { type: 'sterileish', title: 'STERILE-ish™', description: 'We’re basically compliant.' },
   'dr-syntax': { type: 'dr-syntax', title: 'Dr. Syntax', description: 'Harsh but effective structural critiques.' },
+  'beep-wingman': { type: 'beep-wingman', title: 'BEEP Wingman', description: 'Generates compelling opening messages for dating apps.' },
 };
 
 
@@ -265,6 +267,10 @@ export const useAppStore = create<AppState>((set, get) => {
         
         case 'paper-trail':
             launchApp('paper-trail', { title: `Case File`, description: 'Evidence processed.', contentProps: report.report });
+            break;
+            
+        case 'wingman':
+            launchApp('beep-wingman', { title: 'BEEP Wingman Mission', description: 'Operation: Charm', contentProps: report.report });
             break;
       }
     }

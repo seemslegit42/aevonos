@@ -36,6 +36,7 @@ import {
     handleForemanatorLog,
     analyzeCompliance,
     scanEvidence,
+    generateWingmanMessage,
 } from '@/app/actions';
 import {
   DrSyntaxInputSchema,
@@ -54,6 +55,7 @@ import { LaheyAnalysisInputSchema } from './lahey-schemas';
 import { ForemanatorLogInputSchema } from './foremanator-schemas';
 import { SterileishAnalysisInputSchema } from './sterileish-schemas';
 import { PaperTrailScanInputSchema } from './paper-trail-schemas';
+import { WingmanInputSchema } from './wingman-schemas';
 
 
 import {
@@ -299,6 +301,17 @@ class PaperTrailTool extends Tool {
     }
 }
 
+class WingmanTool extends Tool {
+  name = 'generateWingmanMessage';
+  description = 'Generates a compelling opening message for a dating app. Use this when the user wants help writing a message to someone. The user must provide a description of the target and a persona to adopt.';
+  schema = WingmanInputSchema;
+  
+  async _call(input: z.infer<typeof WingmanInputSchema>) {
+    const result = await generateWingmanMessage(input);
+    const report: z.infer<typeof AgentReportSchema> = { agent: 'wingman', report: result };
+    return JSON.stringify(report);
+  }
+}
 
 const tools: Tool[] = [
     new FinalAnswerTool(), new DrSyntaxTool(), 
@@ -306,6 +319,7 @@ const tools: Tool[] = [
     new GetUsageTool(), new VinDieselTool(), new WinstonWolfeTool(), new KifKrokerTool(),
     new VandelayTool(), new JrocTool(), new LaheyTool(), new ForemanatorTool(),
     new SterileishTool(), new PaperTrailTool(),
+    new WingmanTool(),
 ];
 
 const modelWithTools = geminiModel.bind({

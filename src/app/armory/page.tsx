@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Check } from 'lucide-react';
 
 const disgruntledPackApps = [
+  { name: 'Dr. Syntax™' },
   { name: 'Lahey Surveillance Commander™' },
   { name: 'The Kif Kroker™' },
   { name: 'The Lucille Bluth™' },
@@ -24,6 +25,24 @@ const allApps = [
     price: 'Included',
     imageUrl: 'https://placehold.co/600x400.png',
     imageHint: 'data visualization network',
+  },
+  {
+    id: 'dr-syntax',
+    name: 'Dr. Syntax',
+    author: 'ΛΞVON OS',
+    description: "Sarcastic, aggressive, and borderline insulting critiques of your prompts, code, or copy. It's harsh, but it works.",
+    price: '$19/mo',
+    imageUrl: 'https://placehold.co/600x400.png',
+    imageHint: 'scalpel pen document',
+  },
+   {
+    id: 'beep-wingman',
+    name: 'BEEP Wingman',
+    author: 'ΛΞVON OS',
+    description: "Generates compelling opening messages for dating apps. High cringe potential, high reward.",
+    price: '$12/mo',
+    imageUrl: 'https://placehold.co/600x400.png',
+    imageHint: 'cockpit heart neon',
   },
   {
     id: 'lahey-surveillance',
