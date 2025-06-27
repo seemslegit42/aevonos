@@ -5,7 +5,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { ShieldAlert, Bot, Loader2, ChevronRight, Spy } from 'lucide-react';
+import { ShieldAlert, Bot, Loader2, ChevronRight, EyeOff } from 'lucide-react';
 import { Textarea } from '../ui/textarea';
 import { handleInfidelityAnalysis, handleDeployDecoy } from '@/app/actions';
 import type { InfidelityAnalysisOutput } from '@/ai/agents/infidelity-analysis-schemas';
@@ -16,7 +16,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Label } from '../ui/label';
 import { Switch } from '../ui/switch';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Separator } from '../ui/separator';
 
 
@@ -189,7 +189,7 @@ export default function InfidelityRadar() {
                         <div className="flex items-center space-x-2">
                             <Switch id="deep-cover-mode" disabled/>
                             <Label htmlFor="deep-cover-mode" className="text-xs text-muted-foreground">Deep Cover Mode</Label>
-                            <Spy className="h-3 w-3 text-muted-foreground" />
+                            <EyeOff className="h-3 w-3 text-muted-foreground" />
                         </div>
                     </TooltipTrigger>
                     <TooltipContent side="top" className="max-w-xs">

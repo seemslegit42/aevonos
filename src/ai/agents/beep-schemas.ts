@@ -20,7 +20,6 @@ const LaunchableAppTypeSchema = z.enum([
   'terminal',
   'echo-control',
   'pam-poovey-onboarding',
-  'beep-wingman',
   'infidelity-radar',
   'vin-diesel',
   'project-lumbergh',
