@@ -22,7 +22,7 @@ import { RolodexAnalysisOutputSchema } from './rolodex-schemas';
 import { PamAudioOutputSchema } from './pam-poovey-schemas';
 import { InfidelityAnalysisOutputSchema } from './infidelity-analysis-schemas';
 import { DecoyOutputSchema } from './decoy-schemas';
-import { SessionRecallOutputSchema } from '@/ai/agents/echo';
+import { SessionRecallOutputSchema } from '@/ai/agents/echo-schemas';
 
 
 // Schemas from the original BEEP agent, preserved for the public contract.

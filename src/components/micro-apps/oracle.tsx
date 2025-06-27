@@ -1,96 +1,108 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { cn } from '@/lib/utils';
-import { getAppIcon } from '@/components/micro-app-registry';
-import { type MicroAppType } from '@/store/app-store';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { Canvas, useFrame } from '@react-three/fiber';
+import { OrbitControls, Sparkles, Html } from '@react-three/drei';
+import * as THREE from 'three';
 import { type Agent as AgentData, AgentStatus } from '@prisma/client';
 import { Skeleton } from '../ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 import { ServerCrash } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
-const statusColors: Record<AgentStatus | 'default', string> = {
-  [AgentStatus.active]: 'bg-green-400',
-  [AgentStatus.processing]: 'bg-primary',
-  [AgentStatus.idle]: 'bg-muted-foreground',
-  [AgentStatus.paused]: 'bg-yellow-400',
-  [AgentStatus.error]: 'bg-destructive',
-  'default': 'bg-gray-500' // fallback
+// Define colors for different agent statuses using HSL values from the theme
+const statusConfig: Record<AgentStatus, { color: THREE.Color; emissiveIntensity: number }> = {
+    [AgentStatus.active]: { color: new THREE.Color('hsl(177, 69%, 41%)'), emissiveIntensity: 0.8 }, // accent
+    [AgentStatus.processing]: { color: new THREE.Color('hsl(275, 86%, 37%)'), emissiveIntensity: 1.2 }, // primary
+    [AgentStatus.idle]: { color: new THREE.Color('hsl(223, 14%, 60%)'), emissiveIntensity: 0.2 }, // muted-foreground
+    [AgentStatus.paused]: { color: new THREE.Color('hsl(51, 100%, 50%)'), emissiveIntensity: 0.6 }, // ring (yellow)
+    [AgentStatus.error]: { color: new THREE.Color('hsl(0, 62.8%, 30.6%)'), emissiveIntensity: 1.0 }, // destructive
 };
 
-interface AgentNode {
-  type: MicroAppType;
-  status: AgentStatus;
-  name: string;
-  size: number;
-  orbit: number;
-  speed: number;
-  angle: number;
+function AgentNode({ agent, index }: { agent: AgentData, index: number }) {
+    const meshRef = useRef<THREE.Mesh>(null!);
+    const [isHovered, setIsHovered] = useState(false);
+    const config = statusConfig[agent.status] || statusConfig.idle;
+
+    // Calculate a stable position in a circular orbit
+    const angle = (index / 10) * Math.PI * 2;
+    const radius = 3 + Math.floor(index / 5) * 1.5;
+    const position = useMemo(() => new THREE.Vector3(Math.cos(angle) * radius, (Math.random() - 0.5) * 2, Math.sin(angle) * radius), [angle, radius]);
+
+    useFrame((state) => {
+        const { clock } = state;
+        const group = meshRef.current;
+        if (!group) return;
+
+        // Pulsating effect based on status
+        const pulseSpeed = agent.status === AgentStatus.processing ? 4 : 1;
+        const pulseIntensity = agent.status === AgentStatus.processing ? 0.15 : 0.05;
+        group.scale.setScalar(1 + Math.sin(clock.getElapsedTime() * pulseSpeed) * pulseIntensity);
+    });
+
+    return (
+        <group position={position}>
+            <mesh
+                ref={meshRef}
+                onPointerOver={() => setIsHovered(true)}
+                onPointerOut={() => setIsHovered(false)}
+            >
+                <sphereGeometry args={[0.3, 32, 32]} />
+                <meshStandardMaterial
+                    color={config.color}
+                    emissive={config.color}
+                    emissiveIntensity={config.emissiveIntensity}
+                    metalness={0.8}
+                    roughness={0.1}
+                />
+            </mesh>
+            <Html distanceFactor={10}>
+                <div
+                    className={cn(
+                        'transition-opacity duration-300 pointer-events-none p-2 rounded-md text-xs bg-background/50 backdrop-blur-sm border border-border',
+                        isHovered ? 'opacity-100' : 'opacity-0'
+                    )}
+                >
+                    <p className="font-bold">{agent.name}</p>
+                    <p className="capitalize" style={{ color: config.color.getStyle() }}>{agent.status}</p>
+                </div>
+            </Html>
+        </group>
+    );
 }
 
-const AgentNode = ({ agent, index }: { agent: AgentNode, index: number }) => {
-  const Icon = getAppIcon(agent.type);
-  const agentName = agent.name;
-  const statusColorClass = (statusColors[agent.status] || statusColors.default).replace('bg-','text-');
 
+function Scene({ agents }: { agents: AgentData[] }) {
+    return (
+        <>
+            <ambientLight intensity={0.2} />
+            <pointLight position={[0, 0, 0]} color="hsl(var(--primary))" intensity={50} distance={10} />
+            
+            {/* BEEP Core */}
+            <mesh>
+                <sphereGeometry args={[0.5, 32, 32]} />
+                <meshStandardMaterial
+                    color="hsl(var(--primary))"
+                    emissive="hsl(var(--primary))"
+                    emissiveIntensity={1.5}
+                    metalness={0.9}
+                    roughness={0.2}
+                />
+            </mesh>
+            
+            {agents.map((agent, index) => (
+                <AgentNode key={agent.id} agent={agent} index={index} />
+            ))}
+            
+            <Sparkles count={100} scale={10} size={2} speed={0.4} color="hsl(var(--accent))" />
+        </>
+    );
+}
 
-  return (
-    <motion.div
-      className="absolute top-1/2 left-1/2"
-      style={{
-        width: agent.size,
-        height: agent.size,
-        x: '-50%',
-        y: '-50%',
-      }}
-      animate={{
-        rotate: 360,
-        transform: [
-          `rotate(0deg) translateX(${agent.orbit}px) rotate(0deg)`,
-          `rotate(360deg) translateX(${agent.orbit}px) rotate(-360deg)`,
-        ],
-      }}
-      transition={{
-        duration: agent.speed,
-        ease: 'linear',
-        repeat: Infinity,
-      }}
-    >
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <motion.div
-              className={cn("w-full h-full rounded-full flex items-center justify-center border", statusColors[agent.status] || statusColors.default)}
-              style={{
-                 borderColor: `hsl(var(--${agent.status === 'active' ? 'accent' : 'primary'}))`,
-              }}
-              animate={{
-                scale: [1, 1.1, 1],
-                opacity: [0.8, 1, 0.8]
-              }}
-               transition={{
-                duration: 2 + Math.random() * 2,
-                repeat: Infinity,
-                ease: 'easeInOut'
-              }}
-            >
-              <Icon className="w-1/2 h-1/2 text-foreground" />
-            </motion.div>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p className="capitalize">{agentName}: <span className={cn('font-bold', statusColorClass)}>{agent.status}</span></p>
-          </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
-    </motion.div>
-  );
-};
 
 export default function Oracle() {
-  const [agentNodes, setAgentNodes] = useState<AgentNode[]>([]);
+  const [agents, setAgents] = useState<AgentData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -103,17 +115,7 @@ export default function Oracle() {
                 throw new Error('Failed to fetch agent data from the network.');
             }
             const data: AgentData[] = await response.json();
-            
-            setAgentNodes(data.map((agent, index) => ({
-                type: agent.type as MicroAppType,
-                name: agent.name,
-                status: agent.status,
-                size: 40 + Math.random() * 20,
-                orbit: 80 + index * 25,
-                speed: 20 + Math.random() * 20,
-                angle: Math.random() * 360,
-            })));
-
+            setAgents(data);
             setError(null);
         } catch (err) {
             setError(err instanceof Error ? err.message : 'An unknown error occurred');
@@ -129,8 +131,8 @@ export default function Oracle() {
   }, []);
 
   const renderContent = () => {
-    if (isLoading && agentNodes.length === 0) {
-        return <Skeleton className="absolute inset-0 rounded-full" />;
+    if (isLoading && agents.length === 0) {
+        return <Skeleton className="w-full h-full" />;
     }
 
     if (error) {
@@ -144,28 +146,16 @@ export default function Oracle() {
     }
 
     return (
-        <>
-            <div className="absolute inset-0 bg-radial-gradient from-primary/10 via-primary/5 to-transparent rounded-full" />
-            <motion.div
-                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 rounded-full bg-primary/50 border-2 border-primary shadow-[0_0_20px_hsl(var(--primary))]"
-                animate={{ scale: [1, 1.05, 1] }}
-                transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-            >
-                <div className="absolute inset-0 bg-radial-gradient from-background/5 to-transparent rounded-full" />
-            </motion.div>
-
-            {agentNodes.map((agent, index) => (
-                <AgentNode key={agent.type + index} agent={agent} index={index} />
-            ))}
-        </>
+        <Canvas camera={{ position: [0, 5, 10], fov: 60 }}>
+            <Scene agents={agents} />
+            <OrbitControls autoRotate autoRotateSpeed={0.5} enableZoom={true} enablePan={true} />
+        </Canvas>
     )
   }
 
   return (
-    <div className="w-full h-full flex items-center justify-center p-4">
-        <div className="relative aspect-square w-full max-w-[500px]">
-           {renderContent()}
-        </div>
+    <div className="w-full h-full flex items-center justify-center p-2">
+        {renderContent()}
     </div>
   );
 }
