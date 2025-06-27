@@ -262,7 +262,7 @@ export const useAppStore = create<AppState>((set, get) => {
             break;
         
         case 'lahey':
-             launchAppForReport('lahey-surveillance', 'Lahey Surveillance', 'Shit-storm report.', report.report);
+             launchAppForReport('lahey-surveillance', 'Shit-storm report.', report.report);
              break;
         
         case 'foremanator':

@@ -1,3 +1,4 @@
+
 import React from 'react';
 
 export const OracleIcon = (props: React.SVGProps<SVGSVGElement>) => (
