@@ -6,18 +6,9 @@ import Image from 'next/image';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ShoppingCart } from 'lucide-react';
+import type { MicroAppManifest } from '@/config/micro-apps';
 
-type AppListing = {
-  id: string;
-  name: string;
-  author: string;
-  description: string;
-  price: string;
-  imageUrl: string;
-  imageHint: string;
-};
-
-export function MicroAppListingCard({ app }: { app: AppListing }) {
+export function MicroAppListingCard({ app }: { app: MicroAppManifest }) {
   return (
     <Card className="bg-foreground/15 backdrop-blur-[20px] border border-foreground/30 shadow-[0_8px_32px_0_rgba(28,25,52,0.1)] hover:border-primary transition-all duration-300 flex flex-col group overflow-hidden">
       <CardHeader className="p-0">

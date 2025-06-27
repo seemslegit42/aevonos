@@ -1,151 +1,22 @@
-
 import React from 'react';
 import Link from 'next/link';
 import { MicroAppListingCard } from '@/components/armory/micro-app-listing-card';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Check } from 'lucide-react';
+import { microAppManifests, type MicroAppManifest } from '@/config/micro-apps';
 
-const disgruntledPackApps = [
-  { name: 'Dr. Syntax™' },
-  { name: 'Lahey Surveillance Commander™' },
-  { name: 'The Kif Kroker™' },
-  { name: 'The Lucille Bluth™' },
-  { name: 'Project Lumbergh™' },
-  { name: 'The Winston Wolfe™' },
-  { name: 'The Rolodex™' },
-];
+async function getMicroApps(): Promise<MicroAppManifest[]> {
+  // In a production app, this would fetch from an API endpoint.
+  // For this environment, we import directly from the manifest file
+  // as it's a server component. This is efficient and type-safe.
+  return Promise.resolve(microAppManifests);
+}
 
-const allApps = [
-  {
-    id: 'oracle',
-    name: 'The Oracle',
-    author: 'ΛΞVON OS',
-    description: 'Visualize the real-time pulse of your agentic network, replacing static dashboards with an evolving, biomorphic data stream.',
-    price: 'Included',
-    imageUrl: 'https://placehold.co/600x400.png',
-    imageHint: 'data visualization network',
-  },
-  {
-    id: 'dr-syntax',
-    name: 'Dr. Syntax',
-    author: 'ΛΞVON OS',
-    description: "Sarcastic, aggressive, and borderline insulting critiques of your prompts, code, or copy. It's harsh, but it works.",
-    price: '$19/mo',
-    imageUrl: 'https://placehold.co/600x400.png',
-    imageHint: 'scalpel pen document',
-  },
-   {
-    id: 'beep-wingman',
-    name: 'BEEP Wingman',
-    author: 'ΛΞVON OS',
-    description: "Generates compelling opening messages for dating apps. High cringe potential, high reward.",
-    price: '$12/mo',
-    imageUrl: 'https://placehold.co/600x400.png',
-    imageHint: 'cockpit heart neon',
-  },
-  {
-    id: 'lahey-surveillance',
-    name: 'Lahey Surveillance',
-    author: 'Sunnyvale Security',
-    description: 'I am the liquor. And I am watching. Keep an eye on employee productivity with the Shitstorm Index™.',
-    price: '$9/mo',
-    imageUrl: 'https://placehold.co/600x400.png',
-    imageHint: 'surveillance camera bottle',
-  },
-  {
-    id: 'kif-kroker',
-    name: 'The Kif Kroker',
-    author: 'DOOP',
-    description: "*Sigh*. The team's conflict metrics are escalating again. Monitors Slack for passive-aggression and burnout.",
-    price: '$9/mo',
-    imageUrl: 'https://placehold.co/600x400.png',
-    imageHint: 'alien defeated sad',
-  },
-  {
-    id: 'lucille-bluth',
-    name: 'The Lucille Bluth',
-    author: 'Bluth Company',
-    description: "Judgmental budgeting for your allowance. It's one banana, Michael. What could it cost, ten dollars?",
-    price: '$5/mo',
-    imageUrl: 'https://placehold.co/600x400.png',
-    imageHint: 'martini glass eye',
-  },
-  {
-    id: 'project-lumbergh',
-    name: 'Project Lumbergh',
-    author: 'Initech',
-    description: "Yeeeeah, about those meetings... Analyzes invites for pointlessness and generates passive-aggressive decline memos.",
-    price: '$5/mo',
-    imageUrl: 'https://placehold.co/600x400.png',
-    imageHint: 'red stapler office',
-  },
-  {
-    id: 'winston-wolfe',
-    name: 'The Winston Wolfe',
-    author: 'The Fixer',
-    description: "Bad review? Thirty minutes away. I'll be there in ten. Solves online reputation problems with surgical precision.",
-    price: '$29/mo',
-    imageUrl: 'https://placehold.co/600x400.png',
-    imageHint: 'sharp suit cleaning',
-  },
-  {
-    id: 'rolodex',
-    name: 'The Rolodex',
-    author: 'Sterling Cooper',
-    description: "Let's put a pin in that candidate. Analyzes resumes and generates non-cringey outreach icebreakers.",
-    price: '$9/mo',
-    imageUrl: 'https://placehold.co/600x400.png',
-    imageHint: 'vintage rolodex office',
-  },
-  {
-    id: 'jroc-business-kit',
-    name: "J-ROC'S BIZ KIT™",
-    author: 'Roc Pile Inc.',
-    description: "Get dat cheddar legit, my dawg. Generates a business name, tagline, and logo concept for your new hustle.",
-    price: '$15 one-time',
-    imageUrl: 'https://placehold.co/600x400.png',
-    imageHint: 'boombox graffiti microphone',
-  },
-  {
-    id: 'the-foremanator',
-    name: 'The Foremanator',
-    author: 'SiteCommand',
-    description: 'He doesn’t sleep. He doesn’t eat. He just yells about deadlines. Processes construction site logs.',
-    price: '$19/mo',
-    imageUrl: 'https://placehold.co/600x400.png',
-    imageHint: 'hard hat construction',
-  },
-  {
-    id: 'sterileish',
-    name: 'STERILE-ish™',
-    author: 'Basically Compliant LLC',
-    description: 'We’re basically compliant. An irreverent vibe-checker for ISO 13485, FDA, and other cleanroom logs.',
-    price: '$49/mo',
-    imageUrl: 'https://placehold.co/600x400.png',
-    imageHint: 'cleanroom laboratory science',
-  },
-  {
-    id: 'paper-trail',
-    name: 'Paper Trail P.I.',
-    author: 'The Agency',
-    description: "The receipts don't lie. A noir detective that scans your expense receipts and gives you the 'leads'.",
-    price: '$9/mo',
-    imageUrl: 'https://placehold.co/600x400.png',
-    imageHint: 'detective office noir',
-  },
-  {
-    id: 'vandelay',
-    name: 'Vandelay Industries',
-    author: 'Art Vandelay',
-    description: 'Importing, exporting, and ghosting. Generates impeccably boring, jargon-filled calendar invites to block off your time.',
-    price: '$5/mo',
-    imageUrl: 'https://placehold.co/600x400.png',
-    imageHint: 'latex architecture design',
-  }
-];
-
-export default function ArmoryPage() {
+export default async function ArmoryPage() {
+  const allApps = await getMicroApps();
+  const disgruntledPackApps = allApps.filter(app => app.isFeatured);
+  
   return (
     <div className="flex flex-col h-full">
       <header className="p-4 pt-6 text-center">
