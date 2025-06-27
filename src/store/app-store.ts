@@ -268,6 +268,10 @@ export const useAppStore = create<AppState>((set, get) => {
         case 'beep-wingman':
             launchAppForReport('beep-wingman', 'BEEP Wingman', 'Opener Generated', report.report);
             break;
+        
+        case 'paper-trail':
+            launchAppForReport('paper-trail', 'Paper Trail', 'Evidence Scanned', report.report);
+            break;
       }
     }
   };
