@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import type { DrSyntaxOutput } from '@/ai/agents/dr-syntax';
+import type { DrSyntaxOutput } from '@/ai/agents/dr-syntax-schemas';
 import { Star } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 

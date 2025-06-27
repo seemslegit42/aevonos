@@ -3,7 +3,8 @@
 import { processUserCommand, type UserCommandOutput } from '@/ai/agents/beep';
 import { aegisAnomalyScan } from '@/ai/agents/aegis';
 import { revalidatePath } from 'next/cache';
-import { drSyntaxCritique, type DrSyntaxInput, type DrSyntaxOutput } from '@/ai/agents/dr-syntax';
+import { drSyntaxCritique } from '@/ai/agents/dr-syntax';
+import type { DrSyntaxInput, DrSyntaxOutput } from '@/ai/agents/dr-syntax-schemas';
 import { recallSession, type SessionRecallInput, type SessionRecallOutput } from '@/ai/agents/echo';
 
 export async function handleCommand(command: string): Promise<UserCommandOutput> {

@@ -8,8 +8,6 @@
 import {ai} from '@/ai/genkit';
 import { DrSyntaxInputSchema, DrSyntaxOutputSchema, type DrSyntaxInput, type DrSyntaxOutput } from './dr-syntax-schemas';
 
-export { type DrSyntaxInput, type DrSyntaxOutput, DrSyntaxInputSchema, DrSyntaxOutputSchema } from './dr-syntax-schemas';
-
 
 export async function drSyntaxCritique(
   input: DrSyntaxInput

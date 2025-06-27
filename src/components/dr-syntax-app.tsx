@@ -6,7 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 
 import { handleDrSyntaxCritique } from '@/app/actions';
-import type { DrSyntaxOutput } from '@/ai/agents/dr-syntax';
+import type { DrSyntaxOutput } from '@/ai/agents/dr-syntax-schemas';
 
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
