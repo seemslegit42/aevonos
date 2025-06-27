@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { getSession } from '@/lib/auth';
+import { WorkflowRunStatus } from '@prisma/client';
 
 interface RouteParams {
   params: {
@@ -31,10 +32,52 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       data: {
         workflowId: workflow.id,
         workspaceId: session.workspaceId,
-        status: 'pending',
+        status: WorkflowRunStatus.pending,
         triggerPayload: trigger_payload,
+        startedAt: new Date(),
       },
     });
+    
+    // Don't block the response. Simulate the workflow execution in the background.
+    // This is a common pattern in serverless environments for long-running tasks.
+    (async () => {
+        try {
+            // Simulate initial processing delay
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            await prisma.workflowRun.update({
+                where: { id: workflowRun.id },
+                data: { status: WorkflowRunStatus.running }
+            });
+
+            // Simulate main work finishing
+            await new Promise(resolve => setTimeout(resolve, 5000));
+            
+            // Randomly succeed or fail to make the simulation more realistic
+            const isSuccess = Math.random() > 0.2; 
+
+            await prisma.workflowRun.update({
+                where: { id: workflowRun.id },
+                data: { 
+                    status: isSuccess ? WorkflowRunStatus.completed : WorkflowRunStatus.failed,
+                    finishedAt: new Date(),
+                    output: isSuccess 
+                        ? { result: 'Workflow completed successfully with expected output.' }
+                        : { error: 'An unexpected error occurred during execution.' }
+                }
+            });
+        } catch (e) {
+            console.error(`[Workflow Simulation Error] for run ${workflowRun.id}:`, e);
+             await prisma.workflowRun.update({
+                where: { id: workflowRun.id },
+                data: { 
+                    status: WorkflowRunStatus.failed,
+                    finishedAt: new Date(),
+                    output: { error: 'The workflow simulation process itself failed.' }
+                }
+            });
+        }
+    })();
+
 
     const responseSummary = {
       runId: workflowRun.id,
