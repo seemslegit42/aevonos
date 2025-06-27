@@ -22,6 +22,7 @@ import { RolodexAnalysisOutputSchema } from './rolodex-schemas';
 import { PamAudioOutputSchema } from './pam-poovey-schemas';
 import { InfidelityAnalysisOutputSchema } from './infidelity-analysis-schemas';
 import { DecoyOutputSchema } from './decoy-schemas';
+import { SessionRecallOutputSchema } from '@/ai/agents/echo';
 
 
 // Schemas from the original BEEP agent, preserved for the public contract.
@@ -189,6 +190,10 @@ export const AgentReportSchema = z.discriminatedUnion('agent', [
   z.object({
     agent: z.literal('decoy'),
     report: DecoyOutputSchema.describe('The full report from the Decoy agent.'),
+  }),
+  z.object({
+    agent: z.literal('echo'),
+    report: SessionRecallOutputSchema.describe('The full report from the Echo agent.'),
   }),
 ]);
 

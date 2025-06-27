@@ -4,8 +4,7 @@
 import { processUserCommand } from '@/ai/agents/beep';
 import type { UserCommandOutput } from '@/ai/agents/beep-schemas';
 import { revalidatePath } from 'next/cache';
-import { recallSession, type SessionRecallInput, type SessionRecallOutput } from '@/ai/agents/echo';
-
+import { scanEvidence as scanEvidenceFlow, type PaperTrailScanInput, type PaperTrailScanOutput } from '@/ai/agents/paper-trail';
 
 export async function handleCommand(command: string): Promise<UserCommandOutput> {
   try {
@@ -23,15 +22,21 @@ export async function handleCommand(command: string): Promise<UserCommandOutput>
   }
 }
 
-export async function recallSessionAction(input: SessionRecallInput): Promise<SessionRecallOutput> {
+// Keeping this as a specialized action due to the file upload requirement.
+// The BEEP agent's text-based command stream is not suitable for high-bandwidth data.
+export async function scanEvidence(input: PaperTrailScanInput): Promise<PaperTrailScanOutput> {
   try {
-    const result = await recallSession(input);
+    const result = await scanEvidenceFlow(input);
+    revalidatePath('/');
     return result;
   } catch (error) {
-    console.error('Error in Echo recall:', error);
+    console.error('Error in Paper Trail scan:', error);
     return {
-      summary: "I tried to remember what happened, but the memory is fuzzy. There might have been a system error.",
-      keyPoints: ["Could not retrieve session details."],
+      vendor: 'Error',
+      amount: 0,
+      date: new Date().toISOString().split('T')[0],
+      lead: "The informant is offline. Couldn't process the evidence.",
+      isEvidenceValid: false,
     };
   }
 }

@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -5,6 +6,7 @@
  *
  * - recallSession - A function that handles session summarization.
  * - SessionRecallInput - The input type for the recallSession function.
+ * - SessionRecallOutputSchema - The Zod schema for the output.
  * - SessionRecallOutput - The return type for the recallSession function.
  */
 
@@ -18,7 +20,7 @@ const SessionRecallInputSchema = z.object({
 });
 export type SessionRecallInput = z.infer<typeof SessionRecallInputSchema>;
 
-const SessionRecallOutputSchema = z.object({
+export const SessionRecallOutputSchema = z.object({
   summary: z
     .string()
     .describe(

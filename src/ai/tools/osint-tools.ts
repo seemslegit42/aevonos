@@ -1,4 +1,3 @@
-'use server';
 /**
  * @fileOverview A collection of discrete OSINT tools for agentic use.
  * These are functional harnesses that return mock data.

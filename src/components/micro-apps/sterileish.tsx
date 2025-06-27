@@ -1,13 +1,13 @@
 
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Loader2, ListChecks, Check, X, FileDown } from 'lucide-react';
-import { analyzeCompliance } from '@/app/actions';
+import { useAppStore } from '@/store/app-store';
 import type { SterileishAnalysisInput, SterileishAnalysisOutput } from '@/ai/agents/sterileish-schemas';
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -15,24 +15,31 @@ import { Progress } from '../ui/progress';
 import { Switch } from '../ui/switch';
 import { Label } from '../ui/label';
 
-export default function Sterileish() {
-    const [isLoading, setIsLoading] = useState(false);
+export default function Sterileish(props: SterileishAnalysisOutput | {}) {
+    const { handleCommandSubmit, isLoading } = useAppStore(state => ({
+        handleCommandSubmit: state.handleCommandSubmit,
+        isLoading: state.isLoading
+    }));
     const [logText, setLogText] = useState('');
     const [entryType, setEntryType] = useState<SterileishAnalysisInput['entryType']>('general');
-    const [report, setReport] = useState<SterileishAnalysisOutput | null>(null);
+    const [report, setReport] = useState<SterileishAnalysisOutput | null>(props && 'isCompliant' in props ? props : null);
     const [auditMode, setAuditMode] = useState(false);
     const { toast } = useToast();
+
+    useEffect(() => {
+        if (props && 'isCompliant' in props) {
+            setReport(props);
+        }
+    }, [props]);
+
 
     const handleSubmitLog = async () => {
         if (!logText) {
             toast({ variant: 'destructive', title: "Empty Log", description: "You need to actually write something, Janice." });
             return;
         }
-        setIsLoading(true);
-        setReport(null);
-        const response = await analyzeCompliance({ logText, entryType });
-        setReport(response);
-        setIsLoading(false);
+        const command = `analyze this ${entryType} compliance log: "${logText}"`;
+        handleCommandSubmit(command);
         setLogText('');
     };
 

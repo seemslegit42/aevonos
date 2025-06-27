@@ -1,12 +1,13 @@
+
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2, Sparkles, Share2 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { generateBusinessKit } from '@/app/actions';
+import { useAppStore } from '@/store/app-store';
 import type { JrocOutput } from '@/ai/agents/jroc-schemas';
 import { useToast } from '@/hooks/use-toast';
 import Image from 'next/image';
@@ -19,23 +20,30 @@ const BoomBoxSpinner = () => (
     </div>
 )
 
-export default function JrocBusinessKit() {
-    const [isLoading, setIsLoading] = useState(false);
+export default function JrocBusinessKit(props: JrocOutput | {}) {
+    const { handleCommandSubmit, isLoading } = useAppStore(state => ({
+        handleCommandSubmit: state.handleCommandSubmit,
+        isLoading: state.isLoading,
+    }));
     const [businessType, setBusinessType] = useState('');
     const [logoStyle, setLogoStyle] = useState<'bling' | 'chrome' | 'dank minimal'>('bling');
-    const [result, setResult] = useState<JrocOutput | null>(null);
+    const [result, setResult] = useState<JrocOutput | null>(props && 'businessName' in props ? props : null);
     const { toast } = useToast();
+
+    useEffect(() => {
+        if (props && 'businessName' in props) {
+            setResult(props);
+        }
+    }, [props]);
+
 
     const handleGenerate = async () => {
         if (!businessType) {
             toast({ variant: "destructive", title: "Yo, Hold Up!", description: "Gotta tell me what your hustle is, mafk." });
             return;
         }
-        setIsLoading(true);
-        setResult(null);
-        const response = await generateBusinessKit({ businessType, logoStyle });
-        setResult(response);
-        setIsLoading(false);
+        const command = `generate a business kit for a "${businessType}" business with a "${logoStyle}" logo style`;
+        handleCommandSubmit(command);
     };
 
     const handleShare = () => {

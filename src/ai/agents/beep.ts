@@ -68,6 +68,7 @@ import { performInfidelityAnalysis } from '@/ai/agents/infidelity-analysis';
 import { InfidelityAnalysisInputSchema } from '@/ai/agents/infidelity-analysis-schemas';
 import { deployDecoy } from '@/ai/agents/decoy';
 import { DecoyInputSchema } from '@/ai/agents/decoy-schemas';
+import { recallSession } from '@/ai/agents/echo';
 
 
 import {
@@ -439,6 +440,23 @@ class DecoyTool extends Tool {
   }
 }
 
+class EchoTool extends Tool {
+  name = 'recallLastSession';
+  description = 'Recalls the activity from the previous session, providing a summary and key points. Use this when the user asks to "recall", "remember what I did", "summarize last time", etc.';
+  schema = z.object({}); // No input from the model
+  
+  async _call() {
+    // We'll use a dummy activity log for this prototype
+    const dummyActivity = `User opened File Explorer.\nUser ran 'critique this copy' in Dr. Syntax.\nUser ran an Aegis scan at 14:32.\nUser launched Loom Studio to inspect 'Client Onboarding' workflow.`;
+    const result = await recallSession({ sessionActivity: dummyActivity });
+    const report: z.infer<typeof AgentReportSchema> = {
+        agent: 'echo',
+        report: result,
+    };
+    return JSON.stringify(report);
+  }
+}
+
 const tools: Tool[] = [
     new FinalAnswerTool(), new DrSyntaxTool(), 
     new CreateContactTool(), new UpdateContactTool(), new ListContactsTool(), new DeleteContactTool(), 
@@ -449,6 +467,7 @@ const tools: Tool[] = [
     new WingmanTool(), new OsintScanTool(),
     new LumberghTool(), new LucilleBluthTool(), new RolodexTool(),
     new PamPooveyTool(), new InfidelityAnalysisTool(), new DecoyTool(),
+    new EchoTool(),
 ];
 
 const modelWithTools = geminiModel.bind({

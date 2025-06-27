@@ -4,7 +4,6 @@ import type { DragEndEvent } from '@dnd-kit/core';
 import React from 'react';
 
 import { processUserCommand } from '@/ai/agents/beep';
-import { recallSessionAction } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
 import { EchoRecallToast } from '@/components/echo-recall-toast';
 import type { SessionRecallOutput } from '@/ai/agents/echo';
@@ -21,6 +20,9 @@ import type { RolodexAnalysisOutput } from '@/ai/agents/rolodex-schemas';
 import type { PamAudioOutput } from '@/ai/agents/pam-poovey-schemas';
 import type { InfidelityAnalysisOutput } from '@/ai/agents/infidelity-analysis-schemas';
 import type { DecoyOutput } from '@/ai/agents/decoy-schemas';
+import type { JrocOutput } from '@/ai/agents/jroc-schemas';
+import type { SterileishAnalysisOutput } from '@/ai/agents/sterileish-schemas';
+import type { PaperTrailScanOutput } from '@/ai/agents/paper-trail-schemas';
 
 
 // Define the types of MicroApps available in the OS
@@ -105,13 +107,14 @@ export interface AppState {
   handleDragEnd: (event: DragEndEvent) => void;
   handleCommandSubmit: (command: string) => void;
   triggerAppAction: (appId: string) => void;
-  handleSessionRecall: () => void;
   bringToFront: (appId: string) => void;
 }
 
 // A registry for app actions, decoupling them from the component.
 const appActionRegistry: Record<string, (get: () => AppState, set: (fn: (state: AppState) => AppState) => void, app: MicroApp) => void> = {
-  'echo-control': (get) => get().handleSessionRecall(),
+  'echo-control': (get) => {
+    get().handleCommandSubmit('recall last session');
+  },
   'ai-suggestion': (get, set, app) => {
     get().handleCommandSubmit(app.title);
   },
@@ -274,7 +277,7 @@ export const useAppStore = create<AppState>((set, get) => {
             break;
         
         case 'jroc':
-            upsertApp('jroc-business-kit', { id: 'jroc-main', title: `Biz Kit: ${report.report.businessName}`, description: 'Your legit-as-frig business kit.', contentProps: report.report });
+            upsertApp('jroc-business-kit', { id: 'jroc-main', title: `Biz Kit: ${report.report.businessName}`, description: 'Your legit-as-frig business kit.', contentProps: report.report as JrocOutput });
             break;
         
         case 'lahey':
@@ -286,11 +289,15 @@ export const useAppStore = create<AppState>((set, get) => {
             break;
 
         case 'sterileish':
-            upsertApp('sterileish', { id: 'sterileish-main', title: 'STERILE-ish™ Report', description: 'Compliance analysis complete.', contentProps: report.report });
+            upsertApp('sterileish', { id: 'sterileish-main', title: 'STERILE-ish™ Report', description: 'Compliance analysis complete.', contentProps: report.report as SterileishAnalysisOutput });
             break;
         
         case 'paper-trail':
-            upsertApp('paper-trail', { id: 'paper-trail-main', title: `Case File`, description: 'Evidence processed.', contentProps: report.report });
+            const paperTrailAppId = 'paper-trail-main';
+            const paperTrailApp = get().apps.find(a => a.id === paperTrailAppId);
+            const existingLog = paperTrailApp?.contentProps?.evidenceLog || [];
+            const newLog = [report.report, ...existingLog];
+            upsertApp('paper-trail', { id: paperTrailAppId, title: 'Paper Trail P.I.', contentProps: { evidenceLog: newLog as PaperTrailScanOutput[] } });
             break;
             
         case 'wingman':
@@ -336,6 +343,10 @@ export const useAppStore = create<AppState>((set, get) => {
                 contentProps: { decoyResult: decoyReport }
             });
             break;
+        
+        case 'echo':
+            toast({ title: 'Echo Remembers', description: React.createElement(EchoRecallToast, report.report as SessionRecallOutput) });
+            break;
       }
     }
   };
@@ -374,21 +385,6 @@ export const useAppStore = create<AppState>((set, get) => {
       const action = appActionRegistry[app.type];
       if (action) {
         action(get, set, app);
-      }
-    },
-
-    handleSessionRecall: async () => {
-      set({ isLoading: true });
-      const { toast } = useToast.getState();
-      try {
-        const dummyActivity = `User opened File Explorer.\nUser ran 'critique this copy' in Dr. Syntax.\nUser ran an Aegis scan at 14:32.\nUser launched Loom Studio to inspect 'Client Onboarding' workflow.`;
-        const result: SessionRecallOutput = await recallSessionAction({ sessionActivity: dummyActivity });
-        toast({ title: 'Echo Remembers', description: React.createElement(EchoRecallToast, result) });
-      } catch (error) {
-        console.error('Error recalling session:', error);
-        toast({ variant: 'destructive', title: 'Error', description: 'Echo could not recall the session.' });
-      } finally {
-        set({ isLoading: false });
       }
     },
 

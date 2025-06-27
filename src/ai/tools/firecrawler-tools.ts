@@ -1,5 +1,4 @@
 
-'use server';
 /**
  * @fileOverview A tool for running scans with the Firecrawler API.
  */
