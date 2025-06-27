@@ -13,6 +13,8 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '.
 import type { DecoyInput } from '@/ai/agents/decoy-schemas';
 import { handleDeployDecoy } from '@/app/actions';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 
 
 const DecoyDeploymentPanel = () => {
@@ -34,8 +36,7 @@ const DecoyDeploymentPanel = () => {
     }
   
     return (
-      <div className="space-y-3 pt-4">
-        <h4 className="text-sm font-medium text-center text-muted-foreground">Deploy AI Decoy</h4>
+      <div className="space-y-3">
         <Textarea 
             placeholder="Describe the target (e.g., 'Named Alex, loves hiking and indie bands...')" 
             value={targetDescription}
@@ -73,6 +74,7 @@ const DecoyDeploymentPanel = () => {
 
 
 export default function InfidelityRadar() {
+  const isMobile = useIsMobile();
   const [isScanning, setIsScanning] = useState(false);
   const [analysisInput, setAnalysisInput] = useState('');
   const [analysisResult, setAnalysisResult] = useState<InfidelityAnalysisOutput | null>(null);
@@ -131,17 +133,36 @@ export default function InfidelityRadar() {
                         </div>
                     )}
 
-                    <Collapsible open={isDecoyPanelOpen} onOpenChange={setIsDecoyPanelOpen} className="space-y-2">
-                        <CollapsibleTrigger asChild>
-                            <Button variant="outline" className="w-full justify-between">
-                                Deploy Counter-Intelligence
-                                <ChevronRight className={`transition-transform duration-200 ${isDecoyPanelOpen ? 'rotate-90' : ''}`} />
-                            </Button>
-                        </CollapsibleTrigger>
-                        <CollapsibleContent>
-                            <DecoyDeploymentPanel />
-                        </CollapsibleContent>
-                    </Collapsible>
+                    {isMobile ? (
+                      <Sheet>
+                          <SheetTrigger asChild>
+                              <Button variant="outline" className="w-full justify-between">
+                                  Deploy Counter-Intelligence
+                                  <ChevronRight />
+                              </Button>
+                          </SheetTrigger>
+                          <SheetContent side="bottom" className="h-[90%] rounded-t-lg p-4 flex flex-col">
+                              <SheetHeader className="mb-2 flex-shrink-0">
+                                  <SheetTitle>Deploy AI Decoy</SheetTitle>
+                              </SheetHeader>
+                              <div className="overflow-y-auto flex-grow">
+                                <DecoyDeploymentPanel />
+                              </div>
+                          </SheetContent>
+                      </Sheet>
+                    ) : (
+                      <Collapsible open={isDecoyPanelOpen} onOpenChange={setIsDecoyPanelOpen} className="space-y-2">
+                          <CollapsibleTrigger asChild>
+                              <Button variant="outline" className="w-full justify-between">
+                                  Deploy Counter-Intelligence
+                                  <ChevronRight className={`transition-transform duration-200 ${isDecoyPanelOpen ? 'rotate-90' : ''}`} />
+                              </Button>
+                          </CollapsibleTrigger>
+                          <CollapsibleContent>
+                              <DecoyDeploymentPanel />
+                          </CollapsibleContent>
+                      </Collapsible>
+                    )}
                  </div>
             )}
         </div>
