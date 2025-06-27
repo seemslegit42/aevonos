@@ -204,6 +204,8 @@ export const AgentReportSchema = z.discriminatedUnion('agent', [
 
 export const UserCommandInputSchema = z.object({
   userCommand: z.string().describe('A natural language command from the user about what they want to do or launch.'),
+  userId: z.string(),
+  workspaceId: z.string(),
 });
 export type UserCommandInput = z.infer<typeof UserCommandInputSchema>;
 

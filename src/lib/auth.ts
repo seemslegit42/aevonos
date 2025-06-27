@@ -1,6 +1,7 @@
 
 import { SignJWT, jwtVerify } from 'jose';
 import { NextRequest } from 'next/server';
+import { cookies } from 'next/headers';
 
 const secretKey = process.env.JWT_SECRET;
 if (!secretKey) {
@@ -30,12 +31,22 @@ export async function decrypt(input: string): Promise<any> {
 }
 
 /**
- * Extracts and verifies the JWT from a 'session' cookie in the request.
+ * Extracts and verifies the JWT from a 'session' cookie in an API Route Request.
  * @param request The NextRequest object.
  * @returns The session payload if the token is valid, otherwise null.
  */
 export async function getSession(request: NextRequest) {
     const token = request.cookies.get('session')?.value;
+    if (!token) return null;
+    return await decrypt(token);
+}
+
+/**
+ * Extracts and verifies the JWT from a 'session' cookie in a Server Action or RSC.
+ * @returns The session payload if the token is valid, otherwise null.
+ */
+export async function getServerActionSession() {
+    const token = cookies().get('session')?.value;
     if (!token) return null;
     return await decrypt(token);
 }

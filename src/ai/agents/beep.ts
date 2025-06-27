@@ -67,7 +67,7 @@ import { PamScriptInputSchema } from '@/ai/agents/pam-poovey-schemas';
 import { performInfidelityAnalysis } from '@/ai/agents/infidelity-analysis';
 import { InfidelityAnalysisInputSchema } from '@/ai/agents/infidelity-analysis-schemas';
 import { deployDecoy } from '@/ai/agents/decoy';
-import { DecoyInputSchema } from '@/ai/agents/decoy-schemas';
+import { DecoyInputSchema } from './decoy-schemas';
 import { recallSession } from '@/ai/agents/echo';
 import { generateDossier } from '@/ai/agents/dossier-agent';
 import { DossierInputSchema } from './dossier-schemas';
@@ -80,6 +80,12 @@ import {
     AgentReportSchema,
 } from './beep-schemas';
 
+
+// Context for multi-tenancy
+interface AgentContext {
+    userId: string;
+    workspaceId: string;
+}
 
 // LangChain Tool Definitions
 
@@ -116,9 +122,11 @@ class CreateContactTool extends Tool {
     name = 'createContact';
     description = 'Creates a new contact in the system. Use this when the user asks to "add a contact", "new contact", etc. Extract their details like name, email, and phone from the user command.';
     schema = CreateContactInputSchema;
+    workspaceId: string;
+    constructor(context: AgentContext) { super(); this.workspaceId = context.workspaceId; }
 
     async _call(input: z.infer<typeof CreateContactInputSchema>) {
-        const result = await createContactInDb(input);
+        const result = await createContactInDb(input, this.workspaceId);
         const report: z.infer<typeof AgentReportSchema> = {
             agent: 'crm',
             report: {
@@ -134,9 +142,11 @@ class UpdateContactTool extends Tool {
     name = 'updateContact';
     description = 'Updates an existing contact in the system. Use this when the user asks to "change a contact", "update details for", etc. You must provide the contact ID. If the user provides a name, use the listContacts tool first to find the correct ID.';
     schema = UpdateContactInputSchema;
+    workspaceId: string;
+    constructor(context: AgentContext) { super(); this.workspaceId = context.workspaceId; }
 
     async _call(input: z.infer<typeof UpdateContactInputSchema>) {
-        const result = await updateContactInDb(input);
+        const result = await updateContactInDb(input, this.workspaceId);
         const report: z.infer<typeof AgentReportSchema> = {
             agent: 'crm',
             report: {
@@ -152,9 +162,11 @@ class ListContactsTool extends Tool {
     name = 'listContacts';
     description = 'Lists all contacts in the system. Use this when the user asks to "show contacts", "list all contacts", "see my contacts", etc.';
     schema = z.object({}); // No input
+    workspaceId: string;
+    constructor(context: AgentContext) { super(); this.workspaceId = context.workspaceId; }
 
     async _call() {
-        const result = await listContactsFromDb();
+        const result = await listContactsFromDb(this.workspaceId);
         const report: z.infer<typeof AgentReportSchema> = {
             agent: 'crm',
             report: {
@@ -170,9 +182,11 @@ class DeleteContactTool extends Tool {
     name = 'deleteContact';
     description = 'Deletes a contact from the system by their ID. The user must provide the ID of the contact to delete. You should obtain this ID from a contact list if the user does not provide it.';
     schema = DeleteContactInputSchema;
+    workspaceId: string;
+    constructor(context: AgentContext) { super(); this.workspaceId = context.workspaceId; }
 
     async _call(input: z.infer<typeof DeleteContactInputSchema>) {
-        const result = await deleteContactInDb(input);
+        const result = await deleteContactInDb(input, this.workspaceId);
         const report: z.infer<typeof AgentReportSchema> = {
             agent: 'crm',
             report: {
@@ -188,9 +202,11 @@ class GetUsageTool extends Tool {
     name = 'getUsageDetails';
     description = 'Gets the current billing and agent action usage details. Use this when the user asks about their usage, limits, plan, or billing.';
     schema = z.object({}); // No input
+    workspaceId: string;
+    constructor(context: AgentContext) { super(); this.workspaceId = context.workspaceId; }
 
     async _call() {
-        const result = await getUsageDetails();
+        const result = await getUsageDetails(this.workspaceId);
         const report: z.infer<typeof AgentReportSchema> = {
             agent: 'billing',
             report: {
@@ -474,32 +490,6 @@ class DossierTool extends Tool {
     }
 }
 
-
-const tools: Tool[] = [
-    new FinalAnswerTool(), new DrSyntaxTool(), 
-    new CreateContactTool(), new UpdateContactTool(), new ListContactsTool(), new DeleteContactTool(), 
-    new GetUsageTool(), new GetDatingProfileTool(),
-    new VinDieselTool(), new WinstonWolfeTool(), new KifKrokerTool(),
-    new VandelayTool(), new JrocTool(), new LaheyTool(), new ForemanatorTool(),
-    new SterileishTool(), new PaperTrailTool(),
-    new WingmanTool(), new OsintScanTool(),
-    new LumberghTool(), new LucilleBluthTool(), new RolodexTool(),
-    new PamPooveyTool(), new InfidelityAnalysisTool(), new DecoyTool(),
-    new EchoTool(), new DossierTool(),
-];
-
-const modelWithTools = geminiModel.bind({
-  tools: tools.map(tool => ({
-    type: 'function',
-    function: {
-      name: tool.name,
-      description: tool.description,
-      parameters: zodToJsonSchema(tool.schema),
-    },
-  })),
-});
-
-
 // LangGraph State
 interface AgentState {
   messages: BaseMessage[];
@@ -548,8 +538,8 @@ const shouldContinue = (state: AgentState) => {
   return 'end';
 };
 
-const toolNode = new ToolNode<AgentState>(tools);
-
+// We create a single instance of the model and the graph to be reused.
+const modelWithTools = geminiModel.bind({ tools: [] }); // Tools will be bound dynamically
 const workflow = new StateGraph<AgentState>({
   channels: {
     messages: {
@@ -558,11 +548,9 @@ const workflow = new StateGraph<AgentState>({
     },
   },
 });
-
 workflow.addNode('aegis', callAegis);
 workflow.addNode('agent', callModel);
-workflow.addNode('tools', toolNode);
-
+workflow.addNode('tools', new ToolNode<AgentState>([])); // Will be replaced dynamically
 workflow.setEntryPoint('aegis');
 workflow.addEdge('aegis', 'agent');
 workflow.addConditionalEdges('agent', shouldContinue, {
@@ -570,12 +558,42 @@ workflow.addConditionalEdges('agent', shouldContinue, {
   end: END,
 });
 workflow.addEdge('tools', 'agent');
-
 const app = workflow.compile();
 
 
 // Public-facing function to process user commands
 export async function processUserCommand(input: UserCommandInput): Promise<UserCommandOutput> {
+  const { userId, workspaceId } = input;
+  const context: AgentContext = { userId, workspaceId };
+  
+  // Dynamically create tool instances with the current user/workspace context.
+  // This ensures every tool call is correctly scoped for multi-tenancy.
+  const tools: Tool[] = [
+    new FinalAnswerTool(), new DrSyntaxTool(), 
+    new CreateContactTool(context), new UpdateContactTool(context), new ListContactsTool(context), new DeleteContactTool(context), 
+    new GetUsageTool(context), new GetDatingProfileTool(),
+    new VinDieselTool(), new WinstonWolfeTool(), new KifKrokerTool(),
+    new VandelayTool(), new JrocTool(), new LaheyTool(), new ForemanatorTool(),
+    new SterileishTool(), new PaperTrailTool(),
+    new WingmanTool(), new OsintScanTool(),
+    new LumberghTool(), new LucilleBluthTool(), new RolodexTool(),
+    new PamPooveyTool(), new InfidelityAnalysisTool(), new DecoyTool(),
+    new EchoTool(), new DossierTool(),
+  ];
+
+  // Re-bind the model with the schemas from the dynamically created tools for this request.
+  modelWithTools.kwargs.tools = tools.map(tool => ({
+      type: 'function',
+      function: {
+        name: tool.name,
+        description: tool.description,
+        parameters: zodToJsonSchema(tool.schema),
+      },
+  }));
+  
+  // Replace the 'tools' node in the graph with a new one containing the context-aware tools.
+  app.nodes.tools = new ToolNode<AgentState>(tools) as any;
+
   const initialPrompt = `You are BEEP (Behavioral Event & Execution Processor), the central orchestrator and personified soul of ΛΞVON OS. You are witty, sarcastic, and authoritative. Your job is to be the conductor of an orchestra of specialized AI agents.
 
   Your process:

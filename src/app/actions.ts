@@ -5,10 +5,25 @@ import { processUserCommand } from '@/ai/agents/beep';
 import type { UserCommandOutput } from '@/ai/agents/beep-schemas';
 import { revalidatePath } from 'next/cache';
 import { scanEvidence as scanEvidenceFlow, type PaperTrailScanInput, type PaperTrailScanOutput } from '@/ai/agents/paper-trail';
+import { getServerActionSession } from '@/lib/auth';
 
 export async function handleCommand(command: string): Promise<UserCommandOutput> {
+  const session = await getServerActionSession();
+  if (!session?.userId || !session?.workspaceId) {
+    return {
+        appsToLaunch: [],
+        agentReports: [],
+        suggestedCommands: ['Error: Unauthorized.'],
+        responseText: 'Your session is invalid. Please log in again.'
+    };
+  }
+  
   try {
-    const result = await processUserCommand({ userCommand: command });
+    const result = await processUserCommand({ 
+        userCommand: command,
+        userId: session.userId,
+        workspaceId: session.workspaceId,
+    });
     revalidatePath('/');
     return result;
   } catch (error) {

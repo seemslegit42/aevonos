@@ -1,3 +1,4 @@
+
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
@@ -5,89 +6,23 @@ generator client {
   provider = "prisma-client-js"
 }
 
+generator accelerate {
+  provider = "prisma-client-js"
+}
+
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DATABASE_DIRECT_URL")
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
-model User {
-  id            String    @id @default(cuid())
-  email         String    @unique
-  password      String?
-  firstName     String?
-  lastName      String?
-  lastLoginAt   DateTime?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  ownedWorkspace Workspace? @relation("WorkspaceOwner")
-  workspaces    Workspace[] @relation("WorkspaceMembers")
-}
+// -------------------
+// Enums
+// -------------------
 
-model Workspace {
-  id                 String          @id @default(cuid())
-  name               String
-  ownerId            String          @unique
-  owner              User            @relation("WorkspaceOwner", fields: [ownerId], references: [id], onDelete: Cascade)
-  members            User[]          @relation("WorkspaceMembers")
-  agentActionsUsed   Int             @default(0)
-  planTier           String          @default("Apprentice") // "Apprentice", "Artisan", "Priesthood"
-  overageEnabled     Boolean         @default(true)
-  createdAt          DateTime        @default(now())
-  updatedAt          DateTime        @updatedAt
-  contacts           Contact[]
-  workflows          Workflow[]
-  workflowRuns       WorkflowRun[]
-  agents             Agent[]
-  integrations       Integration[]
-  securityAlerts     SecurityAlert[]
-  threatFeeds        ThreatFeed[]
-}
-
-model Contact {
-  id          String    @id @default(cuid())
-  workspaceId String
-  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  email       String?
-  firstName   String?
-  lastName    String?
-  phone       String?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-}
-
-model Workflow {
-  id             String          @id @default(cuid())
-  workspaceId    String
-  workspace      Workspace       @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  name           String
-  isActive       Boolean         @default(true)
-  triggerType    String          @default("api") // "api", "schedule", "event"
-  definition     Json
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
-  runs           WorkflowRun[]
-}
-
-enum WorkflowRunStatus {
-  pending
-  running
-  completed
-  failed
-  paused
-}
-
-model WorkflowRun {
-  id             String            @id @default(cuid())
-  workspaceId    String
-  workspace      Workspace         @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  workflowId     String
-  workflow       Workflow          @relation(fields: [workflowId], references: [id], onDelete: Cascade)
-  status         WorkflowRunStatus @default(pending)
-  triggerPayload Json?
-  output         Json?
-  startedAt      DateTime          @default(now())
-  finishedAt     DateTime?
+enum PlanTier {
+  Apprentice
+  Artisan
+  Priesthood
 }
 
 enum AgentStatus {
@@ -98,32 +33,6 @@ enum AgentStatus {
   error
 }
 
-model Agent {
-  id                 String      @id @default(cuid())
-  workspaceId        String
-  workspace          Workspace   @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  name               String
-  type               String
-  description        String?
-  status             AgentStatus @default(idle)
-  assignedWorkflowId String?
-  lastActivityAt     DateTime?
-  createdAt          DateTime    @default(now())
-  updatedAt          DateTime    @updatedAt
-}
-
-model Integration {
-  id                    String    @id @default(cuid())
-  workspaceId           String
-  workspace             Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  integrationManifestId String // UUID of the manifest
-  name                  String
-  status                String    // "active", "inactive", "error"
-  configDetails         Json
-  createdAt             DateTime  @default(now())
-  updatedAt             DateTime  @updatedAt
-}
-
 enum SecurityRiskLevel {
   low
   medium
@@ -131,21 +40,157 @@ enum SecurityRiskLevel {
   critical
 }
 
+enum WorkflowRunStatus {
+  pending
+  running
+  completed
+  failed
+  paused
+}
+
+// -------------------
+// Models
+// -------------------
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String?
+  firstName String?
+  lastName  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  ownedWorkspaces Workspace[] @relation("WorkspaceOwner")
+  workspaces      Workspace[] @relation("WorkspaceMembers")
+}
+
+model Workspace {
+  id               String    @id @default(cuid())
+  name             String
+  planTier         PlanTier  @default(Apprentice)
+  agentActionsUsed Int       @default(0)
+  overageEnabled   Boolean   @default(false)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  ownerId String
+  owner   User   @relation("WorkspaceOwner", fields: [ownerId], references: [id])
+
+  members User[] @relation("WorkspaceMembers")
+
+  contacts       Contact[]
+  securityAlerts SecurityAlert[]
+  threatFeeds    ThreatFeed[]
+  workflows      Workflow[]
+  workflowRuns   WorkflowRun[]
+  agents         Agent[]
+  integrations   Integration[]
+
+  @@index([ownerId])
+}
+
+model Contact {
+  id          String    @id @default(cuid())
+  email       String?   @unique
+  firstName   String?
+  lastName    String?
+  phone       String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId])
+}
+
 model SecurityAlert {
   id                String            @id @default(cuid())
-  workspaceId       String
-  workspace         Workspace         @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   type              String
   explanation       String
   riskLevel         SecurityRiskLevel
-  timestamp         DateTime          @default(now())
+  timestamp         DateTime
   actionableOptions String[]
+
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId])
 }
 
 model ThreatFeed {
   id          String    @id @default(cuid())
+  url         String
   workspaceId String
   workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  url         String
-  createdAt   DateTime  @default(now())
+
+  @@index([workspaceId])
+}
+
+model Workflow {
+  id          String   @id @default(cuid())
+  name        String
+  definition  Json
+  isActive    Boolean  @default(true)
+  triggerType String   @default("api") // e.g., 'api', 'schedule', 'event'
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  runs WorkflowRun[]
+
+  @@index([workspaceId])
+}
+
+model WorkflowRun {
+  id             String            @id @default(cuid())
+  status         WorkflowRunStatus
+  triggerPayload Json?
+  output         Json?
+  startedAt      DateTime
+  finishedAt     DateTime?
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  workflowId String
+  workflow   Workflow @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId])
+  @@index([workflowId])
+}
+
+model Agent {
+  id          String      @id @default(cuid())
+  name        String
+  type        String // Maps to MicroAppType
+  description String?
+  status      AgentStatus
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId])
+}
+
+model Integration {
+  id                    String   @id @default(cuid())
+  name                  String
+  status                String // active, inactive, error
+  configDetails         Json?
+  integrationManifestId String // Corresponds to ID in config/integration-manifests.ts
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId])
 }
