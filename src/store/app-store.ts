@@ -236,11 +236,11 @@ export const useAppStore = create<AppState>((set, get) => {
             break;
         
         case 'winston-wolfe':
-            launchAppForReport('winston-wolfe', 'Winston Wolfe', 'A solution is ready.', report.report);
+            launchAppForReport('winston-wolfe', 'The Winston Wolfe', 'A solution is ready.', report.report);
             break;
 
         case 'kif-kroker':
-            launchAppForReport('kif-kroker', 'Kif Kroker', 'Comms Analysis', report.report);
+            launchAppForReport('kif-kroker', 'The Kif Kroker', 'Comms Analysis', report.report);
             break;
 
         case 'vandelay':
