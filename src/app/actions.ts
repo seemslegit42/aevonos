@@ -1,7 +1,7 @@
 'use server';
 
 import { generateInitialPrompts } from '@/ai/flows/initial-prompt-generation';
-import { detectAnomalies } from '@/ai/flows/anomaly-detection';
+import { aegisAnomalyScan } from '@/ai/agents/aegis';
 import { revalidatePath } from 'next/cache';
 import { drSyntaxCritique, type DrSyntaxInput, type DrSyntaxOutput } from '@/ai/agents/dr-syntax';
 
@@ -18,7 +18,7 @@ export async function handleCommand(command: string): Promise<string[]> {
 
 export async function checkForAnomalies(activityDescription: string): Promise<{ isAnomalous: boolean; anomalyExplanation: string; }> {
     try {
-        const result = await detectAnomalies({ activityDescription });
+        const result = await aegisAnomalyScan({ activityDescription });
         return result;
     } catch (error) {
         console.error('Error detecting anomalies:', error);
