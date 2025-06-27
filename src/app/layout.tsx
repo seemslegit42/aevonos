@@ -21,9 +21,15 @@ export default function RootLayout({
       </head>
       <body className="font-body antialiased relative min-h-screen">
         <div className="absolute top-0 z-[-2] h-screen w-full bg-background">
-          <div className="absolute bottom-0 left-0 right-0 top-0 bg-[radial-gradient(circle_500px_at_50%_200px,#6A0DAD33,transparent)]"></div>
-          <div className="absolute bottom-0 left-0 right-0 top-0 bg-[radial-gradient(circle_500px_at_50%_800px,#3EB99133,transparent)]"></div>
-           <div className="absolute bottom-0 left-0 right-0 top-0 bg-[radial-gradient(circle_500px_at_80%_600px,#20B2AA33,transparent)]"></div>
+           <div 
+            className="absolute inset-0 bg-[url(https://res.cloudinary.com/delba/image/upload/v1698222956/gradient.png)] bg-cover opacity-10"
+          />
+          <div 
+            className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-transparent"
+          />
+          <div 
+            className="absolute inset-0 animate-aurora bg-[linear-gradient(135deg,hsl(var(--primary)/0.2),hsl(var(--accent)/0.2)_50%,hsl(var(--primary)/0.2)_100%)] bg-[length:400%_400%]"
+          />
         </div>
         
         <main className="min-h-screen flex flex-col">
