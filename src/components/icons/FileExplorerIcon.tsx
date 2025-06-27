@@ -9,12 +9,15 @@ export const FileExplorerIcon = (props: React.SVGProps<SVGSVGElement>) => (
         <stop offset="100%" style={{ stopColor: 'hsl(var(--primary))' }} />
       </linearGradient>
     </defs>
-    {/* A crystalline, faceted folder shape */}
-    <path d="M10 25 L40 25 L50 15 L90 15 L90 80 L10 80 Z" fill="url(#file-gradient)" opacity="0.3" />
-    <path d="M10 25 L40 25 L50 15 L90 15 L90 80 L10 80 Z" stroke="url(#file-gradient)" strokeWidth="3" />
+    {/* Abstracted, faceted data shard/folder glyph */}
+    <path d="M15 20 L45 20 L55 10 L85 10 L85 80 L15 80 Z" fill="url(#file-gradient)" opacity="0.3" />
+    <path d="M15 20 L45 20 L55 10 L85 10 L85 80 L15 80 Z" stroke="url(#file-gradient)" strokeWidth="3" />
 
-    {/* Internal Facet Lines */}
-    <path d="M10 80 L40 25" stroke="hsl(var(--foreground))" strokeWidth="1.5" opacity="0.4" />
-    <path d="M50 15 L90 80" stroke="hsl(var(--foreground))" strokeWidth="1.5" opacity="0.2" />
+    {/* Internal Facet suggesting stacked files/data */}
+    <path d="M25 30 L75 30" stroke="hsl(var(--foreground))" strokeWidth="2" opacity="0.7" />
+    <path d="M25 45 L75 45" stroke="hsl(var(--foreground))" strokeWidth="2" opacity="0.5" />
+    <path d="M25 60 L75 60" stroke="hsl(var(--foreground))" strokeWidth="2" opacity="0.3" />
+
+    <path d="M50 20 L25 70" stroke="hsl(var(--foreground))" strokeWidth="1.5" opacity="0.2" />
   </svg>
 );

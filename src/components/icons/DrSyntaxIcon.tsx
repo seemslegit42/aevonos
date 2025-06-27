@@ -9,14 +9,15 @@ export const DrSyntaxIcon = (props: React.SVGProps<SVGSVGElement>) => (
         <stop offset="100%" style={{ stopColor: 'hsl(var(--primary))' }} />
       </linearGradient>
     </defs>
-    {/* A sharp, crystalline scalpel/pen glyph */}
-    <path d="M80 10 L90 20 L30 80 L20 70 Z" fill="url(#dr-syntax-gradient)" opacity="0.3" />
-    <path d="M80 10 L90 20 L30 80 L20 70 Z" stroke="url(#dr-syntax-gradient)" strokeWidth="3" />
+    {/* A sharper, more aggressive crystalline scalpel/pen glyph */}
+    <path d="M85 5 L95 15 L25 85 L15 75 Z" fill="url(#dr-syntax-gradient)" opacity="0.3" />
+    <path d="M85 5 L95 15 L25 85 L15 75 Z" stroke="url(#dr-syntax-gradient)" strokeWidth="3" />
     
-    {/* Redaction/emphasis line */}
-    <path d="M10 60 L70 90" stroke="hsl(var(--destructive))" strokeWidth="4" opacity="0.7" />
+    {/* A harsh redacting slash, more integrated */}
+    <path d="M5 60 L75 95" stroke="hsl(var(--destructive))" strokeWidth="5" opacity="0.8" />
 
-    {/* Facet line on the blade */}
-    <path d="M85 15 L25 75" stroke="hsl(var(--foreground))" strokeWidth="1.5" opacity="0.5" />
+    {/* Multiple facet lines on the blade for a sharper glint */}
+    <path d="M90 10 L20 80" stroke="hsl(var(--foreground))" strokeWidth="1.5" opacity="0.6" />
+    <path d="M75 5 L35 45" stroke="hsl(var(--foreground))" strokeWidth="1" opacity="0.4" />
   </svg>
 );

@@ -9,13 +9,13 @@ export const BeepWingmanIcon = (props: React.SVGProps<SVGSVGElement>) => (
         <stop offset="100%" style={{ stopColor: 'hsl(var(--primary))' }} />
       </linearGradient>
     </defs>
-    {/* Crystalline, asymmetric heart/wing shape */}
-    <path d="M50 20 L70 15 L90 40 L50 90 L10 40 L30 15 Z" fill="url(#wingman-gradient)" opacity="0.3" />
-    <path d="M50 20 L70 15 L90 40 L50 90 L10 40 L30 15 Z" stroke="url(#wingman-gradient)" strokeWidth="3" />
+    {/* Abstracted, sharp, asymmetrical wing/shard glyph */}
+    <path d="M20 80 L30 20 L80 10 L70 50 L95 70 L50 95 Z" fill="url(#wingman-gradient)" opacity="0.3" />
+    <path d="M20 80 L30 20 L80 10 L70 50 L95 70 L50 95 Z" stroke="url(#wingman-gradient)" strokeWidth="3" />
     
-    {/* Internal Facets */}
-    <path d="M50 20 L50 90" stroke="hsl(var(--foreground))" strokeWidth="1.5" opacity="0.7" />
-    <path d="M30 15 L50 45 L10 40" stroke="hsl(var(--foreground))" strokeWidth="1.5" opacity="0.5" />
-    <path d="M70 15 L50 45 L90 40" stroke="hsl(var(--foreground))" strokeWidth="1.5" opacity="0.5" />
+    {/* Internal Facets creating movement and sharpness */}
+    <path d="M30 20 L50 95" stroke="hsl(var(--foreground))" strokeWidth="1.5" opacity="0.4" />
+    <path d="M20 80 L70 50" stroke="hsl(var(--foreground))" strokeWidth="1.5" opacity="0.6" />
+    <path d="M55 40 L80 10" stroke="hsl(var(--foreground))" strokeWidth="1.5" opacity="0.6" />
   </svg>
 );

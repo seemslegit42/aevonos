@@ -9,12 +9,16 @@ export const PamPooveyIcon = (props: React.SVGProps<SVGSVGElement>) => (
         <stop offset="100%" style={{ stopColor: 'hsl(var(--primary))' }} />
       </linearGradient>
     </defs>
-    {/* A crystalline glyph representing a dolphin puppet. Abstractly. */}
-    <path d="M20 70 Q 30 40 50 50 T 80 30 L 70 60 Q 60 80 40 85 Z" fill="url(#pam-gradient)" opacity="0.3" />
-    <path d="M20 70 Q 30 40 50 50 T 80 30 L 70 60 Q 60 80 40 85 Z" stroke="url(#pam-gradient)" strokeWidth="3" />
+    {/* A fractured, chaotic crystalline glyph representing HR */}
+    <path d="M50 10 L85 35 L75 85 L25 85 L15 35 Z" fill="url(#pam-gradient)" opacity="0.3" />
+    <path d="M50 10 L85 35 L75 85 L25 85 L15 35 Z" stroke="url(#pam-gradient)" strokeWidth="3" />
+    
+    {/* The fracture */}
+    <path d="M40 40 L60 60 L55 65 L70 80" stroke="hsl(var(--destructive))" strokeWidth="4" opacity="0.9" />
 
-    {/* Facet lines */}
-    <path d="M50 50 L 70 60" stroke="hsl(var(--foreground))" strokeWidth="1.5" opacity="0.5" />
-    <path d="M35 60 L 50 50" stroke="hsl(var(--foreground))" strokeWidth="1.5" opacity="0.5" />
+    {/* Internal facets */}
+    <path d="M50 10 L50 60" stroke="hsl(var(--foreground))" strokeWidth="1.5" opacity="0.5" />
+    <path d="M15 35 L75 85" stroke="hsl(var(--foreground))" strokeWidth="1.5" opacity="0.3" />
+    <path d="M85 35 L25 85" stroke="hsl(var(--foreground))" strokeWidth="1.5" opacity="0.3" />
   </svg>
 );

@@ -9,12 +9,16 @@ export const TerminalIcon = (props: React.SVGProps<SVGSVGElement>) => (
         <stop offset="100%" style={{ stopColor: 'hsl(var(--primary))' }} />
       </linearGradient>
     </defs>
-    {/* Crystalline container */}
-    <path d="M10 20 L20 10 L80 10 L90 20 L90 80 L80 90 L20 90 L10 80 Z" fill="url(#terminal-gradient)" opacity="0.3" />
-    <path d="M10 20 L20 10 L80 10 L90 20 L90 80 L80 90 L20 90 L10 80 Z" stroke="url(#terminal-gradient)" strokeWidth="3" />
+    {/* Crystalline container/screen */}
+    <path d="M10 15 L20 5 L80 5 L90 15 V85 L80 95 L20 95 L10 85 Z" fill="url(#terminal-gradient)" opacity="0.3" />
+    <path d="M10 15 L20 5 L80 5 L90 15 V85 L80 95 L20 95 L10 85 Z" stroke="url(#terminal-gradient)" strokeWidth="3" />
     
-    {/* Crystalline ">_" prompt */}
-    <path d="M30 40 L45 50 L30 60" stroke="hsl(var(--foreground))" strokeWidth="3" opacity="0.9" fill="none" />
-    <path d="M50 60 L65 60" stroke="hsl(var(--foreground))" strokeWidth="3" opacity="0.9" fill="none" />
+    {/* Crystalline ">" prompt character */}
+    <path d="M25 45 L40 55 L25 65" stroke="hsl(var(--foreground))" strokeWidth="4" opacity="0.9" fill="none" />
+    {/* Crystalline "_" cursor character */}
+    <path d="M45 65 L65 65" stroke="hsl(var(--foreground))" strokeWidth="4" opacity="0.9" fill="none" />
+
+    {/* Subtle internal facets for screen glare effect */}
+    <path d="M10 85 L90 15" stroke="hsl(var(--foreground))" strokeWidth="1.5" opacity="0.15" />
   </svg>
 );
