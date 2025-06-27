@@ -1,17 +1,16 @@
-
 'use client';
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { ShieldAlert, Bot, Loader2, ChevronRight, EyeOff, Search, Globe, Linkedin, Twitter as XIcon, Instagram, VenetianMask } from 'lucide-react';
+import { ShieldAlert, Bot, Loader2, ChevronRight, EyeOff, Search, Globe, Linkedin, Twitter as XIcon, Instagram, VenetianMask, FileQuestion, BadgeAlert, PhoneOff, Skull } from 'lucide-react';
 import { Textarea } from '../ui/textarea';
 import { handleInfidelityAnalysis, handleDeployDecoy, handleOsintScan } from '@/app/actions';
 import type { InfidelityAnalysisOutput } from '@/ai/agents/infidelity-analysis-schemas';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '../ui/select';
 import type { DecoyInput } from '@/ai/agents/decoy-schemas';
-import type { OsintInput, OsintOutput, SocialProfileSchema as SocialProfileType } from '@/ai/agents/osint-schemas';
+import type { OsintOutput } from '@/ai/agents/osint-schemas';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
@@ -22,6 +21,8 @@ import { Separator } from '../ui/separator';
 import { Input } from '../ui/input';
 import { Badge } from '../ui/badge';
 import { ScrollArea } from '../ui/scroll-area';
+import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
 
 const DecoyDeploymentPanel = () => {
     const [isLoading, setIsLoading] = useState(false);
@@ -80,59 +81,113 @@ const DecoyDeploymentPanel = () => {
 
 const OsintReportPanel = ({ report }: { report: OsintOutput }) => {
     const socialIcons: Record<string, React.ElementType> = {
-        LinkedIn, X: XIcon, Instagram, Facebook, Venmo: VenetianMask,
+        LinkedIn, 'X': XIcon, Instagram, GitHub: FileQuestion, TikTok: VenetianMask, 'Unknown': Globe
     };
     
     return (
-        <div className="space-y-3">
-            <div>
-                <h4 className="font-bold text-primary">Intelligence Summary</h4>
-                <p className="text-xs text-foreground/90">{report.summary}</p>
-            </div>
-            
-            <Separator />
-
-            <div>
-                <h4 className="font-bold text-destructive">Risk Factors</h4>
-                <ul className="text-xs list-disc pl-4 text-destructive/90 space-y-1">
-                    {report.riskFactors.map((factor, i) => <li key={i}>{factor}</li>)}
-                </ul>
-            </div>
-            
-            {report.socialProfiles.length > 0 && <Separator />}
-            
-            {report.socialProfiles.length > 0 && (
+        <ScrollArea className="h-96 pr-2">
+            <div className="space-y-4">
                 <div>
-                    <h4 className="font-bold text-primary">Social Media Footprint</h4>
-                    <div className="space-y-2 mt-1">
-                        {report.socialProfiles.map(profile => {
-                            const Icon = socialIcons[profile.platform] || Globe;
-                            return (
-                                <div key={profile.url} className="text-xs p-2 border rounded-md bg-background/50">
-                                    <div className="flex items-center gap-2 font-bold">
-                                        <Icon className="h-4 w-4" />
-                                        <a href={profile.url} target="_blank" rel="noopener noreferrer" className="hover:underline">{profile.platform} - @{profile.username}</a>
-                                        <Badge variant={profile.privacyLevel === 'Public' ? 'secondary' : 'destructive'} className="ml-auto text-xs">{profile.privacyLevel}</Badge>
-                                    </div>
-                                    <p className="text-foreground/80 italic mt-1">"{profile.recentActivity}"</p>
-                                </div>
-                            )
-                        })}
-                    </div>
+                    <h4 className="font-bold text-primary">Intelligence Summary</h4>
+                    <p className="text-xs text-foreground/90">{report.summary}</p>
                 </div>
-            )}
-        </div>
+                
+                <Separator />
+
+                <div>
+                    <h4 className="font-bold text-destructive">Risk Factors</h4>
+                    <ul className="text-xs list-disc pl-4 text-destructive/90 space-y-1">
+                        {report.riskFactors.map((factor, i) => <li key={i}>{factor}</li>)}
+                    </ul>
+                </div>
+                
+                {report.breaches && report.breaches.length > 0 && <Separator />}
+                {report.breaches && report.breaches.length > 0 && (
+                     <div>
+                        <h4 className="font-bold text-yellow-400 flex items-center gap-2"><BadgeAlert /> Data Breaches</h4>
+                        <div className="space-y-2 mt-1">
+                            {report.breaches.map(breach => (
+                                <div key={breach.name} className="text-xs p-2 border border-yellow-400/50 rounded-md bg-background/50">
+                                    <p className="font-bold text-yellow-400">{breach.name} ({breach.breachDate})</p>
+                                    <p className="text-foreground/80 italic mt-1">{breach.description}</p>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+                
+                {report.intelXLeaks && report.intelXLeaks.length > 0 && <Separator />}
+                {report.intelXLeaks && report.intelXLeaks.length > 0 && (
+                    <div>
+                        <h4 className="font-bold text-red-500 flex items-center gap-2"><Skull /> IntelX Leaks</h4>
+                        <div className="space-y-2 mt-1">
+                            {report.intelXLeaks.map(leak => (
+                                <div key={leak.source} className="text-xs p-2 border border-red-500/50 rounded-md bg-background/50">
+                                    <p className="font-bold text-red-500">{leak.source} ({leak.date})</p>
+                                    <p className="text-foreground/80 italic mt-1">{leak.details}</p>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+                
+                {report.burnerPhoneCheck && <Separator />}
+                {report.burnerPhoneCheck && (
+                    <div>
+                        <h4 className="font-bold text-orange-400 flex items-center gap-2"><PhoneOff /> Burner Phone Check</h4>
+                        <div className="text-xs p-2 border border-orange-400/50 rounded-md bg-background/50">
+                            {report.burnerPhoneCheck.isBurner ? (
+                                <p>Number is flagged as a <span className="font-bold">burner/VoIP</span> service ({report.burnerPhoneCheck.carrier}).</p>
+                            ) : (
+                                <p>Number appears to be a standard mobile number from {report.burnerPhoneCheck.carrier}.</p>
+                            )}
+                        </div>
+                    </div>
+                )}
+
+                {report.socialProfiles && report.socialProfiles.length > 0 && <Separator />}
+                {report.socialProfiles && report.socialProfiles.length > 0 && (
+                    <div>
+                        <h4 className="font-bold text-primary">Social Media Footprint</h4>
+                        <div className="space-y-2 mt-1">
+                            {report.socialProfiles.map(profile => {
+                                const Icon = socialIcons[profile.platform] || Globe;
+                                return (
+                                    <div key={profile.username} className="text-xs p-2 border rounded-md bg-background/50">
+                                        <div className="flex items-center gap-2 font-bold">
+                                            <Icon className="h-4 w-4" />
+                                            <span>{profile.platform} - @{profile.username}</span>
+                                             <Badge variant="secondary" className="ml-auto text-xs">{profile.followerCount.toLocaleString()} followers</Badge>
+                                        </div>
+                                        <p className="font-medium text-foreground/80 mt-1">{profile.bio}</p>
+                                        <div className="text-foreground/80 italic mt-1">
+                                            <p className="font-semibold not-italic text-muted-foreground">Recent Activity:</p>
+                                            <ul className="list-disc pl-4">
+                                                {profile.recentPosts.map((post, i) => <li key={i}>{post}</li>)}
+                                            </ul>
+                                        </div>
+                                    </div>
+                                )
+                            })}
+                        </div>
+                    </div>
+                )}
+            </div>
+        </ScrollArea>
     )
 }
 
 export default function InfidelityRadar() {
   const isMobile = useIsMobile();
+  const { toast } = useToast();
+
   const [isScanning, setIsScanning] = useState(false);
   const [analysisInput, setAnalysisInput] = useState('');
   const [analysisResult, setAnalysisResult] = useState<InfidelityAnalysisOutput | null>(null);
   
   const [isOsintScanning, setIsOsintScanning] = useState(false);
   const [osintTarget, setOsintTarget] = useState('');
+  const [osintContext, setOsintContext] = useState('');
   const [osintReport, setOsintReport] = useState<OsintOutput | null>(null);
 
   const [isDecoyPanelOpen, setIsDecoyPanelOpen] = useState(false);
@@ -147,10 +202,13 @@ export default function InfidelityRadar() {
   }
   
   const handleRunOsintScan = async () => {
-      if (!osintTarget) return;
+      if (!osintTarget) {
+          toast({ variant: 'destructive', title: 'OSINT Error', description: 'Target name is required.' });
+          return;
+      }
       setIsOsintScanning(true);
       setOsintReport(null);
-      const result = await handleOsintScan({ targetName: osintTarget, context: 'Infidelity Radar Investigation' });
+      const result = await handleOsintScan({ targetName: osintTarget, context: osintContext });
       setOsintReport(result);
       setIsOsintScanning(false);
   }
@@ -162,19 +220,25 @@ export default function InfidelityRadar() {
         <ScrollArea className="flex-grow pr-1 space-y-3">
              {/* OSINT Scan Section */}
             <div className="space-y-2 p-2 border border-dashed rounded-lg">
-                <h3 className="font-semibold text-primary">OSINT Scan</h3>
-                <div className="flex gap-2">
-                    <Input 
-                        placeholder="Target's Name..."
-                        value={osintTarget}
-                        onChange={(e) => setOsintTarget(e.target.value)}
-                        disabled={isOsintScanning}
-                        className="bg-background/80"
-                    />
-                    <Button onClick={handleRunOsintScan} disabled={isOsintScanning || !osintTarget}>
-                        {isOsintScanning ? <Loader2 className="animate-spin" /> : <Search />}
-                    </Button>
-                </div>
+                <h3 className="font-semibold text-primary">OSINT Scan (Bloodhound)</h3>
+                 <Input 
+                    placeholder="Target's Name (Required)"
+                    value={osintTarget}
+                    onChange={(e) => setOsintTarget(e.target.value)}
+                    disabled={isOsintScanning}
+                    className="bg-background/80"
+                />
+                <Textarea 
+                    placeholder="Additional Context (Optional): email, phone, social URLs..."
+                    value={osintContext}
+                    onChange={(e) => setOsintContext(e.target.value)}
+                    disabled={isOsintScanning}
+                    rows={2}
+                    className="bg-background/80"
+                />
+                <Button onClick={handleRunOsintScan} disabled={isOsintScanning || !osintTarget} className="w-full">
+                    {isOsintScanning ? <Loader2 className="animate-spin" /> : <><Search className="mr-2"/>Run OSINT Scan</>}
+                </Button>
                 {osintReport && <div className="pt-2"><OsintReportPanel report={osintReport} /></div>}
             </div>
         

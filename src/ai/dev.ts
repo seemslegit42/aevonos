@@ -26,3 +26,4 @@ import '@/ai/agents/foremanator.ts';
 import '@/ai/agents/sterileish.ts';
 import '@/ai/agents/wingman.ts';
 import '@/ai/agents/osint.ts';
+import '@/ai/tools/osint-tools.ts';

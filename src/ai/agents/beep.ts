@@ -37,6 +37,7 @@ import {
     analyzeCompliance,
     scanEvidence,
     generateWingmanMessage,
+    handleOsintScan,
 } from '@/app/actions';
 import {
   DrSyntaxInputSchema,
@@ -58,6 +59,7 @@ import { ForemanatorLogInputSchema } from './foremanator-schemas';
 import { SterileishAnalysisInputSchema } from './sterileish-schemas';
 import { PaperTrailScanInputSchema } from './paper-trail-schemas';
 import { WingmanInputSchema } from './wingman-schemas';
+import { OsintInputSchema } from './osint-schemas';
 
 
 import {
@@ -333,6 +335,21 @@ class WingmanTool extends Tool {
   }
 }
 
+class OsintScanTool extends Tool {
+    name = 'performOsintScan';
+    description = 'Performs a full Open-Source Intelligence (OSINT) scan on a target. Use this when the user asks to "investigate", "run a background check", "scan", or "get intel on" a person. The context should include the person\'s name and any other known identifiers like email or social media links.';
+    schema = OsintInputSchema;
+
+    async _call(input: z.infer<typeof OsintInputSchema>) {
+        const result = await handleOsintScan(input);
+        const report: z.infer<typeof AgentReportSchema> = {
+            agent: 'osint',
+            report: result,
+        };
+        return JSON.stringify(report);
+    }
+}
+
 const tools: Tool[] = [
     new FinalAnswerTool(), new DrSyntaxTool(), 
     new CreateContactTool(), new UpdateContactTool(), new ListContactsTool(), new DeleteContactTool(), 
@@ -340,7 +357,7 @@ const tools: Tool[] = [
     new VinDieselTool(), new WinstonWolfeTool(), new KifKrokerTool(),
     new VandelayTool(), new JrocTool(), new LaheyTool(), new ForemanatorTool(),
     new SterileishTool(), new PaperTrailTool(),
-    new WingmanTool(),
+    new WingmanTool(), new OsintScanTool(),
 ];
 
 const modelWithTools = geminiModel.bind({

@@ -40,7 +40,7 @@ import { analyzeCompliance as analyzeComplianceFlow } from '@/ai/agents/sterilei
 import type { SterileishAnalysisInput, SterileishAnalysisOutput } from '@/ai/agents/sterileish-schemas';
 import { generateWingmanMessage as generateWingmanMessageFlow } from '@/ai/agents/wingman';
 import type { WingmanInput, WingmanOutput } from '@/ai/agents/wingman-schemas';
-import { performOsintScan as performOsintScanFlow } from '@/ai/agents/osint';
+import { performOsintScan } from '@/ai/agents/osint';
 import type { OsintInput, OsintOutput } from '@/ai/agents/osint-schemas';
 
 
@@ -327,19 +327,21 @@ export async function generateWingmanMessage(input: WingmanInput): Promise<Wingm
 
 export async function handleOsintScan(input: OsintInput): Promise<OsintOutput> {
   try {
-    const result = await performOsintScanFlow(input);
+    const result = await performOsintScan(input);
     return result;
   } catch (error) {
     console.error('Error in OSINT scan flow:', error);
-    return {
+    const emptyReport: OsintOutput = {
       summary: "The agent could not complete the OSINT scan due to a system error. The digital trail went cold.",
       riskFactors: [],
+      breaches: [],
+      intelXLeaks: [],
       socialProfiles: [],
-      publicRecords: [],
       digitalFootprint: {
         overallVisibility: 'Low',
         keyObservations: ["Scan failed due to an internal error."],
       }
     };
+    return emptyReport;
   }
 }

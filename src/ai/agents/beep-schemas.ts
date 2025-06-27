@@ -15,6 +15,7 @@ import { ForemanatorLogOutputSchema } from './foremanator-schemas';
 import { SterileishAnalysisOutputSchema } from './sterileish-schemas';
 import { PaperTrailScanOutputSchema } from './paper-trail-schemas';
 import { WingmanOutputSchema } from './wingman-schemas';
+import { OsintOutputSchema } from './osint-schemas';
 
 // Schemas from the original BEEP agent, preserved for the public contract.
 const LaunchableAppTypeSchema = z.enum([
@@ -151,6 +152,10 @@ export const AgentReportSchema = z.discriminatedUnion('agent', [
   z.object({
     agent: z.literal('wingman'),
     report: WingmanOutputSchema.describe('The full report from the Wingman agent.'),
+  }),
+  z.object({
+    agent: z.literal('osint'),
+    report: OsintOutputSchema.describe('The full report from the OSINT agent.'),
   }),
 ]);
 
