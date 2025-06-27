@@ -4,7 +4,7 @@
 import React from 'react';
 import { useDroppable, useDraggable } from '@dnd-kit/core';
 import type { Node, Edge } from '@/app/loom/page';
-import { Bot, PlayCircle, GitBranch, LucideProps, FileUp } from 'lucide-react';
+import { Bot, PlayCircle, GitBranch } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { WinstonWolfeIcon } from '../icons/WinstonWolfeIcon';
 import { KifKrokerIcon } from '../icons/KifKrokerIcon';
@@ -16,6 +16,7 @@ import { JrocIcon } from '../icons/JrocIcon';
 import { LaheyIcon } from '../icons/LaheyIcon';
 import { ForemanatorIcon } from '../icons/ForemanatorIcon';
 import { SterileishIcon } from '../icons/SterileishIcon';
+import { PaperTrailIcon } from '../icons/PaperTrailIcon';
 
 const nodeIcons: Record<string, React.ComponentType<any>> = {
     trigger: PlayCircle,
@@ -26,7 +27,7 @@ const nodeIcons: Record<string, React.ComponentType<any>> = {
     'tool-vandelay': VandelayIcon,
     'tool-dr-syntax': DrSyntaxIcon,
     'tool-crm': AddressBookIcon,
-    'tool-paper-trail': FileUp,
+    'tool-paper-trail': PaperTrailIcon,
     'tool-final-answer': CrystalIcon,
     'tool-jroc': JrocIcon,
     'tool-lahey': LaheyIcon,

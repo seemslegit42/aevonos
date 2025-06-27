@@ -35,6 +35,7 @@ import {
     analyzeLaheyLog,
     handleForemanatorLog,
     analyzeCompliance,
+    scanEvidence,
 } from '@/app/actions';
 import {
   DrSyntaxInputSchema,
@@ -52,6 +53,7 @@ import { JrocInputSchema } from './jroc-schemas';
 import { LaheyAnalysisInputSchema } from './lahey-schemas';
 import { ForemanatorLogInputSchema } from './foremanator-schemas';
 import { SterileishAnalysisInputSchema } from './sterileish-schemas';
+import { PaperTrailScanInputSchema } from './paper-trail-schemas';
 
 
 import {
@@ -282,13 +284,28 @@ class SterileishTool extends Tool {
     }
 }
 
+class PaperTrailTool extends Tool {
+    name = 'scanReceipt';
+    description = 'Scans a receipt image and extracts transaction details. The user must provide a photo of the receipt as a data URI.';
+    schema = PaperTrailScanInputSchema;
+
+    async _call(input: z.infer<typeof PaperTrailScanInputSchema>) {
+        const result = await scanEvidence(input);
+        const report: z.infer<typeof AgentReportSchema> = {
+            agent: 'paper-trail',
+            report: result,
+        };
+        return JSON.stringify(report);
+    }
+}
+
 
 const tools: Tool[] = [
     new FinalAnswerTool(), new DrSyntaxTool(), 
     new CreateContactTool(), new UpdateContactTool(), new ListContactsTool(), new DeleteContactTool(), 
     new GetUsageTool(), new VinDieselTool(), new WinstonWolfeTool(), new KifKrokerTool(),
     new VandelayTool(), new JrocTool(), new LaheyTool(), new ForemanatorTool(),
-    new SterileishTool(),
+    new SterileishTool(), new PaperTrailTool(),
 ];
 
 const modelWithTools = geminiModel.bind({

@@ -272,6 +272,10 @@ export const useAppStore = create<AppState>((set, get) => {
         case 'sterileish':
             launchAppForReport('sterileish', 'STERILE-ish™ Report', 'Compliance analysis complete.', report.report);
             break;
+        
+        case 'paper-trail':
+            launchAppForReport('paper-trail', `Case File: ${report.report.caseFile}`, 'Evidence processed.', report.report);
+            break;
       }
     }
   };

@@ -4,7 +4,7 @@
 import React from 'react';
 import { useDraggable } from '@dnd-kit/core';
 import { Card } from '@/components/ui/card';
-import { Bot, PlayCircle, GitBranch, LucideProps, FileUp } from 'lucide-react';
+import { Bot, PlayCircle, GitBranch, LucideProps } from 'lucide-react';
 import { WinstonWolfeIcon } from '../icons/WinstonWolfeIcon';
 import { KifKrokerIcon } from '../icons/KifKrokerIcon';
 import { VandelayIcon } from '../icons/VandelayIcon';
@@ -15,6 +15,7 @@ import { JrocIcon } from '../icons/JrocIcon';
 import { LaheyIcon } from '../icons/LaheyIcon';
 import { ForemanatorIcon } from '../icons/ForemanatorIcon';
 import { SterileishIcon } from '../icons/SterileishIcon';
+import { PaperTrailIcon } from '../icons/PaperTrailIcon';
 
 
 export type NodeType = 
@@ -54,7 +55,7 @@ const nodeTypes: NodeInfo[] = [
     { type: 'tool-foremanator', label: 'Foremanator', description: 'Processes site logs', icon: ForemanatorIcon },
     { type: 'tool-sterileish', label: 'STERILE-ish', description: 'Analyzes compliance logs', icon: SterileishIcon },
     { type: 'tool-crm', label: 'CRM Tool', description: 'Manages contacts', icon: AddressBookIcon },
-    { type: 'tool-paper-trail', label: 'Paper Trail', description: 'Scans evidence', icon: FileUp },
+    { type: 'tool-paper-trail', label: 'Paper Trail', description: 'Scans evidence', icon: PaperTrailIcon },
     { type: 'tool-final-answer', label: 'Final Answer', description: 'Outputs final response', icon: CrystalIcon },
 ];
 

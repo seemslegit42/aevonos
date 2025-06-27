@@ -23,17 +23,21 @@ export interface Edge {
 }
 
 const initialNodes: Node[] = [
-    { id: 'trigger-1', type: 'trigger', position: { x: 50, y: 350 }, data: { label: 'BEEP Command Received', event: 'user_command' } },
-    { id: 'agent-1', type: 'agent', position: { x: 300, y: 350 }, data: { label: 'BEEP Agent Kernel', personality: 'witty, sarcastic', model: 'gemini-2.0-flash' } },
+    { id: 'trigger-1', type: 'trigger', position: { x: 50, y: 500 }, data: { label: 'BEEP Command Received', event: 'user_command' } },
+    { id: 'agent-1', type: 'agent', position: { x: 350, y: 500 }, data: { label: 'BEEP Agent Kernel', personality: 'witty, sarcastic', model: 'gemini-2.0-flash' } },
     
-    { id: 'tool-drsyntax', type: 'tool-dr-syntax', position: { x: 600, y: 50 }, data: { label: 'Dr. Syntax', agent: 'dr-syntax' } },
-    { id: 'tool-crm', type: 'tool-crm', position: { x: 600, y: 150 }, data: { label: 'CRM Tools', service: 'CRM' } },
-    { id: 'tool-wolfe', type: 'tool-winston-wolfe', position: { x: 600, y: 250 }, data: { label: 'Winston Wolfe', service: 'Reputation' } },
-    { id: 'tool-kif', type: 'tool-kif-kroker', position: { x: 600, y: 350 }, data: { label: 'Kif Kroker', service: 'Comms' } },
-    { id: 'tool-vandelay', type: 'tool-vandelay', position: { x: 600, y: 450 }, data: { label: 'Vandelay', service: 'Calendar' } },
-    { id: 'tool-paper-trail', type: 'tool-paper-trail', position: { x: 600, y: 550 }, data: { label: 'Paper Trail', service: 'Expenses' } },
+    { id: 'tool-drsyntax', type: 'tool-dr-syntax', position: { x: 650, y: 50 }, data: { label: 'Dr. Syntax', agent: 'dr-syntax' } },
+    { id: 'tool-crm', type: 'tool-crm', position: { x: 650, y: 150 }, data: { label: 'CRM Tools', service: 'CRM' } },
+    { id: 'tool-wolfe', type: 'tool-winston-wolfe', position: { x: 650, y: 250 }, data: { label: 'Winston Wolfe', service: 'Reputation' } },
+    { id: 'tool-kif', type: 'tool-kif-kroker', position: { x: 650, y: 350 }, data: { label: 'Kif Kroker', service: 'Comms' } },
+    { id: 'tool-vandelay', type: 'tool-vandelay', position: { x: 650, y: 450 }, data: { label: 'Vandelay', service: 'Calendar' } },
+    { id: 'tool-paper-trail', type: 'tool-paper-trail', position: { x: 650, y: 550 }, data: { label: 'Paper Trail', service: 'Expenses' } },
+    { id: 'tool-jroc', type: 'tool-jroc', position: { x: 650, y: 650 }, data: { label: 'J-ROC', service: 'BizDev' } },
+    { id: 'tool-lahey', type: 'tool-lahey', position: { x: 650, y: 750 }, data: { label: 'Lahey', service: 'Surveillance' } },
+    { id: 'tool-foremanator', type: 'tool-foremanator', position: { x: 650, y: 850 }, data: { label: 'Foremanator', service: 'Construction' } },
+    { id: 'tool-sterileish', type: 'tool-sterileish', position: { x: 650, y: 950 }, data: { label: 'STERILE-ish', service: 'Compliance' } },
     
-    { id: 'tool-final-answer', type: 'tool-final-answer', position: { x: 900, y: 350 }, data: { label: 'Final Answer', schema: 'UserCommandOutput' } },
+    { id: 'tool-final-answer', type: 'tool-final-answer', position: { x: 950, y: 500 }, data: { label: 'Final Answer', schema: 'UserCommandOutput' } },
 ];
 
 const initialEdges: Edge[] = [
@@ -44,6 +48,10 @@ const initialEdges: Edge[] = [
     { id: 'e-agent-kif', source: 'agent-1', target: 'tool-kif' },
     { id: 'e-agent-vandelay', source: 'agent-1', target: 'tool-vandelay' },
     { id: 'e-agent-paper-trail', source: 'agent-1', target: 'tool-paper-trail' },
+    { id: 'e-agent-jroc', source: 'agent-1', target: 'tool-jroc' },
+    { id: 'e-agent-lahey', source: 'agent-1', target: 'tool-lahey' },
+    { id: 'e-agent-foremanator', source: 'agent-1', target: 'tool-foremanator' },
+    { id: 'e-agent-sterileish', source: 'agent-1', target: 'tool-sterileish' },
     { id: 'e-agent-final', source: 'agent-1', target: 'tool-final-answer' },
 ];
 
