@@ -264,5 +264,18 @@ export const microAppManifests: MicroAppManifest[] = [
     routingPath: '/kendra',
     contextAwareCapabilities: [],
     isFeatured: false,
+  },
+  {
+    id: 'stonks-bot',
+    name: 'Stonks Bot',
+    author: 'r/wallstreetbets',
+    description: 'This is not financial advice. Get unhinged, extremely bullish stock tips from a certified degen.',
+    price: '$4.20/mo',
+    imageUrl: 'https://placehold.co/600x400.png',
+    imageHint: 'rocket moon diamond',
+    permissionsRequired: [],
+    routingPath: '/stonks-bot',
+    contextAwareCapabilities: [],
+    isFeatured: false,
   }
 ];

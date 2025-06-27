@@ -24,6 +24,7 @@ import type { SterileishAnalysisOutput } from '@/ai/agents/sterileish-schemas';
 import type { PaperTrailScanOutput } from '@/ai/agents/paper-trail-schemas';
 import type { DossierOutput } from '@/ai/agents/dossier-schemas';
 import type { KendraOutput } from '@/ai/agents/kendra-schemas';
+import type { StonksBotOutput } from '@/ai/agents/stonks-bot-schemas';
 
 
 // Define the types of MicroApps available in the OS
@@ -54,7 +55,8 @@ export type MicroAppType =
   | 'aegis-threatscope'
   | 'aegis-command'
   | 'usage-monitor'
-  | 'kendra';
+  | 'kendra'
+  | 'stonks-bot';
 
 // Define the shape of a MicroApp instance
 export interface MicroApp {
@@ -100,6 +102,7 @@ const defaultAppDetails: Record<MicroAppType, Omit<MicroApp, 'id' | 'position' |
   'beep-wingman': { type: 'beep-wingman', title: 'BEEP Wingman', description: 'Generates compelling opening messages for dating apps.' },
   'usage-monitor': { type: 'usage-monitor', title: 'Usage Monitor', description: 'Tracks your Agent Action usage.' },
   'kendra': { type: 'kendra', title: 'Get Me KENDRA', description: 'Routing to KENDRA.exe. Brace yourself.' },
+  'stonks-bot': { type: 'stonks-bot', title: 'Stonks Bot', description: 'This is not financial advice.' },
 };
 
 
@@ -368,6 +371,9 @@ export const useAppStore = create<AppState>((set, get) => {
                 title: `KENDRA: ${report.report.campaignTitle}`,
                 contentProps: report.report as KendraOutput,
             });
+            break;
+        case 'stonks':
+            upsertApp('stonks-bot', { id: 'stonks-bot-main', contentProps: report.report });
             break;
       }
     }

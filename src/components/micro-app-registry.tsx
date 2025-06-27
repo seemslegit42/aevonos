@@ -28,6 +28,7 @@ import { AegisThreatScopeIcon } from './icons/AegisThreatScopeIcon';
 import { AegisCommandIcon } from './icons/AegisCommandIcon';
 import { UsageMonitorIcon } from './icons/UsageMonitorIcon';
 import { KendraIcon } from './icons/KendraIcon';
+import { StonksIcon } from './icons/StonksIcon';
 
 
 import { type MicroAppType } from '@/store/app-store';
@@ -55,6 +56,7 @@ import AegisCommand from './micro-apps/aegis-command';
 import UsageMonitor from './micro-apps/usage-monitor';
 import EchoRecall from './micro-apps/echo-recall';
 import Kendra from './micro-apps/kendra';
+import StonksBot from './micro-apps/stonks-bot';
 
 
 type ComponentRegistry = {
@@ -167,6 +169,10 @@ export const microAppRegistry: Record<MicroAppType, ComponentRegistry> = {
   'kendra': {
     icon: KendraIcon,
     content: Kendra,
+  },
+  'stonks-bot': {
+    icon: StonksIcon,
+    content: StonksBot,
   },
 };
 

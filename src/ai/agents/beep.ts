@@ -73,6 +73,8 @@ import { generateDossier } from '@/ai/agents/dossier-agent';
 import { DossierInputSchema } from './dossier-schemas';
 import { getKendraTake } from './kendra';
 import { KendraInputSchema } from './kendra-schemas';
+import { getStonksAdvice } from '@/ai/agents/stonks-bot';
+import { StonksBotInputSchema } from '@/ai/agents/stonks-bot-schemas';
 
 
 import {
@@ -504,6 +506,21 @@ class KendraTool extends Tool {
   }
 }
 
+class StonksBotTool extends Tool {
+  name = 'getStonksAdvice';
+  description = 'Gets "financial advice" about a specific stock ticker from a degenerate bot. Use this when the user asks for stock tips, or wants to know about a ticker like GME, AMC, etc.';
+  schema = StonksBotInputSchema;
+  
+  async _call(input: z.infer<typeof StonksBotInputSchema>) {
+    const result = await getStonksAdvice(input);
+    const report: z.infer<typeof AgentReportSchema> = {
+      agent: 'stonks',
+      report: result,
+    };
+    return JSON.stringify(report);
+  }
+}
+
 // LangGraph State
 interface AgentState {
   messages: BaseMessage[];
@@ -592,7 +609,7 @@ export async function processUserCommand(input: UserCommandInput): Promise<UserC
     new WingmanTool(), new OsintScanTool(),
     new LumberghTool(), new LucilleBluthTool(), new RolodexTool(),
     new PamPooveyTool(), new InfidelityAnalysisTool(), new DecoyTool(),
-    new EchoTool(), new DossierTool(), new KendraTool(),
+    new EchoTool(), new DossierTool(), new KendraTool(), new StonksBotTool(),
   ];
 
   // Re-bind the model with the schemas from the dynamically created tools for this request.
