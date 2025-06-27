@@ -4,6 +4,7 @@ import { AegisAnomalyScanOutputSchema } from './aegis-schemas';
 import { ContactSchema, DeleteContactOutputSchema } from '@/ai/tools/crm-schemas';
 import { BillingUsageSchema } from '@/ai/tools/billing-schemas';
 import { VinDieselOutputSchema } from './vin-diesel-schemas';
+import { VandelayAlibiOutputSchema } from './vandelay-schemas';
 
 // Schemas from the original BEEP agent, preserved for the public contract.
 const LaunchableAppTypeSchema = z.enum([
@@ -19,6 +20,7 @@ const LaunchableAppTypeSchema = z.enum([
   'rolodex',
   'winston-wolfe',
   'kif-kroker',
+  'vandelay',
 ]);
 
 export const AppToLaunchSchema = z.object({

@@ -17,3 +17,4 @@ import '@/ai/agents/lucille-bluth.ts';
 import '@/ai/agents/rolodex.ts';
 import '@/ai/agents/winston-wolfe.ts';
 import '@/ai/agents/kif-kroker.ts';
+import '@/ai/agents/vandelay.ts';

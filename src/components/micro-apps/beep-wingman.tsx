@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState } from 'react';
@@ -17,15 +16,6 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { handleGenerateWingmanMessage } from '@/app/actions';
 import type { WingmanInput } from '@/ai/agents/wingman-schemas';
 
-// This Micro-App follows the ΛΞVON OS Universal Structure:
-// - ActionSchema: WingmanInput from wingman-schemas.ts
-// - OutputStream: WingmanOutput from wingman-schemas.ts
-// - AgentKernel: Logic is in `src/ai/agents/wingman.ts`
-// - EventBridge: The `handleGenerate` function connects UI to the agent.
-// - MicroAppCard: The main returned JSX component.
-// - ExpansionLayer: The "Generation History" collapsible section.
-// - MonetizationHook: The "Burner Phone Mode" switch.
-
 export default function BeepWingman() {
     const [isLoading, setIsLoading] = useState(false);
     const [result, setResult] = useState<string | null>(null);
@@ -35,7 +25,6 @@ export default function BeepWingman() {
     const [persona, setPersona] = useState<WingmanInput['persona']>('alpha-hustler');
     const [burnerMode, setBurnerMode] = useState(false);
     
-    // EventBridge: Connects UI interaction to the AgentKernel
     const handleGenerate = async () => {
         if (!targetDescription) {
             setResult("Error: Target profile description cannot be empty.");
@@ -47,12 +36,11 @@ export default function BeepWingman() {
         setResult(response.openingMessage);
         
         if (!response.openingMessage.startsWith("Error:")) {
-            setHistory(prev => [response.openingMessage, ...prev].slice(0, 10)); // Keep last 10
+            setHistory(prev => [response.openingMessage, ...prev].slice(0, 10));
         }
         setIsLoading(false);
     };
 
-    // MicroAppCard: The main UI for the app instance
     return (
         <div className="flex flex-col gap-4 p-2 h-full">
             <Card className="bg-background/50 border-0 shadow-none">
@@ -97,7 +85,6 @@ export default function BeepWingman() {
                         </Alert>
                     )}
 
-                    {/* ExpansionLayer: Contextually relevant additional UI */}
                     {history.length > 0 && (
                         <Collapsible open={isHistoryOpen} onOpenChange={setIsHistoryOpen} className="space-y-2 mt-2">
                             <CollapsibleTrigger asChild>
@@ -123,7 +110,6 @@ export default function BeepWingman() {
                 </CardContent>
             </Card>
 
-            {/* MonetizationHook: Embedded trigger for premium features */}
             <div className="mt-auto pt-2">
                 <TooltipProvider>
                     <Tooltip>
