@@ -46,6 +46,8 @@ import { AegisAnomalyScanOutputSchema } from './aegis-schemas';
 import { createContactInDb, listContactsFromDb, deleteContactInDb, updateContactInDb } from '@/ai/tools/crm-tools';
 import { CreateContactInputSchema, DeleteContactInputSchema, UpdateContactInputSchema } from '@/ai/tools/crm-schemas';
 import { getUsageDetails } from '@/ai/tools/billing-tools';
+import { getDatingProfile } from '@/ai/tools/dating-tools';
+import { DatingProfileInputSchema } from '@/ai/tools/dating-schemas';
 import { VinDieselInputSchema } from './vin-diesel-schemas';
 import { WinstonWolfeInputSchema } from './winston-wolfe-schemas';
 import { KifKrokerAnalysisInputSchema } from './kif-kroker-schemas';
@@ -187,6 +189,24 @@ class GetUsageTool extends Tool {
     }
 }
 
+class GetDatingProfileTool extends Tool {
+    name = 'getDatingProfile';
+    description = 'Fetches a dating app profile by its ID. Use this when the user wants to get information about a specific person on a dating app before crafting a message. For example, "get profile 123 from Hinge."';
+    schema = DatingProfileInputSchema;
+
+    async _call(input: z.infer<typeof DatingProfileInputSchema>) {
+        const result = await getDatingProfile(input);
+        const report: z.infer<typeof AgentReportSchema> = {
+            agent: 'dating',
+            report: {
+                action: 'get_profile',
+                report: result
+            }
+        };
+        return JSON.stringify(report);
+    }
+}
+
 class VinDieselTool extends Tool {
     name = 'validateVin';
     description = 'Validates a Vehicle Identification Number (VIN) for compliance and decoding. Use this when the user asks to "validate a VIN", "check a VIN", or similar.';
@@ -316,7 +336,8 @@ class WingmanTool extends Tool {
 const tools: Tool[] = [
     new FinalAnswerTool(), new DrSyntaxTool(), 
     new CreateContactTool(), new UpdateContactTool(), new ListContactsTool(), new DeleteContactTool(), 
-    new GetUsageTool(), new VinDieselTool(), new WinstonWolfeTool(), new KifKrokerTool(),
+    new GetUsageTool(), new GetDatingProfileTool(),
+    new VinDieselTool(), new WinstonWolfeTool(), new KifKrokerTool(),
     new VandelayTool(), new JrocTool(), new LaheyTool(), new ForemanatorTool(),
     new SterileishTool(), new PaperTrailTool(),
     new WingmanTool(),

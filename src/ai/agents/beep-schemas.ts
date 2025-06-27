@@ -4,6 +4,7 @@ import { DrSyntaxOutputSchema } from './dr-syntax-schemas';
 import { AegisAnomalyScanOutputSchema } from './aegis-schemas';
 import { ContactSchema, DeleteContactOutputSchema } from '@/ai/tools/crm-schemas';
 import { BillingUsageSchema } from '@/ai/tools/billing-schemas';
+import { DatingProfileSchema } from '@/ai/tools/dating-schemas';
 import { VinDieselOutputSchema } from './vin-diesel-schemas';
 import { VandelayAlibiOutputSchema } from './vandelay-schemas';
 import { WinstonWolfeOutputSchema } from './winston-wolfe-schemas';
@@ -77,6 +78,11 @@ const BillingAgentReportSchema = z.object({
     report: BillingUsageSchema.describe('The billing usage details.'),
 });
 
+const DatingAgentReportSchema = z.object({
+    action: z.literal('get_profile'),
+    report: DatingProfileSchema.describe('The fetched dating profile details.'),
+});
+
 
 export const AgentReportSchema = z.discriminatedUnion('agent', [
   z.object({
@@ -98,6 +104,10 @@ export const AgentReportSchema = z.discriminatedUnion('agent', [
   z.object({
     agent: z.literal('billing'),
     report: BillingAgentReportSchema,
+  }),
+  z.object({
+    agent: z.literal('dating'),
+    report: DatingAgentReportSchema,
   }),
   z.object({
     agent: z.literal('vin-diesel'),
