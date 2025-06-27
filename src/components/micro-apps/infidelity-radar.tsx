@@ -12,6 +12,8 @@ import { handleDeployDecoy } from '@/app/actions';
 import { Textarea } from '../ui/textarea';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '../ui/select';
 import type { DecoyInput } from '@/ai/agents/decoy-schemas';
+import { handleInfidelityAnalysis } from '@/app/actions';
+import type { InfidelityAnalysisOutput } from '@/ai/agents/infidelity-analysis-schemas';
 
 const ActivityHeatmap = () => (
   <Card className="bg-background/50">
@@ -27,28 +29,30 @@ const ActivityHeatmap = () => (
   </Card>
 );
 
-const SuspiciousPatternsList = () => (
+const SuspiciousPatternsList = ({ factors, isScanning }: { factors: string[], isScanning: boolean }) => (
   <Card className="bg-background/50">
     <CardHeader>
       <CardTitle className="text-sm">Suspicious Patterns</CardTitle>
     </CardHeader>
     <CardContent>
-      <ul className="text-xs text-muted-foreground list-disc pl-4 space-y-1">
-        <li>Late night message frequency increased by 42%</li>
-        <li>New contact "Gym Buddy 💪" saved at 2:17 AM</li>
-        <li>Location data anomaly detected Tuesday night</li>
-      </ul>
+        {isScanning && <p className="text-xs text-muted-foreground">Scanning for signals...</p>}
+        {!isScanning && factors.length === 0 && <p className="text-xs text-muted-foreground">No specific patterns flagged yet. Provide details and run a scan.</p>}
+        {!isScanning && factors.length > 0 && (
+            <ul className="text-xs text-muted-foreground list-disc pl-4 space-y-1">
+                {factors.map((factor, index) => <li key={index}>{factor}</li>)}
+            </ul>
+        )}
     </CardContent>
   </Card>
 );
 
-const RiskScoreGauge = () => (
+const RiskScoreGauge = ({ score }: { score: number }) => (
     <div>
         <div className="flex justify-between items-center mb-1">
             <span className="text-xs font-medium text-destructive">Risk Score</span>
-            <span className="text-lg font-bold text-destructive">72%</span>
+            <span className="text-lg font-bold text-destructive">{score >= 0 ? `${score}%` : 'N/A'}</span>
         </div>
-        <Progress value={72} className="h-2 [&>div]:bg-destructive" />
+        <Progress value={score >= 0 ? score : 0} className="h-2 [&>div]:bg-destructive" />
     </div>
 );
 
@@ -132,17 +136,34 @@ const AshleyMadisonPanel = () => (
 );
 
 
-const AgentAnalysisLog = () => (
+const AgentAnalysisLog = ({ summary, isScanning }: { summary: string, isScanning: boolean }) => (
     <Alert variant="destructive">
         <ShieldAlert className="h-4 w-4" />
         <AlertTitle>Agent Summary</AlertTitle>
         <AlertDescription>
-            Based on metadata, there is a 72% likelihood of concealed behavior.
+            {isScanning ? 'Analyzing patterns...' : summary}
         </AlertDescription>
     </Alert>
 );
 
 export default function InfidelityRadar() {
+  const [isScanning, setIsScanning] = useState(false);
+  const [analysisInput, setAnalysisInput] = useState('');
+  const [analysisResult, setAnalysisResult] = useState<InfidelityAnalysisOutput | null>(null);
+
+  const handleRunScan = async () => {
+      if (!analysisInput) return;
+      setIsScanning(true);
+      setAnalysisResult(null);
+      const result = await handleInfidelityAnalysis({ situationDescription: analysisInput });
+      setAnalysisResult(result);
+      setIsScanning(false);
+  }
+
+  const riskScore = analysisResult?.riskScore ?? -1;
+  const riskSummary = analysisResult?.riskSummary ?? "Awaiting analysis. Provide details in the input field below and run a scan.";
+  const keyFactors = analysisResult?.keyFactors ?? [];
+
   return (
     <div className="p-2 space-y-4 h-full flex flex-col">
         <Tabs defaultValue="stealth" className="w-full">
@@ -154,20 +175,37 @@ export default function InfidelityRadar() {
         </Tabs>
         
         <div className="space-y-3 flex-grow overflow-y-auto pr-2">
-            <RiskScoreGauge />
-            <AgentAnalysisLog />
+            <RiskScoreGauge score={riskScore} />
+            <AgentAnalysisLog summary={riskSummary} isScanning={isScanning} />
+
+            <Card className="bg-background/50">
+                <CardHeader>
+                    <CardTitle className="text-sm">Field Report Input</CardTitle>
+                    <CardDescription className="text-xs">Describe the situation for analysis. Be specific.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                    <Textarea 
+                        placeholder="e.g., 'Partner started hiding their phone screen. Comes home late smelling like someone else's perfume. Found a receipt for a hotel I've never been to...'"
+                        value={analysisInput}
+                        onChange={(e) => setAnalysisInput(e.target.value)}
+                        disabled={isScanning}
+                        rows={4}
+                    />
+                     <Button className="w-full" onClick={handleRunScan} disabled={isScanning || !analysisInput}>
+                        {isScanning ? <Loader2 className="animate-spin" /> : 'Run Full Scan'}
+                    </Button>
+                </CardContent>
+            </Card>
+
+            <SuspiciousPatternsList factors={keyFactors} isScanning={isScanning} />
             <ActivityHeatmap />
-            <SuspiciousPatternsList />
             <DecoyDeploymentPanel />
             <AshleyMadisonPanel />
         </div>
 
         <div className="flex-shrink-0 grid grid-cols-2 gap-2 pt-2 border-t border-border">
-            <Button variant="outline"><FileDown /> Export Report</Button>
-            <Button variant="secondary"><Swords /> Confront w/ AI Draft</Button>
-        </div>
-        <div className="pt-2">
-             <Button className="w-full">Run Full Scan</Button>
+            <Button variant="outline" disabled={isScanning || !analysisResult}><FileDown /> Export Report</Button>
+            <Button variant="secondary" disabled={isScanning || !analysisResult}><Swords /> Confront w/ AI Draft</Button>
         </div>
     </div>
   );

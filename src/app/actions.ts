@@ -11,6 +11,8 @@ import { generatePamRant as generatePamRantFlow } from '@/ai/agents/pam-poovey';
 import type { PamScriptInput, PamAudioOutput } from '@/ai/agents/pam-poovey-schemas';
 import { deployDecoy as deployDecoyFlow } from '@/ai/agents/decoy';
 import type { DecoyInput, DecoyOutput } from '@/ai/agents/decoy-schemas';
+import { performInfidelityAnalysis as performInfidelityAnalysisFlow } from '@/ai/agents/infidelity-analysis';
+import type { InfidelityAnalysisInput, InfidelityAnalysisOutput } from '@/ai/agents/infidelity-analysis-schemas';
 
 export async function handleCommand(command: string): Promise<UserCommandOutput> {
   try {
@@ -87,6 +89,20 @@ export async function handleDeployDecoy(input: DecoyInput): Promise<DecoyOutput>
     console.error('Error deploying decoy:', error);
     return {
       decoyMessage: "The agent failed to generate a message. The target's profile might be too powerful, or there was a server error.",
+    };
+  }
+}
+
+export async function handleInfidelityAnalysis(input: InfidelityAnalysisInput): Promise<InfidelityAnalysisOutput> {
+  try {
+    const result = await performInfidelityAnalysisFlow(input);
+    return result;
+  } catch (error) {
+    console.error('Error in infidelity analysis flow:', error);
+    return {
+      riskScore: -1, // Use a sentinel value for error
+      riskSummary: "The agent could not complete the analysis due to a system error. The signal may have been lost.",
+      keyFactors: [],
     };
   }
 }

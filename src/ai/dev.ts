@@ -8,3 +8,4 @@ import '@/ai/agents/dr-syntax.ts';
 import '@/ai/agents/pam-poovey.ts';
 import '@/ai/tools/crm-tools.ts';
 import '@/ai/agents/decoy.ts';
+import '@/ai/agents/infidelity-analysis.ts';
