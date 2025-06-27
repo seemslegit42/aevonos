@@ -8,10 +8,6 @@ import { Bot, PlayCircle, GitBranch, LucideProps } from 'lucide-react';
 import { WinstonWolfeIcon } from '../icons/WinstonWolfeIcon';
 import { KifKrokerIcon } from '../icons/KifKrokerIcon';
 import { VandelayIcon } from '../icons/VandelayIcon';
-import { PaperTrailIcon } from '../icons/PaperTrailIcon';
-import { LumberghIcon } from '../icons/LumberghIcon';
-import { LucilleBluthIcon } from '../icons/LucilleBluthIcon';
-import { RolodexIcon } from '../icons/RolodexIcon';
 import { DrSyntaxIcon } from '../icons/DrSyntaxIcon';
 import { AddressBookIcon } from '../icons/AddressBookIcon';
 import { CrystalIcon } from '../icons/CrystalIcon';
@@ -24,10 +20,6 @@ export type NodeType =
     | 'tool-winston-wolfe'
     | 'tool-kif-kroker'
     | 'tool-vandelay'
-    | 'tool-paper-trail'
-    | 'tool-lumbergh'
-    | 'tool-lucille-bluth'
-    | 'tool-rolodex'
     | 'tool-dr-syntax'
     | 'tool-crm'
     | 'tool-final-answer';
@@ -47,10 +39,6 @@ const nodeTypes: NodeInfo[] = [
     { type: 'tool-winston-wolfe', label: 'Winston Wolfe', description: 'Solves reputation problems', icon: WinstonWolfeIcon },
     { type: 'tool-kif-kroker', label: 'Kif Kroker', description: 'Analyzes team comms', icon: KifKrokerIcon },
     { type: 'tool-vandelay', label: 'Vandelay', description: 'Generates alibis', icon: VandelayIcon },
-    { type: 'tool-lumbergh', label: 'Project Lumbergh', description: 'Analyzes meeting invites', icon: LumberghIcon },
-    { type: 'tool-lucille-bluth', label: 'Lucille Bluth', description: 'Judges expenses', icon: LucilleBluthIcon },
-    { type: 'tool-rolodex', label: 'The Rolodex', description: 'Analyzes candidates', icon: RolodexIcon },
-    { type: 'tool-paper-trail', label: 'Paper Trail', description: 'Scans receipts for evidence', icon: PaperTrailIcon },
     { type: 'tool-dr-syntax', label: 'Dr. Syntax', description: 'Critiques content harshly', icon: DrSyntaxIcon },
     { type: 'tool-crm', label: 'CRM Tool', description: 'Manages contacts', icon: AddressBookIcon },
     { type: 'tool-final-answer', label: 'Final Answer', description: 'Outputs final response', icon: CrystalIcon },

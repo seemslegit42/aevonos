@@ -9,10 +9,6 @@ import { cn } from '@/lib/utils';
 import { WinstonWolfeIcon } from '../icons/WinstonWolfeIcon';
 import { KifKrokerIcon } from '../icons/KifKrokerIcon';
 import { VandelayIcon } from '../icons/VandelayIcon';
-import { PaperTrailIcon } from '../icons/PaperTrailIcon';
-import { LumberghIcon } from '../icons/LumberghIcon';
-import { LucilleBluthIcon } from '../icons/LucilleBluthIcon';
-import { RolodexIcon } from '../icons/RolodexIcon';
 import { DrSyntaxIcon } from '../icons/DrSyntaxIcon';
 import { AddressBookIcon } from '../icons/AddressBookIcon';
 import { CrystalIcon } from '../icons/CrystalIcon';
@@ -24,10 +20,6 @@ const nodeIcons: Record<string, React.ComponentType<any>> = {
     'tool-winston-wolfe': WinstonWolfeIcon,
     'tool-kif-kroker': KifKrokerIcon,
     'tool-vandelay': VandelayIcon,
-    'tool-paper-trail': PaperTrailIcon,
-    'tool-lumbergh': LumberghIcon,
-    'tool-lucille-bluth': LucilleBluthIcon,
-    'tool-rolodex': RolodexIcon,
     'tool-dr-syntax': DrSyntaxIcon,
     'tool-crm': AddressBookIcon,
     'tool-final-answer': CrystalIcon,

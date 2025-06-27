@@ -28,14 +28,7 @@ import {
     handleDrSyntaxCritique, 
     generateSolution, 
     analyzeComms,
-    createVandelayAlibi,
-    analyzeInvite,
-    analyzeExpense,
-    analyzeCandidate,
-    handleInfidelityAnalysis,
-    handleGenerateWingmanMessage,
-    handleVinDieselValidation,
-    scanEvidence
+    createVandelayAlibi
 } from '@/app/actions';
 import {
   DrSyntaxInputSchema,
@@ -49,12 +42,6 @@ import { VinDieselInputSchema } from './vin-diesel-schemas';
 import { WinstonWolfeInputSchema } from './winston-wolfe-schemas';
 import { KifKrokerAnalysisInputSchema } from './kif-kroker-schemas';
 import { VandelayAlibiInputSchema } from './vandelay-schemas';
-import { PaperTrailScanInputSchema } from './paper-trail-schemas';
-import { LumberghAnalysisInputSchema } from './lumbergh-schemas';
-import { LucilleBluthInputSchema } from './lucille-bluth-schemas';
-import { RolodexAnalysisInputSchema } from './rolodex-schemas';
-import { InfidelityAnalysisInputSchema } from './infidelity-analysis-schemas';
-import { WingmanInputSchema } from './wingman-schemas';
 
 import {
     type UserCommandInput,
@@ -236,85 +223,12 @@ class VandelayTool extends Tool {
   }
 }
 
-class PaperTrailTool extends Tool {
-    name = 'scanReceipt';
-    description = 'Scans a photo of a receipt to extract details. Use this when a user asks to "scan a receipt" or "log an expense from a photo". The user must provide the receipt image as a data URI.';
-    schema = PaperTrailScanInputSchema;
-
-    async _call(input: z.infer<typeof PaperTrailScanInputSchema>) {
-        const result = await scanEvidence(input);
-        const report: z.infer<typeof AgentReportSchema> = { agent: 'paper-trail', report: result };
-        return JSON.stringify(report);
-    }
-}
-
-class LumberghTool extends Tool {
-  name = 'analyzeMeetingInvite';
-  description = 'Analyzes a meeting invite for red flags (no agenda, too many attendees, buzzwords) and suggests passive-aggressive decline memos. Use for "check this meeting invite", "should I go to this meeting?".';
-  schema = LumberghAnalysisInputSchema;
-  
-  async _call(input: z.infer<typeof LumberghAnalysisInputSchema>) {
-    const result = await analyzeInvite(input);
-    const report: z.infer<typeof AgentReportSchema> = { agent: 'project-lumbergh', report: result };
-    return JSON.stringify(report);
-  }
-}
-
-class LucilleBluthTool extends Tool {
-  name = 'judgeExpense';
-  description = 'Logs an expense and provides a witty, judgmental comment in the persona of Lucille Bluth. Use for "log an expense", "track my spending".';
-  schema = LucilleBluthInputSchema;
-  
-  async _call(input: z.infer<typeof LucilleBluthInputSchema>) {
-    const result = await analyzeExpense(input);
-    const report: z.infer<typeof AgentReportSchema> = { agent: 'lucille-bluth', report: result };
-    return JSON.stringify(report);
-  }
-}
-
-class RolodexTool extends Tool {
-  name = 'analyzeCandidate';
-  description = 'Analyzes a candidate\'s profile against a job description to generate a fit score and an outreach icebreaker. Use for "analyze this candidate", "review a resume for [job description]".';
-  schema = RolodexAnalysisInputSchema;
-  
-  async _call(input: z.infer<typeof RolodexAnalysisInputSchema>) {
-    const result = await analyzeCandidate(input);
-    const report: z.infer<typeof AgentReportSchema> = { agent: 'rolodex', report: result };
-    return JSON.stringify(report);
-  }
-}
-
-class InfidelityRadarTool extends Tool {
-  name = 'analyzeRelationshipSituation';
-  description = 'Performs a risk analysis on a described relationship situation to check for signs of infidelity or deception. Use for "is my partner cheating?", "analyze my relationship".';
-  schema = InfidelityAnalysisInputSchema;
-  
-  async _call(input: z.infer<typeof InfidelityAnalysisInputSchema>) {
-    const result = await handleInfidelityAnalysis(input);
-    const report: z.infer<typeof AgentReportSchema> = { agent: 'infidelity-radar', report: result };
-    return JSON.stringify(report);
-  }
-}
-
-class WingmanTool extends Tool {
-  name = 'generateOpeningMessage';
-  description = 'Generates a compelling opening message for a dating app based on a target\'s profile and a chosen persona. Use for "write a dating message", "help me with tinder".';
-  schema = WingmanInputSchema;
-  
-  async _call(input: z.infer<typeof WingmanInputSchema>) {
-    const result = await handleGenerateWingmanMessage(input);
-    const report: z.infer<typeof AgentReportSchema> = { agent: 'beep-wingman', report: result };
-    return JSON.stringify(report);
-  }
-}
-
 
 const tools: Tool[] = [
     new FinalAnswerTool(), new DrSyntaxTool(), 
     new CreateContactTool(), new UpdateContactTool(), new ListContactsTool(), new DeleteContactTool(), 
     new GetUsageTool(), new VinDieselTool(), new WinstonWolfeTool(), new KifKrokerTool(),
-    new VandelayTool(), new PaperTrailTool(), new LumberghTool(), new LucilleBluthTool(), new RolodexTool(),
-    new InfidelityRadarTool(), new WingmanTool()
+    new VandelayTool()
 ];
 
 const modelWithTools = geminiModel.bind({
@@ -409,7 +323,7 @@ export async function processUserCommand(input: UserCommandInput): Promise<UserC
 
   Your process:
   1.  Analyze the user's command and the mandatory `AEGIS_INTERNAL_REPORT` provided in a System Message. If Aegis detects a threat, your tone must become clinical and serious, dropping your usual banter.
-  2.  Based on the command and the tool descriptions provided, decide which specialized agents or tools to call. You can call multiple tools in parallel if needed. For image-based tools like 'scanReceipt', you cannot use them unless the user has explicitly provided an image data URI.
+  2.  Based on the command and the tool descriptions provided, decide which specialized agents or tools to call. You can call multiple tools in parallel if needed.
   3.  If the user's command is to launch an app (e.g., "launch the terminal", "open the file explorer"), you MUST use the 'appsToLaunch' array in your final answer. Do NOT use a tool for a simple app launch.
   4.  When you have gathered all necessary information from your delegated agents and are ready to provide the final response, you MUST call the 'final_answer' tool. This is your final action.
   5.  Your 'responseText' should be in character—witty, confident, and direct. It should confirm the actions taken and what the user should expect next.

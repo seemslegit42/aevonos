@@ -31,8 +31,6 @@ const initialNodes: Node[] = [
     { id: 'tool-wolfe', type: 'tool-winston-wolfe', position: { x: 600, y: 250 }, data: { label: 'Winston Wolfe', service: 'Reputation' } },
     { id: 'tool-kif', type: 'tool-kif-kroker', position: { x: 600, y: 350 }, data: { label: 'Kif Kroker', service: 'Comms' } },
     { id: 'tool-vandelay', type: 'tool-vandelay', position: { x: 600, y: 450 }, data: { label: 'Vandelay', service: 'Calendar' } },
-    { id: 'tool-lumbergh', type: 'tool-lumbergh', position: { x: 600, y: 550 }, data: { label: 'Project Lumbergh', service: 'Meetings' } },
-    { id: 'tool-lucille', type: 'tool-lucille-bluth', position: { x: 600, y: 650 }, data: { label: 'Lucille Bluth', service: 'Expenses' } },
     
     { id: 'tool-final-answer', type: 'tool-final-answer', position: { x: 900, y: 350 }, data: { label: 'Final Answer', schema: 'UserCommandOutput' } },
 ];
@@ -44,8 +42,6 @@ const initialEdges: Edge[] = [
     { id: 'e-agent-wolfe', source: 'agent-1', target: 'tool-wolfe' },
     { id: 'e-agent-kif', source: 'agent-1', target: 'tool-kif' },
     { id: 'e-agent-vandelay', source: 'agent-1', target: 'tool-vandelay' },
-    { id: 'e-agent-lumbergh', source: 'agent-1', target: 'tool-lumbergh' },
-    { id: 'e-agent-lucille', source: 'agent-1', target: 'tool-lucille' },
     { id: 'e-agent-final', source: 'agent-1', target: 'tool-final-answer' },
 ];
 

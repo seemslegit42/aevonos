@@ -33,7 +33,6 @@ export type MicroAppType =
   | 'winston-wolfe'
   | 'kif-kroker'
   | 'vandelay'
-  | 'paper-trail'
   | 'oracle';
 
 // Define the shape of a MicroApp instance
@@ -67,7 +66,6 @@ const defaultAppDetails: Record<MicroAppType, Omit<MicroApp, 'id' | 'contentProp
   'winston-wolfe': { type: 'winston-wolfe', title: 'The Winston Wolfe', description: "Bad review? Thirty minutes away. I'll be there in ten." },
   'kif-kroker': { type: 'kif-kroker', title: 'The Kif Kroker', description: "Sigh. The team's conflict metrics are escalating again." },
   'vandelay': { type: 'vandelay', title: 'Vandelay Industries', description: 'Importing, exporting, and ghosting.' },
-  'paper-trail': { type: 'paper-trail', title: 'Paper Trail', description: 'Every dollar tells a story. We find the plot holes.' },
   'oracle': { type: 'oracle', title: 'The Oracle', description: 'Agentic pulse network status.' },
 };
 
@@ -244,33 +242,9 @@ export const useAppStore = create<AppState>((set, get) => {
         case 'kif-kroker':
             launchAppForReport('kif-kroker', 'The Kif Kroker', 'Comms Analysis', report.report);
             break;
-
+        
         case 'vandelay':
             launchAppForReport('vandelay', 'Vandelay Industries', 'Alibi Generated', report.report);
-            break;
-        
-        case 'project-lumbergh':
-            launchAppForReport('project-lumbergh', 'Project Lumbergh', 'Invite Analyzed', report.report);
-            break;
-        
-        case 'lucille-bluth':
-            launchAppForReport('lucille-bluth', 'The Lucille Bluth', 'Expense Judged', report.report);
-            break;
-        
-        case 'rolodex':
-            launchAppForReport('rolodex', 'The Rolodex', 'Candidate Analyzed', report.report);
-            break;
-        
-        case 'infidelity-radar':
-            launchAppForReport('infidelity-radar', 'Infidelity Radar', 'Analysis Complete', report.report);
-            break;
-            
-        case 'beep-wingman':
-            launchAppForReport('beep-wingman', 'BEEP Wingman', 'Opener Generated', report.report);
-            break;
-        
-        case 'paper-trail':
-            launchAppForReport('paper-trail', 'Paper Trail', 'Evidence Scanned', report.report);
             break;
       }
     }
