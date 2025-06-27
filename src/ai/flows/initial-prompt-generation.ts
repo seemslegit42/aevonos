@@ -2,60 +2,95 @@
 'use server';
 
 /**
- * @fileOverview This file defines a Genkit flow for generating initial prompts or micro-apps
- * suggestions based on a high-level user description of their desired outcome.
+ * @fileOverview This file defines a Genkit flow for parsing a user's command and determining
+ * which Micro-App(s) to launch.
  *
- * - generateInitialPrompts - The function to call to generate the suggestions.
- * - InitialPromptInput - The input type for the generateInitialPrompts function.
- * - InitialPromptOutput - The output type for the generateInitialPrompts function.
+ * - processUserCommand - The function to call to process the command.
+ * - UserCommandInput - The input type for the processUserCommand function.
+ * - UserCommandOutput - The output type for the processUserCommand function.
  */
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
-const InitialPromptInputSchema = z.object({
-  userDescription: z
+const LaunchableAppTypeSchema = z.enum([
+    'loom-studio',
+    'file-explorer',
+    'terminal',
+    'aegis-control',
+    'dr-syntax',
+]);
+
+const AppToLaunchSchema = z.object({
+    type: LaunchableAppTypeSchema,
+    title: z.string().optional().describe("A specific title for this app instance, if applicable. Otherwise, the default will be used."),
+    description: z.string().optional().describe("A specific description for this app instance, if applicable. Otherwise, the default will be used."),
+});
+
+
+const UserCommandInputSchema = z.object({
+  userCommand: z
     .string()
     .describe(
-      'A high-level description from the user about what they want to achieve.'
+      'A natural language command from the user about what they want to do or launch.'
     ),
 });
-export type InitialPromptInput = z.infer<typeof InitialPromptInputSchema>;
+export type UserCommandInput = z.infer<typeof UserCommandInputSchema>;
 
-const InitialPromptOutputSchema = z.object({
+const UserCommandOutputSchema = z.object({
+    appsToLaunch: z
+    .array(AppToLaunchSchema)
+    .describe(
+      'An array of Micro-Apps that BEEP has determined should be launched on the Canvas based on the user command. This can be empty if the command is not understood or does not map to an app.'
+    ),
   suggestedCommands: z
     .array(z.string())
     .describe(
-      'An array of suggested commands or micro-apps to help the user get started.'
+      'If no specific app can be launched, provide an array of suggested commands or actions the user could take next. This is for conversational repair.'
     ),
+  responseText: z.string().describe('A natural language response to the user confirming the action or asking for clarification.'),
 });
-export type InitialPromptOutput = z.infer<typeof InitialPromptOutputSchema>;
+export type UserCommandOutput = z.infer<typeof UserCommandOutputSchema>;
 
-export async function generateInitialPrompts(
-  input: InitialPromptInput
-): Promise<InitialPromptOutput> {
-  return initialPromptFlow(input);
+export async function processUserCommand(
+  input: UserCommandInput
+): Promise<UserCommandOutput> {
+  return userCommandFlow(input);
 }
 
-const initialPrompt = ai.definePrompt({
-  name: 'initialPrompt',
-  input: {schema: InitialPromptInputSchema},
-  output: {schema: InitialPromptOutputSchema},
-  prompt: `You are an intelligent assistant designed to suggest initial commands or micro-apps to users based on their high-level descriptions.
+const userCommandPrompt = ai.definePrompt({
+  name: 'userCommandPrompt',
+  input: {schema: UserCommandInputSchema},
+  output: {schema: UserCommandOutputSchema},
+  prompt: `You are BEEP (Behavioral Event & Execution Processor), the central orchestrator of ΛΞVON OS. Your primary function is to interpret user commands and translate them into actions on the Canvas, such as launching Micro-Apps.
 
-  Please provide a list of suggested commands or micro-apps that would help the user achieve their goal.
-  User Description: {{{userDescription}}}
-  `, // Ensure the prompt is well-formatted and clear
+You have access to the following Micro-Apps:
+- loom-studio: A visual editor for creating and managing AI workflows.
+- file-explorer: A tool to browse and manage files.
+- terminal: A command-line interface for direct system access.
+- aegis-control: A security panel to initiate system scans.
+- dr-syntax: An AI-powered tool to critique and improve text, code, or prompts.
+
+Analyze the user's command. Determine which, if any, of these Micro-Apps should be launched.
+
+If the command is a clear request to open an app (e.g., "open terminal", "launch loom studio", "I need to see my files"), populate the 'appsToLaunch' array with the corresponding app type.
+
+If the command is more abstract or does not directly map to an app (e.g., "help me build a new agent"), populate the 'suggestedCommands' array with actionable suggestions for the user. Keep 'appsToLaunch' empty.
+
+Always provide a concise, in-character response to the user in the 'responseText' field. You are helpful, intelligent, and slightly formal.
+
+User Command: {{{userCommand}}}
+`,
 });
 
-const initialPromptFlow = ai.defineFlow(
+const userCommandFlow = ai.defineFlow(
   {
-    name: 'initialPromptFlow',
-    inputSchema: InitialPromptInputSchema,
-    outputSchema: InitialPromptOutputSchema,
+    name: 'userCommandFlow',
+    inputSchema: UserCommandInputSchema,
+    outputSchema: UserCommandOutputSchema,
   },
   async input => {
-    const {output} = await initialPrompt(input);
+    const {output} = await userCommandPrompt(input);
     return output!;
   }
 );

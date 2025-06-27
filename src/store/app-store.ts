@@ -2,8 +2,9 @@ import { create } from 'zustand';
 import { arrayMove } from '@dnd-kit/sortable';
 import type { DragEndEvent } from '@dnd-kit/core';
 
-import { handleCommand, checkForAnomalies } from '@/app/actions';
+import { handleCommand } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
+import { checkForAnomalies } from '@/app/actions';
 
 // Define the types of MicroApps available in the OS
 export type MicroAppType = 
@@ -24,6 +25,17 @@ export interface MicroApp {
   contentProps?: any; // Props for content components, e.g., report data
 }
 
+const defaultAppDetails: Record<MicroAppType, Omit<MicroApp, 'id' | 'contentProps'>> = {
+  'loom-studio': { type: 'loom-studio', title: 'Loom Studio', description: 'Visual command center for AI workflows.' },
+  'file-explorer': { type: 'file-explorer', title: 'File Explorer', description: 'Access and manage your files.' },
+  'terminal': { type: 'terminal', title: 'Terminal', description: 'Direct command-line access.' },
+  'aegis-control': { type: 'aegis-control', title: 'Aegis Control', description: 'Run a sample security scan.' },
+  'dr-syntax': { type: 'dr-syntax', title: 'Dr. Syntax', description: 'Get your content critiqued. Brutally.' },
+  'aegis-report': { type: 'aegis-report', title: 'Aegis Scan Report', description: 'Security scan result.'},
+  'ai-suggestion': { type: 'ai-suggestion', title: 'AI Suggestion', description: 'AI-suggested micro-app.'},
+};
+
+
 interface AppState {
   apps: MicroApp[];
   isLoading: boolean;
@@ -36,7 +48,9 @@ interface AppState {
 // A registry for app actions, decoupling them from the component.
 const appActionRegistry: Record<string, (get: () => AppState, set: (fn: (state: AppState) => AppState) => void) => void> = {
   'aegis-control': (get) => get().runAnomalyCheck(),
-  'ai-suggestion': () => useToast.getState().toast({ title: 'Notice', description: `This is an AI-suggested app. Functionality to launch it would be built here.` }),
+  'ai-suggestion': (get, set) => {
+      useToast.getState().toast({ title: 'Notice', description: `This is an AI-suggested app. To take action, you could type this command into the TopBar.` });
+  },
 };
 
 
@@ -132,16 +146,34 @@ export const useAppStore = create<AppState>((set, get) => ({
     if (!command) return;
     set({ isLoading: true });
     try {
-      const suggestedCommands = await handleCommand(command);
-      const newApps: MicroApp[] = suggestedCommands.map((cmd, index) => ({
+      const result = await handleCommand(command);
+      
+      const { toast } = useToast.getState();
+      if (result.responseText) {
+          toast({ title: 'BEEP', description: result.responseText });
+      }
+
+      const appsToLaunch: MicroApp[] = result.appsToLaunch.map((appInfo) => {
+        const defaults = defaultAppDetails[appInfo.type];
+        return {
+          id: `${appInfo.type}-${Date.now()}`,
+          type: appInfo.type,
+          title: appInfo.title || defaults.title,
+          description: appInfo.description || defaults.description,
+        };
+      });
+
+      const suggestionApps: MicroApp[] = result.suggestedCommands.map((cmd, index) => ({
         id: `ai-${Date.now()}-${index}`,
         type: 'ai-suggestion',
         title: cmd,
         description: 'AI-suggested micro-app.',
       }));
+
       set(state => ({
-        apps: [...state.apps.filter(app => !app.id.startsWith('ai-')), ...newApps],
+        apps: [...state.apps, ...appsToLaunch, ...suggestionApps],
       }));
+
     } catch (error) {
       console.error('Error handling command:', error);
       useToast.getState().toast({

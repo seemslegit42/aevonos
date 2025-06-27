@@ -1,18 +1,22 @@
 'use server';
 
-import { generateInitialPrompts } from '@/ai/flows/initial-prompt-generation';
+import { processUserCommand, type UserCommandOutput } from '@/ai/flows/initial-prompt-generation';
 import { aegisAnomalyScan } from '@/ai/agents/aegis';
 import { revalidatePath } from 'next/cache';
 import { drSyntaxCritique, type DrSyntaxInput, type DrSyntaxOutput } from '@/ai/agents/dr-syntax';
 
-export async function handleCommand(command: string): Promise<string[]> {
+export async function handleCommand(command: string): Promise<UserCommandOutput> {
   try {
-    const result = await generateInitialPrompts({ userDescription: command });
+    const result = await processUserCommand({ userCommand: command });
     revalidatePath('/');
-    return result.suggestedCommands;
+    return result;
   } catch (error) {
-    console.error('Error generating initial prompts:', error);
-    return ['Error: Could not process command.'];
+    console.error('Error processing command:', error);
+    return {
+        appsToLaunch: [],
+        suggestedCommands: ['Error: Could not process command.'],
+        responseText: 'My apologies, I encountered an internal error and could not process your command.'
+    };
   }
 }
 
