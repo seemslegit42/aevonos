@@ -21,13 +21,52 @@ export const checkEmailBreaches = ai.defineTool(
     outputSchema: PwnedCheckOutputSchema,
   },
   async ({ email }) => {
-    if (email.includes('breached')) {
-      return [
-        { name: 'Broad-Social-Network', domain: 'broadsocial.com', breachDate: '2021-08-01', description: 'User profile data, including usernames, emails, and bios were exposed.' },
-        { name: 'MyFitnessFriend', domain: 'myfitnessfriend.com', breachDate: '2018-02-01', description: '150 million user accounts were compromised, exposing usernames, email addresses, and hashed passwords.' },
-      ];
+    const apiKey = process.env.HAVEIBEENPWNED_API_KEY;
+
+    if (!apiKey || apiKey === "YOUR_API_KEY_HERE") {
+      console.warn('[OSINT Tool] HaveIBeenPwned API key not set. Using mock data.');
+      if (email.includes('breached')) {
+        return [
+          { name: 'Broad-Social-Network', domain: 'broadsocial.com', breachDate: '2021-08-01', description: 'User profile data, including usernames, emails, and bios were exposed.' },
+          { name: 'MyFitnessFriend', domain: 'myfitnessfriend.com', breachDate: '2018-02-01', description: '150 million user accounts were compromised, exposing usernames, email addresses, and hashed passwords.' },
+        ];
+      }
+      return [];
     }
-    return [];
+
+    try {
+      const response = await fetch(`https://haveibeenpwned.com/api/v3/breachedaccount/${encodeURIComponent(email)}`, {
+        headers: {
+          'hibp-api-key': apiKey,
+          'user-agent': 'AeVonOS-OSINT-Agent',
+        }
+      });
+
+      if (response.status === 404) {
+        return []; // No breaches found for this account.
+      }
+
+      if (!response.ok) {
+        // Don't throw, just log and return empty so the agent flow doesn't crash.
+        console.error(`[OSINT Tool] HaveIBeenPwned API returned status ${response.status}`);
+        return [];
+      }
+      
+      const breaches = await response.json();
+      // The HIBP API returns objects with PascalCase keys, map them to our schema.
+      return breaches.map((breach: any) => ({
+          name: breach.Name || 'Unknown',
+          domain: breach.Domain || 'Unknown',
+          breachDate: breach.BreachDate || 'Unknown',
+          // Strip HTML tags from description
+          description: breach.Description?.replace(/<[^>]*>?/gm, '') || 'No description provided.',
+      }));
+      
+    } catch (error) {
+      console.error('[OSINT Tool] Error fetching from HaveIBeenPwned API:', error);
+      // It's better to return an empty array than to crash the whole agent flow.
+      return [];
+    }
   }
 );
 
