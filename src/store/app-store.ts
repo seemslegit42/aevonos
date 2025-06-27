@@ -190,6 +190,17 @@ export const useAppStore = create<AppState>((set, get) => {
     if (!reports) return;
     const { toast } = useToast.getState();
 
+    const launchAppForReport = (type: MicroAppType, title: string, description: string, contentProps: any) => {
+        const app: MicroApp = {
+            id: generateId(),
+            type,
+            title,
+            description,
+            contentProps,
+        };
+        upsertMicroApp(app, 'after', 'aegis-control');
+    };
+
     for (const report of reports) {
       switch (report.agent) {
         case 'aegis':
@@ -221,15 +232,39 @@ export const useAppStore = create<AppState>((set, get) => {
             break;
         
         case 'vin-diesel':
-            const vinDieselReport = report.report;
-            const vinDieselApp: MicroApp = {
-                id: generateId(),
-                type: 'vin-diesel',
-                title: `VIN: ...${vinDieselReport.vin.slice(-6)}`,
-                description: 'Validation Result',
-                contentProps: { ...vinDieselReport },
-            };
-            upsertMicroApp(vinDieselApp, 'after', 'aegis-control');
+            launchAppForReport('vin-diesel', `VIN: ...${report.report.vin.slice(-6)}`, 'Validation Result', report.report);
+            break;
+        
+        case 'winston-wolfe':
+            launchAppForReport('winston-wolfe', 'Winston Wolfe', 'A solution is ready.', report.report);
+            break;
+
+        case 'kif-kroker':
+            launchAppForReport('kif-kroker', 'Kif Kroker', 'Comms Analysis', report.report);
+            break;
+
+        case 'vandelay':
+            launchAppForReport('vandelay', 'Vandelay Industries', 'Alibi Generated', report.report);
+            break;
+        
+        case 'project-lumbergh':
+            launchAppForReport('project-lumbergh', 'Project Lumbergh', 'Invite Analyzed', report.report);
+            break;
+        
+        case 'lucille-bluth':
+            launchAppForReport('lucille-bluth', 'The Lucille Bluth', 'Expense Judged', report.report);
+            break;
+        
+        case 'rolodex':
+            launchAppForReport('rolodex', 'The Rolodex', 'Candidate Analyzed', report.report);
+            break;
+        
+        case 'infidelity-radar':
+            launchAppForReport('infidelity-radar', 'Infidelity Radar', 'Analysis Complete', report.report);
+            break;
+            
+        case 'beep-wingman':
+            launchAppForReport('beep-wingman', 'BEEP Wingman', 'Opener Generated', report.report);
             break;
       }
     }

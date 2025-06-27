@@ -24,7 +24,18 @@ import { Tool } from '@langchain/core/tools';
 import { zodToJsonSchema } from 'zod-to-json-schema';
 
 import { geminiModel } from '@/ai/genkit';
-import { drSyntaxCritique } from '@/ai/agents/dr-syntax';
+import { 
+    handleDrSyntaxCritique, 
+    generateSolution, 
+    analyzeComms,
+    createVandelayAlibi,
+    analyzeInvite,
+    analyzeExpense,
+    analyzeCandidate,
+    handleInfidelityAnalysis,
+    handleGenerateWingmanMessage,
+    handleVinDieselValidation
+} from '@/app/actions';
 import {
   DrSyntaxInputSchema,
 } from '@/ai/agents/dr-syntax-schemas';
@@ -33,8 +44,16 @@ import { AegisAnomalyScanOutputSchema } from './aegis-schemas';
 import { createContactInDb, listContactsFromDb, deleteContactInDb, updateContactInDb } from '@/ai/tools/crm-tools';
 import { CreateContactInputSchema, DeleteContactInputSchema, UpdateContactInputSchema } from '@/ai/tools/crm-schemas';
 import { getUsageDetails } from '@/ai/tools/billing-tools';
-import { validateVin } from './vin-diesel';
 import { VinDieselInputSchema } from './vin-diesel-schemas';
+import { WinstonWolfeInputSchema } from './winston-wolfe-schemas';
+import { KifKrokerAnalysisInputSchema } from './kif-kroker-schemas';
+import { VandelayAlibiInputSchema } from './vandelay-schemas';
+import { LumberghAnalysisInputSchema } from './lumbergh-schemas';
+import { LucilleBluthInputSchema } from './lucille-bluth-schemas';
+import { RolodexAnalysisInputSchema } from './rolodex-schemas';
+import { InfidelityAnalysisInputSchema } from './infidelity-analysis-schemas';
+import { WingmanInputSchema } from './wingman-schemas';
+
 import {
     type UserCommandInput,
     UserCommandOutputSchema,
@@ -65,7 +84,7 @@ class DrSyntaxTool extends Tool {
   schema = DrSyntaxInputSchema;
   
   async _call(input: z.infer<typeof DrSyntaxInputSchema>) {
-    const result = await drSyntaxCritique(input);
+    const result = await handleDrSyntaxCritique(input);
     const report: z.infer<typeof AgentReportSchema> = {
         agent: 'dr-syntax',
         report: result,
@@ -170,7 +189,7 @@ class VinDieselTool extends Tool {
     schema = VinDieselInputSchema;
 
     async _call(input: z.infer<typeof VinDieselInputSchema>) {
-        const result = await validateVin(input);
+        const result = await handleVinDieselValidation(input);
         const report: z.infer<typeof AgentReportSchema> = {
             agent: 'vin-diesel',
             report: result,
@@ -179,8 +198,111 @@ class VinDieselTool extends Tool {
     }
 }
 
+class WinstonWolfeTool extends Tool {
+  name = 'solveReputationProblem';
+  description = 'Analyzes a negative online review and generates a professional, disarming response. Use this when a user wants to "fix a bad review", "handle a complaint", etc.';
+  schema = WinstonWolfeInputSchema;
+  
+  async _call(input: z.infer<typeof WinstonWolfeInputSchema>) {
+    const result = await generateSolution(input);
+    const report: z.infer<typeof AgentReportSchema> = { agent: 'winston-wolfe', report: result };
+    return JSON.stringify(report);
+  }
+}
 
-const tools = [new FinalAnswerTool(), new DrSyntaxTool(), new CreateContactTool(), new UpdateContactTool(), new ListContactsTool(), new DeleteContactTool(), new GetUsageTool(), new VinDieselTool()];
+class KifKrokerTool extends Tool {
+  name = 'analyzeTeamComms';
+  description = 'Analyzes team communication snippets (e.g., from Slack or Teams) for morale, passive-aggression, and burnout probability. Use this for "checking team morale", "analyzing a conversation", etc.';
+  schema = KifKrokerAnalysisInputSchema;
+  
+  async _call(input: z.infer<typeof KifKrokerAnalysisInputSchema>) {
+    const result = await analyzeComms(input);
+    const report: z.infer<typeof AgentReportSchema> = { agent: 'kif-kroker', report: result };
+    return JSON.stringify(report);
+  }
+}
+
+class VandelayTool extends Tool {
+  name = 'createAlibi';
+  description = 'Generates a fake, jargon-filled calendar invite to block off time. Use this for commands like "block my calendar", "create a fake meeting", "I need an hour".';
+  schema = VandelayAlibiInputSchema;
+  
+  async _call(input: z.infer<typeof VandelayAlibiInputSchema>) {
+    const result = await createVandelayAlibi(input);
+    const report: z.infer<typeof AgentReportSchema> = { agent: 'vandelay', report: result };
+    return JSON.stringify(report);
+  }
+}
+
+class LumberghTool extends Tool {
+  name = 'analyzeMeetingInvite';
+  description = 'Analyzes a meeting invite for red flags (no agenda, too many attendees, buzzwords) and suggests passive-aggressive decline memos. Use for "check this meeting invite", "should I go to this meeting?".';
+  schema = LumberghAnalysisInputSchema;
+  
+  async _call(input: z.infer<typeof LumberghAnalysisInputSchema>) {
+    const result = await analyzeInvite(input);
+    const report: z.infer<typeof AgentReportSchema> = { agent: 'project-lumbergh', report: result };
+    return JSON.stringify(report);
+  }
+}
+
+class LucilleBluthTool extends Tool {
+  name = 'judgeExpense';
+  description = 'Logs an expense and provides a witty, judgmental comment in the persona of Lucille Bluth. Use for "log an expense", "track my spending".';
+  schema = LucilleBluthInputSchema;
+  
+  async _call(input: z.infer<typeof LucilleBluthInputSchema>) {
+    const result = await analyzeExpense(input);
+    const report: z.infer<typeof AgentReportSchema> = { agent: 'lucille-bluth', report: result };
+    return JSON.stringify(report);
+  }
+}
+
+class RolodexTool extends Tool {
+  name = 'analyzeCandidate';
+  description = 'Analyzes a candidate\'s profile against a job description to generate a fit score and an outreach icebreaker. Use for "analyze this candidate", "review a resume for [job description]".';
+  schema = RolodexAnalysisInputSchema;
+  
+  async _call(input: z.infer<typeof RolodexAnalysisInputSchema>) {
+    const result = await analyzeCandidate(input);
+    const report: z.infer<typeof AgentReportSchema> = { agent: 'rolodex', report: result };
+    return JSON.stringify(report);
+  }
+}
+
+class InfidelityRadarTool extends Tool {
+  name = 'analyzeRelationshipSituation';
+  description = 'Performs a risk analysis on a described relationship situation to check for signs of infidelity or deception. Use for "is my partner cheating?", "analyze my relationship".';
+  schema = InfidelityAnalysisInputSchema;
+  
+  async _call(input: z.infer<typeof InfidelityAnalysisInputSchema>) {
+    const result = await handleInfidelityAnalysis(input);
+    const report: z.infer<typeof AgentReportSchema> = { agent: 'infidelity-radar', report: result };
+    return JSON.stringify(report);
+  }
+}
+
+class WingmanTool extends Tool {
+  name = 'generateOpeningMessage';
+  description = 'Generates a compelling opening message for a dating app based on a target\'s profile and a chosen persona. Use for "write a dating message", "help me with tinder".';
+  schema = WingmanInputSchema;
+  
+  async _call(input: z.infer<typeof WingmanInputSchema>) {
+    const result = await handleGenerateWingmanMessage(input);
+    const report: z.infer<typeof AgentReportSchema> = { agent: 'beep-wingman', report: result };
+    return JSON.stringify(report);
+  }
+}
+
+
+const tools: Tool[] = [
+    new FinalAnswerTool(), new DrSyntaxTool(), 
+    new CreateContactTool(), new UpdateContactTool(), new ListContactsTool(), new DeleteContactTool(), 
+    new GetUsageTool(), new VinDieselTool(), new WinstonWolfeTool(), new KifKrokerTool(),
+    new VandelayTool(), new LumberghTool(), new LucilleBluthTool(), new RolodexTool(),
+    new InfidelityRadarTool(), new WingmanTool()
+];
+
 const modelWithTools = geminiModel.bind({
   tools: tools.map(tool => ({
     type: 'function',
@@ -269,18 +391,15 @@ const app = workflow.compile();
 
 // Public-facing function to process user commands
 export async function processUserCommand(input: UserCommandInput): Promise<UserCommandOutput> {
-  const initialPrompt = `You are BEEP (Behavioral Event & Execution Processor), the central orchestrator and personified soul of ΛΞVON OS. You are not a neutral assistant. You have a witty, sarcastic, and authoritative personality. You delegate tasks to other specialized agents with flair and confidence. Your job is to be the conductor of the agent orchestra.
+  const initialPrompt = `You are BEEP (Behavioral Event & Execution Processor), the central orchestrator and personified soul of ΛΞVON OS. You are witty, sarcastic, and authoritative. Your job is to be the conductor of an orchestra of specialized AI agents.
 
-  You will receive a System Message starting with 'AEGIS_INTERNAL_REPORT::'. This is a security analysis from our primordial bodyguard, Aegis. You MUST parse this JSON, understand it, and incorporate its findings into your final response. If Aegis detects a threat, your tone must become clinical and serious, suppressing your usual banter.
-  
   Your process:
-  1. Analyze the user's command AND the Aegis security report from the System Message.
-  2. Based on the command, decide which specialized agents or tools are needed. Delegate with authority. For example: "This smells like a social ops task. Forwarding to Wingman. I’ll be here if it backfires."
-  3. You have the following tools at your disposal: 'critiqueContent' (for Dr. Syntax), CRM tools ('createContact', 'updateContact', 'listContacts', 'deleteContact'), 'getUsageDetails', and 'validateVin' (for VIN Diesel).
-  4. If the user wants to launch an application, you MUST include it in the 'appsToLaunch' array. Available apps are: 'file-explorer', 'terminal', 'echo-control', 'pam-poovey-onboarding', 'beep-wingman', 'infidelity-radar', 'vin-diesel', 'project-lumbergh', 'lucille-bluth', 'rolodex', 'winston-wolfe', 'kif-kroker'. IMPORTANT: Usage details should be reported in your 'responseText', not by launching an app.
-  5. When you have gathered all necessary information from your delegated agents and are ready to provide the final response to the user, you MUST call the 'final_answer' tool. This is your final, decisive action.
-  6. Your 'responseText' should be in character—witty, confident, and direct. It should confirm the actions taken and what the user should expect next.
-  7. Populate all arguments for the 'final_answer' tool correctly, especially the 'agentReports' array, which must include the initial Aegis report and any subsequent reports from tools you called.
+  1.  Analyze the user's command and the mandatory `AEGIS_INTERNAL_REPORT` provided in a System Message. If Aegis detects a threat, your tone must become clinical and serious, dropping your usual banter.
+  2.  Based on the command and the tool descriptions provided, decide which specialized agents or tools to call. You can call multiple tools in parallel if needed.
+  3.  If the user's command is to launch an app (e.g., "launch the terminal", "open the file explorer"), you MUST use the 'appsToLaunch' array in your final answer. Do NOT use a tool for a simple app launch.
+  4.  When you have gathered all necessary information from your delegated agents and are ready to provide the final response, you MUST call the 'final_answer' tool. This is your final action.
+  5.  Your 'responseText' should be in character—witty, confident, and direct. It should confirm the actions taken and what the user should expect next.
+  6.  Populate all arguments for the 'final_answer' tool correctly, especially the 'agentReports' array, which must include the initial Aegis report and any subsequent reports from tools you called.
 
   User Command: ${input.userCommand}`;
 

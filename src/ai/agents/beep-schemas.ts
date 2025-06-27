@@ -5,6 +5,14 @@ import { ContactSchema, DeleteContactOutputSchema } from '@/ai/tools/crm-schemas
 import { BillingUsageSchema } from '@/ai/tools/billing-schemas';
 import { VinDieselOutputSchema } from './vin-diesel-schemas';
 import { VandelayAlibiOutputSchema } from './vandelay-schemas';
+import { WinstonWolfeOutputSchema } from './winston-wolfe-schemas';
+import { KifKrokerAnalysisOutputSchema } from './kif-kroker-schemas';
+import { PaperTrailScanOutputSchema } from './paper-trail-schemas';
+import { LumberghAnalysisOutputSchema } from './lumbergh-schemas';
+import { LucilleBluthOutputSchema } from './lucille-bluth-schemas';
+import { RolodexAnalysisOutputSchema } from './rolodex-schemas';
+import { InfidelityAnalysisOutputSchema } from './infidelity-analysis-schemas';
+import { WingmanOutputSchema } from './wingman-schemas';
 
 // Schemas from the original BEEP agent, preserved for the public contract.
 const LaunchableAppTypeSchema = z.enum([
@@ -21,6 +29,7 @@ const LaunchableAppTypeSchema = z.enum([
   'winston-wolfe',
   'kif-kroker',
   'vandelay',
+  'paper-trail',
 ]);
 
 export const AppToLaunchSchema = z.object({
@@ -88,6 +97,42 @@ export const AgentReportSchema = z.discriminatedUnion('agent', [
     report: VinDieselOutputSchema.describe(
         'The full report from the VIN Diesel agent.'
     ),
+  }),
+  z.object({
+    agent: z.literal('winston-wolfe'),
+    report: WinstonWolfeOutputSchema.describe('The full report from The Winston Wolfe agent.'),
+  }),
+  z.object({
+    agent: z.literal('kif-kroker'),
+    report: KifKrokerAnalysisOutputSchema.describe('The full report from The Kif Kroker agent.'),
+  }),
+  z.object({
+    agent: z.literal('vandelay'),
+    report: VandelayAlibiOutputSchema.describe('The full report from the Vandelay Industries agent.'),
+  }),
+  z.object({
+    agent: z.literal('paper-trail'),
+    report: PaperTrailScanOutputSchema.describe('The full report from the Paper Trail agent.'),
+  }),
+  z.object({
+    agent: z.literal('project-lumbergh'),
+    report: LumberghAnalysisOutputSchema.describe('The full report from the Project Lumbergh agent.'),
+  }),
+  z.object({
+    agent: z.literal('lucille-bluth'),
+    report: LucilleBluthOutputSchema.describe('The full report from The Lucille Bluth agent.'),
+  }),
+  z.object({
+    agent: z.literal('rolodex'),
+    report: RolodexAnalysisOutputSchema.describe('The full report from The Rolodex agent.'),
+  }),
+  z.object({
+    agent: z.literal('infidelity-radar'),
+    report: InfidelityAnalysisOutputSchema.describe('The full report from the Infidelity Radar agent.'),
+  }),
+  z.object({
+    agent: z.literal('beep-wingman'),
+    report: WingmanOutputSchema.describe('The full report from the BEEP Wingman agent.'),
   }),
 ]);
 
