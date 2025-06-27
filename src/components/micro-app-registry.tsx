@@ -46,6 +46,7 @@ import LaheyCommander from './micro-apps/lahey-commander';
 import TheForemanator from './micro-apps/the-foremanator';
 import Sterileish from './micro-apps/sterileish';
 import AegisThreatScope from './micro-apps/aegis-threatscope';
+import DrSyntax from './micro-apps/dr-syntax';
 
 
 type ComponentRegistry = {
@@ -144,6 +145,7 @@ export const microAppRegistry: Record<MicroAppType, ComponentRegistry> = {
   },
   'dr-syntax': {
     icon: DrSyntaxIcon,
+    content: DrSyntax,
   },
 };
 

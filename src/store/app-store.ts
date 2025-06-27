@@ -8,7 +8,6 @@ import { processUserCommand } from '@/ai/agents/beep';
 import { recallSessionAction } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
 import { EchoRecallToast } from '@/components/echo-recall-toast';
-import { DrSyntaxReportToast } from '@/components/dr-syntax-report-toast';
 import type { SessionRecallOutput } from '@/ai/agents/echo';
 import type { DrSyntaxOutput } from '@/ai/agents/dr-syntax-schemas';
 import type { Contact } from '@/ai/tools/crm-schemas';
@@ -225,7 +224,11 @@ export const useAppStore = create<AppState>((set, get) => {
 
         case 'dr-syntax':
           const drSyntaxReport: DrSyntaxOutput = report.report;
-          toast({ title: `Dr. Syntax's Verdict (Rating: ${drSyntaxReport.rating}/10)`, description: React.createElement(DrSyntaxReportToast, drSyntaxReport) });
+          launchApp('dr-syntax', {
+              title: `Critique Result (Rating: ${drSyntaxReport.rating}/10)`,
+              description: `Critique for "${drSyntaxReport.suggestion.substring(0, 20)}..."`,
+              contentProps: drSyntaxReport
+          });
           break;
 
         case 'crm':
