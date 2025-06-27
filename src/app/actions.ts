@@ -1,6 +1,7 @@
 'use server';
 
-import { processUserCommand, type UserCommandOutput } from '@/ai/agents/beep';
+import { processUserCommand } from '@/ai/agents/beep';
+import type { UserCommandOutput } from '@/ai/agents/beep-schemas';
 import { aegisAnomalyScan } from '@/ai/agents/aegis';
 import { revalidatePath } from 'next/cache';
 import { drSyntaxCritique } from '@/ai/agents/dr-syntax';
