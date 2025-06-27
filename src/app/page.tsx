@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import {
   DndContext,
@@ -17,14 +17,22 @@ import { useAppStore } from '@/store/app-store';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export default function Home() {
-  const { apps, handleDragEnd } = useAppStore();
+  const { apps, handleDragEnd, handleCommandSubmit } = useAppStore();
   const [isMounted, setIsMounted] = useState(false);
+  const recalledRef = useRef(false);
 
   useEffect(() => {
     setIsMounted(true);
-    // Initial action on load can be placed here if needed.
-    // For example, to welcome the user or recall the last session.
-  }, []);
+    // Initial action on load to recall the last session.
+    if (!recalledRef.current) {
+        // Using a short timeout to give a sense of the OS "booting up"
+        // and thinking before it greets the user.
+        setTimeout(() => {
+            handleCommandSubmit('recall last session');
+        }, 500);
+        recalledRef.current = true;
+    }
+  }, [handleCommandSubmit]);
 
   const sensors = useSensors(
     useSensor(PointerSensor),

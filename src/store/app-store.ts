@@ -5,8 +5,7 @@ import React from 'react';
 
 import { processUserCommand } from '@/ai/agents/beep';
 import { useToast } from '@/hooks/use-toast';
-import { EchoRecallToast } from '@/components/echo-recall-toast';
-import type { SessionRecallOutput } from '@/ai/agents/echo';
+import type { SessionRecallOutput } from '@/ai/agents/echo-schemas';
 import type { DrSyntaxOutput } from '@/ai/agents/dr-syntax-schemas';
 import type { Contact } from '@/ai/tools/crm-schemas';
 import type { UserCommandOutput, AgentReportSchema } from '@/ai/agents/beep-schemas';
@@ -30,7 +29,7 @@ export type MicroAppType =
   | 'file-explorer' 
   | 'terminal' 
   | 'ai-suggestion'
-  | 'echo-control'
+  | 'echo-recall'
   | 'aegis-control'
   | 'contact-list'
   | 'pam-poovey-onboarding'
@@ -74,7 +73,7 @@ const defaultAppDetails: Record<MicroAppType, Omit<MicroApp, 'id' | 'position' |
   'file-explorer': { type: 'file-explorer', title: 'File Explorer', description: 'Access and manage your files.' },
   'terminal': { type: 'terminal', title: 'Terminal', description: 'Direct command-line access.' },
   'ai-suggestion': { type: 'ai-suggestion', title: 'AI Suggestion', description: 'Click to execute this command.' },
-  'echo-control': { type: 'echo-control', title: 'Recall Session', description: "Click to have Echo summarize the last session's activity." },
+  'echo-recall': { type: 'echo-recall', title: 'Echo: Session Recall', description: "A summary of the last session's activity." },
   'aegis-control': { type: 'aegis-control', title: 'Aegis Security Report', description: "Analysis of the last command's security profile." },
   'aegis-threatscope': { type: 'aegis-threatscope', title: 'Aegis ThreatScope', description: 'Real-time security threat feed.' },
   'aegis-command': { type: 'aegis-command', title: 'Aegis Command', description: 'Configure Aegis security parameters.' },
@@ -112,9 +111,6 @@ export interface AppState {
 
 // A registry for app actions, decoupling them from the component.
 const appActionRegistry: Record<string, (get: () => AppState, set: (fn: (state: AppState) => AppState) => void, app: MicroApp) => void> = {
-  'echo-control': (get) => {
-    get().handleCommandSubmit('recall last session');
-  },
   'ai-suggestion': (get, set, app) => {
     get().handleCommandSubmit(app.title);
   },
@@ -345,7 +341,10 @@ export const useAppStore = create<AppState>((set, get) => {
             break;
         
         case 'echo':
-            toast({ title: 'Echo Remembers', description: React.createElement(EchoRecallToast, report.report as SessionRecallOutput) });
+            upsertApp('echo-recall', {
+                id: 'echo-recall-main',
+                contentProps: report.report as SessionRecallOutput,
+            });
             break;
       }
     }
@@ -353,16 +352,7 @@ export const useAppStore = create<AppState>((set, get) => {
 
 
   return {
-    apps: [
-      {
-        id: 'echo-control-initial',
-        type: 'echo-control',
-        title: 'Recall Session',
-        description: "Click to have Echo summarize the last session's activity.",
-        position: { x: 20, y: 20 },
-        zIndex: 1,
-      },
-    ],
+    apps: [],
     isLoading: false,
     beepOutput: null,
     bringToFront,

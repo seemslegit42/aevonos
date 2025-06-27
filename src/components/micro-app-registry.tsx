@@ -52,6 +52,7 @@ import AegisThreatScope from './micro-apps/aegis-threatscope';
 import DrSyntax from './micro-apps/dr-syntax';
 import AegisCommand from './micro-apps/aegis-command';
 import UsageMonitor from './micro-apps/usage-monitor';
+import EchoRecall from './micro-apps/echo-recall';
 
 
 type ComponentRegistry = {
@@ -69,8 +70,9 @@ export const microAppRegistry: Record<MicroAppType, ComponentRegistry> = {
   'ai-suggestion': {
       icon: CrystalIcon,
   },
-  'echo-control': {
+  'echo-recall': {
     icon: EchoIcon,
+    content: EchoRecall,
   },
   'aegis-control': {
     icon: AegisIcon,
