@@ -3,6 +3,7 @@ import { DrSyntaxOutputSchema } from './dr-syntax-schemas';
 import { AegisAnomalyScanOutputSchema } from './aegis-schemas';
 import { ContactSchema, DeleteContactOutputSchema } from '@/ai/tools/crm-schemas';
 import { BillingUsageSchema } from '@/ai/tools/billing-schemas';
+import { VinDieselOutputSchema } from './vin-diesel-schemas';
 
 // Schemas from the original BEEP agent, preserved for the public contract.
 const LaunchableAppTypeSchema = z.enum([
@@ -12,6 +13,7 @@ const LaunchableAppTypeSchema = z.enum([
   'pam-poovey-onboarding',
   'beep-wingman',
   'infidelity-radar',
+  'vin-diesel',
 ]);
 
 export const AppToLaunchSchema = z.object({
@@ -73,6 +75,12 @@ export const AgentReportSchema = z.discriminatedUnion('agent', [
   z.object({
     agent: z.literal('billing'),
     report: BillingAgentReportSchema,
+  }),
+  z.object({
+    agent: z.literal('vin-diesel'),
+    report: VinDieselOutputSchema.describe(
+        'The full report from the VIN Diesel agent.'
+    ),
   }),
 ]);
 

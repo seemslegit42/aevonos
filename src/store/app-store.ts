@@ -25,7 +25,8 @@ export type MicroAppType =
   | 'contact-list'
   | 'pam-poovey-onboarding'
   | 'beep-wingman'
-  | 'infidelity-radar';
+  | 'infidelity-radar'
+  | 'vin-diesel';
 
 // Define the shape of a MicroApp instance
 export interface MicroApp {
@@ -51,6 +52,7 @@ const defaultAppDetails: Record<MicroAppType, Omit<MicroApp, 'id' | 'contentProp
   'pam-poovey-onboarding': { type: 'pam-poovey-onboarding', title: 'Pam Poovey: HR', description: 'Onboarding, complaints, and questionable life advice.' },
   'beep-wingman': { type: 'beep-wingman', title: 'BEEP™ Wingman', description: 'Dating Automation for High-Functioning Degenerates.' },
   'infidelity-radar': { type: 'infidelity-radar', title: 'Infidelity Radar', description: 'Because intuition deserves evidence.' },
+  'vin-diesel': { type: 'vin-diesel', title: 'VIN Diesel', description: 'Turbocharged compliance. For family.' },
 };
 
 
@@ -202,6 +204,18 @@ export const useAppStore = create<AppState>((set, get) => {
         case 'billing':
             // Billing information is now handled directly in BEEP's textual response
             // and does not launch a Micro-App.
+            break;
+        
+        case 'vin-diesel':
+            const vinDieselReport = report.report;
+            const vinDieselApp: MicroApp = {
+                id: generateId(),
+                type: 'vin-diesel',
+                title: `VIN: ...${vinDieselReport.vin.slice(-6)}`,
+                description: 'Validation Result',
+                contentProps: { ...vinDieselReport },
+            };
+            upsertMicroApp(vinDieselApp, 'after', 'aegis-control');
             break;
       }
     }

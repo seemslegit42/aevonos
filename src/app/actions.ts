@@ -15,6 +15,8 @@ import { performInfidelityAnalysis as performInfidelityAnalysisFlow } from '@/ai
 import type { InfidelityAnalysisInput, InfidelityAnalysisOutput } from '@/ai/agents/infidelity-analysis-schemas';
 import { generateWingmanMessage as generateWingmanMessageFlow } from '@/ai/agents/wingman';
 import type { WingmanInput, WingmanOutput } from '@/ai/agents/wingman-schemas';
+import { validateVin as validateVinFlow } from '@/ai/agents/vin-diesel';
+import type { VinDieselInput, VinDieselOutput } from '@/ai/agents/vin-diesel-schemas';
 
 export async function handleCommand(command: string): Promise<UserCommandOutput> {
   try {
@@ -119,4 +121,18 @@ export async function handleGenerateWingmanMessage(input: WingmanInput): Promise
       openingMessage: "The agent is currently overthinking its pickup line. There might have been a server error.",
     };
   }
+}
+
+export async function handleVinDieselValidation(input: VinDieselInput): Promise<VinDieselOutput> {
+    try {
+        const result = await validateVinFlow(input);
+        return result;
+    } catch (error) {
+        console.error('Error in VIN Diesel validation flow:', error);
+        return {
+            vin: input.vin,
+            isValid: false,
+            statusMessage: "The engine sputtered. There was a server error, try again.",
+        };
+    }
 }

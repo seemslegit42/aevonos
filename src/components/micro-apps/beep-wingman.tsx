@@ -1,21 +1,24 @@
-
 'use client';
 
 import React, { useState } from 'react';
-import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { Bot, Loader2 } from 'lucide-react';
+import { Bot, Loader2, PhoneOff } from 'lucide-react';
 import { Textarea } from '../ui/textarea';
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 import type { WingmanInput } from '@/ai/agents/wingman-schemas';
 import { handleGenerateWingmanMessage } from '@/app/actions';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
+import { Switch } from '../ui/switch';
+import { Label } from '../ui/label';
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '../ui/tooltip';
 
 export default function BeepWingman() {
     const [isLoading, setIsLoading] = useState(false);
     const [result, setResult] = useState<string | null>(null);
     const [targetDescription, setTargetDescription] = useState('');
     const [persona, setPersona] = useState<WingmanInput['persona']>('alpha-hustler');
+    const [burnerMode, setBurnerMode] = useState(false);
     
     const handleGenerate = async () => {
         if (!targetDescription) {
@@ -74,6 +77,22 @@ export default function BeepWingman() {
                     )}
                 </CardContent>
             </Card>
+            <div className="mt-auto pt-2">
+                <TooltipProvider>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <div className="flex items-center space-x-2">
+                                <Switch id="burner-mode" checked={burnerMode} onCheckedChange={setBurnerMode} />
+                                <Label htmlFor="burner-mode" className="text-xs text-muted-foreground">Burner Phone Mode</Label>
+                                <PhoneOff className="h-3 w-3 text-muted-foreground" />
+                            </div>
+                        </TooltipTrigger>
+                        <TooltipContent side="top" className="max-w-xs">
+                            <p className="text-xs">When enabled, this agent instance will be automatically deleted after 24 hours. A premium feature of the Artisan plan.</p>
+                        </TooltipContent>
+                    </Tooltip>
+                </TooltipProvider>
+            </div>
         </div>
     );
 }
