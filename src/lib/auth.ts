@@ -30,15 +30,12 @@ export async function decrypt(input: string): Promise<any> {
 }
 
 /**
- * Extracts and verifies the JWT from an Authorization header.
+ * Extracts and verifies the JWT from a 'session' cookie in the request.
  * @param request The NextRequest object.
  * @returns The session payload if the token is valid, otherwise null.
  */
 export async function getSession(request: NextRequest) {
-    const authHeader = request.headers.get('authorization');
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        return null;
-    }
-    const token = authHeader.substring(7); // Remove 'Bearer ' prefix
+    const token = request.cookies.get('session')?.value;
+    if (!token) return null;
     return await decrypt(token);
 }

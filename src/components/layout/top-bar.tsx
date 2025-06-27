@@ -3,7 +3,10 @@
 
 import React, { useRef } from 'react';
 import { Input } from '@/components/ui/input';
-import { Sparkles, ShieldCheck } from 'lucide-react';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Sparkles, ShieldCheck, LogOut, Settings } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 interface TopBarProps {
@@ -47,7 +50,39 @@ export default function TopBar({ onCommandSubmit, isLoading }: TopBarProps) {
             <ShieldCheck className="w-4 h-4 text-accent" />
             <span className="hidden md:inline">Aegis: Online</span>
         </div>
-        <span className="hidden lg:inline" title="Session Status: Active">Session: Active</span>
+        <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                    <Avatar className="h-8 w-8">
+                        <AvatarFallback>A</AvatarFallback>
+                    </Avatar>
+                </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-56" align="end" forceMount>
+                <DropdownMenuLabel className="font-normal">
+                    <div className="flex flex-col space-y-1">
+                        <p className="text-sm font-medium leading-none">The Architect</p>
+                        <p className="text-xs leading-none text-muted-foreground">
+                            architect@aevonos.com
+                        </p>
+                    </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem>
+                    <Settings className="mr-2 h-4 w-4" />
+                    <span>Workspace Settings</span>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <form action="/api/auth/logout" method="post" className="w-full">
+                  <button type="submit" className="w-full">
+                    <DropdownMenuItem>
+                        <LogOut className="mr-2 h-4 w-4" />
+                        <span>Log out</span>
+                    </DropdownMenuItem>
+                  </button>
+                </form>
+            </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </header>
   );

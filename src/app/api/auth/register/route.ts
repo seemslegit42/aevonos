@@ -71,14 +71,18 @@ export async function POST(request: Request) {
 
     const { password: _, ...userResponse } = user;
     
-    const mockAuthResponse = {
-      accessToken: token,
-      tokenType: "Bearer",
-      expiresIn: 3600,
-      user: userResponse
-    };
+    const response = NextResponse.json({ user: userResponse }, { status: 201 });
 
-    return NextResponse.json(mockAuthResponse, { status: 201 });
+    response.cookies.set({
+        name: 'session',
+        value: token,
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        maxAge: 60 * 60, // 1 hour
+        path: '/',
+    });
+
+    return response;
 
   } catch (error) {
     console.error('[API /auth/register POST]', error);
