@@ -25,6 +25,27 @@ export const ContactSchema = z.object({
 export type Contact = z.infer<typeof ContactSchema>;
 
 
+export async function createContactInDb(input: CreateContactInput): Promise<Contact> {
+  try {
+    const contact = await prisma.contact.create({
+      data: {
+        ...input,
+      },
+    });
+    return {
+      id: contact.id,
+      email: contact.email,
+      firstName: contact.firstName,
+      lastName: contact.lastName,
+      phone: contact.phone,
+    };
+  } catch (error) {
+    console.error('[CRM Tool Error] Failed to create contact:', error);
+    throw new Error('Failed to create the contact in the database.');
+  }
+}
+
+
 export const createContactTool = ai.defineTool(
   {
     name: 'createContact',
@@ -32,23 +53,5 @@ export const createContactTool = ai.defineTool(
     inputSchema: CreateContactInputSchema,
     outputSchema: ContactSchema,
   },
-  async (input) => {
-    try {
-      const contact = await prisma.contact.create({
-        data: {
-          ...input,
-        },
-      });
-      return {
-        id: contact.id,
-        email: contact.email,
-        firstName: contact.firstName,
-        lastName: contact.lastName,
-        phone: contact.phone,
-      };
-    } catch (error) {
-      console.error('[CRM Tool Error] Failed to create contact:', error);
-      throw new Error('Failed to create the contact in the database.');
-    }
-  }
+  createContactInDb
 );
