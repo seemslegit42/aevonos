@@ -9,6 +9,7 @@ import WorkflowCanvas from '@/components/loom/workflow-canvas';
 import PropertyInspector from '@/components/loom/property-inspector';
 import LoomHeader from '@/components/loom/loom-header';
 import WorkflowList from '@/components/loom/workflow-list';
+import WorkflowRunHistory from '@/components/loom/workflow-run-history';
 import { useToast } from '@/hooks/use-toast';
 
 export interface Node {
@@ -142,6 +143,7 @@ export default function LoomPage() {
             if (response.status !== 202) throw new Error('Failed to trigger workflow run.');
             const runSummary = await response.json();
             toast({ title: 'Workflow Run Initiated', description: `Run ID: ${runSummary.runId}` });
+            setListRefreshTrigger(val => val + 1); // Refresh history
         } catch(e) {
             toast({ variant: 'destructive', title: 'Error', description: 'Could not trigger workflow.' });
         } finally {
@@ -238,7 +240,14 @@ export default function LoomPage() {
             isRunning={isRunning}
         />
         <div className="flex-grow flex min-h-0">
-            <WorkflowList onSelectWorkflow={handleSelectWorkflow} activeWorkflowId={activeWorkflowId} triggerRefresh={listRefreshTrigger}/>
+             <div className="w-64 flex-shrink-0 flex flex-col min-h-0 border-r border-foreground/20">
+              <div className="h-[60%] min-h-0 border-b border-foreground/20">
+                  <WorkflowList onSelectWorkflow={handleSelectWorkflow} activeWorkflowId={activeWorkflowId} triggerRefresh={listRefreshTrigger}/>
+              </div>
+              <div className="h-[40%] min-h-0">
+                 <WorkflowRunHistory activeWorkflowId={activeWorkflowId} triggerRefresh={listRefreshTrigger}/>
+              </div>
+          </div>
             <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
                 <div className="flex-grow flex gap-4 p-4 min-h-0">
                     <NodesSidebar />

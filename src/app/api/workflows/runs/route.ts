@@ -41,9 +41,17 @@ export async function GET(request: NextRequest) {
     
     const workflowRuns = await prisma.workflowRun.findMany({
       where: whereClause,
+      include: {
+        workflow: {
+          select: {
+            name: true,
+          }
+        }
+      },
       orderBy: {
         startedAt: 'desc',
       },
+      take: 50,
     });
 
     return NextResponse.json(workflowRuns);
@@ -53,3 +61,4 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Failed to retrieve workflow runs.' }, { status: 500 });
   }
 }
+

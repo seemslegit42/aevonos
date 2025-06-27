@@ -44,12 +44,14 @@ export default function WorkflowList({ onSelectWorkflow, activeWorkflowId, trigg
   }, [triggerRefresh]);
 
   return (
-    <div className="w-64 flex-shrink-0 bg-foreground/10 backdrop-blur-xl border-r border-foreground/20 p-4 flex flex-col gap-4">
-      <h2 className="font-headline text-lg text-foreground">Workflows</h2>
-      <Button variant="outline" onClick={() => onSelectWorkflow(null)}>
-        <PlusCircle className="mr-2" />
-        New Workflow
-      </Button>
+    <div className="h-full w-full bg-foreground/10 backdrop-blur-xl p-4 flex flex-col gap-4">
+      <div className="flex justify-between items-center">
+        <h2 className="font-headline text-lg text-foreground">Workflows</h2>
+        <Button variant="outline" size="sm" onClick={() => onSelectWorkflow(null)}>
+            <PlusCircle className="mr-2 h-4 w-4" />
+            New
+        </Button>
+      </div>
       <ScrollArea className="flex-grow -mr-4 pr-4">
         {isLoading ? (
           <div className="space-y-2">
