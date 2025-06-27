@@ -134,9 +134,6 @@ export const microAppRegistry: Record<MicroAppType, ComponentRegistry> = {
   'dr-syntax': {
     icon: DrSyntaxIcon,
   },
-  'beep-wingman': {
-    icon: BeepWingmanIcon,
-  },
 };
 
 export const getAppIcon = (type: MicroAppType) => {
