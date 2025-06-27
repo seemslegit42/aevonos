@@ -1,26 +1,40 @@
-
 'use client';
 
 import React, { useState } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { Bot, Loader2, PhoneOff } from 'lucide-react';
+import { Bot, Loader2, PhoneOff, History, ChevronRight } from 'lucide-react';
 import { Textarea } from '../ui/textarea';
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
-import type { WingmanInput } from '@/ai/agents/wingman-schemas';
-import { handleGenerateWingmanMessage } from '@/app/actions';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
 import { Switch } from '../ui/switch';
 import { Label } from '../ui/label';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '../ui/tooltip';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { ScrollArea } from '@/components/ui/scroll-area';
+
+import { handleGenerateWingmanMessage } from '@/app/actions';
+import type { WingmanInput } from '@/ai/agents/wingman-schemas';
+
+// This Micro-App follows the ΛΞVON OS Universal Structure:
+// - ActionSchema: WingmanInput from wingman-schemas.ts
+// - OutputStream: WingmanOutput from wingman-schemas.ts
+// - AgentKernel: Logic is in `src/ai/agents/wingman.ts`
+// - EventBridge: The `handleGenerate` function connects UI to the agent.
+// - MicroAppCard: The main returned JSX component.
+// - ExpansionLayer: The "Generation History" collapsible section.
+// - MonetizationHook: The "Burner Phone Mode" switch.
 
 export default function BeepWingman() {
     const [isLoading, setIsLoading] = useState(false);
     const [result, setResult] = useState<string | null>(null);
+    const [history, setHistory] = useState<string[]>([]);
+    const [isHistoryOpen, setIsHistoryOpen] = useState(false);
     const [targetDescription, setTargetDescription] = useState('');
     const [persona, setPersona] = useState<WingmanInput['persona']>('alpha-hustler');
     const [burnerMode, setBurnerMode] = useState(false);
     
+    // EventBridge: Connects UI interaction to the AgentKernel
     const handleGenerate = async () => {
         if (!targetDescription) {
             setResult("Error: Target profile description cannot be empty.");
@@ -30,11 +44,16 @@ export default function BeepWingman() {
         setResult(null);
         const response = await handleGenerateWingmanMessage({ targetDescription, persona });
         setResult(response.openingMessage);
+        
+        if (!response.openingMessage.startsWith("Error:")) {
+            setHistory(prev => [response.openingMessage, ...prev].slice(0, 10)); // Keep last 10
+        }
         setIsLoading(false);
     };
 
+    // MicroAppCard: The main UI for the app instance
     return (
-        <div className="flex flex-col gap-4 p-2">
+        <div className="flex flex-col gap-4 p-2 h-full">
             <Card className="bg-background/50 border-0 shadow-none">
                 <CardHeader className="p-2">
                     <CardTitle className="text-base">Agent Configuration</CardTitle>
@@ -76,8 +95,34 @@ export default function BeepWingman() {
                             </AlertDescription>
                         </Alert>
                     )}
+
+                    {/* ExpansionLayer: Contextually relevant additional UI */}
+                    {history.length > 0 && (
+                        <Collapsible open={isHistoryOpen} onOpenChange={setIsHistoryOpen} className="space-y-2 mt-2">
+                            <CollapsibleTrigger asChild>
+                                <Button variant="outline" className="w-full justify-between">
+                                    <div className="flex items-center gap-2">
+                                        <History className="h-4 w-4" />
+                                        <span>Generation History</span>
+                                    </div>
+                                    <ChevronRight className={`transition-transform duration-200 ${isHistoryOpen ? 'rotate-90' : ''}`} />
+                                </Button>
+                            </CollapsibleTrigger>
+                            <CollapsibleContent>
+                                <ScrollArea className="h-24 w-full rounded-md border p-2 bg-background/50">
+                                    <div className="space-y-2">
+                                    {history.map((item, index) => (
+                                        <p key={index} className="text-xs text-muted-foreground italic border-b border-border/50 pb-1 last:border-b-0">"{item}"</p>
+                                    ))}
+                                    </div>
+                                </ScrollArea>
+                            </CollapsibleContent>
+                        </Collapsible>
+                    )}
                 </CardContent>
             </Card>
+
+            {/* MonetizationHook: Embedded trigger for premium features */}
             <div className="mt-auto pt-2">
                 <TooltipProvider>
                     <Tooltip>
