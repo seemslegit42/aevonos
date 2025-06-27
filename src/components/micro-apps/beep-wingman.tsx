@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState } from 'react';
@@ -164,7 +163,7 @@ const SettingsView = () => {
 export default function BeepWingman() {
   return (
     <div className="h-full">
-      <Tabs defaultValue="pipeline" className="flex flex-col h-full">
+      <Tabs defaultValue="settings" className="flex flex-col h-full">
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="pipeline">Pipeline</TabsTrigger>
           <TabsTrigger value="inbox">Inbox</TabsTrigger>
