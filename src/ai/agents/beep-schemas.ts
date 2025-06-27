@@ -12,7 +12,6 @@ const LaunchableAppTypeSchema = z.enum([
   'pam-poovey-onboarding',
   'beep-wingman',
   'infidelity-radar',
-  'usage-monitor',
 ]);
 
 export const AppToLaunchSchema = z.object({
