@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { getSession } from '@/lib/auth';
 import { WorkflowRunStatus } from '@prisma/client';
+import { executeWorkflow } from '@/lib/workflow-executor';
 
 interface RouteParams {
   params: {
@@ -38,41 +39,38 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       },
     });
     
-    // Don't block the response. Simulate the workflow execution in the background.
-    // This is a common pattern in serverless environments for long-running tasks.
+    // Don't block the API response. Execute the workflow in the background.
     (async () => {
         try {
-            // Simulate initial processing delay
-            await new Promise(resolve => setTimeout(resolve, 2000));
             await prisma.workflowRun.update({
                 where: { id: workflowRun.id },
                 data: { status: WorkflowRunStatus.running }
             });
 
-            // Simulate main work finishing
-            await new Promise(resolve => setTimeout(resolve, 5000));
-            
-            // Randomly succeed or fail to make the simulation more realistic
-            const isSuccess = Math.random() > 0.2; 
+            // Execute the actual workflow using the new executor
+            const result = await executeWorkflow(
+                workflow, 
+                trigger_payload, 
+                { workspaceId: session.workspaceId! }
+            );
 
             await prisma.workflowRun.update({
                 where: { id: workflowRun.id },
                 data: { 
-                    status: isSuccess ? WorkflowRunStatus.completed : WorkflowRunStatus.failed,
+                    status: WorkflowRunStatus.completed,
                     finishedAt: new Date(),
-                    output: isSuccess 
-                        ? { result: 'Workflow completed successfully with expected output.' }
-                        : { error: 'An unexpected error occurred during execution.' }
+                    output: result, // Store the actual result from the execution
                 }
             });
         } catch (e) {
-            console.error(`[Workflow Simulation Error] for run ${workflowRun.id}:`, e);
+            console.error(`[Workflow Execution Error] for run ${workflowRun.id}:`, e);
+            const errorMessage = e instanceof Error ? e.message : 'An unknown error occurred during execution.';
              await prisma.workflowRun.update({
                 where: { id: workflowRun.id },
                 data: { 
                     status: WorkflowRunStatus.failed,
                     finishedAt: new Date(),
-                    output: { error: 'The workflow simulation process itself failed.' }
+                    output: { error: errorMessage }
                 }
             });
         }
