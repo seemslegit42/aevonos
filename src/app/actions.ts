@@ -38,6 +38,8 @@ import { analyzeLaheyLog as analyzeLaheyLogFlow } from '@/ai/agents/lahey';
 import type { LaheyAnalysisInput, LaheyAnalysisOutput } from '@/ai/agents/lahey-schemas';
 import { processDailyLog } from '@/ai/agents/foremanator';
 import type { ForemanatorLogInput, ForemanatorLogOutput } from '@/ai/agents/foremanator-schemas';
+import { analyzeCompliance as analyzeComplianceFlow } from '@/ai/agents/sterileish';
+import type { SterileishAnalysisInput, SterileishAnalysisOutput } from '@/ai/agents/sterileish-schemas';
 
 
 export async function handleCommand(command: string): Promise<UserCommandOutput> {
@@ -298,6 +300,21 @@ export async function handleForemanatorLog(input: ForemanatorLogInput): Promise<
             materialsUsed: [],
             blockers: ['Server error.'],
             foremanatorCommentary: "You think these reports write themselves? Fix the server."
+        };
+    }
+}
+
+export async function analyzeCompliance(input: SterileishAnalysisInput): Promise<SterileishAnalysisOutput> {
+    try {
+        const result = await analyzeComplianceFlow(input);
+        return result;
+    } catch (error) {
+        console.error('Error in STERILE-ish analysis:', error);
+        return {
+            isCompliant: false,
+            complianceNotes: "Analysis failed. The sample was probably contaminated. Or the server is.",
+            sterileRating: 0,
+            snarkySummary: "The system is down. Everything is probably a biohazard now."
         };
     }
 }

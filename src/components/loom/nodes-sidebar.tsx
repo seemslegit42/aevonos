@@ -14,6 +14,7 @@ import { CrystalIcon } from '../icons/CrystalIcon';
 import { JrocIcon } from '../icons/JrocIcon';
 import { LaheyIcon } from '../icons/LaheyIcon';
 import { ForemanatorIcon } from '../icons/ForemanatorIcon';
+import { SterileishIcon } from '../icons/SterileishIcon';
 
 
 export type NodeType = 
@@ -29,6 +30,7 @@ export type NodeType =
     | 'tool-jroc'
     | 'tool-lahey'
     | 'tool-foremanator'
+    | 'tool-sterileish'
     | 'tool-final-answer';
 
 
@@ -50,6 +52,7 @@ const nodeTypes: NodeInfo[] = [
     { type: 'tool-jroc', label: 'J-ROC', description: 'Generates business kits', icon: JrocIcon },
     { type: 'tool-lahey', label: 'Lahey', description: 'Investigates logs', icon: LaheyIcon },
     { type: 'tool-foremanator', label: 'Foremanator', description: 'Processes site logs', icon: ForemanatorIcon },
+    { type: 'tool-sterileish', label: 'STERILE-ish', description: 'Analyzes compliance logs', icon: SterileishIcon },
     { type: 'tool-crm', label: 'CRM Tool', description: 'Manages contacts', icon: AddressBookIcon },
     { type: 'tool-paper-trail', label: 'Paper Trail', description: 'Scans evidence', icon: FileUp },
     { type: 'tool-final-answer', label: 'Final Answer', description: 'Outputs final response', icon: CrystalIcon },

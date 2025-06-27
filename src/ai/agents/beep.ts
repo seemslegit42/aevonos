@@ -34,6 +34,7 @@ import {
     generateBusinessKit,
     analyzeLaheyLog,
     handleForemanatorLog,
+    analyzeCompliance,
 } from '@/app/actions';
 import {
   DrSyntaxInputSchema,
@@ -50,6 +51,7 @@ import { VandelayAlibiInputSchema } from './vandelay-schemas';
 import { JrocInputSchema } from './jroc-schemas';
 import { LaheyAnalysisInputSchema } from './lahey-schemas';
 import { ForemanatorLogInputSchema } from './foremanator-schemas';
+import { SterileishAnalysisInputSchema } from './sterileish-schemas';
 
 
 import {
@@ -268,12 +270,25 @@ class ForemanatorTool extends Tool {
     }
 }
 
+class SterileishTool extends Tool {
+    name = 'analyzeComplianceLog';
+    description = 'Analyzes a cleanroom or medical device manufacturing log for compliance issues with a sarcastic tone. Use for commands like "analyze this cleanroom log" or "is this calibration record compliant?".';
+    schema = SterileishAnalysisInputSchema;
+    
+    async _call(input: z.infer<typeof SterileishAnalysisInputSchema>) {
+        const result = await analyzeCompliance(input);
+        const report: z.infer<typeof AgentReportSchema> = { agent: 'sterileish', report: result };
+        return JSON.stringify(report);
+    }
+}
+
 
 const tools: Tool[] = [
     new FinalAnswerTool(), new DrSyntaxTool(), 
     new CreateContactTool(), new UpdateContactTool(), new ListContactsTool(), new DeleteContactTool(), 
     new GetUsageTool(), new VinDieselTool(), new WinstonWolfeTool(), new KifKrokerTool(),
     new VandelayTool(), new JrocTool(), new LaheyTool(), new ForemanatorTool(),
+    new SterileishTool(),
 ];
 
 const modelWithTools = geminiModel.bind({

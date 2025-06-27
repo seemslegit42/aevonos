@@ -21,6 +21,7 @@ import { PaperTrailIcon } from './icons/PaperTrailIcon';
 import { JrocIcon } from './icons/JrocIcon';
 import { LaheyIcon } from './icons/LaheyIcon';
 import { ForemanatorIcon } from './icons/ForemanatorIcon';
+import { SterileishIcon } from './icons/SterileishIcon';
 
 
 import { type MicroAppType } from '@/store/app-store';
@@ -41,6 +42,7 @@ import PaperTrail from './micro-apps/paper-trail';
 import JrocBusinessKit from './micro-apps/jroc-business-kit';
 import LaheyCommander from './micro-apps/lahey-commander';
 import TheForemanator from './micro-apps/the-foremanator';
+import Sterileish from './micro-apps/sterileish';
 
 
 type ComponentRegistry = {
@@ -128,6 +130,10 @@ export const microAppRegistry: Record<MicroAppType, ComponentRegistry> = {
   'the-foremanator': {
       icon: ForemanatorIcon,
       content: TheForemanator,
+  },
+  'sterileish': {
+      icon: SterileishIcon,
+      content: Sterileish,
   }
 };
 
