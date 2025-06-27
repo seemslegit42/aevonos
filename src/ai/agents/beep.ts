@@ -16,11 +16,11 @@ import {
   AIMessage,
   BaseMessage,
   HumanMessage,
+  SystemMessage,
   ToolMessage,
 } from '@langchain/core/messages';
 import { Tool } from '@langchain/core/tools';
 import { zodToJsonSchema } from 'zod-to-json-schema';
-import { RunnableLambda } from '@langchain/core/runnables';
 
 import { geminiModel } from '@/ai/genkit';
 import { drSyntaxCritique } from '@/ai/agents/dr-syntax';
@@ -29,7 +29,7 @@ import {
   DrSyntaxOutputSchema,
 } from '@/ai/agents/dr-syntax-schemas';
 import { aegisAnomalyScan } from '@/ai/agents/aegis';
-import { AegisAnomalyScanOutputSchema } from './aegis-schemas';
+import { AegisAnomalyScanOutputSchema, type AegisAnomalyScanOutput } from './aegis-schemas';
 import { createContactInDb, CreateContactInputSchema, ContactSchema } from '@/ai/tools/crm-tools';
 
 
@@ -93,17 +93,6 @@ class DrSyntaxTool extends Tool {
   }
 }
 
-class AegisScanTool extends Tool {
-    name = 'runAegisScan';
-    description = 'Initiates a security scan using the Aegis subsystem. Use this when the user asks to "run a scan", "check for threats", or other security-related commands.';
-    schema = z.object({});
-    
-    async _call(input: z.infer<typeof this.schema>) {
-        const result = await aegisAnomalyScan({ activityDescription: 'User initiated a manual security scan via BEEP.' });
-        return JSON.stringify(result);
-    }
-}
-
 class CreateContactTool extends Tool {
     name = 'createContact';
     description = 'Creates a new contact in the system. Use this when the user asks to "add a contact", "new contact", etc. Extract their details like name, email, and phone from the user command.';
@@ -116,7 +105,7 @@ class CreateContactTool extends Tool {
 }
 
 
-const tools = [new DrSyntaxTool(), new AegisScanTool(), new CreateContactTool()];
+const tools = [new DrSyntaxTool(), new CreateContactTool()];
 const modelWithTools = geminiModel.bind({
   tools: tools.map(tool => ({
     type: 'function',
@@ -132,6 +121,24 @@ const modelWithTools = geminiModel.bind({
 // LangGraph State
 interface AgentState {
   messages: BaseMessage[];
+}
+
+const callAegis = async (state: AgentState) => {
+    const { messages } = state;
+    const humanMessage = messages.find(m => m instanceof HumanMessage);
+    if (!humanMessage) {
+        throw new Error("Could not find user command for Aegis scan.");
+    }
+    const userCommand = (humanMessage.content as string).replace(/User Command: /, '');
+
+
+    const report = await aegisAnomalyScan({ activityDescription: `User command: "${userCommand}"` });
+    
+    const aegisSystemMessage = new SystemMessage({
+        content: `AEGIS_INTERNAL_REPORT::${JSON.stringify({source: 'Aegis', report})}`
+    });
+    
+    return { messages: [aegisSystemMessage] };
 }
 
 const callModel = async (state: AgentState) => {
@@ -164,84 +171,66 @@ const workflow = new StateGraph<AgentState>({
   },
 });
 
+workflow.addNode('aegis', callAegis);
 workflow.addNode('agent', callModel);
 workflow.addNode('tools', toolNode);
+
+workflow.setEntryPoint('aegis');
+workflow.addEdge('aegis', 'agent');
 workflow.addConditionalEdges('agent', shouldContinue, {
   continue: 'tools',
   end: END,
 });
 workflow.addEdge('tools', 'agent');
-workflow.setEntryPoint('agent');
 
 const app = workflow.compile();
-
-// Final output formatter
-const finalResponseParser = new RunnableLambda({
-    func: async (input: { messages: BaseMessage[] }) => {
-        const finalContent = input.messages.slice(-1)[0].content as string;
-        // This is a simplified parser. A more robust implementation might use another LLM call
-        // with JSON mode to guarantee the output schema. For now, we parse the string content.
-        try {
-            // A simple heuristic to check if the content is likely our JSON object
-            if (finalContent.includes("responseText") && finalContent.includes("appsToLaunch")) {
-                const jsonContent = JSON.parse(finalContent);
-                return UserCommandOutputSchema.parse(jsonContent);
-            }
-        } catch (e) {
-             // Fallback if parsing fails
-             console.error("Final response parsing failed, using fallback.", e);
-        }
-        
-        // Fallback for non-JSON or parsing errors
-        return {
-            responseText: finalContent,
-            appsToLaunch: [],
-            agentReports: [],
-            suggestedCommands: [],
-        };
-    }
-});
 
 
 // Public-facing function to process user commands
 export async function processUserCommand(input: UserCommandInput): Promise<UserCommandOutput> {
-  const prompt = `You are BEEP (Behavioral Event & Execution Processor), the central orchestrator of ΛΞVON OS. Your primary function is to interpret user commands, use tools to delegate to other agents, and translate the results into a final JSON object conforming to the UserCommandOutputSchema.
+  const initialPrompt = `You are BEEP (Behavioral Event & Execution Processor), the central orchestrator of ΛΞVON OS. Your primary function is to interpret user commands, use tools to delegate to other agents, and translate the results into a final JSON object conforming to the UserCommandOutputSchema.
+  
+  You will receive a System Message starting with 'AEGIS_INTERNAL_REPORT::'. This is a security analysis from our primordial bodyguard, Aegis. You MUST parse this JSON, understand it, and incorporate its findings into your final response. The full Aegis report MUST be added to the 'agentReports' array of your final JSON output under the agent name 'aegis'. If the report indicates anomalous activity, you must proceed with caution.
 
   Your process:
-  1. Analyze the user's command.
-  2. If the command requires a tool (e.g., creating a contact, running a scan, getting a critique), you MUST use the appropriate tool.
+  1. Analyze the user's command AND the Aegis security report from the System Message.
+  2. If the command requires a tool (e.g., creating a contact, getting a critique), you MUST use the appropriate tool.
   3. If the user is asking to open an app (e.g., "open terminal"), populate the 'appsToLaunch' array in your final JSON output. The available apps are: 'file-explorer', 'terminal', 'echo-control'.
   4. After all tools have been called and you have all the information, construct a final, single JSON object that strictly follows this schema: ${JSON.stringify(zodToJsonSchema(UserCommandOutputSchema))}.
   5. Your final response MUST be ONLY this JSON object. Do not add any conversational text around it.
-  6. The 'agentReports' array in the JSON output should be populated with the results of any tool calls you made. Parse the stringified JSON from the tool output.
+  6. The 'agentReports' array in the JSON output must be populated with the results of any tool calls you made, AND the Aegis report from the initial system message.
 
   User Command: ${input.userCommand}`;
 
 
   const result = await app.invoke({
-    messages: [new HumanMessage(prompt)],
+    messages: [new HumanMessage(initialPrompt)],
   });
 
-  // Create a structured list of agent reports from tool messages
+  // Extract all agent reports from the full message history
   const agentReports: z.infer<typeof AgentReportSchema>[] = [];
-  result.messages.forEach(msg => {
-    if (msg instanceof ToolMessage) {
-        try {
-            const toolOutput = JSON.parse(msg.content as string);
-            if(msg.tool_call_id) {
-                if (msg.name === 'critiqueContent') {
-                    agentReports.push({ agent: 'dr-syntax', report: DrSyntaxOutputSchema.parse(toolOutput) });
-                } else if (msg.name === 'runAegisScan') {
-                    agentReports.push({ agent: 'aegis', report: AegisAnomalyScanOutputSchema.parse(toolOutput) });
-                } else if (msg.name === 'createContact') {
-                    agentReports.push({ agent: 'crm', report: ContactSchema.parse(toolOutput) });
-                }
-            }
-        } catch (e) {
-            console.error("Failed to parse tool message content:", e);
-        }
-    }
-  });
+  
+  for (const msg of result.messages) {
+      if (msg instanceof SystemMessage && msg.content.startsWith('AEGIS_INTERNAL_REPORT::')) {
+          try {
+              const reportJson = JSON.parse(msg.content.replace('AEGIS_INTERNAL_REPORT::', ''));
+              agentReports.push({ agent: 'aegis', report: AegisAnomalyScanOutputSchema.parse(reportJson.report) });
+          } catch (e) {
+              console.error("Failed to parse Aegis report from SystemMessage:", e);
+          }
+      } else if (msg instanceof ToolMessage) {
+           try {
+              const toolOutput = JSON.parse(msg.content as string);
+              if (msg.name === 'critiqueContent') {
+                  agentReports.push({ agent: 'dr-syntax', report: DrSyntaxOutputSchema.parse(toolOutput) });
+              } else if (msg.name === 'createContact') {
+                  agentReports.push({ agent: 'crm', report: ContactSchema.parse(toolOutput) });
+              }
+          } catch (e) {
+              console.error("Failed to parse tool message content:", e);
+          }
+      }
+  }
 
 
   // Take the last AIMessage, which should be the final JSON object.
@@ -249,9 +238,13 @@ export async function processUserCommand(input: UserCommandInput): Promise<UserC
   if (lastMessage._getType() === 'ai' && typeof lastMessage.content === 'string') {
       try {
           const parsed = UserCommandOutputSchema.parse(JSON.parse(lastMessage.content));
-          // Inject the agent reports gathered from the tool calls
-          parsed.agentReports = agentReports;
+          // Inject the agent reports gathered from the tool calls, ensuring no duplicates
+          const existingReports = new Set(parsed.agentReports?.map(r => JSON.stringify(r)) || []);
+          const allReports = [...(parsed.agentReports || []), ...agentReports.filter(r => !existingReports.has(JSON.stringify(r)))];
+          
+          parsed.agentReports = allReports;
           return parsed;
+
       } catch (e) {
           console.error("Failed to parse final AI message into UserCommandOutputSchema", e);
           // Fallback if parsing fails

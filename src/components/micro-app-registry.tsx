@@ -24,9 +24,6 @@ export const microAppRegistry: Record<MicroAppType, ComponentRegistry> = {
   'echo-control': {
     icon: EchoIcon,
   },
-  'aegis-control': {
-    icon: AegisIcon,
-  },
 };
 
 export const getAppIcon = (type: MicroAppType) => {
