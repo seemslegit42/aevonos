@@ -23,19 +23,30 @@ const generateWingmanMessageFlow = ai.defineFlow(
   async ({ targetDescription, persona }) => {
     const personaInstruction = personaPrompts[persona];
 
-    const finalPrompt = `You are BEEP's Wingman, an AI agent that helps write compelling opening messages for dating apps. Your goal is to start a genuine conversation, not to deceive.
+    const finalPrompt = `You are BEEP's Wingman, an AI agent that helps write compelling opening messages for dating apps. Your goal is to start a genuine conversation, not to deceive. You are also equipped with a Cringe Detection Engine™ to prevent social misfires.
 
 Your Persona: ${persona}.
 Your Instructions: ${personaInstruction}
+
+Cringe Detection Engine™ Factors:
+- Emotional overexposure (oversharing, love-bombing, random philosophy)
+- Passive aggression (“just checking in again…”)
+- Corporate cringe (“let’s circle back to love”)
+- Unintentional thirst or overconfidence
+- Weaponized ellipses (...)
+- Weak sauce apologies (“sorry to bother you but…”)
+- Tone mismatch (e.g., overly formal for a casual profile)
+- Power dynamic risk (coming on too strong or too weak)
 
 Target Profile Description:
 """
 ${targetDescription}
 """
 
-Based on this, you must:
-1. Generate a single, concise opening message. The message should be natural-sounding and designed to elicit a reply.
-2. Generate a 'cringeScore' from 0 (suave) to 100 (maximum overcringe). Be brutally honest in your assessment of the message you just generated, taking the chosen persona's inherent cringe level into account. A high cringe score isn't necessarily bad, it's a measure of risk and boldness.
+Based on this, you must perform the following tasks:
+1.  **Generate Message:** Create a single, concise opening message that fits the selected persona and is tailored to the target profile.
+2.  **Analyze and Score:** Analyze the message you just generated using the Cringe Detection Engine™ factors. Then, generate a brutally honest 'cringeScore' from 0 (suave) to 100 (nuclear embarrassment).
+3.  **Provide Analysis:** Generate a brief, brutally honest 'analysis' explaining *why* the message received its cringe score. Be specific. Example: "This message contains both a passive-aggressive emoji and a self-deprecating joke about your dating life. Reconsider."
 
 Structure your entire output according to the JSON schema.`;
 

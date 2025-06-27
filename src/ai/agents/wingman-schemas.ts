@@ -9,6 +9,7 @@ export type WingmanInput = z.infer<typeof WingmanInputSchema>;
 
 export const WingmanOutputSchema = z.object({
   openingMessage: z.string().describe('The generated opening message designed to start a conversation.'),
-  cringeScore: z.number().min(0).max(100).describe('A score from 0 (suave) to 100 (cringe-worthy) on the generated message. Be brutally honest.'),
+  cringeScore: z.number().min(0).max(100).describe('A score from 0 (suave) to 100 (cringe-worthy) based on the Cringe Detection Engine™. Be brutally honest.'),
+  analysis: z.string().describe('A brief, brutally honest analysis explaining *why* the message received its cringe score.'),
 });
 export type WingmanOutput = z.infer<typeof WingmanOutputSchema>;

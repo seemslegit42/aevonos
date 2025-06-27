@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Loader2, Wand2, Copy, Bot } from 'lucide-react';
+import { Loader2, Wand2, Copy, Bot, ShieldAlert } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { generateWingmanMessage } from '@/app/actions';
 import type { WingmanInput, WingmanOutput } from '@/ai/agents/wingman-schemas';
@@ -87,6 +87,13 @@ export default function BeepWingman() {
                         </AlertDescription>
                     </Alert>
                     <CringeOMeterDial score={result.cringeScore} />
+                     <Alert variant={result.cringeScore > 70 ? 'destructive' : 'default'} className="bg-background/80 mt-2">
+                        <ShieldAlert className="h-4 w-4" />
+                        <AlertTitle>Cringe Analysis</AlertTitle>
+                        <AlertDescription>
+                            {result.analysis}
+                        </AlertDescription>
+                    </Alert>
                 </div>
             )}
         </div>
