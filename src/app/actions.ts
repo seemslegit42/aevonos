@@ -1,3 +1,4 @@
+
 'use server';
 
 import { processUserCommand } from '@/ai/agents/beep';
@@ -29,6 +30,8 @@ import { analyzeComms as analyzeCommsFlow } from '@/ai/agents/kif-kroker';
 import type { KifKrokerAnalysisInput, KifKrokerAnalysisOutput } from '@/ai/agents/kif-kroker-schemas';
 import { createVandelayAlibi as createVandelayAlibiFlow } from '@/ai/agents/vandelay';
 import type { VandelayAlibiInput, VandelayAlibiOutput } from '@/ai/agents/vandelay-schemas';
+import { scanEvidence as scanEvidenceFlow } from '@/ai/agents/paper-trail';
+import type { PaperTrailScanInput, PaperTrailScanOutput } from '@/ai/agents/paper-trail-schemas';
 
 export async function handleCommand(command: string): Promise<UserCommandOutput> {
   try {
@@ -224,6 +227,22 @@ export async function createVandelayAlibi(input: VandelayAlibiInput): Promise<Va
     console.error('Error in Vandelay alibi flow:', error);
     return {
       title: "Error: Could not generate alibi due to a critical synergy failure.",
+    };
+  }
+}
+
+export async function scanEvidence(input: PaperTrailScanInput): Promise<PaperTrailScanOutput> {
+  try {
+    const result = await scanEvidenceFlow(input);
+    return result;
+  } catch (error) {
+    console.error('Error in Paper Trail evidence scan:', error);
+    return {
+      vendor: 'Unknown',
+      amount: 0,
+      date: 'N/A',
+      lead: 'The informant went dark. Could be a server error, or something more sinister.',
+      isEvidenceValid: false,
     };
   }
 }

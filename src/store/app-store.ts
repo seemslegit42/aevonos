@@ -32,7 +32,8 @@ export type MicroAppType =
   | 'rolodex'
   | 'winston-wolfe'
   | 'kif-kroker'
-  | 'vandelay';
+  | 'vandelay'
+  | 'paper-trail';
 
 // Define the shape of a MicroApp instance
 export interface MicroApp {
@@ -65,6 +66,7 @@ const defaultAppDetails: Record<MicroAppType, Omit<MicroApp, 'id' | 'contentProp
   'winston-wolfe': { type: 'winston-wolfe', title: 'The Winston Wolfe', description: "Bad review? Thirty minutes away. I'll be there in ten." },
   'kif-kroker': { type: 'kif-kroker', title: 'The Kif Kroker', description: "Sigh. The team's conflict metrics are escalating again." },
   'vandelay': { type: 'vandelay', title: 'Vandelay Industries', description: 'Importing, exporting, and ghosting.' },
+  'paper-trail': { type: 'paper-trail', title: 'Paper Trail', description: 'Every dollar tells a story. We find the plot holes.' },
 };
 
 

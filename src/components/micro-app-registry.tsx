@@ -15,6 +15,7 @@ import { RolodexIcon } from '@/components/icons/RolodexIcon';
 import { WinstonWolfeIcon } from '@/components/icons/WinstonWolfeIcon';
 import { KifKrokerIcon } from '@/components/icons/KifKrokerIcon';
 import { VandelayIcon } from '@/components/icons/VandelayIcon';
+import { PaperTrailIcon } from '@/components/icons/PaperTrailIcon';
 import { EyeOff } from 'lucide-react';
 
 import { type MicroAppType } from '@/store/app-store';
@@ -30,6 +31,7 @@ import TheRolodex from './micro-apps/rolodex';
 import TheWinstonWolfe from './micro-apps/winston-wolfe';
 import TheKifKroker from './micro-apps/kif-kroker';
 import Vandelay from './micro-apps/vandelay';
+import PaperTrail from './micro-apps/paper-trail';
 
 type ComponentRegistry = {
     icon: React.ComponentType<any>;
@@ -96,6 +98,10 @@ export const microAppRegistry: Record<MicroAppType, ComponentRegistry> = {
   'vandelay': {
     icon: VandelayIcon,
     content: Vandelay,
+  },
+  'paper-trail': {
+    icon: PaperTrailIcon,
+    content: PaperTrail,
   },
 };
 
