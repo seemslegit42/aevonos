@@ -1,3 +1,4 @@
+
 import React from 'react';
 
 export const DrSyntaxIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -8,9 +9,14 @@ export const DrSyntaxIcon = (props: React.SVGProps<SVGSVGElement>) => (
         <stop offset="100%" style={{ stopColor: 'hsl(var(--primary))' }} />
       </linearGradient>
     </defs>
-    <path d="M50 10 L60 20 L40 80 L30 90 L50 10 Z" fill="url(#dr-syntax-gradient)" opacity="0.3" />
-    <path d="M50 10 L60 20 L40 80 L30 90 L50 10 Z" stroke="url(#dr-syntax-gradient)" strokeWidth="3" />
-    <path d="M65 25 L85 45 L55 75 L35 55 Z" fill="url(#dr-syntax-gradient)" opacity="0.5" />
-    <path d="M65 25 L85 45 L55 75 L35 55 Z" stroke="url(#dr-syntax-gradient)" strokeWidth="2" />
+    {/* A sharp, crystalline scalpel/pen glyph */}
+    <path d="M80 10 L90 20 L30 80 L20 70 Z" fill="url(#dr-syntax-gradient)" opacity="0.3" />
+    <path d="M80 10 L90 20 L30 80 L20 70 Z" stroke="url(#dr-syntax-gradient)" strokeWidth="3" />
+    
+    {/* Redaction/emphasis line */}
+    <path d="M10 60 L70 90" stroke="hsl(var(--destructive))" strokeWidth="4" opacity="0.7" />
+
+    {/* Facet line on the blade */}
+    <path d="M85 15 L25 75" stroke="hsl(var(--foreground))" strokeWidth="1.5" opacity="0.5" />
   </svg>
 );

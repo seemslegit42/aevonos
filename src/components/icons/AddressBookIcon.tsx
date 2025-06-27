@@ -9,17 +9,16 @@ export const AddressBookIcon = (props: React.SVGProps<SVGSVGElement>) => (
         <stop offset="100%" style={{ stopColor: 'hsl(var(--primary))' }} />
       </linearGradient>
     </defs>
-    {/* Book Cover */}
-    <path d="M20 10 H80 Q 85 10, 85 15 V 85 Q 85 90, 80 90 H 20 Q 15 90, 15 85 V 15 Q 15 10, 20 10 Z" fill="url(#address-book-gradient)" opacity="0.3" />
-    <path d="M20 10 H80 Q 85 10, 85 15 V 85 Q 85 90, 80 90 H 20 Q 15 90, 15 85 V 15 Q 15 10, 20 10 Z" stroke="url(#address-book-gradient)" strokeWidth="3" />
+    {/* Crystalline Hexagon Shape */}
+    <path d="M50 10 L85 30 V70 L50 90 L15 70 V30 Z" fill="url(#address-book-gradient)" opacity="0.3" />
+    <path d="M50 10 L85 30 V70 L50 90 L15 70 V30 Z" stroke="url(#address-book-gradient)" strokeWidth="3" />
     
-    {/* Binding */}
-    <path d="M15 15 V 85" stroke="hsl(var(--foreground))" strokeWidth="4" opacity="0.6" />
+    {/* Internal Facets / "Entries" */}
+    <path d="M35 40 H 65" stroke="hsl(var(--foreground))" strokeWidth="2.5" opacity="0.8" />
+    <path d="M35 50 H 65" stroke="hsl(var(--foreground))" strokeWidth="2.5" opacity="0.8" />
+    <path d="M35 60 H 65" stroke="hsl(var(--foreground))" strokeWidth="2.5" opacity="0.8" />
 
-    {/* Abstract contact lines */}
-    <path d="M35 30 H 70" stroke="hsl(var(--foreground))" strokeWidth="2" opacity="0.7" />
-    <path d="M35 45 H 70" stroke="hsl(var(--foreground))" strokeWidth="2" opacity="0.7" />
-    <path d="M35 60 H 70" stroke="hsl(var(--foreground))" strokeWidth="2" opacity="0.7" />
-    <path d="M35 75 H 70" stroke="hsl(var(--foreground))" strokeWidth="2" opacity="0.7" />
+    {/* Vertical Facet Line */}
+    <path d="M50 10 L50 90" stroke="hsl(var(--foreground))" strokeWidth="1.5" opacity="0.4" />
   </svg>
 );

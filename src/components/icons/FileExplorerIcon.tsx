@@ -1,3 +1,4 @@
+
 import React from 'react';
 
 export const FileExplorerIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -8,8 +9,12 @@ export const FileExplorerIcon = (props: React.SVGProps<SVGSVGElement>) => (
         <stop offset="100%" style={{ stopColor: 'hsl(var(--primary))' }} />
       </linearGradient>
     </defs>
-    <path d="M10 25 H40 L50 15 H90 V85 H10 Z" fill="url(#file-gradient)" opacity="0.3" />
-    <path d="M10 25 H40 L50 15 H90 V85 H10 Z" stroke="url(#file-gradient)" strokeWidth="3" />
-    <path d="M20 40 L80 40 M20 55 L80 55 M20 70 L60 70" stroke="hsl(var(--foreground))" strokeWidth="2" opacity="0.7" />
+    {/* A crystalline, faceted folder shape */}
+    <path d="M10 25 L40 25 L50 15 L90 15 L90 80 L10 80 Z" fill="url(#file-gradient)" opacity="0.3" />
+    <path d="M10 25 L40 25 L50 15 L90 15 L90 80 L10 80 Z" stroke="url(#file-gradient)" strokeWidth="3" />
+
+    {/* Internal Facet Lines */}
+    <path d="M10 80 L40 25" stroke="hsl(var(--foreground))" strokeWidth="1.5" opacity="0.4" />
+    <path d="M50 15 L90 80" stroke="hsl(var(--foreground))" strokeWidth="1.5" opacity="0.2" />
   </svg>
 );

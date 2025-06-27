@@ -1,3 +1,4 @@
+
 import React from 'react';
 
 export const EchoIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -8,9 +9,12 @@ export const EchoIcon = (props: React.SVGProps<SVGSVGElement>) => (
         <stop offset="100%" style={{ stopColor: 'hsl(var(--primary))' }} />
       </linearGradient>
     </defs>
-    <path d="M50 50 m-40 0 a40 40 0 1 0 80 0 a40 40 0 1 0 -80 0" stroke="url(#echo-gradient)" strokeWidth="3" opacity="0.3" />
-    <path d="M50 50 m-30 0 a30 30 0 1 0 60 0 a30 30 0 1 0 -60 0" stroke="url(#echo-gradient)" strokeWidth="3" opacity="0.6" />
-    <path d="M50 50 m-20 0 a20 20 0 1 0 40 0 a20 20 0 1 0 -40 0" stroke="url(#echo-gradient)" strokeWidth="3" opacity="0.9" />
-    <circle cx="50" cy="50" r="10" fill="url(#echo-gradient)" stroke="hsl(var(--foreground))" strokeWidth="1.5" />
+    {/* Concentric Hexagons */}
+    <path d="M50 10 L85 30 V70 L50 90 L15 70 V30 Z" stroke="url(#echo-gradient)" strokeWidth="3" opacity="0.9" />
+    <path d="M50 20 L77 35 V65 L50 80 L23 65 V35 Z" stroke="url(#echo-gradient)" strokeWidth="2.5" opacity="0.6" />
+    <path d="M50 30 L69 40 V60 L50 70 L31 60 V40 Z" stroke="url(#echo-gradient)" strokeWidth="2" opacity="0.3" />
+
+    {/* Central Point */}
+    <circle cx="50" cy="50" r="3" fill="url(#echo-gradient)" stroke="hsl(var(--foreground))" strokeWidth="1.5" />
   </svg>
 );
