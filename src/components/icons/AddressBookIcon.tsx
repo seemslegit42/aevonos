@@ -9,19 +9,16 @@ export const AddressBookIcon = (props: React.SVGProps<SVGSVGElement>) => (
         <stop offset="100%" style={{ stopColor: 'hsl(var(--primary))' }} />
       </linearGradient>
     </defs>
-    {/* Crystalline Shard/Book shape */}
-    <path d="M50 5 L85 25 L90 75 L50 95 L10 75 L15 25 Z" fill="url(#address-book-gradient)" opacity="0.3" />
-    <path d="M50 5 L85 25 L90 75 L50 95 L10 75 L15 25 Z" stroke="url(#address-book-gradient)" strokeWidth="3" />
+    {/* Book Shape */}
+    <path d="M75 10 H 25 C 20 10, 15 15, 15 20 V 80 C 15 85, 20 90, 25 90 H 75 C 80 90, 85 85, 85 80 V 20 C 85 15, 80 10, 75 10 Z" fill="url(#address-book-gradient)" opacity="0.2" />
+    <path d="M75 10 H 25 C 20 10, 15 15, 15 20 V 80 C 15 85, 20 90, 25 90 H 75 C 80 90, 85 85, 85 80 V 20 C 85 15, 80 10, 75 10 Z" stroke="url(#address-book-gradient)" strokeWidth="3" />
     
-    {/* Vertical Spine Facet */}
-    <path d="M50 5 L50 95" stroke="hsl(var(--foreground))" strokeWidth="1.5" opacity="0.4" />
+    {/* Spine */}
+    <path d="M25 10 V 90" stroke="hsl(var(--foreground))" strokeWidth="2" opacity="0.6" />
 
-    {/* Abstracted 'Entry' Facets */}
-    <path d="M50 35 L85 25" stroke="hsl(var(--foreground))" strokeWidth="1.5" opacity="0.6" />
-    <path d="M50 50 L88 45" stroke="hsl(var(--foreground))" strokeWidth="1.5" opacity="0.6" />
-    <path d="M50 65 L90 75" stroke="hsl(var(--foreground))" strokeWidth="1.5" opacity="0.6" />
-    <path d="M50 35 L15 25" stroke="hsl(var(--foreground))" strokeWidth="1.5" opacity="0.6" />
-    <path d="M50 50 L12 45" stroke="hsl(var(--foreground))" strokeWidth="1.5" opacity="0.6" />
-    <path d="M50 65 L10 75" stroke="hsl(var(--foreground))" strokeWidth="1.5" opacity="0.6" />
+    {/* Abstracted Address Lines */}
+    <path d="M40 30 L 70 30" stroke="hsl(var(--foreground))" strokeWidth="1.5" opacity="0.7" />
+    <path d="M40 45 L 70 45" stroke="hsl(var(--foreground))" strokeWidth="1.5" opacity="0.7" />
+    <path d="M40 60 L 70 60" stroke="hsl(var(--foreground))" strokeWidth="1.5" opacity="0.7" />
   </svg>
 );
