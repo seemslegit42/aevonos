@@ -9,6 +9,8 @@ import type { DrSyntaxInput, DrSyntaxOutput } from '@/ai/agents/dr-syntax-schema
 import { recallSession, type SessionRecallInput, type SessionRecallOutput } from '@/ai/agents/echo';
 import { generatePamRant as generatePamRantFlow } from '@/ai/agents/pam-poovey';
 import type { PamScriptInput, PamAudioOutput } from '@/ai/agents/pam-poovey-schemas';
+import { deployDecoy as deployDecoyFlow } from '@/ai/agents/decoy';
+import type { DecoyInput, DecoyOutput } from '@/ai/agents/decoy-schemas';
 
 export async function handleCommand(command: string): Promise<UserCommandOutput> {
   try {
@@ -73,6 +75,18 @@ export async function generatePamRant(input: PamScriptInput): Promise<PamAudioOu
     return {
       script: "I'd tell you what you need to know, but my glass is empty and so is my soul. Also, there was a server error.",
       audioDataUri: '',
+    };
+  }
+}
+
+export async function handleDeployDecoy(input: DecoyInput): Promise<DecoyOutput> {
+  try {
+    const result = await deployDecoyFlow(input);
+    return result;
+  } catch (error) {
+    console.error('Error deploying decoy:', error);
+    return {
+      decoyMessage: "The agent failed to generate a message. The target's profile might be too powerful, or there was a server error.",
     };
   }
 }
