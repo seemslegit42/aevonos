@@ -21,6 +21,8 @@ import { analyzeInvite as analyzeInviteFlow } from '@/ai/agents/lumbergh';
 import type { LumberghAnalysisInput, LumberghAnalysisOutput } from '@/ai/agents/lumbergh-schemas';
 import { analyzeExpense as analyzeExpenseLucilleFlow } from '@/ai/agents/lucille-bluth';
 import type { LucilleBluthInput, LucilleBluthOutput } from '@/ai/agents/lucille-bluth-schemas';
+import { analyzeCandidate as analyzeCandidateFlow } from '@/ai/agents/rolodex';
+import type { RolodexAnalysisInput, RolodexAnalysisOutput } from '@/ai/agents/rolodex-schemas';
 
 export async function handleCommand(command: string): Promise<UserCommandOutput> {
   try {
@@ -165,4 +167,18 @@ export async function analyzeExpense(input: LucilleBluthInput): Promise<LucilleB
       judgmentalRemark: "I tried to process that, but the sheer effort was exhausting. There was probably a server error. Get me a vodka rocks.",
     };
   }
+}
+
+export async function analyzeCandidate(input: RolodexAnalysisInput): Promise<RolodexAnalysisOutput> {
+    try {
+        const result = await analyzeCandidateFlow(input);
+        return result;
+    } catch (error) {
+        console.error('Error in Rolodex analysis flow:', error);
+        return {
+            fitScore: 0,
+            icebreaker: "Analysis failed. Let's put a pin in that.",
+            summary: "Could not generate summary due to a server error.",
+        };
+    }
 }
