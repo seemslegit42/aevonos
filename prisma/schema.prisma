@@ -9,7 +9,59 @@ generator client {
 datasource db {
   provider  = "postgresql"
   url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  // For Prisma Accelerate, you'd also need a direct URL.
+  // directUrl = env("DIRECT_DATABASE_URL")
+}
+
+// In a multi-tenant application, Workspace would often represent a Tenant.
+model Workspace {
+  id                Int           @id @default(autoincrement())
+  uuid              String        @unique @default(uuid())
+  name              String
+  planTier          String        @default("Artisan")
+  agentActionsUsed  Int           @default(0)
+  overageEnabled    Boolean       @default(false)
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  
+  workflows         Workflow[]
+  workflowRuns      WorkflowRun[]
+  contacts          Contact[]
+}
+
+model Workflow {
+  id          Int      @id @default(autoincrement())
+  uuid        String   @unique @default(uuid())
+  name        String
+  definition  Json
+  isActive    Boolean  @default(true)
+  triggerType String   @default("api") // api, schedule, event
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  workspaceId Int
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  runs        WorkflowRun[]
+}
+
+model WorkflowRun {
+  id          Int       @id @default(autoincrement())
+  uuid        String    @unique @default(uuid())
+  status      String    // pending, running, completed, failed, paused
+  triggerPayload Json?
+  output      Json?
+  startedAt   DateTime  @default(now())
+  finishedAt  DateTime?
+  
+  workflowId  Int
+  workflow    Workflow  @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  
+  workspaceId Int
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@index([workflowId])
+  @@index([workspaceId])
 }
 
 model Contact {
@@ -20,45 +72,7 @@ model Contact {
   phone     String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-}
-
-model Workspace {
-  id               Int           @id @default(autoincrement())
-  uuid             String        @unique @default(uuid())
-  name             String
-  planTier         String        @default("Artisan")
-  agentActionsUsed Int           @default(0)
-  overageEnabled   Boolean       @default(false)
-  workflows        Workflow[]
-  workflowRuns     WorkflowRun[]
-  createdAt        DateTime      @default(now())
-  updatedAt        DateTime      @updatedAt
-}
-
-model Workflow {
-  id          Int           @id @default(autoincrement())
-  uuid        String        @unique @default(uuid())
-  tenantId    Int?
-  workspace   Workspace?    @relation(fields: [tenantId], references: [id])
-  name        String
-  isActive    Boolean       @default(true)
-  triggerType String        @default("api")
-  definition  Json
-  runs        WorkflowRun[]
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
-}
-
-model WorkflowRun {
-  id             Int        @id @default(autoincrement())
-  uuid           String     @unique @default(uuid())
-  tenantId       Int?
-  workspace      Workspace? @relation(fields: [tenantId], references: [id])
-  workflowId     Int
-  workflow       Workflow   @relation(fields: [workflowId], references: [id])
-  status         String     @default("pending")
-  triggerPayload Json?
-  output         Json?
-  startedAt      DateTime   @default(now())
-  finishedAt     DateTime?
+  
+  workspaceId Int?
+  workspace   Workspace? @relation(fields: [workspaceId], references: [id], onDelete: SetNull)
 }
