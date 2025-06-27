@@ -9,7 +9,7 @@ import type { SessionRecallOutput } from '@/ai/agents/echo-schemas';
 import type { DrSyntaxOutput } from '@/ai/agents/dr-syntax-schemas';
 import type { Contact } from '@/ai/tools/crm-schemas';
 import type { UserCommandOutput, AgentReportSchema } from '@/ai/agents/beep-schemas';
-import { OsintOutput } from '@/ai/agents/osint-schemas';
+import type { OsintOutput } from '@/ai/agents/osint-schemas';
 import type { WinstonWolfeOutput } from '@/ai/agents/winston-wolfe-schemas';
 import type { KifKrokerAnalysisOutput } from '@/ai/agents/kif-kroker-schemas';
 import type { VandelayAlibiOutput } from '@/ai/agents/vandelay-schemas';
