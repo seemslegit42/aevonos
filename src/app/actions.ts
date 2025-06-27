@@ -19,6 +19,8 @@ import { validateVin as validateVinFlow } from '@/ai/agents/vin-diesel';
 import type { VinDieselInput, VinDieselOutput } from '@/ai/agents/vin-diesel-schemas';
 import { analyzeInvite as analyzeInviteFlow } from '@/ai/agents/lumbergh';
 import type { LumberghAnalysisInput, LumberghAnalysisOutput } from '@/ai/agents/lumbergh-schemas';
+import { analyzeExpense as analyzeExpenseLucilleFlow } from '@/ai/agents/lucille-bluth';
+import type { LucilleBluthInput, LucilleBluthOutput } from '@/ai/agents/lucille-bluth-schemas';
 
 export async function handleCommand(command: string): Promise<UserCommandOutput> {
   try {
@@ -149,6 +151,18 @@ export async function analyzeInvite(input: LumberghAnalysisInput): Promise<Lumbe
       isFlagged: true,
       flagReason: "Yeeeeah, my own internal TPS reports are showing an error right now, so I can't really look at this. Mmmkay?",
       declineMemos: [],
+    };
+  }
+}
+
+export async function analyzeExpense(input: LucilleBluthInput): Promise<LucilleBluthOutput> {
+  try {
+    const result = await analyzeExpenseLucilleFlow(input);
+    return result;
+  } catch (error) {
+    console.error('Error in Lucille Bluth analysis flow:', error);
+    return {
+      judgmentalRemark: "I tried to process that, but the sheer effort was exhausting. There was probably a server error. Get me a vodka rocks.",
     };
   }
 }

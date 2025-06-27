@@ -27,7 +27,8 @@ export type MicroAppType =
   | 'beep-wingman'
   | 'infidelity-radar'
   | 'vin-diesel'
-  | 'project-lumbergh';
+  | 'project-lumbergh'
+  | 'lucille-bluth';
 
 // Define the shape of a MicroApp instance
 export interface MicroApp {
@@ -49,12 +50,13 @@ const defaultAppDetails: Record<MicroAppType, Omit<MicroApp, 'id' | 'contentProp
   'ai-suggestion': { type: 'ai-suggestion', title: 'AI Suggestion', description: 'Click to execute this command.' },
   'echo-control': { type: 'echo-control', title: 'Recall Session', description: "Click to have Echo summarize the last session's activity." },
   'aegis-control': { type: 'aegis-control', title: 'Aegis Security Report', description: "Analysis of the last command's security profile." },
-  'contact-list': { type: 'contact-list', title: 'Contact List', description: 'A list of contacts from the CRM.' },
+  'contact-list': { type: 'contact-list', title: 'Contact List', description: 'A list of your contacts.' },
   'pam-poovey-onboarding': { type: 'pam-poovey-onboarding', title: 'Pam Poovey: HR', description: 'Onboarding, complaints, and questionable life advice.' },
   'beep-wingman': { type: 'beep-wingman', title: 'BEEP™ Wingman', description: 'Dating Automation for High-Functioning Degenerates.' },
   'infidelity-radar': { type: 'infidelity-radar', title: 'Infidelity Radar', description: 'Because intuition deserves evidence.' },
   'vin-diesel': { type: 'vin-diesel', title: 'VIN Diesel', description: 'Turbocharged compliance. For family.' },
   'project-lumbergh': { type: 'project-lumbergh', title: 'Project Lumbergh', description: 'Yeah, about those meetings...' },
+  'lucille-bluth': { type: 'lucille-bluth', title: 'The Lucille Bluth', description: 'Judgmental budgeting for your allowance.' },
 };
 
 

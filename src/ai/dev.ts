@@ -13,3 +13,4 @@ import '@/ai/agents/infidelity-analysis.ts';
 import '@/ai/agents/wingman.ts';
 import '@/ai/agents/vin-diesel.ts';
 import '@/ai/agents/lumbergh.ts';
+import '@/ai/agents/lucille-bluth.ts';
