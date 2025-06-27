@@ -62,19 +62,26 @@ export default function MicroAppCard({ app, index }: MicroAppCardProps) {
         {...attributes}
         {...listeners}
         className="bg-foreground/15 backdrop-blur-[20px] border border-foreground/30 shadow-[0_8px_32px_0_rgba(28,25,52,0.1)] hover:border-primary transition-all duration-300 flex flex-col cursor-grab group"
-        onClick={isDragging ? undefined : app.action}
+        onClick={isDragging || app.content ? undefined : app.action}
       >
-        <CardHeader className="flex flex-col items-center text-center p-4">
-          <div className="w-20 h-20 mb-4 flex items-center justify-center">
-            <Icon className="w-full h-full text-primary group-hover:scale-110 transition-transform duration-300" />
+        <CardHeader className="flex flex-row items-center space-x-4 p-4">
+          <div className="w-12 h-12 flex-shrink-0 items-center justify-center">
+            <Icon className="w-full h-full text-primary" />
           </div>
-          <CardTitle className="font-headline text-lg text-foreground">{app.title}</CardTitle>
+          <div className="text-left">
+            <CardTitle className="font-headline text-lg text-foreground">{app.title}</CardTitle>
+            {!app.content && (
+              <CardDescription className="text-left text-muted-foreground text-sm">
+                {app.description}
+              </CardDescription>
+            )}
+          </div>
         </CardHeader>
-        <CardContent className="flex-grow p-4 pt-0">
-          <CardDescription className="text-center text-muted-foreground text-sm">
-            {app.description}
-          </CardDescription>
-        </CardContent>
+        {app.content && (
+          <CardContent className="flex-grow p-4 pt-0">
+             {app.content}
+          </CardContent>
+        )}
       </Card>
     </>
   );

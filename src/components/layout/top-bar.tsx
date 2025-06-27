@@ -2,16 +2,14 @@
 
 import React, { useRef } from 'react';
 import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Sparkles, ShieldCheck, ShieldAlert } from 'lucide-react';
+import { Sparkles, ShieldCheck } from 'lucide-react';
 
 interface TopBarProps {
   onCommandSubmit: (command: string) => void;
   isLoading: boolean;
-  aegisStatus: 'Secure' | 'Anomaly Detected' | 'Scanning...';
 }
 
-export default function TopBar({ onCommandSubmit, isLoading, aegisStatus }: TopBarProps) {
+export default function TopBar({ onCommandSubmit, isLoading }: TopBarProps) {
   const formRef = useRef<HTMLFormElement>(null);
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
@@ -20,17 +18,6 @@ export default function TopBar({ onCommandSubmit, isLoading, aegisStatus }: TopB
     const command = formData.get('command') as string;
     onCommandSubmit(command);
     formRef.current?.reset();
-  };
-  
-  const AegisStatusIcon = () => {
-    switch(aegisStatus) {
-      case 'Secure':
-        return <ShieldCheck className="w-4 h-4 text-[#3EB991]" />;
-      case 'Anomaly Detected':
-        return <ShieldAlert className="w-4 h-4 text-destructive" />;
-      case 'Scanning...':
-        return <Sparkles className="w-4 h-4 text-[#FFD700] animate-pulse" />;
-    }
   };
 
   return (
@@ -54,8 +41,8 @@ export default function TopBar({ onCommandSubmit, isLoading, aegisStatus }: TopB
       </div>
       <div className="flex items-center gap-4 text-sm text-muted-foreground">
         <div className="flex items-center gap-2">
-            <AegisStatusIcon />
-            <span>Aegis: {aegisStatus}</span>
+            <ShieldCheck className="w-4 h-4 text-patina-green" />
+            <span>Aegis: Online</span>
         </div>
         <span>Session: Active</span>
       </div>

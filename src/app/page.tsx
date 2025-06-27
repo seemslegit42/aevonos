@@ -28,6 +28,7 @@ import { AegisIcon } from '@/components/icons/AegisIcon';
 import { CrystalIcon } from '@/components/icons/CrystalIcon';
 import { DrSyntaxIcon } from '@/components/icons/DrSyntaxIcon';
 import { DrSyntaxApp } from '@/components/dr-syntax-app';
+import { AegisReportApp } from '@/components/aegis-report-app';
 
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
@@ -38,12 +39,12 @@ export interface MicroApp {
   icon: React.ComponentType<any>;
   description: string;
   action?: () => void;
+  content?: React.ReactNode;
 }
 
 export default function Home() {
   const { toast } = useToast();
   const [isPending, startTransition] = useTransition();
-  const [aegisStatus, setAegisStatus] = useState<'Secure' | 'Anomaly Detected' | 'Scanning...'>('Secure');
   const [activeApp, setActiveApp] = useState<string | null>(null);
 
   const [apps, setApps] = useState<MicroApp[]>([
@@ -100,19 +101,21 @@ export default function Home() {
     }
   };
 
-  const runAnomalyCheck = () => {
+  function runAnomalyCheck() {
     startTransition(async () => {
-      setAegisStatus('Scanning...');
       const result = await checkForAnomalies('User accessed financial_records.csv and project_phoenix.docx then initiated a data transfer to an external IP.');
-      if (result.isAnomalous) {
-        setAegisStatus('Anomaly Detected');
-        toast({
-          variant: 'destructive',
-          title: 'Aegis Alert: Anomaly Detected',
-          description: result.anomalyExplanation,
-        });
-      } else {
-        setAegisStatus('Secure');
+      
+      const reportApp: MicroApp = {
+        id: `aegis-report-${Date.now()}`,
+        title: 'Aegis Scan Report',
+        icon: AegisIcon,
+        description: `Scan from ${new Date().toLocaleTimeString()}`,
+        content: <AegisReportApp result={result} />,
+      };
+      
+      setApps(prev => [...prev, reportApp]);
+      
+      if (!result.isAnomalous) {
         toast({
           title: 'Aegis Scan Complete',
           description: 'No anomalies detected in the simulated activity.',
@@ -154,7 +157,7 @@ export default function Home() {
 
   return (
     <div className="flex flex-col h-screen p-4 gap-4">
-      <TopBar onCommandSubmit={handleCommandSubmit} isLoading={isPending} aegisStatus={aegisStatus} />
+      <TopBar onCommandSubmit={handleCommandSubmit} isLoading={isPending} />
       <div className="flex-grow p-4 rounded-lg">
         <DndContext
           sensors={sensors}
