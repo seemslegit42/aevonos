@@ -5,6 +5,15 @@ import { MicroAppListingCard } from '@/components/armory/micro-app-listing-card'
 
 const mockApps = [
   {
+    id: 'oracle',
+    name: 'The Oracle',
+    author: 'ΛΞVON OS',
+    description: 'A living metaphor for your OS. Visualize the real-time pulse of your agentic network, replacing static dashboards with an evolving, biomorphic data stream. See the health of your digital ecosystem.',
+    price: '$29/mo',
+    imageUrl: 'https://placehold.co/600x400.png',
+    imageHint: 'data visualization network',
+  },
+  {
     id: 'infidelity-radar',
     name: 'Infidelity Radar',
     author: 'Aegis Systems',

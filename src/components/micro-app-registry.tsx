@@ -17,6 +17,7 @@ import { KifKrokerIcon } from '@/components/icons/KifKrokerIcon';
 import { VandelayIcon } from '@/components/icons/VandelayIcon';
 import { PaperTrailIcon } from '@/components/icons/PaperTrailIcon';
 import { EyeOff } from 'lucide-react';
+import { OracleIcon } from './icons/OracleIcon';
 
 import { type MicroAppType } from '@/store/app-store';
 import ContactList from './micro-apps/contact-list';
@@ -32,6 +33,7 @@ import TheWinstonWolfe from './micro-apps/winston-wolfe';
 import TheKifKroker from './micro-apps/kif-kroker';
 import Vandelay from './micro-apps/vandelay';
 import PaperTrail from './micro-apps/paper-trail';
+import Oracle from './micro-apps/oracle';
 
 type ComponentRegistry = {
     icon: React.ComponentType<any>;
@@ -102,6 +104,10 @@ export const microAppRegistry: Record<MicroAppType, ComponentRegistry> = {
   'paper-trail': {
     icon: PaperTrailIcon,
     content: PaperTrail,
+  },
+  'oracle': {
+    icon: OracleIcon,
+    content: Oracle,
   },
 };
 
