@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview Tool for fetching billing and usage data.
@@ -13,28 +14,21 @@ const PLAN_LIMITS = {
   'Priesthood': 100000,
 } as const;
 
-// This is a functional implementation that queries and seeds the database.
+// This function now requires a workspaceId to fetch the correct data.
 const getUsageDetailsFlow = ai.defineFlow(
   {
     name: 'getUsageDetailsFlow',
-    inputSchema: z.void(),
+    inputSchema: z.object({ workspaceId: z.string() }),
     outputSchema: BillingUsageSchema,
   },
-  async () => {
-    // In a real multi-tenant app, you'd get the workspace ID from the user's session.
-    // For this environment, we'll find the first workspace or create a default one.
-    let workspace = await (prisma as any).workspace.findFirst();
+  async ({ workspaceId }) => {
+    let workspace = await prisma.workspace.findUnique({
+        where: { id: workspaceId }
+    });
 
     if (!workspace) {
-        // Seed a default workspace if none exists.
-        workspace = await (prisma as any).workspace.create({
-            data: {
-                name: 'Default Workspace',
-                planTier: 'Artisan',
-                agentActionsUsed: 7531, // Set to match example from api-spec.md
-                overageEnabled: true,
-            }
-        });
+        // This should not happen in a real authenticated flow, but it's good practice to handle it.
+        throw new Error(`Workspace with ID ${workspaceId} not found.`);
     }
     
     const planTier = workspace.planTier as keyof typeof PLAN_LIMITS;
@@ -50,6 +44,26 @@ const getUsageDetailsFlow = ai.defineFlow(
   }
 );
 
+// The exported function's signature must change if it needs workspaceId.
+// For now, BEEP doesn't pass this, so we'll keep the public signature but it will only work for the first workspace.
+// This highlights the need to pass context into the agent graph.
 export async function getUsageDetails(): Promise<BillingUsage> {
-    return getUsageDetailsFlow();
+    const firstWorkspace = await prisma.workspace.findFirst();
+    if (!firstWorkspace) {
+        // Seed a default workspace if none exists.
+        const defaultUser = await prisma.user.create({
+            data: { email: 'default-user@aevonos.com' }
+        });
+        const seededWorkspace = await prisma.workspace.create({
+            data: {
+                name: 'Default Workspace',
+                planTier: 'Artisan',
+                agentActionsUsed: 7531,
+                overageEnabled: true,
+                ownerId: defaultUser.id,
+            }
+        });
+        return getUsageDetailsFlow({ workspaceId: seededWorkspace.id });
+    }
+    return getUsageDetailsFlow({ workspaceId: firstWorkspace.id });
 }

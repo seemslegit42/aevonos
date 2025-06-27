@@ -2,14 +2,21 @@
 import { NextResponse, NextRequest } from 'next/server';
 import prisma from '@/lib/prisma';
 import { z } from 'zod';
+import { getSession } from '@/lib/auth';
+import { WorkflowRunStatus } from '@prisma/client';
+
 
 const FilterSchema = z.object({
-  status: z.enum(['pending', 'running', 'completed', 'failed', 'paused']).optional(),
-  workflowId: z.string().uuid().optional(),
+  status: z.nativeEnum(WorkflowRunStatus).optional(),
+  workflowId: z.string().optional(), // Now refers to the CUID
 });
 
-// Corresponds to operationId `listWorkflowRuns`
 export async function GET(request: NextRequest) {
+  const session = await getSession(request);
+  if (!session?.workspaceId) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   try {
     const { searchParams } = new URL(request.url);
     const queryParams = Object.fromEntries(searchParams.entries());
@@ -21,7 +28,7 @@ export async function GET(request: NextRequest) {
     
     const { status, workflowId } = validation.data;
     const whereClause: any = {
-        // tenantId: 1 // In a real app, this would come from auth.
+        workspaceId: session.workspaceId
     };
 
     if (status) {
@@ -29,22 +36,10 @@ export async function GET(request: NextRequest) {
     }
 
     if (workflowId) {
-      // We need to find the internal integer ID for the workflow definition
-      // based on its public UUID to filter the runs.
-      const workflowDef = await (prisma as any).workflow.findUnique({
-        where: { uuid: workflowId },
-        select: { id: true },
-      });
-      
-      if (workflowDef) {
-        whereClause.workflowId = workflowDef.id; // Filter by the FK
-      } else {
-        // If the workflowId doesn't exist, no runs can match.
-        return NextResponse.json([]);
-      }
+      whereClause.workflowId = workflowId;
     }
     
-    const workflowRuns = await (prisma as any).workflowRun.findMany({
+    const workflowRuns = await prisma.workflowRun.findMany({
       where: whereClause,
       orderBy: {
         startedAt: 'desc',

@@ -1,9 +1,9 @@
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { z } from 'zod';
+import { getSession } from '@/lib/auth';
 
-// Schema from api-spec.md for creating a contact
 const ContactCreationRequestSchema = z.object({
   email: z.string().email().optional().nullable(),
   firstName: z.string().optional().nullable(),
@@ -11,9 +11,17 @@ const ContactCreationRequestSchema = z.object({
   phone: z.string().optional().nullable(),
 });
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const session = await getSession(request);
+  if (!session?.workspaceId) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   try {
     const contacts = await prisma.contact.findMany({
+      where: {
+        workspaceId: session.workspaceId,
+      },
       orderBy: {
         createdAt: 'desc',
       },
@@ -25,7 +33,12 @@ export async function GET() {
   }
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
+  const session = await getSession(request);
+  if (!session?.workspaceId) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   try {
     const body = await request.json();
     const validation = ContactCreationRequestSchema.safeParse(body);
@@ -34,18 +47,23 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid contact data.', issues: validation.error.issues }, { status: 400 });
     }
 
-    // Check for existing contact with the same email if provided
     if (validation.data.email) {
-      const existingContact = await prisma.contact.findUnique({
-        where: { email: validation.data.email },
+      const existingContact = await prisma.contact.findFirst({
+        where: { 
+            email: validation.data.email,
+            workspaceId: session.workspaceId,
+        },
       });
       if (existingContact) {
-        return NextResponse.json({ error: 'Contact with this email already exists.' }, { status: 409 });
+        return NextResponse.json({ error: 'Contact with this email already exists in this workspace.' }, { status: 409 });
       }
     }
 
     const newContact = await prisma.contact.create({
-      data: validation.data,
+      data: {
+        ...validation.data,
+        workspaceId: session.workspaceId,
+      },
     });
 
     return NextResponse.json(newContact, { status: 201 });

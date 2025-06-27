@@ -25,7 +25,7 @@ export interface Edge {
 }
 
 export interface Workflow {
-  uuid?: string;
+  id?: string; // Now CUID from DB
   name: string;
   definition: {
     nodes: Node[];
@@ -101,8 +101,8 @@ export default function LoomPage() {
         };
 
         try {
-            const url = activeWorkflow.uuid ? `/api/workflows/${activeWorkflow.uuid}` : '/api/workflows';
-            const method = activeWorkflow.uuid ? 'PUT' : 'POST';
+            const url = activeWorkflow.id ? `/api/workflows/${activeWorkflow.id}` : '/api/workflows';
+            const method = activeWorkflow.id ? 'PUT' : 'POST';
 
             const response = await fetch(url, {
                 method,
@@ -117,7 +117,7 @@ export default function LoomPage() {
             
             const savedWorkflow = await response.json();
             setActiveWorkflow(savedWorkflow);
-            setActiveWorkflowId(savedWorkflow.uuid);
+            setActiveWorkflowId(savedWorkflow.id);
 
             toast({ title: 'Success', description: 'Workflow saved.' });
             setListRefreshTrigger(val => val + 1);
@@ -129,12 +129,12 @@ export default function LoomPage() {
     };
     
     const handleRun = async () => {
-        if (!activeWorkflow?.uuid) return;
+        if (!activeWorkflow?.id) return;
         setIsRunning(true);
         toast({ title: 'Executing...', description: `Triggering workflow: ${activeWorkflow.name}` });
         
         try {
-             const response = await fetch(`/api/workflows/${activeWorkflow.uuid}/run`, {
+             const response = await fetch(`/api/workflows/${activeWorkflow.id}/run`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ triggeredBy: 'LoomUI' }) // Example payload
@@ -150,11 +150,11 @@ export default function LoomPage() {
     };
 
     const handleDelete = async () => {
-        if (!activeWorkflow?.uuid) return;
+        if (!activeWorkflow?.id) return;
         if (!confirm(`Are you sure you want to delete "${activeWorkflow.name}"? This cannot be undone.`)) return;
 
         try {
-            const response = await fetch(`/api/workflows/${activeWorkflow.uuid}`, { method: 'DELETE' });
+            const response = await fetch(`/api/workflows/${activeWorkflow.id}`, { method: 'DELETE' });
             if (response.status !== 204) throw new Error('Failed to delete workflow.');
             
             toast({ title: 'Success', description: 'Workflow deleted.' });

@@ -9,7 +9,7 @@ import { PlusCircle, Workflow } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export interface WorkflowSummary {
-  uuid: string;
+  id: string;
   name: string;
   updatedAt: string;
 }
@@ -61,11 +61,11 @@ export default function WorkflowList({ onSelectWorkflow, activeWorkflowId, trigg
           <div className="space-y-2">
             {workflows.map(wf => (
               <button
-                key={wf.uuid}
-                onClick={() => onSelectWorkflow(wf.uuid)}
+                key={wf.id}
+                onClick={() => onSelectWorkflow(wf.id)}
                 className={cn(
                   'w-full text-left p-2 rounded-md transition-colors flex items-center gap-3',
-                  activeWorkflowId === wf.uuid ? 'bg-primary text-primary-foreground' : 'hover:bg-accent hover:text-accent-foreground'
+                  activeWorkflowId === wf.id ? 'bg-primary text-primary-foreground' : 'hover:bg-accent hover:text-accent-foreground'
                 )}
               >
                 <Workflow className="w-5 h-5 flex-shrink-0" />

@@ -1,50 +1,28 @@
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import prisma from '@/lib/prisma';
+import { getSession } from '@/lib/auth';
 import { AgentStatus } from '@prisma/client';
 
-// Schema from api-spec.md for deploying an agent
 const AgentDeploymentRequestSchema = z.object({
   name: z.string(),
   description: z.string().optional().nullable(),
   configuration: z.record(z.any()).describe("JSON object containing agent-specific configuration."),
 });
 
-// Corresponds to operationId `listAgents`
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
+  const session = await getSession(request);
+  if (!session?.workspaceId) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   try {
-    // In a real app, this would be filtered by the tenantId from the user's JWT.
-    let agents = await prisma.agent.findMany();
-    
-    // Seed data if none exists, for demo purposes
-    if (agents.length === 0) {
-        await prisma.agent.createMany({
-            data: [
-                {
-                    name: "Market Research Agent",
-                    description: "Gathers and analyzes market data from various sources.",
-                    status: AgentStatus.active,
-                    lastActivityAt: new Date(Date.now() - 2 * 3600 * 1000),
-                },
-                {
-                    name: "Customer Support Bot",
-                    description: "Handles initial customer queries and triages support tickets.",
-                    status: AgentStatus.idle,
-                    assignedWorkflowId: "w1a2b3c4-d5e6-f789-0123-456789abcdef",
-                    lastActivityAt: new Date(Date.now() - 30 * 60 * 1000),
-                },
-                {
-                    name: "Social Media Scheduler",
-                    description: "Schedules and posts content to social media channels.",
-                    status: AgentStatus.error,
-                    lastActivityAt: new Date(Date.now() - 5 * 24 * 3600 * 1000),
-                }
-            ]
-        });
-        agents = await prisma.agent.findMany();
-    }
-    
+    const agents = await prisma.agent.findMany({
+        where: {
+            workspaceId: session.workspaceId,
+        }
+    });
     return NextResponse.json(agents);
   } catch (error) {
     console.error('[API /agents GET]', error);
@@ -52,8 +30,12 @@ export async function GET(request: Request) {
   }
 }
 
-// Corresponds to operationId `deployAgent`
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
+  const session = await getSession(request);
+  if (!session?.workspaceId) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   try {
     const body = await request.json();
     const validation = AgentDeploymentRequestSchema.safeParse(body);
@@ -64,12 +46,12 @@ export async function POST(request: Request) {
 
     const { name, description } = validation.data;
 
-    // In a real app, you'd associate this with the user's workspaceId
     const newAgent = await prisma.agent.create({
         data: {
             name,
             description,
             status: AgentStatus.idle,
+            workspaceId: session.workspaceId,
         }
     });
 

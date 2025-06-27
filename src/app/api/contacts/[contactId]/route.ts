@@ -1,7 +1,8 @@
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { z } from 'zod';
+import { getSession } from '@/lib/auth';
 
 const ContactUpdateRequestSchema = z.object({
   email: z.string().email().optional().nullable(),
@@ -16,12 +17,16 @@ interface RouteParams {
   };
 }
 
-// GET /api/contacts/{contactId}
-export async function GET(request: Request, { params }: RouteParams) {
+export async function GET(request: NextRequest, { params }: RouteParams) {
+  const session = await getSession(request);
+  if (!session?.workspaceId) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+  
   try {
     const { contactId } = params;
-    const contact = await prisma.contact.findUnique({
-      where: { id: contactId },
+    const contact = await prisma.contact.findFirst({
+      where: { id: contactId, workspaceId: session.workspaceId },
     });
 
     if (!contact) {
@@ -35,8 +40,12 @@ export async function GET(request: Request, { params }: RouteParams) {
   }
 }
 
-// PUT /api/contacts/{contactId}
-export async function PUT(request: Request, { params }: RouteParams) {
+export async function PUT(request: NextRequest, { params }: RouteParams) {
+  const session = await getSession(request);
+  if (!session?.workspaceId) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+    
   try {
     const { contactId } = params;
     const body = await request.json();
@@ -46,6 +55,14 @@ export async function PUT(request: Request, { params }: RouteParams) {
       return NextResponse.json({ error: 'Invalid contact data.', issues: validation.error.issues }, { status: 400 });
     }
 
+    // Verify the contact belongs to the user's workspace before updating
+    const existingContact = await prisma.contact.findFirst({
+        where: { id: contactId, workspaceId: session.workspaceId }
+    });
+    if (!existingContact) {
+        return NextResponse.json({ error: 'Contact not found.' }, { status: 404 });
+    }
+
     const updatedContact = await prisma.contact.update({
       where: { id: contactId },
       data: validation.data,
@@ -53,10 +70,6 @@ export async function PUT(request: Request, { params }: RouteParams) {
 
     return NextResponse.json(updatedContact);
   } catch (error) {
-    // Check for Prisma's specific "record not found" error
-    if ((error as any).code === 'P2025') {
-         return NextResponse.json({ error: 'Contact not found.' }, { status: 404 });
-    }
     console.error(`[API /contacts/{contactId} PUT]`, error);
     if (error instanceof SyntaxError) {
       return NextResponse.json({ error: 'Invalid JSON in request body.' }, { status: 400 });
@@ -65,11 +78,22 @@ export async function PUT(request: Request, { params }: RouteParams) {
   }
 }
 
-
-// DELETE /api/contacts/{contactId}
-export async function DELETE(request: Request, { params }: RouteParams) {
+export async function DELETE(request: NextRequest, { params }: RouteParams) {
+    const session = await getSession(request);
+    if (!session?.workspaceId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    
     try {
         const { contactId } = params;
+
+        // Verify the contact belongs to the user's workspace before deleting
+        const existingContact = await prisma.contact.findFirst({
+            where: { id: contactId, workspaceId: session.workspaceId }
+        });
+        if (!existingContact) {
+            return NextResponse.json({ error: 'Contact not found.' }, { status: 404 });
+        }
 
         await prisma.contact.delete({
             where: { id: contactId },
@@ -77,9 +101,6 @@ export async function DELETE(request: Request, { params }: RouteParams) {
 
         return new NextResponse(null, { status: 204 });
     } catch (error) {
-        if ((error as any).code === 'P2025') {
-            return NextResponse.json({ error: 'Contact not found.' }, { status: 404 });
-        }
         console.error(`[API /contacts/{contactId} DELETE]`, error);
         return NextResponse.json({ error: 'Failed to delete contact.' }, { status: 500 });
     }

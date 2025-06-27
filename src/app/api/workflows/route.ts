@@ -1,9 +1,9 @@
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { z } from 'zod';
+import { getSession } from '@/lib/auth';
 
-// Schema from api-spec.md for creating a workflow
 const WorkflowCreationRequestSchema = z.object({
   name: z.string(),
   isActive: z.boolean().optional().default(true),
@@ -11,15 +11,20 @@ const WorkflowCreationRequestSchema = z.object({
   definition: z.record(z.any()).describe("JSONB representation of the workflow graph (e.g., LangGraph JSON structure)."),
 });
 
-// GET /api/workflows
-// Corresponds to operationId `listWorkflows`
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const session = await getSession(request);
+  if (!session?.workspaceId) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+  
   try {
-    // In a real multi-tenant app, you'd filter by tenantId from the user's session.
-    const workflows = await (prisma as any).workflow.findMany({
-      orderBy: {
-        createdAt: 'desc',
-      },
+    const workflows = await prisma.workflow.findMany({
+        where: {
+            workspaceId: session.workspaceId,
+        },
+        orderBy: {
+            createdAt: 'desc',
+        },
     });
     return NextResponse.json(workflows);
   } catch (error) {
@@ -28,9 +33,12 @@ export async function GET() {
   }
 }
 
-// POST /api/workflows
-// Corresponds to operationId `createWorkflow`
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
+  const session = await getSession(request);
+  if (!session?.workspaceId) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+  
   try {
     const body = await request.json();
     const validation = WorkflowCreationRequestSchema.safeParse(body);
@@ -39,8 +47,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid workflow definition.', issues: validation.error.issues }, { status: 400 });
     }
 
-    const newWorkflow = await (prisma as any).workflow.create({
-      data: validation.data,
+    const newWorkflow = await prisma.workflow.create({
+      data: {
+        ...validation.data,
+        workspaceId: session.workspaceId,
+      },
     });
 
     return NextResponse.json(newWorkflow, { status: 201 });

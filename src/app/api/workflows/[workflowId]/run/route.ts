@@ -1,6 +1,7 @@
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { getSession } from '@/lib/auth';
 
 interface RouteParams {
   params: {
@@ -8,38 +9,35 @@ interface RouteParams {
   };
 }
 
-// Corresponds to operationId `triggerWorkflowRun`
-export async function POST(request: Request, { params }: RouteParams) {
+export async function POST(request: NextRequest, { params }: RouteParams) {
+  const session = await getSession(request);
+  if (!session?.workspaceId) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+  
   try {
     const { workflowId } = params;
     const trigger_payload = await request.json();
 
-    // 1. Find the workflow definition by its public UUID
-    const workflow = await (prisma as any).workflow.findUnique({
-      where: { uuid: workflowId },
+    const workflow = await prisma.workflow.findFirst({
+      where: { id: workflowId, workspaceId: session.workspaceId },
     });
 
     if (!workflow) {
       return NextResponse.json({ error: 'Workflow not found.' }, { status: 404 });
     }
 
-    // In a real system, you would now enqueue this for execution by a LangGraph runner.
-    // For now, we will create a record of the run instance to show it has been initiated.
-
-    // 2. Create the workflow run instance in the database
-    const workflowRun = await (prisma as any).workflowRun.create({
+    const workflowRun = await prisma.workflowRun.create({
       data: {
-        workflowId: workflow.id, // FK to the workflow definition internal ID
-        tenantId: workflow.tenantId || 1, // Inherit tenantId or default
+        workflowId: workflow.id,
+        workspaceId: session.workspaceId,
         status: 'pending',
         triggerPayload: trigger_payload,
-        // The `output` field will be populated when the workflow completes.
       },
     });
 
-    // 3. Return the WorkflowRunSummary as per the spec
     const responseSummary = {
-      runId: workflowRun.uuid, // Publicly exposed UUID for the run
+      runId: workflowRun.id,
       status: workflowRun.status,
       startedAt: workflowRun.startedAt,
     };
