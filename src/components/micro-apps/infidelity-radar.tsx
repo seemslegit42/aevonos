@@ -5,7 +5,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { ShieldAlert, Bot, Loader2, ChevronRight, EyeOff, Search, Globe, Linkedin, Twitter as XIcon, Instagram, VenetianMask, FileQuestion, BadgeAlert, PhoneOff, Skull, FileDown, FileJson, Lock, Unlock, Gavel, Copy } from 'lucide-react';
+import { ShieldAlert, Bot, Loader2, ChevronRight, EyeOff, Search, Globe, Linkedin, Twitter as XIcon, Instagram, VenetianMask, FileQuestion, BadgeAlert, PhoneOff, Skull, FileDown, FileJson, Lock, Unlock, Gavel, Copy, Flame } from 'lucide-react';
 import { Textarea } from '../ui/textarea';
 import type { InfidelityAnalysisOutput } from '@/ai/agents/infidelity-analysis-schemas';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '../ui/select';
@@ -375,6 +375,15 @@ export default function InfidelityRadar(props: { osintReport?: OsintOutput, anal
       const command = `perform an osint scan on "${osintTarget}" with the following context: "${osintContext}"`;
       handleCommandSubmit(command);
   }
+
+  const handleBurnBridge = () => {
+    if (!osintTarget) {
+        toast({ variant: 'destructive', title: "Target Required", description: "You must specify a target to burn the bridge with." });
+        return;
+    }
+    const command = `burn the bridge with target "${osintTarget}" using this context: "${osintContext}"`;
+    handleCommandSubmit(command);
+  }
   
   const handleCompileDossier = async (mode: 'standard' | 'legal' = 'standard') => {
       if (!osintReport && !analysisResult) {
@@ -401,6 +410,23 @@ export default function InfidelityRadar(props: { osintReport?: OsintOutput, anal
   return (
     <div className="p-2 h-full flex flex-col">
         <ScrollArea className="flex-grow pr-1 space-y-3">
+             <Card className="bg-destructive/20 border-destructive/50">
+                <CardHeader className="p-2">
+                    <CardTitle className="text-base text-destructive flex items-center gap-2"><Flame /> Burn Bridge Protocol</CardTitle>
+                    <CardDescription className="text-xs text-destructive/80">"When doubt becomes a liability, liquidate the asset."</CardDescription>
+                </CardHeader>
+                <CardContent className="p-2 space-y-2">
+                    <p className="text-xs text-destructive/70">
+                        This will trigger a full-spectrum analysis, including OSINT, behavioral scans, and decoy deployment, culminating in a final dossier. This action is irreversible.
+                    </p>
+                    <Button variant="destructive" className="w-full" onClick={handleBurnBridge} disabled={isLoading || !osintTarget}>
+                        {isLoading ? <Loader2 className="animate-spin" /> : <>Initiate Full Scan</>}
+                    </Button>
+                </CardContent>
+            </Card>
+
+            <Separator className="my-3" />
+        
              {/* OSINT Scan Section */}
             <div className="space-y-2 p-2 border border-dashed rounded-lg">
                 <h3 className="font-semibold text-primary">OSINT Scan (Bloodhound)</h3>
