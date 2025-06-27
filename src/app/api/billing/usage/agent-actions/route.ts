@@ -1,14 +1,18 @@
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { getUsageDetails } from '@/ai/tools/billing-tools';
+import { getSession } from '@/lib/auth';
 
 // GET /api/billing/usage/agent-actions
 // Corresponds to the operationId `getAgentActionsUsage` in api-spec.md
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   try {
-    // In a real application, you'd get the workspace/tenant ID from the auth token.
-    // This function currently returns mock data as defined in the billing-tools.
-    const usageDetails = await getUsageDetails();
+    const session = await getSession(request);
+    if (!session?.workspaceId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const usageDetails = await getUsageDetails(session.workspaceId);
     
     return NextResponse.json(usageDetails);
 

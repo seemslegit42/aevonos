@@ -43,7 +43,7 @@ export default function LoomHeader({
         />
       </div>
       <div className="flex items-center gap-2">
-        {activeWorkflow?.uuid && (
+        {activeWorkflow?.id && (
             <>
                 <Button variant="outline" onClick={onDelete}>
                     <Trash2 />
