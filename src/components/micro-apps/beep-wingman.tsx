@@ -101,7 +101,7 @@ const SettingsView = () => {
             <Card className="bg-background/50">
                 <CardHeader>
                     <CardTitle className="text-base">Agent Configuration</CardTitle>
-                    <CardDescription className="text-xs">Tune the agent's persona and provide target details to generate an opener.</CardDescription>
+                    <CardDescription className="text-xs">"RicoSuave-bot deployed. Initiating Phase 1: Compliment, then confuse."</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-3">
                     <label className="text-sm font-medium">Persona Tuning</label>
@@ -110,14 +110,14 @@ const SettingsView = () => {
                             <SelectValue placeholder="Select dating persona..." />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="sapiosexual">🧠 Sapiosexual</SelectItem>
-                            <SelectItem value="alpha-hustler">💼 Alpha Hustler</SelectItem>
-                            <SelectItem value="chill-demon">😏 Chill Demon</SelectItem>
-                            <SelectItem value="awkward-sweetheart">🤓 Awkward Sweetheart</SelectItem>
+                            <SelectItem value="alpha-hustler">💼 RicoSuaveBot™</SelectItem>
+                            <SelectItem value="chill-demon">😏 Savage</SelectItem>
+                            <SelectItem value="awkward-sweetheart">🥰 Sweetheart</SelectItem>
+                            <SelectItem value="sapiosexual">🤖 Turing-Tested Seducer</SelectItem>
                         </SelectContent>
                     </Select>
 
-                    <label className="text-sm font-medium">Target Profile</label>
+                    <label className="text-sm font-medium">Target Sales Funnel</label>
                      <Textarea 
                         placeholder="Describe the target's profile (e.g., 'Name is Sarah, bio says \"fluent in sarcasm and movie quotes\", has a picture with a golden retriever...')" 
                         value={targetDescription}
@@ -147,7 +147,7 @@ const SettingsView = () => {
                 </CardHeader>
                 <CardContent className="flex flex-col gap-3">
                     <div className="flex justify-between items-center">
-                        <span>OSINT Vetting</span>
+                        <span>Burner Phone Mode</span>
                         <Badge variant="destructive">VIP</Badge>
                     </div>
                     <div className="flex justify-between items-center">
