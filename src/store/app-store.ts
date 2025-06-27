@@ -19,6 +19,7 @@ export type MicroAppType =
   | 'terminal' 
   | 'ai-suggestion'
   | 'echo-control'
+  | 'aegis-control'
   | 'contact-list';
 
 // Define the shape of a MicroApp instance
@@ -40,6 +41,7 @@ const defaultAppDetails: Record<MicroAppType, Omit<MicroApp, 'id' | 'contentProp
   'terminal': { type: 'terminal', title: 'Terminal', description: 'Direct command-line access.' },
   'ai-suggestion': { type: 'ai-suggestion', title: 'AI Suggestion', description: 'Click to execute this command.' },
   'echo-control': { type: 'echo-control', title: 'Recall Session', description: "Click to have Echo summarize the last session's activity." },
+  'aegis-control': { type: 'aegis-control', title: 'Aegis Security Report', description: "Analysis of the last command's security profile." },
   'contact-list': { type: 'contact-list', title: 'Contact List', description: 'A list of contacts from the CRM.' },
 };
 
@@ -150,23 +152,51 @@ User launched Loom Studio to inspect 'Client Onboarding' workflow.`;
 
       // Handle agent reports
       if (result.agentReports) {
+        // First, find and process the Aegis report to create or update its micro-app
+        const aegisReport = result.agentReports.find(r => r.agent === 'aegis')?.report;
+
+        if (aegisReport) {
+            const aegisAppId = 'aegis-report-main';
+            const newAegisApp: MicroApp = {
+                id: aegisAppId,
+                type: 'aegis-control',
+                title: defaultAppDetails['aegis-control'].title,
+                description: '', // Description is handled by the content component
+                contentProps: { ...aegisReport }
+            };
+
+            set(state => {
+                const existingApp = state.apps.find(a => a.id === aegisAppId);
+                if (existingApp) {
+                    return { apps: state.apps.map(a => a.id === aegisAppId ? newAegisApp : a) };
+                } else {
+                    const echoIndex = state.apps.findIndex(a => a.type === 'echo-control');
+                    const newApps = [...state.apps];
+                    newApps.splice(echoIndex !== -1 ? echoIndex + 1 : 0, 0, newAegisApp);
+                    return { apps: newApps };
+                }
+            });
+
+            // Also show a toast, but only if anomalous
+            if (aegisReport.isAnomalous) {
+                toast({
+                    title: 'Aegis Alert',
+                    description: aegisReport.anomalyExplanation,
+                    variant: 'destructive',
+                });
+            }
+        }
+
         for (const agentReport of result.agentReports) {
+          if (agentReport.agent === 'aegis') {
+            continue; // Handled above
+          }
           if (agentReport.agent === 'dr-syntax') {
             const report: DrSyntaxOutput = agentReport.report;
             toast({
                 title: `Dr. Syntax's Verdict (Rating: ${report.rating}/10)`,
                 description: React.createElement(DrSyntaxReportToast, report)
             });
-          }
-          if (agentReport.agent === 'aegis') {
-            const report = agentReport.report;
-            if (report.isAnomalous) {
-                toast({
-                    title: 'Aegis Alert',
-                    description: report.anomalyExplanation,
-                    variant: 'destructive',
-                });
-            }
           }
           if (agentReport.agent === 'crm') {
             const crmReport = agentReport.report;
