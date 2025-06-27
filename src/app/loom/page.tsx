@@ -23,18 +23,22 @@ export interface Edge {
 }
 
 const initialNodes: Node[] = [
-    { id: '1', type: 'trigger', position: { x: 100, y: 200 }, data: { label: 'Webhook Received' } },
-    { id: '2', type: 'agent', position: { x: 400, y: 100 }, data: { label: 'Analyze Sentiment', model: 'gemini-2.0-flash' } },
-    { id: '3', type: 'logic', position: { x: 400, y: 300 }, data: { label: 'Check if Positive' } },
-    { id: '4', type: 'tool', position: { x: 700, y: 100 }, data: { label: 'Add to CRM' } },
-    { id: '5', type: 'tool', position: { x: 700, y: 300 }, data: { label: 'Notify Slack' } },
+    { id: 'trigger-1', type: 'trigger', position: { x: 50, y: 250 }, data: { label: 'BEEP Command Received', event: 'user_command' } },
+    { id: 'agent-1', type: 'agent', position: { x: 300, y: 250 }, data: { label: 'BEEP Agent Kernel', personality: 'witty, sarcastic', model: 'gemini-2.0-flash' } },
+    { id: 'tool-drsyntax', type: 'tool', position: { x: 600, y: 50 }, data: { label: 'Tool: critiqueContent', agent: 'Dr. Syntax' } },
+    { id: 'tool-crm-list', type: 'tool', position: { x: 600, y: 150 }, data: { label: 'Tool: listContacts', service: 'CRM' } },
+    { id: 'tool-crm-create', type: 'tool', position: { x: 600, y: 250 }, data: { label: 'Tool: createContact', service: 'CRM' } },
+    { id: 'tool-billing', type: 'tool', position: { x: 600, y: 350 }, data: { label: 'Tool: getUsageDetails', service: 'Billing' } },
+    { id: 'tool-final-answer', type: 'tool', position: { x: 900, y: 250 }, data: { label: 'Output: Final Answer', schema: 'UserCommandOutput' } },
 ];
 
 const initialEdges: Edge[] = [
-    { id: 'e1-2', source: '1', target: '2' },
-    { id: 'e1-3', source: '1', target: '3' },
-    { id: 'e2-4', source: '2', target: '4' },
-    { id: 'e3-5', source: '3', target: '5' },
+    { id: 'e-trigger-agent', source: 'trigger-1', target: 'agent-1' },
+    { id: 'e-agent-drsyntax', source: 'agent-1', target: 'tool-drsyntax' },
+    { id: 'e-agent-crm-list', source: 'agent-1', target: 'tool-crm-list' },
+    { id: 'e-agent-crm-create', source: 'agent-1', target: 'tool-crm-create' },
+    { id: 'e-agent-billing', source: 'agent-1', target: 'tool-billing' },
+    { id: 'e-agent-final', source: 'agent-1', target: 'tool-final-answer' },
 ];
 
 
