@@ -2,66 +2,32 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-  provider        = "prisma-client-js"
-  previewFeatures = ["driverAdapters"]
+  provider = "prisma-client-js"
 }
 
 datasource db {
   provider  = "postgresql"
   url       = env("DATABASE_URL")
-  // For Prisma Accelerate, you'd also need a direct URL.
-  // directUrl = env("DIRECT_DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
-// In a multi-tenant application, Workspace would often represent a Tenant.
+// Multi-tenancy and User Management
 model Workspace {
-  id                Int           @id @default(autoincrement())
-  uuid              String        @unique @default(uuid())
-  name              String
-  planTier          String        @default("Artisan")
-  agentActionsUsed  Int           @default(0)
-  overageEnabled    Boolean       @default(false)
-  createdAt         DateTime      @default(now())
-  updatedAt         DateTime      @updatedAt
-  
-  workflows         Workflow[]
-  workflowRuns      WorkflowRun[]
-  contacts          Contact[]
-}
+  id               Int      @id @default(autoincrement())
+  uuid             String   @unique @default(cuid())
+  name             String
+  planTier         String   @default("free") // e.g., free, pro, scale
+  agentActionsUsed Int      @default(0)
+  overageEnabled   Boolean  @default(false)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 
-model Workflow {
-  id          Int      @id @default(autoincrement())
-  uuid        String   @unique @default(uuid())
-  name        String
-  definition  Json
-  isActive    Boolean  @default(true)
-  triggerType String   @default("api") // api, schedule, event
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
-  workspaceId Int
-  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-
-  runs        WorkflowRun[]
-}
-
-model WorkflowRun {
-  id          Int       @id @default(autoincrement())
-  uuid        String    @unique @default(uuid())
-  status      String    // pending, running, completed, failed, paused
-  triggerPayload Json?
-  output      Json?
-  startedAt   DateTime  @default(now())
-  finishedAt  DateTime?
-  
-  workflowId  Int
-  workflow    Workflow  @relation(fields: [workflowId], references: [id], onDelete: Cascade)
-  
-  workspaceId Int
-  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-
-  @@index([workflowId])
-  @@index([workspaceId])
+  // Relations
+  workflows      Workflow[]
+  workflowRuns   WorkflowRun[]
+  agents         Agent[]
+  securityAlerts SecurityAlert[]
+  // In a real app, you'd have a User model and a many-to-many relation here.
 }
 
 model Contact {
@@ -72,7 +38,98 @@ model Contact {
   phone     String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
+  // In a real multi-tenant app, this would have a relation to Workspace
+}
+
+
+// LangGraph / Loom Studio Models
+enum WorkflowTriggerType {
+  api
+  schedule
+  event
+}
+
+model Workflow {
+  id          Int                 @id @default(autoincrement())
+  uuid        String              @unique @default(cuid())
+  name        String
+  isActive    Boolean             @default(true)
+  triggerType WorkflowTriggerType @default(api)
+  definition  Json // Stores the LangGraph JSON structure
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+
   workspaceId Int?
-  workspace   Workspace? @relation(fields: [workspaceId], references: [id], onDelete: SetNull)
+  workspace   Workspace? @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  runs WorkflowRun[]
+}
+
+enum WorkflowRunStatus {
+  pending
+  running
+  completed
+  failed
+  paused
+}
+
+model WorkflowRun {
+  id             Int               @id @default(autoincrement())
+  uuid           String            @unique @default(cuid())
+  status         WorkflowRunStatus @default(pending)
+  triggerPayload Json?
+  output         Json?
+  startedAt      DateTime          @default(now())
+  finishedAt     DateTime?
+
+  workflowId Int
+  workflow   Workflow @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+
+  workspaceId Int?
+  workspace   Workspace? @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+}
+
+// Agent Management
+enum AgentStatus {
+  active
+  idle
+  processing
+  paused
+  error
+}
+
+model Agent {
+  id                 String      @id @default(cuid())
+  name               String
+  description        String?
+  status             AgentStatus @default(idle)
+  assignedWorkflowId String? // This could be a relation if workflows had UUIDs as primary keys
+  lastActivityAt     DateTime?
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
+
+  workspaceId Int?
+  workspace   Workspace? @relation(fields: [workspaceId], references: [id])
+}
+
+// Aegis Security
+enum SecurityRiskLevel {
+  low
+  medium
+  high
+  critical
+}
+
+model SecurityAlert {
+  id                String            @id @default(cuid())
+  type              String
+  explanation       String
+  riskLevel         SecurityRiskLevel
+  timestamp         DateTime
+  actionableOptions String[]
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  workspaceId Int?
+  workspace   Workspace? @relation(fields: [workspaceId], references: [id])
 }

@@ -1,7 +1,8 @@
 
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import crypto from 'crypto';
+import prisma from '@/lib/prisma';
+import { AgentStatus } from '@prisma/client';
 
 // Schema from api-spec.md for deploying an agent
 const AgentDeploymentRequestSchema = z.object({
@@ -10,48 +11,41 @@ const AgentDeploymentRequestSchema = z.object({
   configuration: z.record(z.any()).describe("JSON object containing agent-specific configuration."),
 });
 
-const mockAgents = [
-    {
-        id: crypto.randomUUID(),
-        tenantId: 1,
-        name: "Market Research Agent",
-        description: "Gathers and analyzes market data from various sources.",
-        status: "active",
-        assignedWorkflowId: null,
-        lastActivityAt: new Date(Date.now() - 2 * 3600 * 1000).toISOString(),
-        createdAt: new Date(Date.now() - 15 * 24 * 3600 * 1000).toISOString(),
-        updatedAt: new Date().toISOString(),
-    },
-    {
-        id: crypto.randomUUID(),
-        tenantId: 1,
-        name: "Customer Support Bot",
-        description: "Handles initial customer queries and triages support tickets.",
-        status: "idle",
-        assignedWorkflowId: "w1a2b3c4-d5e6-f789-0123-456789abcdef",
-        lastActivityAt: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
-        createdAt: new Date(Date.now() - 10 * 24 * 3600 * 1000).toISOString(),
-        updatedAt: new Date().toISOString(),
-    },
-    {
-        id: crypto.randomUUID(),
-        tenantId: 1,
-        name: "Social Media Scheduler",
-        description: "Schedules and posts content to social media channels.",
-        status: "error",
-        assignedWorkflowId: null,
-        lastActivityAt: new Date(Date.now() - 5 * 24 * 3600 * 1000).toISOString(),
-        createdAt: new Date(Date.now() - 20 * 24 * 3600 * 1000).toISOString(),
-        updatedAt: new Date(Date.now() - 5 * 24 * 3600 * 1000).toISOString(),
-    }
-];
-
 // Corresponds to operationId `listAgents`
 export async function GET(request: Request) {
   try {
-    // In a real app, these would be fetched from the database
-    // and filtered by the tenantId from the user's JWT.
-    return NextResponse.json(mockAgents);
+    // In a real app, this would be filtered by the tenantId from the user's JWT.
+    let agents = await prisma.agent.findMany();
+    
+    // Seed data if none exists, for demo purposes
+    if (agents.length === 0) {
+        await prisma.agent.createMany({
+            data: [
+                {
+                    name: "Market Research Agent",
+                    description: "Gathers and analyzes market data from various sources.",
+                    status: AgentStatus.active,
+                    lastActivityAt: new Date(Date.now() - 2 * 3600 * 1000),
+                },
+                {
+                    name: "Customer Support Bot",
+                    description: "Handles initial customer queries and triages support tickets.",
+                    status: AgentStatus.idle,
+                    assignedWorkflowId: "w1a2b3c4-d5e6-f789-0123-456789abcdef",
+                    lastActivityAt: new Date(Date.now() - 30 * 60 * 1000),
+                },
+                {
+                    name: "Social Media Scheduler",
+                    description: "Schedules and posts content to social media channels.",
+                    status: AgentStatus.error,
+                    lastActivityAt: new Date(Date.now() - 5 * 24 * 3600 * 1000),
+                }
+            ]
+        });
+        agents = await prisma.agent.findMany();
+    }
+    
+    return NextResponse.json(agents);
   } catch (error) {
     console.error('[API /agents GET]', error);
     return NextResponse.json({ error: 'Failed to retrieve agents.' }, { status: 500 });
@@ -70,19 +64,14 @@ export async function POST(request: Request) {
 
     const { name, description } = validation.data;
 
-    // In a real application, you'd deploy the agent (e.g., create a DB record, spin up a service).
-    // For now, we return a mock response representing the newly deployed agent.
-    const newAgent = {
-        id: crypto.randomUUID(),
-        tenantId: 1, // This would come from the auth token
-        name,
-        description,
-        status: "idle",
-        assignedWorkflowId: null,
-        lastActivityAt: null,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-    };
+    // In a real app, you'd associate this with the user's workspaceId
+    const newAgent = await prisma.agent.create({
+        data: {
+            name,
+            description,
+            status: AgentStatus.idle,
+        }
+    });
 
     return NextResponse.json(newAgent, { status: 201 });
 
