@@ -40,6 +40,8 @@ export function MicroAppListingCard({ app }: { app: AppListing }) {
       </CardContent>
       <CardFooter className="flex justify-between items-center p-4 pt-0">
         <p className="text-2xl font-bold text-primary font-headline">{app.price}</p>
-        <Button><ShoppingCart className="mr-2 h-4 w-4" /> Purchase</Button>
+        <Button><ShoppingCart className="mr-2 h-4 w-4" /> Acquire</Button>
       </CardFooter>
-    </Card
+    </Card>
+  );
+}
