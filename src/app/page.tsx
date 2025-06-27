@@ -31,7 +31,6 @@ import { DrSyntaxApp } from '@/components/dr-syntax-app';
 import { AegisReportApp } from '@/components/aegis-report-app';
 
 import { useToast } from '@/hooks/use-toast';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
 
 export interface MicroApp {
   id: string;
@@ -45,7 +44,6 @@ export interface MicroApp {
 export default function Home() {
   const { toast } = useToast();
   const [isPending, startTransition] = useTransition();
-  const [activeApp, setActiveApp] = useState<string | null>(null);
 
   const [apps, setApps] = useState<MicroApp[]>([
     {
@@ -78,7 +76,7 @@ export default function Home() {
       title: 'Dr. Syntax',
       icon: DrSyntaxIcon,
       description: 'Get your content critiqued. Brutally.',
-      action: () => setActiveApp('dr-syntax'),
+      content: <DrSyntaxApp />,
     },
   ]);
 
@@ -139,22 +137,6 @@ export default function Home() {
     });
   };
 
-  const renderActiveApp = () => {
-    switch (activeApp) {
-      case 'dr-syntax':
-        return (
-          <Dialog open={activeApp === 'dr-syntax'} onOpenChange={(isOpen) => !isOpen && setActiveApp(null)}>
-            <DialogContent className="bg-background/80 backdrop-blur-[20px] border-foreground/30 max-w-3xl p-0">
-               <DrSyntaxApp />
-            </DialogContent>
-          </Dialog>
-        );
-      default:
-        return null;
-    }
-  };
-
-
   return (
     <div className="flex flex-col h-screen p-4 gap-4">
       <TopBar onCommandSubmit={handleCommandSubmit} isLoading={isPending} />
@@ -172,7 +154,6 @@ export default function Home() {
        <footer className="text-center text-xs text-muted-foreground">
         <p>ΛΞVON OS - All rights reserved.</p>
       </footer>
-      {renderActiveApp()}
     </div>
   );
 }
