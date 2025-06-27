@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-generator client {
-  provider = "prisma-client-js"
-}
 
 datasource db {
   provider     = "postgresql"
@@ -11,81 +5,67 @@ datasource db {
   relationMode = "prisma"
 }
 
-model User {
-  id          String @id @default(cuid())
-  email       String @unique
-  firstName   String?
-  lastName    String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
-  ownedWorkspaces Workspace[]     @relation("WorkspaceOwner")
-  workspaces      WorkspaceUser[]
+generator client {
+  provider = "prisma-client-js"
 }
 
 model Workspace {
   id        String   @id @default(cuid())
   name      String
+  planTier  String   @default("free")
+  agentActionsUsed Int @default(0)
+  overageEnabled Boolean @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
-  ownerId String
-  owner   User   @relation("WorkspaceOwner", fields: [ownerId], references: [id])
-
-  users           WorkspaceUser[]
-  contacts        Contact[]
-  workflows       Workflow[]
-  workflowRuns    WorkflowRun[]
-  agents          Agent[]
-  securityAlerts  SecurityAlert[]
   
-  planTier         String  @default("Apprentice")
-  agentActionsUsed Int     @default(0)
-  overageEnabled   Boolean @default(false)
+  ownerId String @unique
+  owner User @relation(fields: [ownerId], references: [id])
+
+  contacts      Contact[]
+  workflows     Workflow[]
+  workflowRuns  WorkflowRun[]
+  agents        Agent[]
+  securityAlerts SecurityAlert[]
 }
 
-model WorkspaceUser {
-  workspaceId String
-  userId      String
-  role        String   @default("member") // e.g., 'owner', 'admin', 'member'
-  createdAt   DateTime @default(now())
-
-  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@id([workspaceId, userId])
+model User {
+  id        String    @id @default(cuid())
+  email     String    @unique
+  workspace Workspace?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 }
-
 
 model Contact {
-  id        String   @id @default(cuid())
-  email     String?  @unique
-  firstName String?
-  lastName  String?
-  phone     String?
+  id          String  @id @default(cuid())
+  workspaceId String
+  email       String? @unique
+  firstName   String?
+  lastName    String?
+  phone       String?
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
-  workspaceId String
-  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
 
   @@index([workspaceId])
 }
 
 model Workflow {
-  id          String      @id @default(cuid())
-  name        String
-  isActive    Boolean     @default(true)
-  triggerType String      @default("api")
-  definition  Json
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-
+  id          String   @id @default(cuid())
   workspaceId String
-  workspace   Workspace   @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  name        String
+  isActive    Boolean  @default(true)
+  triggerType String   @default("api")
+  definition  Json
 
-  runs WorkflowRun[]
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  runs      WorkflowRun[]
 
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
   @@index([workspaceId])
 }
 
@@ -99,19 +79,19 @@ enum WorkflowRunStatus {
 
 model WorkflowRun {
   id             String            @id @default(cuid())
+  workspaceId    String
+  workflowId     String
   status         WorkflowRunStatus @default(pending)
   triggerPayload Json?
   output         Json?
   startedAt      DateTime          @default(now())
   finishedAt     DateTime?
 
-  workflowId String
-  workflow   Workflow @relation(fields: [workflowId], references: [id], onDelete: Cascade)
-
-  workspaceId String
-  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  workflow  Workflow  @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  
   @@index([workspaceId])
+  @@index([workflowId])
 }
 
 enum AgentStatus {
@@ -123,18 +103,17 @@ enum AgentStatus {
 }
 
 model Agent {
-  id                 String      @id @default(cuid())
-  name               String
-  description        String?
-  status             AgentStatus @default(idle)
-  assignedWorkflowId String?
-  lastActivityAt     DateTime?   @default(now())
-  createdAt          DateTime    @default(now())
-  updatedAt          DateTime    @updatedAt
-
+  id          String   @id @default(cuid())
   workspaceId String
-  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  name        String
+  description String?
+  status      AgentStatus @default(idle)
+  lastActivityAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  
   @@index([workspaceId])
 }
 
@@ -146,15 +125,15 @@ enum SecurityRiskLevel {
 }
 
 model SecurityAlert {
-  id                String            @id @default(cuid())
-  type              String
-  explanation       String
-  riskLevel         SecurityRiskLevel
-  timestamp         DateTime          @default(now())
+  id          String   @id @default(cuid())
+  workspaceId String
+  type        String
+  explanation String
+  riskLevel   SecurityRiskLevel @default(low)
+  timestamp   DateTime @default(now())
   actionableOptions String[]
 
-  workspaceId String
-  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  
   @@index([workspaceId])
 }
