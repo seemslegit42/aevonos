@@ -10,6 +10,7 @@ import { DrSyntaxApp } from '@/components/dr-syntax-app';
 import { AegisReportApp } from '@/components/aegis-report-app';
 import { EchoRecallApp } from '@/components/echo-recall-app';
 import { type MicroAppType } from '@/store/app-store';
+import { DrSyntaxReportApp } from '@/components/dr-syntax-report-app';
 
 type ComponentRegistry = {
     icon: React.ComponentType<any>;
@@ -36,6 +37,10 @@ export const microAppRegistry: Record<MicroAppType, ComponentRegistry> = {
   'aegis-report': {
       icon: AegisIcon,
       content: AegisReportApp,
+  },
+  'dr-syntax-report': {
+      icon: DrSyntaxIcon,
+      content: DrSyntaxReportApp,
   },
   'ai-suggestion': {
       icon: CrystalIcon,

@@ -2,7 +2,8 @@ import { create } from 'zustand';
 import { arrayMove } from '@dnd-kit/sortable';
 import type { DragEndEvent } from '@dnd-kit/core';
 
-import { handleCommand, recallSessionAction } from '@/app/actions';
+import { processUserCommand } from '@/ai/agents/beep';
+import { recallSessionAction } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
 import { checkForAnomalies } from '@/app/actions';
 
@@ -14,6 +15,7 @@ export type MicroAppType =
   | 'aegis-control' 
   | 'dr-syntax' 
   | 'aegis-report'
+  | 'dr-syntax-report'
   | 'ai-suggestion'
   | 'echo-control'
   | 'echo-recall';
@@ -34,6 +36,7 @@ const defaultAppDetails: Record<MicroAppType, Omit<MicroApp, 'id' | 'contentProp
   'aegis-control': { type: 'aegis-control', title: 'Aegis Control', description: 'Run a sample security scan.' },
   'dr-syntax': { type: 'dr-syntax', title: 'Dr. Syntax', description: 'Get your content critiqued. Brutally.' },
   'aegis-report': { type: 'aegis-report', title: 'Aegis Scan Report', description: 'Security scan result.'},
+  'dr-syntax-report': { type: 'dr-syntax-report', title: 'Dr. Syntax Report', description: 'A critique from the doctor.' },
   'ai-suggestion': { type: 'ai-suggestion', title: 'AI Suggestion', description: 'Click to execute this command.' },
   'echo-control': { type: 'echo-control', title: 'Recall Session', description: "Click to have Echo summarize the last session's activity." },
   'echo-recall': { type: 'echo-recall', title: 'Session Recall', description: 'A summary of your last session.'},
@@ -189,13 +192,12 @@ User launched Loom Studio to inspect 'Client Onboarding' workflow.`;
     if (!command) return;
     set({ isLoading: true });
     
-    // Clear previous suggestions before processing a new command
     set(state => ({
         apps: state.apps.filter(app => app.type !== 'ai-suggestion')
     }));
 
     try {
-      const result = await handleCommand(command);
+      const result = await processUserCommand({ userCommand: command });
       
       const { toast } = useToast.getState();
       if (result.responseText) {
@@ -212,6 +214,22 @@ User launched Loom Studio to inspect 'Client Onboarding' workflow.`;
         };
       });
 
+      // Handle agent reports by creating report apps
+      const reportApps: MicroApp[] = [];
+      if (result.agentReports) {
+        for (const agentReport of result.agentReports) {
+          if (agentReport.agent === 'dr-syntax') {
+            reportApps.push({
+              id: `dr-syntax-report-${Date.now()}`,
+              type: 'dr-syntax-report',
+              title: defaultAppDetails['dr-syntax-report'].title,
+              description: `Critique from ${new Date().toLocaleTimeString()}`,
+              contentProps: { result: agentReport.report },
+            });
+          }
+        }
+      }
+
       const suggestionApps: MicroApp[] = result.suggestedCommands.map((cmd, index) => ({
         id: `ai-${Date.now()}-${index}`,
         type: 'ai-suggestion',
@@ -220,7 +238,7 @@ User launched Loom Studio to inspect 'Client Onboarding' workflow.`;
       }));
 
       set(state => ({
-        apps: [...state.apps, ...appsToLaunch, ...suggestionApps],
+        apps: [...state.apps, ...appsToLaunch, ...reportApps, ...suggestionApps],
       }));
 
     } catch (error) {

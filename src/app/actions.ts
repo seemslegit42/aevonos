@@ -1,6 +1,6 @@
 'use server';
 
-import { processUserCommand, type UserCommandOutput } from '@/ai/flows/initial-prompt-generation';
+import { processUserCommand, type UserCommandOutput } from '@/ai/agents/beep';
 import { aegisAnomalyScan } from '@/ai/agents/aegis';
 import { revalidatePath } from 'next/cache';
 import { drSyntaxCritique, type DrSyntaxInput, type DrSyntaxOutput } from '@/ai/agents/dr-syntax';
@@ -15,6 +15,7 @@ export async function handleCommand(command: string): Promise<UserCommandOutput>
     console.error('Error processing command:', error);
     return {
         appsToLaunch: [],
+        agentReports: [],
         suggestedCommands: ['Error: Could not process command.'],
         responseText: 'My apologies, I encountered an internal error and could not process your command.'
     };
