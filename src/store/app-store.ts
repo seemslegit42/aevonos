@@ -1,6 +1,6 @@
 
+
 import { create } from 'zustand';
-import { arrayMove } from '@dnd-kit/sortable';
 import type { DragEndEvent } from '@dnd-kit/core';
 import React from 'react';
 
@@ -45,15 +45,17 @@ export interface MicroApp {
   type: MicroAppType;
   title: string;
   description: string;
+  position: { x: number; y: number };
+  zIndex: number;
   contentProps?: any; // Props for content components, e.g., report data
 }
 
 // A simple, non-react-based unique ID generator for new app instances.
 let appInstanceId = 0;
-const generateId = () => `app-instance-${++appInstanceId}`;
+const generateId = () => `app-instance-${appInstanceId++}-${Date.now()}`;
 
 
-const defaultAppDetails: Record<MicroAppType, Omit<MicroApp, 'id' | 'contentProps'>> = {
+const defaultAppDetails: Record<MicroAppType, Omit<MicroApp, 'id' | 'position' | 'zIndex' | 'contentProps'>> = {
   'file-explorer': { type: 'file-explorer', title: 'File Explorer', description: 'Access and manage your files.' },
   'terminal': { type: 'terminal', title: 'Terminal', description: 'Direct command-line access.' },
   'ai-suggestion': { type: 'ai-suggestion', title: 'AI Suggestion', description: 'Click to execute this command.' },
@@ -85,6 +87,7 @@ interface AppState {
   handleCommandSubmit: (command: string) => void;
   triggerAppAction: (appId: string) => void;
   handleSessionRecall: () => void;
+  bringToFront: (appId: string) => void;
 }
 
 // A registry for app actions, decoupling them from the component.
@@ -98,45 +101,62 @@ const appActionRegistry: Record<string, (get: () => AppState, set: (fn: (state: 
 
 export const useAppStore = create<AppState>((set, get) => {
     
-  // === PRIVATE HELPERS (scoped to the store closure) ===
+  let zIndexCounter = 10;
 
-  /**
-   * Updates an existing MicroApp or inserts a new one into the state.
-   * This is a core utility for handling dynamic app manifestations.
-   * @param newApp The MicroApp object to upsert.
-   * @param position Optional: Where to insert the new app relative to another type.
-   * @param relativeToType The type of app to position against.
-   */
-  const upsertMicroApp = (newApp: MicroApp, position?: 'after' | 'before', relativeToType?: MicroAppType) => {
-    set(state => {
-      const existingIndex = state.apps.findIndex(a => a.id === newApp.id);
-      
-      if (existingIndex > -1) {
-        // Update existing app in-place
-        const updatedApps = [...state.apps];
-        updatedApps[existingIndex] = newApp;
-        return { apps: updatedApps };
-      }
-      
-      // Insert new app at a specific position if requested
-      if (position && relativeToType) {
-        const relativeIndex = state.apps.findIndex(a => a.type === relativeToType);
-        if (relativeIndex > -1) {
-          const newApps = [...state.apps];
-          newApps.splice(relativeIndex + (position === 'after' ? 1 : 0), 0, newApp);
-          return { apps: newApps };
-        }
-      }
-
-      // Fallback: add to the end
-      return { apps: [...state.apps, newApp] };
-    });
+  const bringToFront = (appId: string) => {
+    const newZIndex = ++zIndexCounter;
+    set(state => ({
+      apps: state.apps.map(app => 
+        app.id === appId ? { ...app, zIndex: newZIndex } : app
+      ),
+    }));
   };
 
-  /**
-   * Handles the various response types from the CRM agent.
-   * @param crmReport The report object from the CRM agent.
-   */
+  const launchApp = (type: MicroAppType, overrides: Partial<Omit<MicroApp, 'type'>> = {}) => {
+    const defaults = defaultAppDetails[type];
+    const existingAppsCount = get().apps.length;
+    
+    const newApp: MicroApp = {
+        id: overrides.id || generateId(),
+        type: type,
+        title: overrides.title || defaults.title,
+        description: overrides.description || defaults.description,
+        contentProps: overrides.contentProps || {},
+        position: overrides.position || { x: 40 + (existingAppsCount % 8) * 30, y: 40 + (existingAppsCount % 8) * 30 },
+        zIndex: ++zIndexCounter,
+    };
+    
+    set(state => ({
+      apps: [...state.apps, newApp]
+    }));
+    
+    bringToFront(newApp.id);
+    return newApp;
+  }
+  
+  const upsertApp = (type: MicroAppType, props: Partial<Omit<MicroApp, 'type'>>) => {
+      if (!props.id) {
+          return launchApp(type, props);
+      }
+      
+      const existingApp = get().apps.find(a => a.id === props.id);
+      
+      if(existingApp) {
+          set(state => ({
+              apps: state.apps.map(app => 
+                  app.id === props.id
+                  ? { ...app, ...props, zIndex: ++zIndexCounter }
+                  : app
+              )
+          }));
+          bringToFront(props.id);
+          return get().apps.find(a => a.id === props.id);
+      } else {
+          return launchApp(type, props);
+      }
+  }
+
+
   const processCrmReport = (crmReport: Extract<AgentReportSchema, { agent: 'crm' }>['report']) => {
     const { toast } = useToast.getState();
     const crmAppId = 'contact-list-main';
@@ -144,7 +164,6 @@ export const useAppStore = create<AppState>((set, get) => {
     switch (crmReport.action) {
       case 'create':
         toast({ title: 'CRM Agent', description: `Contact "${crmReport.report.firstName} ${crmReport.report.lastName}" created successfully.` });
-        // Re-fetch the list to show the new contact. A more optimized approach might add it directly.
         get().handleCommandSubmit('list all contacts');
         break;
       
@@ -158,18 +177,12 @@ export const useAppStore = create<AppState>((set, get) => {
               : app
           )
         }));
+        bringToFront(crmAppId);
         break;
 
       case 'list':
         const contacts = crmReport.report;
-        const contactListApp: MicroApp = {
-          id: crmAppId,
-          type: 'contact-list',
-          title: 'Contact List',
-          description: 'A list of your contacts.',
-          contentProps: { contacts },
-        };
-        upsertMicroApp(contactListApp);
+        upsertApp('contact-list', { id: crmAppId, contentProps: { contacts } });
         break;
 
       case 'delete':
@@ -190,36 +203,15 @@ export const useAppStore = create<AppState>((set, get) => {
     }
   };
 
-  /**
-   * Processes an array of agent reports, dispatching toasts or updating app states.
-   * @param reports The array of agent reports from BEEP.
-   */
+
   const processAgentReports = (reports: UserCommandOutput['agentReports']) => {
     if (!reports) return;
     const { toast } = useToast.getState();
 
-    const launchAppForReport = (type: MicroAppType, title: string, description: string, contentProps: any) => {
-        const app: MicroApp = {
-            id: generateId(),
-            type,
-            title,
-            description,
-            contentProps,
-        };
-        upsertMicroApp(app, 'after', 'aegis-control');
-    };
-
     for (const report of reports) {
       switch (report.agent) {
         case 'aegis':
-          const aegisApp: MicroApp = {
-            id: 'aegis-report-main',
-            type: 'aegis-control',
-            title: defaultAppDetails['aegis-control'].title,
-            description: '',
-            contentProps: { ...report.report }
-          };
-          upsertMicroApp(aegisApp, 'after', 'echo-control');
+          upsertApp('aegis-control', { id: 'aegis-report-main', contentProps: { ...report.report }});
           if (report.report.isAnomalous) {
             toast({ title: 'Aegis Alert', description: report.report.anomalyExplanation, variant: 'destructive' });
           }
@@ -235,50 +227,48 @@ export const useAppStore = create<AppState>((set, get) => {
           break;
         
         case 'billing':
-            // Billing information is now handled directly in BEEP's textual response
-            // and does not launch a Micro-App.
             break;
         
         case 'vin-diesel':
-            launchAppForReport('vin-diesel', `VIN: ...${report.report.vin.slice(-6)}`, 'Validation Result', report.report);
+            launchApp('vin-diesel', { title: `VIN: ...${report.report.vin.slice(-6)}`, description: 'Validation Result', contentProps: report.report });
             break;
         
         case 'winston-wolfe':
-            launchAppForReport('winston-wolfe', 'The Winston Wolfe', 'A solution is ready.', report.report);
+            launchApp('winston-wolfe', { title: 'The Winston Wolfe', description: 'A solution is ready.', contentProps: report.report });
             break;
 
         case 'kif-kroker':
-            launchAppForReport('kif-kroker', 'The Kif Kroker', 'Comms Analysis', report.report);
+            launchApp('kif-kroker', { title: 'The Kif Kroker', description: 'Comms Analysis', contentProps: report.report });
             break;
         
         case 'vandelay':
-            launchAppForReport('vandelay', 'Vandelay Industries', 'Alibi Generated', report.report);
+            launchApp('vandelay', { title: 'Vandelay Industries', description: 'Alibi Generated', contentProps: report.report });
             break;
         
         case 'jroc':
-            launchAppForReport('jroc-business-kit', `Biz Kit: ${report.report.businessName}`, 'Your legit-as-frig business kit.', report.report);
+            launchApp('jroc-business-kit', { title: `Biz Kit: ${report.report.businessName}`, description: 'Your legit-as-frig business kit.', contentProps: report.report });
             break;
         
         case 'lahey':
-             launchAppForReport('lahey-surveillance', 'Shit-storm report.', report.report);
+             launchApp('lahey-surveillance', { title: `Lahey Report`, description: 'Shit-storm report.', contentProps: report.report });
              break;
         
         case 'foremanator':
-            launchAppForReport('the-foremanator', 'Foremanator Site Log', 'Daily report processed.', report.report);
+            launchApp('the-foremanator', { title: 'Foremanator Site Log', description: 'Daily report processed.', contentProps: report.report });
             break;
 
         case 'sterileish':
-            launchAppForReport('sterileish', 'STERILE-ish™ Report', 'Compliance analysis complete.', report.report);
+            launchApp('sterileish', { title: 'STERILE-ish™ Report', description: 'Compliance analysis complete.', contentProps: report.report });
             break;
         
         case 'paper-trail':
-            launchAppForReport('paper-trail', `Case File: ${report.report.caseFile}`, 'Evidence processed.', report.report);
+            launchApp('paper-trail', { title: `Case File`, description: 'Evidence processed.', contentProps: report.report });
             break;
       }
     }
   };
 
-  // === PUBLIC API of the store ===
+
   return {
     apps: [
       {
@@ -286,19 +276,23 @@ export const useAppStore = create<AppState>((set, get) => {
         type: 'echo-control',
         title: 'Recall Session',
         description: "Click to have Echo summarize the last session's activity.",
+        position: { x: 20, y: 20 },
+        zIndex: 1,
       },
     ],
     isLoading: false,
+    bringToFront,
 
     handleDragEnd: (event: DragEndEvent) => {
-      const { active, over } = event;
-      if (over && active.id !== over.id) {
-        set((state) => {
-          const oldIndex = state.apps.findIndex((item) => item.id === active.id);
-          const newIndex = state.apps.findIndex((item) => item.id === over.id);
-          return { apps: arrayMove(state.apps, oldIndex, newIndex) };
-        });
-      }
+      const { active, delta } = event;
+      set(state => ({
+        apps: state.apps.map(app => 
+          app.id === active.id 
+            ? { ...app, position: { x: app.position.x + delta.x, y: app.position.y + delta.y } }
+            : app
+        )
+      }));
+      bringToFront(active.id as string);
     },
 
     triggerAppAction: (appId: string) => {
@@ -329,7 +323,6 @@ export const useAppStore = create<AppState>((set, get) => {
       if (!command) return;
       set({ isLoading: true });
       
-      // Clear previous suggestions and reports before executing a new command.
       set(state => ({
           apps: state.apps.filter(app => app.type !== 'ai-suggestion' && app.id !== 'aegis-report-main')
       }));
@@ -344,23 +337,20 @@ export const useAppStore = create<AppState>((set, get) => {
 
         processAgentReports(result.agentReports);
 
-        const appsToLaunch = result.appsToLaunch.map((appInfo) => {
-          const defaults = defaultAppDetails[appInfo.type];
-          return { id: generateId(), type: appInfo.type, title: appInfo.title || defaults.title, description: appInfo.description || defaults.description };
+        result.appsToLaunch.forEach(appInfo => {
+            const defaults = defaultAppDetails[appInfo.type];
+            launchApp(appInfo.type, {
+                title: appInfo.title || defaults.title,
+                description: appInfo.description || defaults.description,
+            });
         });
 
-        const suggestionApps = result.suggestedCommands.map((cmd) => ({
-          id: generateId(),
-          type: 'ai-suggestion',
-          title: cmd,
-          description: defaultAppDetails['ai-suggestion'].description,
-        }));
-        
-        if (appsToLaunch.length > 0 || suggestionApps.length > 0) {
-            set(state => ({
-                apps: [...state.apps, ...appsToLaunch, ...suggestionApps],
-            }));
-        }
+        result.suggestedCommands.forEach(cmd => {
+            launchApp('ai-suggestion', {
+                title: cmd,
+                description: defaultAppDetails['ai-suggestion'].description,
+            });
+        });
 
       } catch (error) {
         console.error('Error handling command:', error);

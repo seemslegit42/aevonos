@@ -11,11 +11,6 @@ import {
   useSensor,
   useSensors,
 } from '@dnd-kit/core';
-import {
-  SortableContext,
-  sortableKeyboardCoordinates,
-  rectSortingStrategy,
-} from '@dnd-kit/sortable';
 
 import MicroAppGrid from '@/components/micro-app-grid';
 import { useAppStore } from '@/store/app-store';
@@ -33,9 +28,7 @@ export default function Home() {
 
   const sensors = useSensors(
     useSensor(PointerSensor),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
+    useSensor(KeyboardSensor)
   );
 
   const initialAppCount = useAppStore.getState().apps.length || 1;
@@ -65,9 +58,7 @@ export default function Home() {
           collisionDetection={closestCenter}
           onDragEnd={handleDragEnd}
         >
-          <SortableContext items={apps.map((app) => app.id)} strategy={rectSortingStrategy}>
-            <MicroAppGrid apps={apps} />
-          </SortableContext>
+          <MicroAppGrid apps={apps} />
         </DndContext>
       </div>
       <footer className="text-center text-xs text-muted-foreground flex-shrink-0">
