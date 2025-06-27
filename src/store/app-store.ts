@@ -13,7 +13,6 @@ export type MicroAppType =
   | 'file-explorer' 
   | 'terminal' 
   | 'aegis-control' 
-  | 'dr-syntax' 
   | 'aegis-report'
   | 'dr-syntax-report'
   | 'ai-suggestion'
@@ -34,7 +33,6 @@ const defaultAppDetails: Record<MicroAppType, Omit<MicroApp, 'id' | 'contentProp
   'file-explorer': { type: 'file-explorer', title: 'File Explorer', description: 'Access and manage your files.' },
   'terminal': { type: 'terminal', title: 'Terminal', description: 'Direct command-line access.' },
   'aegis-control': { type: 'aegis-control', title: 'Aegis Control', description: 'Run a sample security scan.' },
-  'dr-syntax': { type: 'dr-syntax', title: 'Dr. Syntax', description: 'Get your content critiqued. Brutally.' },
   'aegis-report': { type: 'aegis-report', title: 'Aegis Scan Report', description: 'Security scan result.'},
   'dr-syntax-report': { type: 'dr-syntax-report', title: 'Dr. Syntax Report', description: 'A critique from the doctor.' },
   'ai-suggestion': { type: 'ai-suggestion', title: 'AI Suggestion', description: 'Click to execute this command.' },
@@ -88,12 +86,6 @@ export const useAppStore = create<AppState>((set, get) => ({
       type: 'aegis-control',
       title: 'Aegis Control',
       description: 'Run a sample security scan.',
-    },
-    {
-      id: '5',
-      type: 'dr-syntax',
-      title: 'Dr. Syntax',
-      description: 'Get your content critiqued. Brutally.',
     },
   ],
   isLoading: false,

@@ -31,7 +31,6 @@ const LaunchableAppTypeSchema = z.enum([
     'file-explorer',
     'terminal',
     'aegis-control',
-    'dr-syntax',
     'echo-control',
 ]);
 
@@ -93,7 +92,6 @@ You have access to the following Micro-Apps which you can launch:
 - file-explorer: A tool to browse and manage files.
 - terminal: A command-line interface for direct system access.
 - aegis-control: A security panel to initiate system scans.
-- dr-syntax: An interactive app for getting content critiqued.
 - echo-control: An app to recall and summarize the last session.
 
 You also have tools to delegate tasks to other agents:
