@@ -8,7 +8,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { Html, Icosahedron, Edges, Torus } from '@react-three/drei';
+import { Html, Icosahedron, Edges } from '@react-three/drei';
 import * as THREE from 'three';
 
 import { Button } from '@/components/ui/button';
@@ -41,12 +41,11 @@ const passwordPlaceholders = [
 ];
 
 
-// A single component for the crystal sphere and its corresponding ring
 function Crystal({ config }: { config: any }) {
-    const sphereRef = useRef<THREE.Group>(null!);
+    const groupRef = useRef<THREE.Group>(null!);
 
     useFrame((state, delta) => {
-        const group = sphereRef.current;
+        const group = groupRef.current;
         if (group) {
             // Add a subtle, independent rotation to each crystal to make it feel more alive.
             group.rotation.x += delta * 0.1;
@@ -55,75 +54,54 @@ function Crystal({ config }: { config: any }) {
     });
 
     return (
-        <group position={config.position}>
-             {/* The crystal sphere at the center of the circle, in its own rotating group */}
-            <group ref={sphereRef}>
-                <Icosahedron
-                    args={[config.sphereRadius, 4]} // Use a dynamic radius for the sphere
-                >
-                    <meshStandardMaterial
-                        color="hsl(var(--primary))"
-                        emissive="hsl(var(--accent))"
-                        emissiveIntensity={0.3}
-                        roughness={0.05}
-                        metalness={0.1}
-                        transmission={0.95}
-                        thickness={1.5}
-                        ior={1.7}
-                    />
-                    <Edges scale={1.001} color="white" />
-                </Icosahedron>
-            </group>
-            {/* The ring representing the circle itself */}
-            <Torus args={[config.ringRadius, 0.02, 16, 100]}>
-                 <meshStandardMaterial
+        <group position={config.position} ref={groupRef}>
+            <Icosahedron
+                args={[config.sphereRadius, 4]}
+            >
+                <meshStandardMaterial
                     color="hsl(var(--primary))"
                     emissive="hsl(var(--accent))"
-                    emissiveIntensity={0.6}
-                    roughness={0.2}
-                    metalness={0.8}
+                    emissiveIntensity={0.3}
+                    roughness={0.05}
+                    metalness={0.1}
+                    transmission={0.95}
+                    thickness={1.5}
+                    ior={1.7}
                 />
                 <Edges scale={1.001} color="white" />
-            </Torus>
+            </Icosahedron>
         </group>
     );
 }
 
-// 3D Scene Component
+
 function LoginScene() {
   const group = useRef<THREE.Group>(null!);
 
   const crystals = useMemo(() => {
+    const totalCrystals = 19;
+    const constellationRadius = 4;
+    const crystalSphereRadius = 0.4;
+
     const points: [number, number, number][] = [];
-    const ringRadius = 2.0; 
-    const sphereRadius = 0.5;
+    // Using the golden angle to distribute points evenly on a sphere (Fibonacci lattice)
+    const phi = Math.PI * (Math.sqrt(5) - 1);
 
-    // The 19 points for the Flower of Life center points
-    points.push([0, 0, 0]); // Center
+    for (let i = 0; i < totalCrystals; i++) {
+        const y = 1 - (i / (totalCrystals - 1)) * 2;  // y goes from 1 to -1
+        const radiusAtY = Math.sqrt(1 - y * y);   // radius at y
 
-    // First ring of 6
-    for (let i = 0; i < 6; i++) {
-        const angle = (Math.PI / 3) * i;
-        points.push([Math.cos(angle) * ringRadius, Math.sin(angle) * ringRadius, 0]);
-    }
+        const theta = phi * i;
 
-    // Second ring of 12
-    const r2 = ringRadius * 2;
-    for (let i = 0; i < 6; i++) {
-        const angle = (Math.PI / 3) * i;
-        points.push([Math.cos(angle) * r2, Math.sin(angle) * r2, 0]);
-    }
-    const r3 = ringRadius * Math.sqrt(3);
-    for (let i = 0; i < 6; i++) {
-        const angle = (Math.PI / 3) * i + (Math.PI / 6);
-        points.push([Math.cos(angle) * r3, Math.sin(angle) * r3, 0]);
+        const x = Math.cos(theta) * radiusAtY * constellationRadius;
+        const z = Math.sin(theta) * radiusAtY * constellationRadius;
+        
+        points.push([x, y, z]);
     }
     
-    // We trust the math to generate 19 unique points for our pattern.
     return points.map(p => ({
       position: p,
-      ringRadius: ringRadius,
-      sphereRadius: sphereRadius,
+      sphereRadius: crystalSphereRadius,
     }));
   }, []);
 
@@ -133,13 +111,12 @@ function LoginScene() {
       // Mouse parallax effect
       group.current.position.lerp(new THREE.Vector3(state.mouse.x * 0.5, state.mouse.y * 0.5, 0), 0.05);
       // Controlled, graceful rotation
-      group.current.rotation.z += delta * 0.02; // Primary spin
-      group.current.rotation.y += delta * 0.005; // Gentle wobble
+      group.current.rotation.y += delta * 0.02;
     }
   });
 
   return (
-    <group ref={group} scale={0.4} rotation={[Math.PI / 5, 0, 0]}>
+    <group ref={group} rotation={[Math.PI / 8, 0, 0]}>
       {crystals.map((config, i) => (
         <Crystal key={i} config={config} />
       ))}
@@ -218,7 +195,7 @@ export default function LoginPage() {
 
   return (
     <div className="w-full h-screen bg-background">
-      <Canvas camera={{ position: [0, 0, 10], fov: 75 }}>
+      <Canvas camera={{ position: [0, 0, 10], fov: 60 }}>
         <ambientLight intensity={1} />
         <pointLight position={[10, 10, 10]} intensity={5} color="hsl(var(--primary))" />
         <pointLight position={[-10, -10, 5]} intensity={3} color="hsl(var(--accent))" />
