@@ -6,6 +6,7 @@ import type { UserCommandOutput } from '@/ai/agents/beep-schemas';
 import { revalidatePath } from 'next/cache';
 import { scanEvidence as scanEvidenceFlow, type PaperTrailScanInput, type PaperTrailScanOutput } from '@/ai/agents/paper-trail';
 import { getServerActionSession } from '@/lib/auth';
+import prisma from '@/lib/prisma';
 
 export async function handleCommand(command: string): Promise<UserCommandOutput> {
   const session = await getServerActionSession();
@@ -58,5 +59,33 @@ export async function scanEvidence(input: Omit<PaperTrailScanInput, 'workspaceId
       lead: "The informant is offline. Couldn't process the evidence.",
       isEvidenceValid: false,
     };
+  }
+}
+
+export async function purchaseCredits(amount: number) {
+  const session = await getServerActionSession();
+  if (!session?.workspaceId) {
+    return { success: false, error: 'Unauthorized' };
+  }
+
+  if (amount <= 0) {
+    return { success: false, error: 'Invalid credit amount.' };
+  }
+
+  try {
+    await prisma.workspace.update({
+      where: { id: session.workspaceId },
+      data: {
+        credits: {
+          increment: amount,
+        },
+      },
+    });
+
+    revalidatePath('/');
+    return { success: true, message: `${amount.toLocaleString()} credits added successfully.` };
+  } catch (error) {
+    console.error('[Action: purchaseCredits]', error);
+    return { success: false, error: 'Failed to add credits.' };
   }
 }
