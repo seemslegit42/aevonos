@@ -46,8 +46,8 @@ export default function Sterileish(props: SterileishAnalysisOutput | {}) {
     const ratingPercent = report ? report.sterileRating * 10 : 0;
 
     return (
-        <div className="p-2 space-y-3 h-full flex flex-col bg-accent/10 border border-accent/20 rounded-lg">
-            <Card className="bg-background/50 border-accent/30 text-foreground">
+        <div className="p-2 space-y-3 h-full flex flex-col font-typewriter bg-[hsl(var(--military-green))] text-[hsl(var(--military-green-foreground))] border border-military-green-foreground/20 rounded-lg">
+            <Card className="bg-black/20 border-military-green-foreground/30 text-military-green-foreground">
                 <CardHeader className="p-2">
                     <CardTitle className="text-base text-accent font-headline">Cleanroom Log Entry</CardTitle>
                     <CardDescription className="text-xs text-accent/70">"It's probably fine."</CardDescription>
@@ -59,11 +59,11 @@ export default function Sterileish(props: SterileishAnalysisOutput | {}) {
                         onChange={(e) => setLogText(e.target.value)}
                         disabled={isLoading}
                         rows={3}
-                        className="bg-background/80 border-accent/50 text-foreground placeholder:text-muted-foreground focus-visible:ring-accent"
+                        className="bg-black/20 border-military-green-foreground/30 text-ledger-cream placeholder:text-ledger-cream/50 focus-visible:ring-ledger-cream"
                     />
                     <div className="flex gap-2">
                         <Select value={entryType} onValueChange={(v: any) => setEntryType(v)} disabled={isLoading}>
-                            <SelectTrigger className="bg-background/80 border-accent/50 focus:ring-accent">
+                            <SelectTrigger className="bg-black/20 border-military-green-foreground/30 focus:ring-ledger-cream">
                                 <SelectValue placeholder="Entry Type" />
                             </SelectTrigger>
                             <SelectContent>
@@ -73,7 +73,7 @@ export default function Sterileish(props: SterileishAnalysisOutput | {}) {
                                 <SelectItem value="general">General</SelectItem>
                             </SelectContent>
                         </Select>
-                        <Button className="w-full bg-accent text-accent-foreground hover:bg-accent/90" onClick={handleSubmitLog} disabled={isLoading}>
+                        <Button className="w-full bg-ledger-cream text-military-green hover:bg-ledger-cream/80 font-bold" onClick={handleSubmitLog} disabled={isLoading}>
                             {isLoading ? <Loader2 className="animate-spin" /> : 'Analyze Log'}
                         </Button>
                     </div>
@@ -81,7 +81,7 @@ export default function Sterileish(props: SterileishAnalysisOutput | {}) {
             </Card>
 
             {report && (
-                <Card className="bg-background/50 border-accent/30 text-foreground flex-grow">
+                <Card className="bg-black/20 border-military-green-foreground/30 text-military-green-foreground flex-grow">
                     <CardHeader className="p-2">
                         <CardTitle className="text-base text-accent font-headline">Compliance Analysis</CardTitle>
                     </CardHeader>
@@ -115,7 +115,7 @@ export default function Sterileish(props: SterileishAnalysisOutput | {}) {
                 </Card>
             )}
 
-             <div className="flex-shrink-0 pt-2 border-t border-accent/20 flex items-center justify-between">
+             <div className="flex-shrink-0 pt-2 border-t border-military-green-foreground/20 flex items-center justify-between">
                 <div className="flex items-center space-x-2">
                     <Switch id="audit-mode" checked={auditMode} onCheckedChange={setAuditMode} />
                     <Label htmlFor="audit-mode">Audit Mode</Label>

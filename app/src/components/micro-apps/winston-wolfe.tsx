@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -50,6 +51,7 @@ export default function TheWinstonWolfe(props: WinstonWolfeOutput | {}) {
                     onChange={(e) => setReviewText(e.target.value)}
                     disabled={isLoading}
                     rows={4}
+                    className="bg-background/80"
                 />
                 <Button className="w-full" onClick={handleGenerateSolution} disabled={isLoading || !reviewText}>
                     {isLoading ? <Loader2 className="animate-spin" /> : 'Call The Fixer'}
