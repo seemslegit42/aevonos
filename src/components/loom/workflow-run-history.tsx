@@ -8,7 +8,9 @@ import { Badge } from '@/components/ui/badge';
 import { RefreshCw, Play, CheckCircle, XCircle, Loader2 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { cn } from '@/lib/utils';
-import { WorkflowRunStatus } from '@prisma/client';
+import { WorkflowRunStatus, type WorkflowRun as FullWorkflowRun } from '@prisma/client';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 
 export interface WorkflowRunSummary {
   id: string;
@@ -20,11 +22,6 @@ export interface WorkflowRunSummary {
   };
 }
 
-interface WorkflowRunHistoryProps {
-  activeWorkflowId: string | null;
-  triggerRefresh: number;
-}
-
 const statusConfig: Record<WorkflowRunStatus, { icon: React.ElementType, color: string, badgeVariant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
   [WorkflowRunStatus.pending]: { icon: Loader2, color: 'text-blue-400', badgeVariant: 'outline' },
   [WorkflowRunStatus.running]: { icon: Loader2, color: 'text-primary', badgeVariant: 'default' },
@@ -34,25 +31,104 @@ const statusConfig: Record<WorkflowRunStatus, { icon: React.ElementType, color: 
 };
 
 
+function RunDetails({ runId }: { runId: string }) {
+    const [details, setDetails] = useState<FullWorkflowRun | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+
+    useEffect(() => {
+        async function fetchDetails() {
+            setIsLoading(true);
+            try {
+                const response = await fetch(`/api/workflows/runs/${runId}`);
+                if (!response.ok) throw new Error("Failed to fetch run details.");
+                const data = await response.json();
+                setDetails(data);
+            } catch (err) {
+                setError(err instanceof Error ? err.message : "An unknown error occurred.");
+            } finally {
+                setIsLoading(false);
+            }
+        }
+        fetchDetails();
+    }, [runId]);
+
+    if (isLoading) {
+        return (
+            <div className="space-y-4">
+                <Skeleton className="h-8 w-1/2" />
+                <Skeleton className="h-24 w-full" />
+                <Skeleton className="h-24 w-full" />
+            </div>
+        );
+    }
+    
+    if (error) {
+        return (
+            <Alert variant="destructive">
+                <XCircle className="h-4 w-4" />
+                <AlertTitle>Error</AlertTitle>
+                <AlertDescription>{error}</AlertDescription>
+            </Alert>
+        );
+    }
+
+    if (!details) return null;
+
+    const renderJsonPayload = (title: string, data: any) => (
+        <div>
+            <h4 className="font-semibold text-sm mb-1">{title}</h4>
+            <pre className="text-xs bg-muted/50 p-2 rounded-md max-h-40 overflow-auto">
+                {JSON.stringify(data, null, 2)}
+            </pre>
+        </div>
+    );
+
+    return (
+        <div className="space-y-4">
+            {details.triggerPayload && renderJsonPayload("Trigger Payload", details.triggerPayload)}
+            {details.output && renderJsonPayload("Final Output", details.output)}
+        </div>
+    );
+}
+
 function RunItem({ run }: { run: WorkflowRunSummary }) {
+    const [isDialogOpen, setIsDialogOpen] = useState(false);
     const config = statusConfig[run.status] || statusConfig.pending;
     const Icon = config.icon;
     return (
-        <div className="p-2 rounded-md border border-foreground/15 hover:bg-accent/10 transition-colors">
-            <div className="flex justify-between items-start">
-                <div className="flex items-center gap-2">
-                     <Icon className={cn("h-4 w-4", config.color, run.status === 'running' || run.status === 'pending' ? 'animate-spin' : '')} />
-                     <div className='overflow-hidden'>
-                        <p className="text-sm font-medium truncate" title={run.workflow.name}>{run.workflow.name}</p>
-                        <p className="text-xs text-muted-foreground font-mono truncate" title={run.id}>{run.id}</p>
-                     </div>
-                </div>
-                <Badge variant={config.badgeVariant} className="capitalize text-xs">{run.status}</Badge>
-            </div>
-            <p className="text-xs text-muted-foreground text-right mt-1">
-                Triggered {formatDistanceToNow(new Date(run.startedAt), { addSuffix: true })}
-            </p>
-        </div>
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+                <button
+                    className="w-full text-left p-2 rounded-md border border-foreground/15 hover:bg-accent/10 transition-colors"
+                >
+                    <div className="flex justify-between items-start">
+                        <div className="flex items-center gap-2">
+                             <Icon className={cn("h-4 w-4", config.color, run.status === 'running' || run.status === 'pending' ? 'animate-spin' : '')} />
+                             <div className='overflow-hidden'>
+                                <p className="text-sm font-medium truncate" title={run.workflow.name}>{run.workflow.name}</p>
+                                <p className="text-xs text-muted-foreground font-mono truncate" title={run.id}>{run.id}</p>
+                             </div>
+                        </div>
+                        <Badge variant={config.badgeVariant} className="capitalize text-xs">{run.status}</Badge>
+                    </div>
+                    <p className="text-xs text-muted-foreground text-right mt-1">
+                        Triggered {formatDistanceToNow(new Date(run.startedAt), { addSuffix: true })}
+                    </p>
+                </button>
+            </DialogTrigger>
+            {isDialogOpen && (
+                <DialogContent className="max-w-2xl">
+                    <DialogHeader>
+                        <DialogTitle>Workflow Run Details</DialogTitle>
+                        <DialogDescription>
+                            <span className='font-mono text-xs'>{run.id}</span>
+                        </DialogDescription>
+                    </DialogHeader>
+                    <RunDetails runId={run.id} />
+                </DialogContent>
+            )}
+        </Dialog>
     );
 }
 
@@ -88,7 +164,7 @@ export default function WorkflowRunHistory({ activeWorkflowId, triggerRefresh }:
     if (isLoading && runs.length === 0) {
       return (
         <div className="space-y-2">
-          {[...Array(3)].map((_, i) => <Skeleton key={i} className="h-16 w-full" />)}
+          {[...Array(3)].map((_, i) => <Skeleton key={i} className="h-20 w-full" />)}
         </div>
       );
     }
