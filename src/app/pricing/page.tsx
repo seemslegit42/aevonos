@@ -1,3 +1,4 @@
+
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import PricingCard from '@/components/pricing/pricing-card';
@@ -5,6 +6,7 @@ import PlanAdvisorWidget from '@/components/pricing/plan-advisor-widget';
 
 const plans = [
     {
+        tierId: "apprentice",
         tierName: "Apprentice",
         price: "$0",
         priceSubtext: "Free Forever",
@@ -18,6 +20,7 @@ const plans = [
         isFeatured: false,
     },
     {
+        tierId: "artisan",
         tierName: "Artisan",
         price: "$20",
         priceSubtext: "per user / month",
@@ -32,6 +35,7 @@ const plans = [
         isFeatured: true,
     },
     {
+        tierId: "priesthood",
         tierName: "Priesthood",
         price: "Custom",
         priceSubtext: "Contact Sales",

@@ -3,8 +3,10 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import { Button } from '@/components/ui/button';
 import { Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import Link from 'next/link';
 
 interface PricingCardProps {
+    tierId: string;
     tierName: string;
     price: string;
     priceSubtext: string;
@@ -13,7 +15,9 @@ interface PricingCardProps {
     isFeatured?: boolean;
 }
 
-export default function PricingCard({ tierName, price, priceSubtext, description, features, isFeatured }: PricingCardProps) {
+export default function PricingCard({ tierId, tierName, price, priceSubtext, description, features, isFeatured }: PricingCardProps) {
+    const link = tierName === "Priesthood" ? "/register" : `/subscribe/${tierId}`;
+
     return (
         <Card className={cn("flex flex-col", isFeatured ? "border-primary ring-2 ring-primary bg-primary/5 shadow-2xl shadow-primary/10" : "bg-background/80")}>
             <CardHeader className="p-6">
@@ -35,9 +39,11 @@ export default function PricingCard({ tierName, price, priceSubtext, description
                 </ul>
             </CardContent>
             <CardFooter className="p-6">
-                <Button className="w-full" variant={isFeatured ? "default" : "outline"}>
-                   {tierName === "Priesthood" ? "Contact Sales" : "Get Started"}
-                </Button>
+                <Link href={link} className="w-full">
+                    <Button className="w-full" variant={isFeatured ? "default" : "outline"}>
+                       {tierName === "Priesthood" ? "Contact Sales" : "Get Started"}
+                    </Button>
+                </Link>
             </CardFooter>
         </Card>
     );

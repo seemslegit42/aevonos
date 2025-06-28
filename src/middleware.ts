@@ -1,3 +1,4 @@
+
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { decrypt, encrypt } from '@/lib/auth';
@@ -6,7 +7,7 @@ export async function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname;
 
   // Define public paths that don't require authentication
-  const publicPaths = ['/login', '/register', '/validator', '/pricing'];
+  const publicPaths = ['/login', '/register', '/validator', '/pricing', '/subscribe'];
 
   // If the path is public, let the request through
   if (publicPaths.some(p => path.startsWith(p))) {
