@@ -6,7 +6,6 @@ import type { UserCommandOutput } from '@/ai/agents/beep-schemas';
 import { revalidatePath } from 'next/cache';
 import { scanEvidence as scanEvidenceFlow, type PaperTrailScanInput, type PaperTrailScanOutput } from '@/ai/agents/paper-trail';
 import { getServerActionSession } from '@/lib/auth';
-import prisma from '@/lib/prisma';
 import { createTransaction } from '@/services/ledger-service';
 import { TransactionType } from '@prisma/client';
 
