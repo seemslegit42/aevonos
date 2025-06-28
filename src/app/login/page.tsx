@@ -48,7 +48,9 @@ function Crystal({ config }: { config: any }) {
     useFrame((state, delta) => {
         const group = ref.current;
         if (group) {
-            // Remove individual rotation to let the parent group control it
+            // Add a subtle, independent rotation to each crystal to make it feel more alive.
+            group.rotation.x += delta * 0.1;
+            group.rotation.y += delta * 0.15;
         }
     });
 
@@ -115,7 +117,7 @@ function LoginScene() {
         points.push([Math.cos(angle) * r3, Math.sin(angle) * r3, 0]);
     }
     
-    // Removed the unstable `uniquePoints` logic. We now trust the math to generate 19 unique points.
+    // We trust the math to generate 19 unique points for our pattern.
     return points.map(p => ({
       position: p,
       ringRadius: ringRadius,
