@@ -41,6 +41,8 @@ import { analyzeComms } from '@/ai/agents/kif-kroker';
 import { KifKrokerAnalysisInputSchema } from './kif-kroker-schemas';
 import { createVandelayAlibi } from '@/ai/agents/vandelay';
 import { VandelayAlibiInputSchema } from './vandelay-schemas';
+import { analyzeCandidate } from '@/ai/agents/rolodex';
+import { RolodexAnalysisInputSchema } from './rolodex-schemas';
 import { jrocBusinessKit } from '@/ai/agents/jroc';
 import { JrocInputSchema } from './jroc-schemas';
 import { analyzeLaheyLog } from '@/ai/agents/lahey';
@@ -287,6 +289,18 @@ class VandelayTool extends Tool {
   async _call(input: z.infer<typeof VandelayAlibiInputSchema>) {
     const result = await createVandelayAlibi(input);
     const report: z.infer<typeof AgentReportSchema> = { agent: 'vandelay', report: result };
+    return JSON.stringify(report);
+  }
+}
+
+class RolodexTool extends Tool {
+  name = 'analyzeCandidate';
+  description = 'Analyzes a candidate summary against a job description. Use this to "check candidate fit", "analyze a resume", etc. You need to provide the candidate name, summary, and the job description.';
+  schema = RolodexAnalysisInputSchema;
+  
+  async _call(input: z.infer<typeof RolodexAnalysisInputSchema>) {
+    const result = await analyzeCandidate(input);
+    const report: z.infer<typeof AgentReportSchema> = { agent: 'rolodex', report: result };
     return JSON.stringify(report);
   }
 }
@@ -602,7 +616,7 @@ export async function processUserCommand(input: UserCommandInput): Promise<UserC
     new FinalAnswerTool(), new DrSyntaxTool(), 
     new CreateContactTool(context), new UpdateContactTool(context), new ListContactsTool(context), new DeleteContactTool(context), 
     new GetUsageTool(context), new GetDatingProfileTool(),
-    new VinDieselTool(), new WinstonWolfeTool(), new KifKrokerTool(),
+    new VinDieselTool(), new WinstonWolfeTool(), new KifKrokerTool(), new RolodexTool(),
     new VandelayTool(), new JrocTool(), new LaheyTool(), new ForemanatorTool(),
     new SterileishTool(), new PaperTrailTool(), new BarbaraTool(), new AuditorTool(),
     new WingmanTool(), new OsintTool(), new InfidelityAnalysisTool(),

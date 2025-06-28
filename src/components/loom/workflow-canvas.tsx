@@ -11,6 +11,7 @@ import { KifKrokerIcon } from '../icons/KifKrokerIcon';
 import { VandelayIcon } from '../icons/VandelayIcon';
 import { DrSyntaxIcon } from '../icons/DrSyntaxIcon';
 import { AddressBookIcon } from '../icons/AddressBookIcon';
+import { RolodexIcon } from '../icons/RolodexIcon';
 import { CrystalIcon } from '../icons/CrystalIcon';
 import { JrocIcon } from '../icons/JrocIcon';
 import { LaheyIcon } from '../icons/LaheyIcon';
@@ -25,6 +26,7 @@ const nodeIcons: Record<string, React.ComponentType<any>> = {
     'tool-winston-wolfe': WinstonWolfeIcon,
     'tool-kif-kroker': KifKrokerIcon,
     'tool-vandelay': VandelayIcon,
+    'tool-rolodex': RolodexIcon,
     'tool-dr-syntax': DrSyntaxIcon,
     'tool-crm': AddressBookIcon,
     'tool-paper-trail': PaperTrailIcon,

@@ -8,6 +8,7 @@ import { drSyntaxCritique } from '@/ai/agents/dr-syntax';
 import { generateSolution } from '@/ai/agents/winston-wolfe';
 import { analyzeComms } from '@/ai/agents/kif-kroker';
 import { createVandelayAlibi } from '@/ai/agents/vandelay';
+import { analyzeCandidate } from '@/ai/agents/rolodex';
 import { scanEvidence } from '@/ai/agents/paper-trail';
 import { generateBusinessKit } from '@/ai/agents/jroc';
 import { analyzeLaheyLog } from '@/ai/agents/lahey';
@@ -62,6 +63,9 @@ async function executeNode(node: Node, payload: any, context: ExecutionContext):
         
         case 'tool-vandelay':
             return await createVandelayAlibi(input);
+
+        case 'tool-rolodex':
+            return await analyzeCandidate(input);
 
         case 'tool-paper-trail':
             if (!input.receiptPhotoUri) throw new Error("Paper Trail node requires a receiptPhotoUri in its payload.");

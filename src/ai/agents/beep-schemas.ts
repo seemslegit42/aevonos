@@ -10,6 +10,7 @@ import { VinDieselOutputSchema } from './vin-diesel-schemas';
 import { VandelayAlibiOutputSchema } from './vandelay-schemas';
 import { WinstonWolfeOutputSchema } from './winston-wolfe-schemas';
 import { KifKrokerAnalysisOutputSchema } from './kif-kroker-schemas';
+import { RolodexAnalysisOutputSchema } from './rolodex-schemas';
 import { JrocOutputSchema } from './jroc-schemas';
 import { LaheyAnalysisOutputSchema } from './lahey-schemas';
 import { ForemanatorLogOutputSchema } from './foremanator-schemas';
@@ -149,6 +150,10 @@ export const AgentReportSchema = z.discriminatedUnion('agent', [
   z.object({
     agent: z.literal('vandelay'),
     report: VandelayAlibiOutputSchema.describe('The full report from the Vandelay Industries agent.'),
+  }),
+  z.object({
+    agent: z.literal('rolodex'),
+    report: RolodexAnalysisOutputSchema.describe('The full report from The Rolodex agent.'),
   }),
   z.object({
     agent: z.literal('jroc'),

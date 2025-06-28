@@ -313,15 +313,15 @@ export const useAppStore = create<AppState>((set, get) => {
             break;
         
         case 'winston-wolfe':
-            launchApp('winston-wolfe', { contentProps: report.report });
+            launchApp('winston-wolfe', { contentProps: report.report as WinstonWolfeOutput });
             break;
 
         case 'kif-kroker':
-            launchApp('kif-kroker', { contentProps: report.report });
+            launchApp('kif-kroker', { contentProps: report.report as KifKrokerAnalysisOutput });
             break;
         
         case 'vandelay':
-            launchApp('vandelay', { contentProps: { alibi: report.report } });
+            launchApp('vandelay', { contentProps: { alibi: report.report as VandelayAlibiOutput } });
             break;
         
         case 'jroc':

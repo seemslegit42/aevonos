@@ -10,6 +10,7 @@ import { KifKrokerIcon } from '../icons/KifKrokerIcon';
 import { VandelayIcon } from '../icons/VandelayIcon';
 import { DrSyntaxIcon } from '../icons/DrSyntaxIcon';
 import { AddressBookIcon } from '../icons/AddressBookIcon';
+import { RolodexIcon } from '../icons/RolodexIcon';
 import { CrystalIcon } from '../icons/CrystalIcon';
 import { JrocIcon } from '../icons/JrocIcon';
 import { LaheyIcon } from '../icons/LaheyIcon';
@@ -25,6 +26,7 @@ export type NodeType =
     | 'tool-winston-wolfe'
     | 'tool-kif-kroker'
     | 'tool-vandelay'
+    | 'tool-rolodex'
     | 'tool-dr-syntax'
     | 'tool-crm'
     | 'tool-paper-trail'
@@ -49,6 +51,7 @@ const nodeTypes: NodeInfo[] = [
     { type: 'tool-winston-wolfe', label: 'Winston Wolfe', description: 'Solves reputation problems', icon: WinstonWolfeIcon },
     { type: 'tool-kif-kroker', label: 'Kif Kroker', description: 'Analyzes team comms', icon: KifKrokerIcon },
     { type: 'tool-vandelay', label: 'Vandelay', description: 'Generates alibis', icon: VandelayIcon },
+    { type: 'tool-rolodex', label: 'Rolodex', description: 'Analyzes candidates', icon: RolodexIcon },
     { type: 'tool-dr-syntax', label: 'Dr. Syntax', description: 'Critiques content harshly', icon: DrSyntaxIcon },
     { type: 'tool-jroc', label: 'J-ROC', description: 'Generates business kits', icon: JrocIcon },
     { type: 'tool-lahey', label: 'Lahey', description: 'Investigates logs', icon: LaheyIcon },
