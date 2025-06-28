@@ -1,3 +1,4 @@
+
 'use client';
 
 import React from 'react';
@@ -68,7 +69,7 @@ export default function LoginPage() {
 
   return (
     <div className="w-full h-screen relative">
-        <div className="absolute inset-0 z-0 flex items-center justify-center p-4">
+        <div className="absolute inset-0 z-0 flex items-center justify-center">
             <FlowerOfLifeIcon className="w-full max-w-3xl h-full max-h-3xl" />
         </div>
         <div className="w-full h-screen flex items-center justify-center p-4 relative z-10">
