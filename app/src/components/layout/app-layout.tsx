@@ -10,7 +10,6 @@ import type { User } from '@prisma/client';
 const MainLayout = dynamic(() => 
   import('@/components/layout/main-layout').then((mod) => mod.MainLayout), 
   {
-    ssr: false,
     loading: () => (
       <div className="flex flex-col h-screen p-4 gap-4">
         <Skeleton className="h-[68px] w-full" />
