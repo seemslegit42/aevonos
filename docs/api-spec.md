@@ -1,3 +1,4 @@
+
 Here is the updated document: docs/API/PUBLIC-API-SPEC.md.This document provides the formal OpenAPI 3.0 specification for the ΛΞVON OS Public API. It details the endpoints, data models, authentication methods, and error handling, serving as the definitive contract for external developers and services interacting with the platform.ΛΞVON OS: Public API SpecificationVersion: 1.0.0Description: The official Public API for ΛΞVON OS, the Intelligent Operating System for SMBs. This RESTful API allows external applications to seamlessly integrate with ΛΞVON OS functionalities, enabling AI-powered task delegation, workflow orchestration, secure data synchronization, and access to core platform intelligence.1. General API Information
 {
   "openapi": "3.0.0",
@@ -597,6 +598,39 @@ Here is the updated document: docs/API/PUBLIC-API-SPEC.md.This document provides
       }
     },
     "/security/threat-feeds": {
+      "get": {
+        "tags": ["Security"],
+        "summary": "Retrieve configured threat intelligence feeds for Aegis.",
+        "operationId": "getThreatFeeds",
+        "description": "Fetches the list of URLs currently configured as threat intelligence sources.",
+        "responses": {
+          "200": {
+            "description": "A list of threat feed URLs.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "url": {
+                        "type": "string",
+                        "format": "url"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized."
+          }
+        }
+      },
       "put": {
         "tags": ["Security"],
         "summary": "Configure threat intelligence feed sources for Aegis.",
