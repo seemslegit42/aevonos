@@ -75,6 +75,8 @@ import { analyzeInvite } from '@/ai/agents/lumbergh';
 import { LumberghAnalysisInputSchema } from './lumbergh-schemas';
 import { analyzeExpense } from '@/ai/agents/lucille-bluth';
 import { LucilleBluthInputSchema } from './lucille-bluth-schemas';
+import { generatePamRant } from './pam-poovey';
+import { PamScriptInputSchema } from './pam-poovey-schemas';
 import {
     type UserCommandInput,
     UserCommandOutputSchema,
@@ -502,6 +504,21 @@ class LucilleBluthTool extends Tool {
   }
 }
 
+class PamPooveyTool extends Tool {
+  name = 'getPamsTake';
+  description = "Delegates a task to Pam Poovey, the HR director. Use this for requests like 'get Pam to talk about onboarding' or 'ask Pam about the attendance policy'. Specify the HR topic.";
+  schema = PamScriptInputSchema;
+  
+  async _call(input: z.infer<typeof PamScriptInputSchema>) {
+    const result = await generatePamRant(input);
+    const report: z.infer<typeof AgentReportSchema> = {
+        agent: 'pam-poovey',
+        report: result,
+    };
+    return JSON.stringify(report);
+  }
+}
+
 
 // LangGraph State
 interface AgentState {
@@ -591,6 +608,7 @@ export async function processUserCommand(input: UserCommandInput): Promise<UserC
     new WingmanTool(), new OsintTool(), new InfidelityAnalysisTool(),
     new DecoyTool(), new DossierTool(), new KendraTool(), new StonksBotTool(),
     new OrpheanOracleTool(), new LumberghTool(), new LucilleBluthTool(),
+    new PamPooveyTool(),
   ];
 
   // Re-bind the model with the schemas from the dynamically created tools for this request.

@@ -371,6 +371,10 @@ export const useAppStore = create<AppState>((set, get) => {
         case 'lucille-bluth':
             launchApp('lucille-bluth', { contentProps: report.report as LucilleBluthOutput });
             break;
+
+        case 'pam-poovey':
+            launchApp('pam-poovey-onboarding', { contentProps: report.report as PamAudioOutput });
+            break;
       }
     }
   };

@@ -27,6 +27,7 @@ import { StonksBotOutputSchema } from './stonks-bot-schemas';
 import { OrpheanOracleOutputSchema } from './orphean-oracle-schemas';
 import { LumberghAnalysisOutputSchema } from './lumbergh-schemas';
 import { LucilleBluthOutputSchema } from './lucille-bluth-schemas';
+import { PamAudioOutputSchema } from './pam-poovey-schemas';
 
 
 // Schemas from the original BEEP agent, preserved for the public contract.
@@ -221,6 +222,10 @@ export const AgentReportSchema = z.discriminatedUnion('agent', [
   z.object({
     agent: z.literal('lucille-bluth'),
     report: LucilleBluthOutputSchema.describe('The full report from The Lucille Bluth agent.'),
+  }),
+  z.object({
+    agent: z.literal('pam-poovey'),
+    report: PamAudioOutputSchema.describe('The full report from the Pam Poovey agent.'),
   }),
 ]);
 
