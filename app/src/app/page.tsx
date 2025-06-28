@@ -26,11 +26,7 @@ export default function Home() {
     setIsMounted(true);
     // Initial action on load to recall the last session.
     if (!recalledRef.current) {
-        // Using a short timeout to give a sense of the OS "booting up"
-        // and thinking before it greets the user.
-        setTimeout(() => {
-            handleCommandSubmit('recall last session');
-        }, 500);
+        handleCommandSubmit('recall last session');
         recalledRef.current = true;
     }
   }, [handleCommandSubmit]);

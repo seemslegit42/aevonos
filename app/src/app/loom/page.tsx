@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useCallback, useRef, useEffect } from 'react';
@@ -161,12 +162,9 @@ export default function LoomPage() {
         }
     };
     
-    const handleRun = async () => {
+    const handleRun = () => {
         if (!activeWorkflow) return;
         setIsRunning(true);
-        toast({ title: 'Translating Workflow...', description: `Compiling graph into a BEEP command.` });
-        
-        await new Promise(resolve => setTimeout(resolve, 1000)); // simulate compilation
 
         const command = translateWorkflowToCommand({ ...activeWorkflow, definition: { nodes, edges }});
         
@@ -175,11 +173,9 @@ export default function LoomPage() {
         handleCommandSubmit(command);
 
         // After submitting, redirect back to the canvas to see the result
-        setTimeout(() => {
-            router.push('/');
-        }, 1500);
+        router.push('/');
 
-        // We don't wait for the result here, so set isRunning to false
+        // The redirect will unmount this page anyway.
         setIsRunning(false);
     };
 
