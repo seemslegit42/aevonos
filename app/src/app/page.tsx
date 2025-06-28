@@ -1,6 +1,7 @@
+
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import Link from 'next/link';
 import {
   DndContext,
@@ -13,15 +14,9 @@ import {
 
 import MicroAppGrid from '@/components/micro-app-grid';
 import { useAppStore } from '@/store/app-store';
-import EmptyCanvas from '@/components/canvas/empty-canvas';
 
 export default function Home() {
   const { apps, handleDragEnd } = useAppStore();
-  const [isClient, setIsClient] = useState(false);
-
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -36,11 +31,7 @@ export default function Home() {
           collisionDetection={closestCenter}
           onDragEnd={handleDragEnd}
         >
-          {isClient && apps.length > 0 ? (
-            <MicroAppGrid apps={apps} />
-          ) : (
-            <EmptyCanvas />
-          )}
+          <MicroAppGrid apps={apps} />
         </DndContext>
       </div>
       <footer className="text-center text-xs text-muted-foreground flex-shrink-0">
