@@ -32,7 +32,7 @@ export default function StonksBot(props: StonksBotOutput | {}) {
 
     const handleGetAdvice = async () => {
         if (!ticker) {
-            toast({ variant: "destructive", title: "No Ticker!", description: "Gotta give me a ticker to tell you to yolo into." });
+            toast({ variant: "destructive", title: "No Ticker!", description: "Gotta give me a ticker to yolo into." });
             return;
         }
         const command = `get stonks advice for ticker ${ticker}`;
