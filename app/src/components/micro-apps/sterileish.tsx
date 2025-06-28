@@ -50,7 +50,7 @@ export default function Sterileish(props: SterileishAnalysisOutput | {}) {
             <Card className="bg-black/20 border-military-green-foreground/30 text-military-green-foreground">
                 <CardHeader className="p-2">
                     <CardTitle className="text-base text-accent font-headline">Cleanroom Log Entry</CardTitle>
-                    <CardDescription className="text-xs text-accent/70">"It's probably fine."</CardDescription>
+                    <CardDescription className="text-xs text-military-green-foreground/70">"It's probably fine."</CardDescription>
                 </CardHeader>
                 <CardContent className="p-2 space-y-2">
                     <Textarea 
@@ -91,7 +91,7 @@ export default function Sterileish(props: SterileishAnalysisOutput | {}) {
                                 <span className="text-xs font-medium text-accent">Sanitation Level</span>
                                 <span className="text-lg font-bold text-accent">{report.sterileRating.toFixed(1)}</span>
                             </div>
-                            <Progress value={ratingPercent} className="h-2 [&>div]:bg-accent" />
+                            <Progress value={ratingPercent} className="h-2 [&>div]:bg-gradient-to-r [&>div]:from-accent [&>div]:to-primary" />
                         </div>
 
                         <Alert className={report.isCompliant ? "border-accent/50 bg-background/50" : "border-destructive/50 bg-background/50"}>

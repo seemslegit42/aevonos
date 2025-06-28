@@ -28,38 +28,40 @@
   }
  
   .dark {
-    --background: 247 36% 15%; /* Obsidian Black */
-    --foreground: 150 100% 98%; /* Vitreous White */
+    --background: 224 71.4% 4.1%; /* Midnight Blue */
+    --foreground: 210 40% 98%; /* Almost White */
 
-    --card: 150 100% 98%; /* Vitreous White, used with alpha */
-    --card-foreground: 150 100% 98%; /* Vitreous White */
+    --card: 224 71.4% 4.1%; /* Midnight Blue, used with alpha */
+    --card-foreground: 210 40% 98%; /* Almost White */
 
-    --popover: 150 100% 98%; /* Vitreous White, used with alpha */
-    --popover-foreground: 150 100% 98%; /* Vitreous White */
+    --popover: 224 71.4% 4.1%; /* Midnight Blue, used with alpha */
+    --popover-foreground: 210 40% 98%; /* Almost White */
 
-    --primary: 275 86% 37%; /* Imperial Purple */
-    --primary-foreground: 150 100% 98%; /* Vitreous White */
+    --primary: 195 90% 45%; /* Vibrant Cyan */
+    --primary-foreground: 224 71.4% 4.1%; /* Midnight Blue for contrast on primary */
 
-    --secondary: 247 36% 25%; /* Slightly lighter Obsidian Black */
-    --secondary-foreground: 150 100% 98%; /* Vitreous White */
+    --secondary: 217.2 32.6% 17.5%; /* Darker Blue-Gray */
+    --secondary-foreground: 210 40% 98%; /* Almost White */
 
-    --muted: 247 36% 25%;
-    --muted-foreground: 223 14% 60%; /* Conchoidal Gray */
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%; /* Slate Gray */
 
-    --accent: 177 69% 41%; /* Roman Aqua */
-    --accent-foreground: 247 36% 15%; /* Obsidian Black for contrast on accent bg */
+    --accent: 320 85% 60%; /* Electric Pink */
+    --accent-foreground: 210 40% 98%; /* Almost White for contrast on accent */
 
-    --destructive: 0 62.8% 30.6%;
+    --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 223 14% 60%; /* Conchoidal Gray */
-    --input: 150 100% 98%; /* Vitreous White */
-    --ring: 51 100% 50%; /* Gilded Accent */
+    --border: 217.2 32.6% 17.5%; /* Darker Blue-Gray */
+    --input: 217.2 32.6% 17.5%; /* Darker Blue-Gray */
+    --ring: 45 90% 55%; /* Vibrant Gold/Yellow for warnings */
     
     /* For Iridescent Aurora background */
-    --iridescent-one: 197 100% 50%;
+    --iridescent-one: 195 90% 50%;
     --iridescent-two: 275 86% 50%;
-    --iridescent-three: 320 100% 55%;
+    --iridescent-three: 320 85% 65%;
+    
+    /* Themed app colors */
     --pale-green: 140 50% 85%; /* Pale Green for Sterileish */
     --military-green: 82 20% 30%; /* A dark, desaturated green */
     --military-green-foreground: 82 40% 90%; /* A pale cream/green for text */
