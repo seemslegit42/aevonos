@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
   DndContext,
@@ -17,6 +17,11 @@ import EmptyCanvas from '@/components/canvas/empty-canvas';
 
 export default function Home() {
   const { apps, handleDragEnd } = useAppStore();
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -31,7 +36,7 @@ export default function Home() {
           collisionDetection={closestCenter}
           onDragEnd={handleDragEnd}
         >
-          {apps.length > 0 ? (
+          {isClient && apps.length > 0 ? (
             <MicroAppGrid apps={apps} />
           ) : (
             <EmptyCanvas />
