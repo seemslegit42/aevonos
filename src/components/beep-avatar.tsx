@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { Icosahedron, Edges } from '@react-three/drei';
+import { Edges } from '@react-three/drei';
 import * as THREE from 'three';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppStore } from '@/store/app-store';
@@ -70,15 +70,16 @@ const AnimatedIcosahedron = ({ avatarState }: { avatarState: AvatarState }) => {
 
     return (
         <group ref={groupRef}>
-            <Icosahedron args={[1.5, 1]}>
+            <mesh>
+                <icosahedronGeometry args={[1.5, 1]} />
                 <meshStandardMaterial
                     ref={materialRef}
                     roughness={0.1}
                     metalness={0.9}
                     emissive={new THREE.Color('hsl(195, 90%, 45%)')}
                 />
-                 <Edges scale={1.001} threshold={15} color="white" />
-            </Icosahedron>
+                <Edges scale={1.001} threshold={15} color="white" />
+            </mesh>
         </group>
     );
 };
