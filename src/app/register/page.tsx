@@ -148,8 +148,8 @@ export default function RegisterPage() {
           <CardContent>
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)}>
-                <div className="relative h-48 overflow-hidden">
-                  <AnimatePresence initial={false} custom={direction}>
+                <div className="relative min-h-[12rem]">
+                  <AnimatePresence mode="wait" initial={false} custom={direction}>
                       <motion.div
                           key={step}
                           custom={direction}
