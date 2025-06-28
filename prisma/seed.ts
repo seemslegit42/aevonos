@@ -7,51 +7,18 @@ const prisma = new PrismaClient()
 async function main() {
   console.log(`Start seeding ...`)
 
-  // --- SAFE CLEANUP ---
-  // To prevent foreign key constraint errors, we manually delete records in the correct order.
-  // This is more robust than relying on onDelete: Cascade, which might not be configured.
-  
-  console.log('Clearing existing data to ensure a clean slate...')
-
-  // Delete all records from models that depend on Workspace or User
-  await prisma.workflowRun.deleteMany({});
-  await prisma.workflow.deleteMany({});
-  await prisma.agent.deleteMany({});
-  await prisma.securityAlert.deleteMany({});
-  await prisma.contact.deleteMany({});
-  await prisma.integration.deleteMany({});
-  await prisma.threatFeed.deleteMany({});
-  console.log('Deleted dependent records (Workflows, Agents, Contacts, etc.).');
-  
-  // Now, handle the many-to-many relation between User and Workspace.
-  const workspaces = await prisma.workspace.findMany({
-      include: { members: { select: { id: true }}}
+  // Idempotent seeding: check if the default user already exists.
+  const existingUser = await prisma.user.findUnique({
+    where: { email: 'architect@aevonos.com' },
   });
 
-  for (const workspace of workspaces) {
-      if (workspace.members.length > 0) {
-        await prisma.workspace.update({
-            where: { id: workspace.id },
-            data: {
-                members: {
-                    disconnect: workspace.members.map(m => ({ id: m.id }))
-                }
-            }
-        });
-      }
+  // If the user exists, we assume the database is already seeded.
+  if (existingUser) {
+    console.log('Database already seeded. Skipping.');
+    return;
   }
-  console.log('Disconnected all user-workspace relations.');
-
-  // Now it's safe to delete Workspaces and Users
-  await prisma.workspace.deleteMany({});
-  console.log('Deleted all workspaces.');
-
-  await prisma.user.deleteMany({});
-  console.log('Deleted all users.');
-
-  console.log('Cleared existing data successfully.');
   
-  // --- RE-CREATE DEFAULT USER AND WORKSPACE ---
+  console.log('No existing data found. Seeding from scratch...');
 
   const hashedPassword = await bcrypt.hash('password123', 10);
   const user = await prisma.user.create({
@@ -74,8 +41,6 @@ async function main() {
     },
   })
   console.log(`Created workspace with id: ${newWorkspace.id}`)
-
-  // --- SEED SAMPLE DATA ---
 
   const statuses: AgentStatus[] = [AgentStatus.active, AgentStatus.idle, AgentStatus.processing, AgentStatus.paused, AgentStatus.error];
   await prisma.agent.createMany({
