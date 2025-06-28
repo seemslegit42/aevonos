@@ -4,11 +4,21 @@ import { NextRequest } from 'next/server';
 import { cookies } from 'next/headers';
 import prisma from '@/lib/prisma';
 
-const secretKey = process.env.JWT_SECRET;
-if (!secretKey) {
-    throw new Error('JWT_SECRET is not set in the environment variables.');
+// Be extra robust about the secret key.
+// If it's missing or an empty string, use a placeholder for development.
+// This prevents the server from crashing on startup if the .env is not configured.
+const secretKey = (process.env.JWT_SECRET && process.env.JWT_SECRET.trim() !== '') 
+    ? process.env.JWT_SECRET 
+    : 'this-is-a-default-secret-key-for-development';
+
+if (secretKey === 'this-is-a-default-secret-key-for-development') {
+    console.warn(
+        '\x1b[33m%s\x1b[0m', // Yellow text
+        'WARNING: JWT_SECRET is not set in environment variables. Using a default, insecure key for development purposes. Please set a strong, unique secret in your .env file for production.'
+    );
 }
 const key = new TextEncoder().encode(secretKey);
+
 
 export async function encrypt(payload: { expires: Date, [key: string]: any }) {
   return await new SignJWT(payload)
