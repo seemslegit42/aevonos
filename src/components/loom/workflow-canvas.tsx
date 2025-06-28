@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useRef, useState, useMemo, forwardRef } from 'react';
@@ -140,7 +141,7 @@ const WorkflowCanvas = forwardRef<HTMLDivElement, WorkflowCanvasProps>(({
              <svg width="100%" height="100%" className="absolute inset-0">
                 <defs>
                     <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
-                        <circle cx="1" cy="1" r="1" fill="hsl(var(--muted-foreground) / 0.3)" />
+                        <circle cx="1" cy="1" r="0.5" fill="hsl(var(--muted-foreground) / 0.3)" />
                     </pattern>
                 </defs>
                 <rect width="100%" height="100%" fill="url(#grid)" />
