@@ -1,10 +1,18 @@
 
-
 'use server';
 
 import type { Workflow as PrismaWorkflow } from '@prisma/client';
-import { createContactInDb, listContactsFromDb, updateContactInDb, deleteContactInDb } from '@/ai/tools/crm-tools';
 import type { Workflow, Node } from '@/app/loom/page';
+import { createContactInDb, listContactsFromDb, updateContactInDb, deleteContactInDb } from '@/ai/tools/crm-tools';
+import { drSyntaxCritique } from '@/ai/agents/dr-syntax';
+import { generateSolution } from '@/ai/agents/winston-wolfe';
+import { analyzeComms } from '@/ai/agents/kif-kroker';
+import { createVandelayAlibi } from '@/ai/agents/vandelay';
+import { scanEvidence } from '@/ai/agents/paper-trail';
+import { generateBusinessKit } from '@/ai/agents/jroc';
+import { analyzeLaheyLog } from '@/ai/agents/lahey';
+import { processDailyLog } from '@/ai/agents/foremanator';
+import { analyzeCompliance } from '@/ai/agents/sterileish';
 
 interface ExecutionContext {
     workspaceId: string;
@@ -12,53 +20,69 @@ interface ExecutionContext {
 
 async function executeNode(node: Node, payload: any, context: ExecutionContext): Promise<any> {
     const { type, data } = node;
+    // Combine the dynamic payload from the previous node with static data configured on the current node.
+    const input = { ...payload, ...data };
 
-    // We'll only implement the CRM tool for now to demonstrate graph traversal.
-    if (type === 'tool-crm') {
-        const { action, ...nodeData } = data;
-        const input = { ...payload, ...nodeData };
+    console.log(`Executing node type: ${type} with label: ${data.label}`);
+
+    switch (type) {
+        case 'trigger':
+            return { status: 'triggered', initialPayload: payload };
+
+        case 'tool-final-answer':
+            console.log(`Reached Final Answer node.`);
+            return { finalOutput: payload };
+
+        case 'tool-crm':
+            const { action, ...crmData } = input;
+            console.log(`Executing CRM action: ${action} with input:`, crmData);
+            switch (action) {
+                case 'list':
+                    return { contacts: await listContactsFromDb(context.workspaceId) };
+                case 'create':
+                    return { newContact: await createContactInDb(crmData, context.workspaceId) };
+                case 'update':
+                    if (!crmData.id) throw new Error("Update action requires a contact ID.");
+                    return { updatedContact: await updateContactInDb(crmData, context.workspaceId) };
+                case 'delete':
+                    if (!crmData.id) throw new Error("Delete action requires a contact ID.");
+                    return { deletionResult: await deleteContactInDb(crmData, context.workspaceId) };
+                default:
+                    throw new Error(`Unsupported CRM action in workflow: ${action}`);
+            }
+
+        case 'tool-dr-syntax':
+            return await drSyntaxCritique(input);
         
-        console.log(`Executing CRM action: ${action} with input:`, input);
+        case 'tool-winston-wolfe':
+            return await generateSolution(input);
 
-        switch (action) {
-            case 'list':
-                // The result of this action should be an array of contacts.
-                return { contacts: await listContactsFromDb(context.workspaceId) };
+        case 'tool-kif-kroker':
+             return await analyzeComms(input);
+        
+        case 'tool-vandelay':
+            return await createVandelayAlibi(input);
+
+        case 'tool-paper-trail':
+            if (!input.receiptPhotoUri) throw new Error("Paper Trail node requires a receiptPhotoUri in its payload.");
+            return await scanEvidence(input);
+        
+        case 'tool-jroc':
+            return await generateBusinessKit(input);
+
+        case 'tool-lahey':
+            return await analyzeLaheyLog(input);
+
+        case 'tool-foremanator':
+            return await processDailyLog(input);
+        
+        case 'tool-sterileish':
+            return await analyzeCompliance(input);
             
-            case 'create':
-                 // The result will be the newly created contact object.
-                return { newContact: await createContactInDb({
-                    firstName: input.firstName,
-                    lastName: input.lastName,
-                    email: input.email,
-                    phone: input.phone,
-                }, context.workspaceId) };
-            
-            case 'update':
-                if (!input.id) throw new Error("Update action requires a contact ID.");
-                return { updatedContact: await updateContactInDb(input, context.workspaceId) };
-
-            case 'delete':
-                 if (!input.id) throw new Error("Delete action requires a contact ID.");
-                 return { deletionResult: await deleteContactInDb(input, context.workspaceId) };
-
-            default:
-                throw new Error(`Unsupported CRM action in workflow: ${action}`);
-        }
+        default:
+            console.log(`Node type '${type}' is not implemented for execution. Skipping.`);
+            return { status: 'skipped', reason: `Node type '${type}' not implemented` };
     }
-    
-    if (type === 'trigger') {
-        console.log(`Executing trigger: ${data.label}`);
-        return { status: 'triggered', initialPayload: payload };
-    }
-
-    if (type === 'tool-final-answer') {
-        console.log(`Reached Final Answer node.`);
-        return { finalOutput: payload };
-    }
-
-    console.log(`Node type '${type}' is not implemented for execution. Skipping.`);
-    return { status: 'skipped', reason: `Node type '${type}' not implemented` };
 }
 
 
