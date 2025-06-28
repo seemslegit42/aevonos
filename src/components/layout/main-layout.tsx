@@ -1,11 +1,10 @@
-
 'use client';
 
 import React from 'react';
 import { usePathname } from 'next/navigation';
-import dynamic from 'next/dynamic';
 import TopBar from '@/components/layout/top-bar';
 import type { User } from '@prisma/client';
+import dynamic from 'next/dynamic';
 
 // BeepAvatar is client-side only because it uses hooks like useFrame from r3f
 const BeepAvatar = dynamic(() => import('@/components/beep-avatar'), { 
@@ -30,7 +29,7 @@ export function MainLayout({ children, user }: { children: React.ReactNode; user
     <div className="flex flex-col h-screen p-4 gap-4">
       <TopBar user={user} />
       <main className="flex-grow flex flex-col min-h-0 overflow-y-auto">
-        {/* Render children directly. The child page is responsible for its own client-side guards. */}
+        {/* Render children directly. Client/Server rendering is handled by the page. */}
         {children}
       </main>
       <BeepAvatar />

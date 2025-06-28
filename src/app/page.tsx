@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import Link from 'next/link';
 import {
   DndContext,
@@ -17,11 +17,6 @@ import EmptyCanvas from '@/components/canvas/empty-canvas';
 
 export default function Home() {
   const { apps, handleDragEnd } = useAppStore();
-  const [isClient, setIsClient] = useState(false);
-
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -31,17 +26,13 @@ export default function Home() {
   return (
     <div className="flex flex-col h-full">
       <div className="flex-grow p-4 rounded-lg">
-          {isClient ? (
-              <DndContext
-                sensors={sensors}
-                collisionDetection={closestCenter}
-                onDragEnd={handleDragEnd}
-              >
-                <MicroAppGrid apps={apps} />
-              </DndContext>
-          ) : (
-            <EmptyCanvas />
-          )}
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+          >
+            <MicroAppGrid apps={apps} />
+          </DndContext>
       </div>
       <footer className="text-center text-xs text-muted-foreground flex-shrink-0">
         <p>ΛΞVON OS - All rights reserved. | <Link href="/armory" className="hover:text-primary underline">Visit the Armory</Link> | <Link href="/loom" className="hover:text-primary underline">Enter Loom Studio</Link> | <Link href="/validator" className="hover:text-primary underline">Verify Dossier</Link></p>
