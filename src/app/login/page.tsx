@@ -72,6 +72,7 @@ function Crystal({ config }: { config: any }) {
                     roughness={0.2}
                     metalness={0.8}
                 />
+                <Edges scale={1.001} color="white" />
             </Torus>
         </group>
     );
@@ -121,10 +122,9 @@ function LoginScene() {
     if (group.current) {
       // Mouse parallax effect
       group.current.position.lerp(new THREE.Vector3(state.mouse.x * 0.5, state.mouse.y * 0.5, 0), 0.05);
-      // Constant rotation of the whole pattern
-      group.current.rotation.x += delta * 0.01;
-      group.current.rotation.y += delta * 0.02;
-      group.current.rotation.z -= delta * 0.01;
+      // A more controlled, graceful rotation instead of chaotic tumbling
+      group.current.rotation.z += delta * 0.02; // Primary spin
+      group.current.rotation.y += delta * 0.005; // Gentle wobble
     }
   });
 
