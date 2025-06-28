@@ -7,6 +7,8 @@ import { revalidatePath } from 'next/cache';
 import { scanEvidence as scanEvidenceFlow, type PaperTrailScanInput, type PaperTrailScanOutput } from '@/ai/agents/paper-trail';
 import { getServerActionSession } from '@/lib/auth';
 import prisma from '@/lib/prisma';
+import { createTransaction } from '@/services/ledger-service';
+import { TransactionType } from '@prisma/client';
 
 export async function handleCommand(command: string): Promise<UserCommandOutput> {
   const session = await getServerActionSession();
@@ -64,7 +66,7 @@ export async function scanEvidence(input: Omit<PaperTrailScanInput, 'workspaceId
 
 export async function purchaseCredits(amount: number) {
   const session = await getServerActionSession();
-  if (!session?.workspaceId) {
+  if (!session?.userId || !session?.workspaceId) {
     return { success: false, error: 'Unauthorized' };
   }
 
@@ -73,13 +75,12 @@ export async function purchaseCredits(amount: number) {
   }
 
   try {
-    await prisma.workspace.update({
-      where: { id: session.workspaceId },
-      data: {
-        credits: {
-          increment: amount,
-        },
-      },
+    await createTransaction({
+      workspaceId: session.workspaceId,
+      userId: session.userId,
+      type: TransactionType.CREDIT,
+      amount,
+      description: `Manual credit purchase of ${amount.toLocaleString()}`,
     });
 
     revalidatePath('/');
