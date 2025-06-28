@@ -35,7 +35,9 @@ async function main() {
     data: {
       name: 'Primary Canvas',
       ownerId: user.id,
-      credits: 100.0,
+      // The ledger service will handle setting the initial credits via a transaction.
+      // We set it to 0 here initially.
+      credits: 0.0,
       members: {
         connect: { id: user.id }
       }
@@ -51,6 +53,12 @@ async function main() {
         amount: 100.0,
         description: "Initial workspace credit grant.",
         userId: user.id,
+        // Also update the workspace balance since this is a seed script bypassing the service
+        workspace: {
+          update: {
+            credits: 100.0
+          }
+        }
     }
   });
   console.log('Seeded genesis credit transaction.');
