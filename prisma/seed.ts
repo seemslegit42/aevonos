@@ -35,6 +35,7 @@ async function main() {
     data: {
       name: 'Primary Canvas',
       ownerId: user.id,
+      credits: 100,
       members: {
         connect: { id: user.id }
       }

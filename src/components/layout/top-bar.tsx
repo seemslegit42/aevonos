@@ -2,6 +2,7 @@
 'use client';
 
 import React, { useRef, useState, useEffect } from 'react';
+import Link from 'next/link';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -17,13 +18,14 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Sparkles, ShieldCheck, LogOut, Settings, User as UserIcon } from 'lucide-react';
+import { Sparkles, ShieldCheck, LogOut, Settings, User as UserIcon, Database } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { logout } from '@/app/auth/actions';
 import type { User, Workspace } from '@prisma/client';
 import { useAppStore } from '@/store/app-store';
 import UserProfileDialog from '@/components/user-profile-dialog';
 import WorkspaceSettingsDialog from '@/components/workspace-settings-dialog';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 type UserProp = Pick<User, 'id' | 'email' | 'firstName' | 'lastName'> | null;
 
@@ -90,6 +92,22 @@ export default function TopBar({ user, workspace }: TopBarProps) {
             <ShieldCheck className="w-4 h-4 text-accent" />
             <span className="hidden md:inline">Aegis: Online</span>
         </div>
+        <div className="h-6 w-px bg-border hidden md:block" />
+        <TooltipProvider>
+            <Tooltip>
+                <TooltipTrigger asChild>
+                    <Button variant="ghost" className="flex items-center gap-1.5 h-8 px-2" asChild>
+                        <Link href="/pricing">
+                            <Database className="w-4 h-4 text-primary" />
+                            <span className="hidden md:inline font-medium font-mono">{workspace?.credits?.toLocaleString() ?? 0}</span>
+                        </Link>
+                    </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                    <p>CogniOps Credits</p>
+                </TooltipContent>
+            </Tooltip>
+        </TooltipProvider>
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-8 w-8 rounded-full">
