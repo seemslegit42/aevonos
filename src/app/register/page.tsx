@@ -1,4 +1,3 @@
-
 'use client';
 
 import React from 'react';
@@ -14,6 +13,7 @@ import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
+import { CrystalIcon } from '@/components/icons/CrystalIcon';
 
 const formSchema = z.object({
   firstName: z.string().optional(),
@@ -74,12 +74,17 @@ export default function RegisterPage() {
 
   return (
     <div className="flex items-center justify-center min-h-screen p-4">
-      <Card className="w-full max-w-sm">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-headline tracking-widest text-primary">
-            ΛΞVON
-          </CardTitle>
-          <CardDescription>Create your intelligent canvas.</CardDescription>
+      <Card className="w-full max-w-sm bg-black/30 backdrop-blur-lg border border-white/10 shadow-2xl text-white">
+        <CardHeader className="text-center space-y-4 pt-8">
+            <div className="flex justify-center">
+                 <CrystalIcon className="w-16 h-16 text-primary" />
+            </div>
+            <div>
+              <CardTitle className="text-3xl font-headline tracking-widest text-white">
+                ΛΞVON
+              </CardTitle>
+              <CardDescription className="text-white/70">Create your intelligent canvas.</CardDescription>
+            </div>
         </CardHeader>
         <CardContent>
           <Form {...form}>
@@ -90,9 +95,9 @@ export default function RegisterPage() {
                   name="firstName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>First Name</FormLabel>
+                      <FormLabel className="text-white/80">First Name</FormLabel>
                       <FormControl>
-                        <Input placeholder="Art" {...field} disabled={isSubmitting} />
+                        <Input placeholder="Art" {...field} disabled={isSubmitting} className="bg-white/5 border-white/20 placeholder:text-white/40 focus:border-primary" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -103,9 +108,9 @@ export default function RegisterPage() {
                   name="lastName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Last Name</FormLabel>
+                      <FormLabel className="text-white/80">Last Name</FormLabel>
                       <FormControl>
-                        <Input placeholder="Vandelay" {...field} disabled={isSubmitting} />
+                        <Input placeholder="Vandelay" {...field} disabled={isSubmitting} className="bg-white/5 border-white/20 placeholder:text-white/40 focus:border-primary" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -117,9 +122,9 @@ export default function RegisterPage() {
                 name="workspaceName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Workspace Name</FormLabel>
+                    <FormLabel className="text-white/80">Workspace Name</FormLabel>
                     <FormControl>
-                      <Input placeholder="Vandelay Industries" {...field} disabled={isSubmitting} />
+                      <Input placeholder="Vandelay Industries" {...field} disabled={isSubmitting} className="bg-white/5 border-white/20 placeholder:text-white/40 focus:border-primary" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -130,9 +135,9 @@ export default function RegisterPage() {
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Email</FormLabel>
+                    <FormLabel className="text-white/80">Email</FormLabel>
                     <FormControl>
-                      <Input type="email" placeholder="agent@aevonos.com" {...field} disabled={isSubmitting} />
+                      <Input type="email" placeholder="agent@aevonos.com" {...field} disabled={isSubmitting} className="bg-white/5 border-white/20 placeholder:text-white/40 focus:border-primary" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -143,22 +148,22 @@ export default function RegisterPage() {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Password</FormLabel>
+                    <FormLabel className="text-white/80">Password</FormLabel>
                     <FormControl>
-                      <Input type="password" placeholder="Min. 8 characters" {...field} disabled={isSubmitting} />
+                      <Input type="password" placeholder="Min. 8 characters" {...field} disabled={isSubmitting} className="bg-white/5 border-white/20 placeholder:text-white/40 focus:border-primary" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              <Button type="submit" className="w-full" disabled={isSubmitting}>
+              <Button type="submit" className="w-full bg-primary/80 backdrop-blur-sm border border-primary text-white hover:bg-primary" disabled={isSubmitting}>
                 {isSubmitting ? <Loader2 className="animate-spin" /> : 'Create Workspace'}
               </Button>
             </form>
           </Form>
-          <div className="mt-4 text-center text-sm">
+          <div className="mt-4 text-center text-sm text-white/60">
             Already have an account?{' '}
-            <Link href="/login" className="underline text-primary">
+            <Link href="/login" className="font-bold text-primary hover:text-primary/80 transition-colors">
               Sign in
             </Link>
           </div>
