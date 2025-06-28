@@ -40,19 +40,49 @@ const passwordPlaceholders = [
     "The key to the universe... or just your password.",
 ];
 
+
+// Individual crystal component with its own animation logic
+function Crystal({ config }: { config: any }) {
+    const ref = useRef<THREE.Group>(null!);
+
+    useFrame((_, delta) => {
+        if (ref.current) {
+            ref.current.rotation.y += delta * config.rotationSpeed;
+            ref.current.rotation.x += delta * config.rotationSpeed * 0.5;
+        }
+    });
+
+    return (
+        <group ref={ref} position={config.position} rotation={config.rotation}>
+            <Icosahedron
+              args={[1, 1]}
+              scale={config.scale}
+            >
+              <meshStandardMaterial
+                color="hsl(var(--primary))"
+                emissive="hsl(var(--accent))"
+                emissiveIntensity={0.3}
+                roughness={0.05}
+                metalness={0.1}
+                transmission={0.95}
+                thickness={1.5}
+                ior={1.7}
+              />
+              <Edges scale={1.001} color="white" />
+            </Icosahedron>
+        </group>
+    );
+}
+
 // 3D Scene Component
 function LoginScene() {
   const group = useRef<THREE.Group>(null!);
 
   const crystals = useMemo(() => {
     return Array.from({ length: 100 }, () => ({
-      position: [
-        (Math.random() - 0.5) * 25,
-        (Math.random() - 0.5) * 15,
-        (Math.random() - 0.5) * 20 - 5,
-      ],
+      position: [(Math.random() - 0.5) * 25, (Math.random() - 0.5) * 15, (Math.random() - 0.5) * 20 - 5],
       rotation: [Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI] as const,
-      scale: Math.random() * 0.2 + 0.1,
+      scale: [Math.random() * 0.3 + 0.1, Math.random() * 0.8 + 0.2, Math.random() * 0.3 + 0.1] as const,
       rotationSpeed: (Math.random() - 0.5) * 0.2
     }));
   }, []);
@@ -66,24 +96,8 @@ function LoginScene() {
 
   return (
     <group ref={group}>
-      {crystals.map((crystal, i) => (
-        <group key={i} position={crystal.position} rotation={crystal.rotation}>
-            <Icosahedron
-              args={[1, 1]}
-              scale={crystal.scale}
-            >
-              <meshStandardMaterial
-                color="hsl(var(--primary))"
-                emissive="hsl(var(--primary))"
-                emissiveIntensity={0.4}
-                roughness={0.1}
-                metalness={0.9}
-                transparent
-                opacity={0.6}
-              />
-              <Edges scale={1.001} color="white" />
-            </Icosahedron>
-        </group>
+      {crystals.map((config, i) => (
+        <Crystal key={i} config={config} />
       ))}
     </group>
   );
