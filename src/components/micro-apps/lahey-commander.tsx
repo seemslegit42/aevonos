@@ -28,7 +28,7 @@ const mockTimeline = [
 
 const severityClasses = {
     high: 'border-destructive text-destructive',
-    medium: 'border-yellow-500 text-yellow-500',
+    medium: 'border-ring text-ring',
     low: 'border-accent text-accent',
 }
 
@@ -43,7 +43,7 @@ const EmployeeCard = ({ staff }: { staff: (typeof mockStaff)[0] }) => {
                 </div>
             </CardHeader>
             <CardContent className="p-3 pt-0">
-                <Progress value={staff.shitstorm_index} className="h-2 [&>div]:bg-destructive" />
+                <Progress value={staff.shitstorm_index} className="h-2" indicatorClassName="bg-destructive" />
                 <p className="text-right text-xs mt-1 text-destructive font-mono">{staff.shitstorm_index}%</p>
             </CardContent>
         </Card>

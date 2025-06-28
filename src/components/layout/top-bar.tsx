@@ -12,7 +12,7 @@ import { logout } from '@/app/auth/actions';
 import type { User } from '@prisma/client';
 import { useAppStore } from '@/store/app-store';
 
-type UserProp = Pick<User, 'email' | 'firstName' | 'lastName'> | null;
+type UserProp = Pick<User, 'id' | 'email' | 'firstName' | 'lastName'> | null;
 
 interface TopBarProps {
   user: UserProp;
