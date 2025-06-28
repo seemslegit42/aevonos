@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -15,12 +15,17 @@ import { Badge } from '../ui/badge';
 import { Separator } from '../ui/separator';
 
 export default function PaperTrail(props: { evidenceLog?: PaperTrailScanOutput[] } | {}) {
-  const [caseFileId] = useState(() => `CASE-${Math.random().toString(36).substr(2, 9).toUpperCase()}`);
+  const [caseFileId, setCaseFileId] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
   const [evidenceLog, setEvidenceLog] = useState<PaperTrailScanOutput[]>(props && 'evidenceLog' in props ? props.evidenceLog! : []);
   const [preview, setPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+
+  useEffect(() => {
+    // Generate a client-side only ID to avoid hydration mismatch.
+    setCaseFileId(`CASE-${Math.random().toString(36).substr(2, 9).toUpperCase()}`);
+  }, []);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -72,7 +77,7 @@ export default function PaperTrail(props: { evidenceLog?: PaperTrailScanOutput[]
         <Card className="bg-background/50 border-border/50">
             <CardHeader className="p-2 pb-0">
                 <CardTitle className="text-base font-mono flex justify-between">
-                    <span>{caseFileId}</span>
+                    <span>{caseFileId || '...'}</span>
                     <Badge variant="outline">OPEN</Badge>
                 </CardTitle>
                 <CardDescription className="text-xs">The Chicago Business Trip Case</CardDescription>
