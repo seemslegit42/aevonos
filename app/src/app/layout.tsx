@@ -26,15 +26,13 @@ export default async function RootLayout({
       </head>
       <body className="font-body antialiased relative min-h-screen">
         <div className="absolute top-0 z-[-2] h-screen w-full bg-background">
-           <div 
-            className="absolute inset-0 bg-[url(https://res.cloudinary.com/delba/image/upload/v1698222956/gradient.png)] bg-cover opacity-10"
-          />
           <div 
             className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-transparent"
           />
           <div 
             className="absolute inset-0 animate-aurora bg-[linear-gradient(135deg,hsl(var(--iridescent-one)/0.2),hsl(var(--iridescent-two)/0.2)_50%,hsl(var(--iridescent-three)/0.2)_100%)] bg-[length:600%_600%]"
           />
+          <div className="absolute inset-0 grain-overlay" />
         </div>
         
         <AppLayout user={user}>
