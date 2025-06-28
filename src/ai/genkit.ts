@@ -21,7 +21,6 @@ if (!hasValidApiKey) {
 export const ai = genkit({
   // Only add the googleAI plugin if the key is valid. This prevents startup crash.
   plugins: hasValidApiKey ? [googleAI({apiKey: apiKey})] : [],
-  model: 'googleai/gemini-2.0-flash',
 });
 
 // The LangChain model will likely fail on first use if the key is invalid, which is fine.
