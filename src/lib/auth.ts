@@ -2,6 +2,7 @@
 import { SignJWT, jwtVerify } from 'jose';
 import { NextRequest } from 'next/server';
 import { cookies } from 'next/headers';
+import prisma from '@/lib/prisma';
 
 const secretKey = process.env.JWT_SECRET;
 if (!secretKey) {
@@ -49,4 +50,26 @@ export async function getServerActionSession() {
     const token = cookies().get('session')?.value;
     if (!token) return null;
     return await decrypt(token);
+}
+
+
+/**
+ * Retrieves the current user's data based on the session. For use in RSCs and Server Actions.
+ * @returns The user object (without password) or null if not authenticated.
+ */
+export async function getCurrentUser() {
+  const session = await getServerActionSession();
+  if (!session?.userId) {
+    return null;
+  }
+  const user = await prisma.user.findUnique({
+    where: { id: session.userId },
+    select: {
+      id: true,
+      email: true,
+      firstName: true,
+      lastName: true,
+    },
+  });
+  return user;
 }

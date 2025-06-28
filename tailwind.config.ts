@@ -1,3 +1,4 @@
+
 import type {Config} from 'tailwindcss';
 
 export default {
@@ -13,6 +14,7 @@ export default {
         body: ['Lexend', 'sans-serif'],
         headline: ['Comfortaa', 'sans-serif'],
         code: ['monospace'],
+        typewriter: ['Inconsolata', 'monospace'],
       },
       colors: {
         background: 'hsl(var(--background))',
@@ -65,6 +67,11 @@ export default {
           border: 'hsl(var(--sidebar-border))',
           ring: 'hsl(var(--sidebar-ring))',
         },
+        'military-green': {
+          DEFAULT: 'hsl(var(--military-green))',
+          foreground: 'hsl(var(--military-green-foreground))',
+        },
+        'ledger-cream': 'hsl(var(--ledger-cream))',
       },
       borderRadius: {
         lg: 'var(--radius)',
@@ -100,7 +107,7 @@ export default {
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
-        aurora: 'aurora 15s ease infinite',
+        aurora: 'aurora 20s ease infinite',
       },
     },
   },
