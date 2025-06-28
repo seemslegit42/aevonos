@@ -1,7 +1,7 @@
 
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
@@ -15,15 +15,57 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import { CrystalIcon } from '@/components/icons/CrystalIcon';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 const formSchema = z.object({
-  email: z.string().email({ message: "Please enter a valid email address." }),
-  password: z.string().min(1, { message: "Password cannot be empty." }),
+  email: z.string().email({ message: "A valid email is required for system entry." }),
+  password: z.string().min(1, { message: "A password is required. Even I can't get you in without it." }),
 });
+
+const emailPlaceholders = [
+    "architect@aevonos.com",
+    "the.one@the.matrix",
+    "beep_is_my_friend@aevonos.com",
+    "agent.smith@the.system",
+    "enter.the.void@aevonos.com"
+];
+
+const passwordPlaceholders = [
+    "••••••••••••••",
+    "The password is 'password'. Just kidding. Or am I?",
+    "It's definitely not '123456'",
+    "The key to the universe... or just your password.",
+];
 
 export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
+
+  const [emailPlaceholder, setEmailPlaceholder] = useState(emailPlaceholders[0]);
+  const [passwordPlaceholder, setPasswordPlaceholder] = useState(passwordPlaceholders[0]);
+
+  useEffect(() => {
+      const emailInterval = setInterval(() => {
+          setEmailPlaceholder(p => {
+              const currentIndex = emailPlaceholders.indexOf(p);
+              const nextIndex = (currentIndex + 1) % emailPlaceholders.length;
+              return emailPlaceholders[nextIndex];
+          });
+      }, 3000);
+
+      const passwordInterval = setInterval(() => {
+          setPasswordPlaceholder(p => {
+              const currentIndex = passwordPlaceholders.indexOf(p);
+              const nextIndex = (currentIndex + 1) % passwordPlaceholders.length;
+              return passwordPlaceholders[nextIndex];
+          });
+      }, 4500);
+
+      return () => {
+          clearInterval(emailInterval);
+          clearInterval(passwordInterval);
+      };
+  }, []);
   
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -45,19 +87,19 @@ export default function LoginPage() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to login.');
+        throw new Error(errorData.error || 'Authentication sequence failed. Check credentials.');
       }
 
       toast({
-        title: 'Login Successful',
-        description: 'Welcome back to ΛΞVON OS.',
+        title: 'Identity Verified.',
+        description: 'Welcome back, Architect. The canvas awaits.',
       });
       router.push('/');
       router.refresh(); // To ensure layout reflects logged-in state
     } catch (error) {
       toast({
         variant: 'destructive',
-        title: 'Login Failed',
+        title: 'Access Denied.',
         description: (error as Error).message,
       });
     }
@@ -68,13 +110,13 @@ export default function LoginPage() {
       <Card className="w-full max-w-sm bg-black/30 backdrop-blur-lg border border-white/10 shadow-2xl text-white">
         <CardHeader className="text-center space-y-4 pt-8">
             <div className="flex justify-center">
-                 <CrystalIcon className="w-16 h-16 text-primary" />
+                 <CrystalIcon className="w-16 h-16 text-primary crystal-pulse" />
             </div>
             <div>
                 <CardTitle className="text-3xl font-headline tracking-widest text-white">
-                    ΛΞVON
+                    Identity Verification
                 </CardTitle>
-                <CardDescription className="text-white/70">Enter the intelligent canvas.</CardDescription>
+                <CardDescription className="text-white/70">The system requires a handshake.</CardDescription>
             </div>
         </CardHeader>
         <CardContent>
@@ -85,11 +127,11 @@ export default function LoginPage() {
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-white/80">Email</FormLabel>
+                    <FormLabel className="text-white/80">System Handle</FormLabel>
                     <FormControl>
                       <Input 
                         type="email" 
-                        placeholder="agent@aevonos.com" 
+                        placeholder={emailPlaceholder} 
                         {...field} 
                         disabled={isSubmitting} 
                         className="bg-white/5 border-white/20 placeholder:text-white/40 focus:border-primary"
@@ -104,10 +146,25 @@ export default function LoginPage() {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-white/80">Password</FormLabel>
+                    <div className="flex justify-between items-center">
+                        <FormLabel className="text-white/80">Encryption Key</FormLabel>
+                        <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Link href="#" className="text-xs text-primary/70 hover:text-primary transition-colors">
+                                        Key forgotten?
+                                    </Link>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                    <p>Tough luck. Try to remember it. I'm an OS, not a locksmith.</p>
+                                </TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
+                    </div>
                     <FormControl>
                       <Input 
-                        type="password" 
+                        type="password"
+                        placeholder={passwordPlaceholder}
                         {...field} 
                         disabled={isSubmitting} 
                         className="bg-white/5 border-white/20 placeholder:text-white/40 focus:border-primary"
@@ -123,9 +180,9 @@ export default function LoginPage() {
             </form>
           </Form>
           <div className="mt-4 text-center text-sm text-white/60">
-            Need an account?{' '}
+            Need system access?{' '}
             <Link href="/register" className="font-bold text-primary hover:text-primary/80 transition-colors">
-              Register
+              Request a build.
             </Link>
           </div>
         </CardContent>

@@ -19,9 +19,9 @@ import { CrystalIcon } from '@/components/icons/CrystalIcon';
 const formSchema = z.object({
   firstName: z.string().optional(),
   lastName: z.string().optional(),
-  workspaceName: z.string().trim().min(1, { message: "Workspace name cannot be empty." }),
-  email: z.string().email({ message: "Please enter a valid email." }),
-  password: z.string().min(8, { message: "Password must be at least 8 characters." }),
+  workspaceName: z.string().trim().min(1, { message: "Every masterpiece needs a title." }),
+  email: z.string().email({ message: "A valid email is required to establish a connection." }),
+  password: z.string().min(8, { message: "Key must be at least 8 characters. For your own good." }),
 });
 
 export default function RegisterPage() {
@@ -53,12 +53,12 @@ export default function RegisterPage() {
 
       if (!response.ok) {
         const errorMsg = responseData.issues ? responseData.issues.map((i: any) => i.message).join(', ') : responseData.error;
-        throw new Error(errorMsg || 'Failed to register.');
+        throw new Error(errorMsg || 'Workspace creation failed.');
       }
       
       toast({
-        title: 'Registration Successful',
-        description: 'Your workspace has been created. Welcome to ΛΞVON OS.',
+        title: 'Build Request Received.',
+        description: 'Your canvas is being prepared. Welcome to ΛΞVON OS.',
       });
 
       router.push('/');
@@ -67,7 +67,7 @@ export default function RegisterPage() {
     } catch (error) {
       toast({
         variant: 'destructive',
-        title: 'Registration Failed',
+        title: 'Build Failed.',
         description: (error as Error).message,
       });
     }
@@ -78,13 +78,13 @@ export default function RegisterPage() {
       <Card className="w-full max-w-sm bg-black/30 backdrop-blur-lg border border-white/10 shadow-2xl text-white">
         <CardHeader className="text-center space-y-4 pt-8">
             <div className="flex justify-center">
-                 <CrystalIcon className="w-16 h-16 text-primary" />
+                 <CrystalIcon className="w-16 h-16 text-primary crystal-pulse" />
             </div>
             <div>
               <CardTitle className="text-3xl font-headline tracking-widest text-white">
-                ΛΞVON
+                Request a Build
               </CardTitle>
-              <CardDescription className="text-white/70">Create your intelligent canvas.</CardDescription>
+              <CardDescription className="text-white/70">Forge your own intelligent canvas.</CardDescription>
             </div>
         </CardHeader>
         <CardContent>
@@ -123,7 +123,7 @@ export default function RegisterPage() {
                 name="workspaceName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-white/80">Workspace Name</FormLabel>
+                    <FormLabel className="text-white/80">Canvas Title</FormLabel>
                     <FormControl>
                       <Input placeholder="Vandelay Industries" {...field} disabled={isSubmitting} className="bg-white/5 border-white/20 placeholder:text-white/40 focus:border-primary" />
                     </FormControl>
@@ -136,7 +136,7 @@ export default function RegisterPage() {
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-white/80">Email</FormLabel>
+                    <FormLabel className="text-white/80">System Handle</FormLabel>
                     <FormControl>
                       <Input type="email" placeholder="agent@aevonos.com" {...field} disabled={isSubmitting} className="bg-white/5 border-white/20 placeholder:text-white/40 focus:border-primary" />
                     </FormControl>
@@ -149,7 +149,7 @@ export default function RegisterPage() {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-white/80">Password</FormLabel>
+                    <FormLabel className="text-white/80">Encryption Key</FormLabel>
                     <FormControl>
                       <Input type="password" placeholder="Min. 8 characters" {...field} disabled={isSubmitting} className="bg-white/5 border-white/20 placeholder:text-white/40 focus:border-primary" />
                     </FormControl>
@@ -158,14 +158,14 @@ export default function RegisterPage() {
                 )}
               />
               <Button type="submit" className="w-full bg-primary/80 backdrop-blur-sm border border-primary text-white hover:bg-primary" disabled={isSubmitting}>
-                {isSubmitting ? <Loader2 className="animate-spin" /> : 'Create Workspace'}
+                {isSubmitting ? <Loader2 className="animate-spin" /> : 'Forge Canvas'}
               </Button>
             </form>
           </Form>
           <div className="mt-4 text-center text-sm text-white/60">
-            Already have an account?{' '}
+            Already have a build?{' '}
             <Link href="/login" className="font-bold text-primary hover:text-primary/80 transition-colors">
-              Sign in
+              Verify Identity
             </Link>
           </div>
         </CardContent>

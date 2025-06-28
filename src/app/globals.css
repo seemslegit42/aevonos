@@ -69,14 +69,15 @@
     --military-green: 82 20% 30%;
     --ledger-cream: 45 67% 91%;
   }
-}
- 
-@layer base {
+
   * {
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-body;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-headline;
   }
 }
 
@@ -93,4 +94,18 @@
     pointer-events: none;
     z-index: 1; /* Place it above the aurora but below content */
   }
+  .crystal-pulse {
+    animation: crystal-pulse 5s ease-in-out infinite;
+  }
+}
+
+@keyframes crystal-pulse {
+    0%, 100% {
+        transform: scale(1);
+        opacity: 0.8;
+    }
+    50% {
+        transform: scale(1.05);
+        opacity: 1;
+    }
 }
