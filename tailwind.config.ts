@@ -67,14 +67,6 @@ export default {
           border: 'hsl(var(--sidebar-border))',
           ring: 'hsl(var(--sidebar-ring))',
         },
-        'military-green': {
-          DEFAULT: 'hsl(var(--military-green))',
-          foreground: 'hsl(var(--military-green-foreground))',
-        },
-        'ledger-cream': 'hsl(var(--ledger-cream))',
-        'steely-lavender': 'hsl(var(--steely-lavender))',
-        'faded-cream': 'hsl(var(--faded-cream))',
-        'polished-chrome': 'hsl(var(--polished-chrome))',
       },
       borderRadius: {
         lg: 'var(--radius)',

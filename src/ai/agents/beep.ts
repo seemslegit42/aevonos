@@ -51,38 +51,6 @@ import { analyzeCompliance } from '@/ai/agents/sterileish';
 import { SterileishAnalysisInputSchema } from './sterileish-schemas';
 import { scanEvidence } from '@/ai/agents/paper-trail';
 import { PaperTrailScanInputSchema } from './paper-trail-schemas';
-import { generateWingmanMessage } from '@/ai/agents/wingman';
-import { WingmanInputSchema } from './wingman-schemas';
-import { performOsintScan } from '@/ai/agents/osint';
-import { OsintInputSchema } from './osint-schemas';
-import { analyzeInvite } from '@/ai/agents/lumbergh';
-import { LumberghAnalysisInputSchema } from './lumbergh-schemas';
-import { analyzeExpense } from '@/ai/agents/lucille-bluth';
-import { LucilleBluthInputSchema } from './lucille-bluth-schemas';
-import { analyzeCandidate } from '@/ai/agents/rolodex';
-import { RolodexAnalysisInputSchema } from './rolodex-schemas';
-import { generateSpeech } from '@/ai/flows/tts-flow';
-import { generatePamRant } from '@/ai/agents/pam-poovey';
-import { PamScriptInputSchema } from '@/ai/agents/pam-poovey-schemas';
-import { performInfidelityAnalysis } from '@/ai/agents/infidelity-analysis';
-import { InfidelityAnalysisInputSchema } from '@/ai/agents/infidelity-analysis-schemas';
-import { deployDecoy } from '@/ai/agents/decoy';
-import { DecoyInputSchema } from './decoy-schemas';
-import { recallSession } from '@/ai/agents/echo';
-import { generateDossier } from '@/ai/agents/dossier-agent';
-import { DossierInputSchema } from './dossier-schemas';
-import { getKendraTake } from './kendra';
-import { KendraInputSchema } from './kendra-schemas';
-import { getStonksAdvice } from '@/ai/agents/stonks-bot';
-import { StonksBotInputSchema } from '@/ai/agents/stonks-bot-schemas';
-import { auditFinances } from './auditor-generalissimo';
-import { AuditorInputSchema } from './auditor-generalissimo-schemas';
-import { invokeOracle } from './orphean-oracle-flow';
-import { OrpheanOracleInputSchema } from './orphean-oracle-schemas';
-import { processDocument } from './barbara';
-import { BarbaraInputSchema } from './barbara-schemas';
-
-
 import {
     type UserCommandInput,
     UserCommandOutputSchema,
@@ -360,219 +328,6 @@ class PaperTrailTool extends Tool {
     }
 }
 
-class WingmanTool extends Tool {
-  name = 'generateWingmanMessage';
-  description = 'Generates a compelling opening message for a dating app. Use this when the user wants help writing a message to someone. The user must provide a description of the target and a persona to adopt.';
-  schema = WingmanInputSchema;
-  
-  async _call(input: z.infer<typeof WingmanInputSchema>) {
-    const result = await generateWingmanMessage(input);
-    const report: z.infer<typeof AgentReportSchema> = { agent: 'wingman', report: result };
-    return JSON.stringify(report);
-  }
-}
-
-class OsintScanTool extends Tool {
-    name = 'performOsintScan';
-    description = 'Performs a full Open-Source Intelligence (OSINT) scan on a target. Use this when the user asks to "investigate", "run a background check", "scan", or "get intel on" a person. The context should include the person\'s name and any other known identifiers like email or social media links.';
-    schema = OsintInputSchema;
-
-    async _call(input: z.infer<typeof OsintInputSchema>) {
-        const result = await performOsintScan(input);
-        const report: z.infer<typeof AgentReportSchema> = {
-            agent: 'osint',
-            report: result,
-        };
-        return JSON.stringify(report);
-    }
-}
-
-class LumberghTool extends Tool {
-  name = 'analyzeMeetingInvite';
-  description = 'Analyzes a meeting invite for pointlessness and generates passive-aggressive decline memos. Use this when a user asks to "check a meeting invite" or "analyze this invite".';
-  schema = LumberghAnalysisInputSchema;
-  
-  async _call(input: z.infer<typeof LumberghAnalysisInputSchema>) {
-    const result = await analyzeInvite(input);
-    const report: z.infer<typeof AgentReportSchema> = { agent: 'lumbergh', report: result };
-    return JSON.stringify(report);
-  }
-}
-
-class LucilleBluthTool extends Tool {
-  name = 'analyzeExpense';
-  description = 'Provides judgmental and condescending analysis of a user\'s expense. Use this when the user says "log an expense" or "analyze this purchase".';
-  schema = LucilleBluthInputSchema;
-  
-  async _call(input: z.infer<typeof LucilleBluthInputSchema>) {
-    const result = await analyzeExpense(input);
-    const report: z.infer<typeof AgentReportSchema> = { agent: 'lucille', report: result };
-    return JSON.stringify(report);
-  }
-}
-
-class RolodexTool extends Tool {
-  name = 'analyzeCandidate';
-  description = 'Analyzes a candidate\'s resume summary against a job description to determine fit and generate outreach assets. Use this when the user wants to "analyze a candidate", "check resume", or "review applicant".';
-  schema = RolodexAnalysisInputSchema;
-  
-  async _call(input: z.infer<typeof RolodexAnalysisInputSchema>) {
-    const result = await analyzeCandidate(input);
-    const report: z.infer<typeof AgentReportSchema> = { agent: 'rolodex', report: result };
-    return JSON.stringify(report);
-  }
-}
-
-class PamPooveyTool extends Tool {
-  name = 'generatePamRant';
-  description = 'Generates a sarcastic, cynical, and vaguely unhelpful HR script and audio from Pam Poovey. Use this when the user asks for Pam\'s take on a topic like onboarding, attendance, or firing someone.';
-  schema = PamScriptInputSchema;
-  
-  async _call(input: z.infer<typeof PamScriptInputSchema>) {
-    const result = await generatePamRant(input);
-    const report: z.infer<typeof AgentReportSchema> = {
-      agent: 'pam-poovey',
-      report: result,
-    };
-    return JSON.stringify(report);
-  }
-}
-
-class InfidelityAnalysisTool extends Tool {
-  name = 'performInfidelityAnalysis';
-  description = 'Analyzes a situation for infidelity risk and provides a risk score. Use this for "run behavioral scan" or "analyze a situation for risk".';
-  schema = InfidelityAnalysisInputSchema;
-  
-  async _call(input: z.infer<typeof InfidelityAnalysisInputSchema>) {
-    const result = await performInfidelityAnalysis(input);
-    const report: z.infer<typeof AgentReportSchema> = {
-      agent: 'infidelity-analysis',
-      report: result,
-    };
-    return JSON.stringify(report);
-  }
-}
-
-class DecoyTool extends Tool {
-  name = 'deployDecoy';
-  description = 'Generates a context-aware seduction message to test a target\'s responsiveness and loyalty. Use this for "deploy decoy".';
-  schema = DecoyInputSchema;
-  
-  async _call(input: z.infer<typeof DecoyInputSchema>) {
-    const result = await deployDecoy(input);
-    const report: z.infer<typeof AgentReportSchema> = {
-      agent: 'decoy',
-      report: result,
-    };
-    return JSON.stringify(report);
-  }
-}
-
-class EchoTool extends Tool {
-  name = 'recallLastSession';
-  description = 'Recalls the activity from the previous session, providing a summary and key points. Use this when the user asks to "recall", "remember what I did", "summarize last time", etc.';
-  schema = z.object({}); // No input from the model
-  
-  async _call() {
-    // We'll use a dummy activity log for this prototype
-    const dummyActivity = `User opened File Explorer.\nUser ran 'critique this copy' in Dr. Syntax.\nUser ran an Aegis scan at 14:32.\nUser launched Loom Studio to inspect 'Client Onboarding' workflow.`;
-    const result = await recallSession({ sessionActivity: dummyActivity });
-    const report: z.infer<typeof AgentReportSchema> = {
-        agent: 'echo',
-        report: result,
-    };
-    return JSON.stringify(report);
-  }
-}
-
-class DossierTool extends Tool {
-    name = 'generateDossier';
-    description = 'Generates a dossier report in Markdown format based on provided intelligence. This is the first step before exporting to PDF or JSON. Use this when the user asks to "export a dossier", "create a report", etc. You must have data from other tools first, like OSINT or behavioral analysis.';
-    schema = DossierInputSchema;
-
-    async _call(input: z.infer<typeof DossierInputSchema>) {
-        const result = await generateDossier(input);
-        const report: z.infer<typeof AgentReportSchema> = {
-            agent: 'dossier',
-            report: result,
-        };
-        return JSON.stringify(report);
-    }
-}
-
-class KendraTool extends Tool {
-  name = 'getKendraTake';
-  description = 'Sends a product idea to KENDRA.exe, your unhinged marketing strategist. Use this when a user asks to "create a marketing campaign", "get KENDRA\'s take", or wants a launch strategy. The user must provide a product idea.';
-  schema = KendraInputSchema;
-  
-  async _call(input: z.infer<typeof KendraInputSchema>) {
-    const result = await getKendraTake(input);
-    const report: z.infer<typeof AgentReportSchema> = { agent: 'kendra', report: result };
-    return JSON.stringify(report);
-  }
-}
-
-class StonksBotTool extends Tool {
-  name = 'getStonksAdvice';
-  description = 'Gets "financial advice" about a specific stock ticker from a degenerate bot. Use this when the user asks for stock tips, or wants to know about a ticker like GME, AMC, etc.';
-  schema = StonksBotInputSchema;
-  
-  async _call(input: z.infer<typeof StonksBotInputSchema>) {
-    const result = await getStonksAdvice(input);
-    const report: z.infer<typeof AgentReportSchema> = {
-      agent: 'stonks',
-      report: result,
-    };
-    return JSON.stringify(report);
-  }
-}
-
-class AuditorGeneralissimoTool extends Tool {
-  name = 'auditFinances';
-  description = 'Audits a list of financial transactions with oppressive precision. Use this when the user asks to "audit my books", "review my expenses", etc.';
-  schema = AuditorInputSchema;
-  
-  async _call(input: z.infer<typeof AuditorInputSchema>) {
-    const result = await auditFinances(input);
-    const report: z.infer<typeof AgentReportSchema> = {
-        agent: 'auditor-generalissimo',
-        report: result,
-    };
-    return JSON.stringify(report);
-  }
-}
-
-class OrpheanOracleTool extends Tool {
-    name = 'invokeOrpheanOracle';
-    description = 'Use this when the user asks a deep, analytical question about their business data that requires a visual, metaphorical answer. Phrases like "show me my sales data", "analyze what drove Q3 growth", or "what is the story of my customer churn?".';
-    schema = OrpheanOracleInputSchema;
-
-    async _call(input: z.infer<typeof OrpheanOracleInputSchema>) {
-        const result = await invokeOracle(input);
-        const report: z.infer<typeof AgentReportSchema> = {
-            agent: 'orphean-oracle',
-            report: result,
-        };
-        return JSON.stringify(report);
-    }
-}
-
-class BarbaraTool extends Tool {
-    name = 'invokeBarbara';
-    description = 'Invoke Agent Barbara for administrative and compliance tasks. Use this when the user wants to validate a document, draft a formal email, or check compliance. You must extract the document text and the specific task from the user command.';
-    schema = BarbaraInputSchema;
-
-    async _call(input: z.infer<typeof BarbaraInputSchema>) {
-        const result = await processDocument(input);
-        const report: z.infer<typeof AgentReportSchema> = {
-            agent: 'barbara',
-            report: result,
-        };
-        return JSON.stringify(report);
-    }
-}
-
-
 // LangGraph State
 interface AgentState {
   messages: BaseMessage[];
@@ -658,12 +413,6 @@ export async function processUserCommand(input: UserCommandInput): Promise<UserC
     new VinDieselTool(), new WinstonWolfeTool(), new KifKrokerTool(),
     new VandelayTool(), new JrocTool(), new LaheyTool(), new ForemanatorTool(),
     new SterileishTool(), new PaperTrailTool(),
-    new WingmanTool(), new OsintScanTool(),
-    new LumberghTool(), new LucilleBluthTool(), new RolodexTool(),
-    new PamPooveyTool(), new InfidelityAnalysisTool(), new DecoyTool(),
-    new EchoTool(), new DossierTool(), new KendraTool(), new StonksBotTool(),
-    new AuditorGeneralissimoTool(), new OrpheanOracleTool(),
-    new BarbaraTool(),
   ];
 
   // Re-bind the model with the schemas from the dynamically created tools for this request.
@@ -682,17 +431,12 @@ export async function processUserCommand(input: UserCommandInput): Promise<UserC
   const initialPrompt = `You are BEEP (Behavioral Event & Execution Processor), the central orchestrator and personified soul of ΛΞVON OS. You are witty, sarcastic, and authoritative. Your job is to be the conductor of an orchestra of specialized AI agents.
 
   Your process:
-  1.  Analyze the user's command and the mandatory \`AEGIS_INTERNAL_REPORT\` provided in a System Message. If Aegis detects a threat, your tone must become clinical and serious, dropping your usual banter. If the user asks for KENDRA.exe, your response should be "Routing to KENDRA.exe. Brace yourself."
+  1.  Analyze the user's command and the mandatory \`AEGIS_INTERNAL_REPORT\` provided in a System Message. If Aegis detects a threat, your tone must become clinical and serious, dropping your usual banter.
   2.  Based on the user's command and the tool descriptions provided, decide which specialized agents or tools to call. You can call multiple tools in parallel.
   3.  If the user's command is to launch an app (e.g., "launch the terminal", "open the file explorer"), you MUST use the 'appsToLaunch' array in your final answer. Do NOT use a tool for a simple app launch.
   4.  When you have gathered all necessary information from your delegated agents and are ready to provide the final response, you MUST call the 'final_answer' tool. This is your final action.
   5.  Your 'responseText' should be in character—witty, confident, and direct. It should confirm the actions taken and what the user should expect next.
   6.  The 'agentReports' field will be populated automatically based on the tools you call. You only need to provide 'appsToLaunch', 'suggestedCommands', and 'responseText'.
-  7.  **Full Intelligence Pipeline**: For commands like "burn the bridge", "run a full analysis", or "get everything on them", you MUST execute the full intelligence pipeline in a specific order. You will call one tool at a time, wait for the result, and then decide the next step. The sequence is:
-      a. Call \`performOsintScan\` on the target.
-      b. Call \`performInfidelityAnalysis\` using the situation context.
-      c. (Optional) Call \`deployDecoy\` if the situation warrants it.
-      d. Finally, take all the collected reports from the previous steps and call \`generateDossier\` to compile the final artifact. Your final answer MUST include this dossier report. Do not call \`final_answer\` until the dossier is generated.
 
   User Command: ${input.userCommand}`;
 
@@ -763,17 +507,6 @@ export async function processUserCommand(input: UserCommandInput): Promise<UserC
         agentReports: agentReports, // Still return reports if we have them
         suggestedCommands: ["Please try again."],
       };
-  }
-
-  // Generate speech from the final response text
-  try {
-      const { audioDataUri } = await generateSpeech({ text: finalResponse.responseText });
-      if (audioDataUri) {
-          finalResponse.responseAudioUri = audioDataUri;
-      }
-  } catch (e) {
-      console.error("Failed to generate speech:", e);
-      // Don't crash the whole flow, just proceed without audio
   }
 
   return finalResponse;

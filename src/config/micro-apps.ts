@@ -1,11 +1,10 @@
 
 
-
 // This file serves as a non-database source of truth for micro-app manifests.
 // In a larger system, this could be stored in a database and managed via an admin interface.
 
 export type MicroAppManifest = {
-  id: string; // This is the app type string like 'orphean-oracle'
+  id: string;
   name: string;
   description: string;
   author: string;

@@ -21,23 +21,11 @@ import { JrocIcon } from './icons/JrocIcon';
 import { LaheyIcon } from './icons/LaheyIcon';
 import { ForemanatorIcon } from './icons/ForemanatorIcon';
 import { SterileishIcon } from './icons/SterileishIcon';
-import { DrSyntaxIcon } from './icons/DrSyntaxIcon';
-import { BeepWingmanIcon } from './icons/BeepWingmanIcon';
-import { AegisThreatScopeIcon } from './icons/AegisThreatScopeIcon';
-import { AegisCommandIcon } from './icons/AegisCommandIcon';
-import { UsageMonitorIcon } from './icons/UsageMonitorIcon';
-import { KendraIcon } from './icons/KendraIcon';
-import { StonksIcon } from './icons/StonksIcon';
-import { AuditorGeneralissimoIcon } from './icons/AuditorGeneralissimoIcon';
-import { BarbaraIcon } from './icons/BarbaraIcon';
-import { OracleIcon } from './icons/OracleIcon';
-
 
 import { type MicroAppType } from '@/store/app-store';
 import ContactList from './micro-apps/contact-list';
 import AegisReport from './micro-apps/aegis-report';
 import PamPooveyOnboarding from './micro-apps/pam-poovey-onboarding';
-import BeepWingman from './micro-apps/beep-wingman';
 import InfidelityRadar from './micro-apps/infidelity-radar';
 import VinDiesel from './micro-apps/vin-diesel';
 import ProjectLumbergh from './micro-apps/project-lumbergh';
@@ -52,17 +40,6 @@ import JrocBusinessKit from './micro-apps/jroc-business-kit';
 import LaheyCommander from './micro-apps/lahey-commander';
 import TheForemanator from './micro-apps/the-foremanator';
 import Sterileish from './micro-apps/sterileish';
-import DrSyntax from './micro-apps/dr-syntax';
-import AegisThreatScope from './micro-apps/aegis-threatscope';
-import AegisCommand from './micro-apps/aegis-command';
-import UsageMonitor from './micro-apps/usage-monitor';
-import EchoRecall from './micro-apps/echo-recall';
-import Kendra from './micro-apps/kendra';
-import StonksBot from './micro-apps/stonks-bot';
-import AuditorGeneralissimo from './micro-apps/auditor-generalissimo';
-import Barbara from './micro-apps/barbara';
-import Oracle from './micro-apps/oracle';
-
 
 type ComponentRegistry = {
     icon: React.ComponentType<any>;
@@ -81,19 +58,10 @@ export const microAppRegistry: Record<MicroAppType, ComponentRegistry> = {
   },
   'echo-recall': {
     icon: EchoIcon,
-    content: EchoRecall,
   },
   'aegis-control': {
     icon: AegisIcon,
     content: AegisReport,
-  },
-  'aegis-threatscope': {
-    icon: AegisThreatScopeIcon,
-    content: AegisThreatScope,
-  },
-  'aegis-command': {
-    icon: AegisCommandIcon,
-    content: AegisCommand,
   },
   'contact-list': {
     icon: AddressBookIcon,
@@ -102,10 +70,6 @@ export const microAppRegistry: Record<MicroAppType, ComponentRegistry> = {
   'pam-poovey-onboarding': {
     icon: PamPooveyIcon,
     content: PamPooveyOnboarding,
-  },
-  'beep-wingman': {
-    icon: BeepWingmanIcon,
-    content: BeepWingman,
   },
   'infidelity-radar': {
     icon: EyeOff,
@@ -162,34 +126,6 @@ export const microAppRegistry: Record<MicroAppType, ComponentRegistry> = {
   'sterileish': {
       icon: SterileishIcon,
       content: Sterileish,
-  },
-  'dr-syntax': {
-    icon: DrSyntaxIcon,
-    content: DrSyntax,
-  },
-  'usage-monitor': {
-    icon: UsageMonitorIcon,
-    content: UsageMonitor,
-  },
-  'kendra': {
-    icon: KendraIcon,
-    content: Kendra,
-  },
-  'stonks-bot': {
-    icon: StonksIcon,
-    content: StonksBot,
-  },
-  'auditor-generalissimo': {
-    icon: AuditorGeneralissimoIcon,
-    content: AuditorGeneralissimo,
-  },
-  'barbara': {
-    icon: BarbaraIcon,
-    content: Barbara,
-  },
-  'oracle': {
-    icon: OracleIcon,
-    content: Oracle,
   },
 };
 

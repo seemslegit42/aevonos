@@ -6,7 +6,6 @@ import type { UserCommandOutput } from '@/ai/agents/beep-schemas';
 import { revalidatePath } from 'next/cache';
 import { scanEvidence as scanEvidenceFlow, type PaperTrailScanInput, type PaperTrailScanOutput } from '@/ai/agents/paper-trail';
 import { getServerActionSession } from '@/lib/auth';
-import { getStockPrice, type StockPrice } from '@/ai/tools/finance-tools';
 
 export async function handleCommand(command: string): Promise<UserCommandOutput> {
   const session = await getServerActionSession();
@@ -54,15 +53,5 @@ export async function scanEvidence(input: PaperTrailScanInput): Promise<PaperTra
       lead: "The informant is offline. Couldn't process the evidence.",
       isEvidenceValid: false,
     };
-  }
-}
-
-export async function fetchPrice(ticker: string): Promise<StockPrice | { error: string }> {
-  try {
-    const price = await getStockPrice({ ticker });
-    return price;
-  } catch (e) {
-    console.error(`[fetchPrice Action Error] for ${ticker}:`, e);
-    return { error: e instanceof Error ? e.message : `An unknown error occurred while fetching price for ${ticker}.` };
   }
 }

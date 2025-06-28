@@ -23,13 +23,6 @@ import type { DecoyOutput } from '@/ai/agents/decoy-schemas';
 import type { JrocOutput } from '@/ai/agents/jroc-schemas';
 import type { SterileishAnalysisOutput } from '@/ai/agents/sterileish-schemas';
 import type { PaperTrailScanOutput } from '@/ai/agents/paper-trail-schemas';
-import type { DossierOutput } from '@/ai/agents/dossier-schemas';
-import type { KendraOutput } from '@/ai/agents/kendra-schemas';
-import type { StonksBotOutput } from '@/ai/agents/stonks-bot-schemas';
-import type { AuditorOutput } from '@/ai/agents/auditor-generalissimo-schemas';
-import type { OrpheanOracleOutput } from '@/ai/agents/orphean-oracle-schemas';
-import type { BarbaraOutput } from '@/ai/agents/barbara-schemas';
-
 
 // Define the types of MicroApps available in the OS
 export type MicroAppType = 
@@ -53,17 +46,7 @@ export type MicroAppType =
   | 'jroc-business-kit'
   | 'lahey-surveillance'
   | 'the-foremanator'
-  | 'sterileish'
-  | 'dr-syntax'
-  | 'beep-wingman'
-  | 'aegis-threatscope'
-  | 'aegis-command'
-  | 'usage-monitor'
-  | 'kendra'
-  | 'stonks-bot'
-  | 'auditor-generalissimo'
-  | 'barbara'
-  | 'oracle';
+  | 'sterileish';
 
 // Define the shape of a MicroApp instance
 export interface MicroApp {
@@ -88,8 +71,6 @@ const defaultAppDetails: Record<MicroAppType, Omit<MicroApp, 'id' | 'position' |
   'ai-suggestion': { type: 'ai-suggestion', title: 'AI Suggestion', description: 'Click to execute this command.' },
   'echo-recall': { type: 'echo-recall', title: 'Echo: Session Recall', description: "A summary of the last session's activity." },
   'aegis-control': { type: 'aegis-control', title: 'Aegis Security Report', description: "Analysis of the last command's security profile." },
-  'aegis-threatscope': { type: 'aegis-threatscope', title: 'Aegis ThreatScope', description: 'Real-time security threat feed.' },
-  'aegis-command': { type: 'aegis-command', title: 'Aegis Command', description: 'Configure Aegis security parameters.' },
   'contact-list': { type: 'contact-list', title: 'Contact List', description: 'A list of your contacts.' },
   'pam-poovey-onboarding': { type: 'pam-poovey-onboarding', title: 'Pam Poovey: HR', description: 'Onboarding, complaints, and questionable life advice.' },
   'infidelity-radar': { type: 'infidelity-radar', title: 'Infidelity Radar', description: 'Because intuition deserves evidence.' },
@@ -106,14 +87,6 @@ const defaultAppDetails: Record<MicroAppType, Omit<MicroApp, 'id' | 'position' |
   'lahey-surveillance': { type: 'lahey-surveillance', title: 'Lahey Surveillance', description: 'I am the liquor. And I am watching.' },
   'the-foremanator': { type: 'the-foremanator', title: 'The Foremanator', description: 'He doesn’t sleep. He doesn’t eat. He just yells about deadlines.' },
   'sterileish': { type: 'sterileish', title: 'STERILE-ish™', description: 'We’re basically compliant.' },
-  'dr-syntax': { type: 'dr-syntax', title: 'Dr. Syntax', description: 'Harsh but effective structural critiques.' },
-  'beep-wingman': { type: 'beep-wingman', title: 'BEEP Wingman', description: 'Generates compelling opening messages for dating apps.' },
-  'usage-monitor': { type: 'usage-monitor', title: 'Usage Monitor', description: 'Tracks your Agent Action usage.' },
-  'kendra': { type: 'kendra', title: 'Get Me KENDRA', description: 'Routing to KENDRA.exe. Brace yourself.' },
-  'stonks-bot': { type: 'stonks-bot', title: 'Stonks Bot', description: 'This is not financial advice.' },
-  'auditor-generalissimo': { type: 'auditor-generalissimo', title: 'The Auditor Generalissimo', description: 'Guilty until proven solvent.' },
-  'barbara': { type: 'barbara', title: 'Agent Barbara™', description: 'Precise, passive-aggressive compliance.' },
-  'oracle': { type: 'oracle', title: 'Agent Oracle', description: 'A living visualization of your AI agent constellation.' },
 };
 
 const defaultAppSizes: Record<MicroAppType, { width: number; height: number }> = {
@@ -138,16 +111,6 @@ const defaultAppSizes: Record<MicroAppType, { width: number; height: number }> =
   'lahey-surveillance': { width: 400, height: 500 },
   'the-foremanator': { width: 340, height: 500 },
   'sterileish': { width: 340, height: 500 },
-  'dr-syntax': { width: 340, height: 480 },
-  'beep-wingman': { width: 340, height: 520 },
-  'aegis-threatscope': { width: 360, height: 500 },
-  'aegis-command': { width: 360, height: 400 },
-  'usage-monitor': { width: 320, height: 350 },
-  'kendra': { width: 360, height: 550 },
-  'stonks-bot': { width: 340, height: 550 },
-  'auditor-generalissimo': { width: 360, height: 550 },
-  'barbara': { width: 360, height: 550 },
-  'oracle': { width: 400, height: 400 },
 };
 
 export interface AppState {
@@ -283,19 +246,16 @@ export const useAppStore = create<AppState>((set, get) => {
     for (const report of reports) {
       switch (report.agent) {
         case 'aegis':
-          upsertApp('aegis-control', { id: 'aegis-report-main', contentProps: { ...report.report }});
+          launchApp('aegis-control', { contentProps: { ...report.report }});
           if (report.report.isAnomalous) {
             toast({ title: 'Aegis Alert', description: report.report.anomalyExplanation, variant: 'destructive' });
           }
           break;
 
         case 'dr-syntax':
-          const drSyntaxReport: DrSyntaxOutput = report.report;
-          upsertApp('dr-syntax', { 
-              id: 'dr-syntax-main',
-              title: `Critique Result (Rating: ${drSyntaxReport.rating}/10)`,
-              description: `Critique for a piece of content.`,
-              contentProps: drSyntaxReport
+          launchApp('ai-suggestion', {
+            title: `Critique Result (Rating: ${report.report.rating}/10)`,
+            description: `Critique: ${report.report.critique}\nSuggestion: ${report.report.suggestion}`,
           });
           break;
 
@@ -304,42 +264,42 @@ export const useAppStore = create<AppState>((set, get) => {
           break;
         
         case 'billing':
-            upsertApp('usage-monitor', {
-                id: 'usage-monitor-main',
-                contentProps: { ...report.report.report }
+            launchApp('ai-suggestion', {
+                title: 'Billing Usage Report',
+                description: `Plan: ${report.report.report.planTier}\nUsage: ${report.report.report.totalActionsUsed}/${report.report.report.planLimit} Agent Actions`,
             });
             break;
         
         case 'vin-diesel':
-            upsertApp('vin-diesel', { id: 'vin-diesel-main', title: `VIN: ...${report.report.vin.slice(-6)}`, description: 'Validation Result', contentProps: report.report });
+            launchApp('vin-diesel', { title: `VIN: ...${report.report.vin.slice(-6)}`, description: 'Validation Result', contentProps: report.report });
             break;
         
         case 'winston-wolfe':
-            upsertApp('winston-wolfe', { id: 'winston-wolfe-main', contentProps: report.report });
+            launchApp('winston-wolfe', { contentProps: report.report });
             break;
 
         case 'kif-kroker':
-            upsertApp('kif-kroker', { id: 'kif-kroker-main', contentProps: report.report });
+            launchApp('kif-kroker', { contentProps: report.report });
             break;
         
         case 'vandelay':
-            upsertApp('vandelay', { id: 'vandelay-main', contentProps: { alibi: report.report } });
+            launchApp('vandelay', { contentProps: { alibi: report.report } });
             break;
         
         case 'jroc':
-            upsertApp('jroc-business-kit', { id: 'jroc-main', title: `Biz Kit: ${report.report.businessName}`, description: 'Your legit-as-frig business kit.', contentProps: report.report as JrocOutput });
+            launchApp('jroc-business-kit', { title: `Biz Kit: ${report.report.businessName}`, description: 'Your legit-as-frig business kit.', contentProps: report.report as JrocOutput });
             break;
         
         case 'lahey':
-             upsertApp('lahey-surveillance', { id: 'lahey-main', title: `Lahey Report`, description: 'Shit-storm report.', contentProps: report.report });
+             launchApp('lahey-surveillance', { title: `Lahey Report`, description: 'Shit-storm report.', contentProps: report.report });
              break;
         
         case 'foremanator':
-            upsertApp('the-foremanator', { id: 'foremanator-main', title: 'Foremanator Site Log', description: 'Daily report processed.', contentProps: report.report });
+            launchApp('the-foremanator', { title: 'Foremanator Site Log', description: 'Daily report processed.', contentProps: report.report });
             break;
 
         case 'sterileish':
-            upsertApp('sterileish', { id: 'sterileish-main', title: 'STERILE-ish™ Report', description: 'Compliance analysis complete.', contentProps: report.report as SterileishAnalysisOutput });
+            launchApp('sterileish', { title: 'STERILE-ish™ Report', description: 'Compliance analysis complete.', contentProps: report.report as SterileishAnalysisOutput });
             break;
         
         case 'paper-trail':
@@ -348,97 +308,6 @@ export const useAppStore = create<AppState>((set, get) => {
             const existingLog = paperTrailApp?.contentProps?.evidenceLog || [];
             const newLog = [report.report, ...existingLog];
             upsertApp('paper-trail', { id: paperTrailAppId, title: 'Paper Trail P.I.', contentProps: { evidenceLog: newLog as PaperTrailScanOutput[] } });
-            break;
-            
-        case 'wingman':
-            upsertApp('beep-wingman', { id: 'wingman-main', title: 'BEEP Wingman Mission', description: 'Operation: Charm', contentProps: report.report });
-            break;
-        
-        case 'osint':
-            upsertApp('infidelity-radar', { id: 'infidelity-radar-main', contentProps: { osintReport: report.report }});
-            break;
-            
-        case 'lumbergh':
-             upsertApp('project-lumbergh', { id: 'lumbergh-main', contentProps: { ...report.report } });
-             break;
-        
-        case 'lucille':
-            upsertApp('lucille-bluth', { id: 'lucille-bluth-main', contentProps: { ...report.report } });
-            break;
-
-        case 'rolodex':
-            upsertApp('rolodex', { id: 'rolodex-main', contentProps: { ...report.report } });
-            break;
-
-        case 'pam-poovey':
-            const pamReport: PamAudioOutput = report.report;
-            upsertApp('pam-poovey-onboarding', { 
-                id: 'pam-poovey-main',
-                contentProps: pamReport
-            });
-            break;
-
-        case 'infidelity-analysis':
-            const analysisReport: InfidelityAnalysisOutput = report.report;
-            upsertApp('infidelity-radar', {
-                id: 'infidelity-radar-main',
-                contentProps: { analysisResult: analysisReport }
-            });
-            break;
-
-        case 'decoy':
-            const decoyReport: DecoyOutput = report.report;
-            upsertApp('infidelity-radar', {
-                id: 'infidelity-radar-main',
-                contentProps: { decoyResult: decoyReport }
-            });
-            break;
-        
-        case 'echo':
-            upsertApp('echo-recall', {
-                id: 'echo-recall-main',
-                contentProps: report.report as SessionRecallOutput,
-            });
-            break;
-        
-        case 'dossier':
-            const dossierReport: DossierOutput = report.report;
-            const contentProp = dossierReport.mode === 'legal' 
-                ? { legalDossierReport: dossierReport }
-                : { dossierReport: dossierReport };
-
-            upsertApp('infidelity-radar', {
-                id: 'infidelity-radar-main',
-                contentProps: contentProp
-            });
-            break;
-        case 'kendra':
-            upsertApp('kendra', {
-                id: 'kendra-main',
-                title: `KENDRA: ${report.report.campaignTitle}`,
-                contentProps: report.report as KendraOutput,
-            });
-            break;
-        case 'stonks':
-            upsertApp('stonks-bot', { id: 'stonks-bot-main', contentProps: report.report });
-            break;
-        case 'auditor-generalissimo':
-            upsertApp('auditor-generalissimo', {
-                id: 'auditor-generalissimo-main',
-                contentProps: report.report as AuditorOutput,
-            });
-            break;
-        case 'orphean-oracle':
-            upsertApp('orphean-oracle', {
-                id: 'orphean-oracle-main',
-                contentProps: report.report as OrpheanOracleOutput,
-            });
-            break;
-        case 'barbara':
-            upsertApp('barbara', {
-                id: 'barbara-main',
-                contentProps: report.report as BarbaraOutput,
-            });
             break;
       }
     }
@@ -500,29 +369,10 @@ export const useAppStore = create<AppState>((set, get) => {
         processAgentReports(result.agentReports);
 
         result.appsToLaunch.forEach(appInfo => {
-            // Check for existing 'singleton' apps and upsert instead of launching new
-            const singletonApps: Record<string, string> = {
-              'oracle': 'agent-oracle-main',
-              'aegis-threatscope': 'aegis-threatscope-main',
-              'aegis-command': 'aegis-command-main',
-              'usage-monitor': 'usage-monitor-main',
-              // Add other app types that should only have one instance
-            };
-
-            const singletonId = (singletonApps as any)[appInfo.type];
-
-            if (singletonId) {
-                upsertApp(appInfo.type, {
-                    id: singletonId,
-                    title: appInfo.title || defaultAppDetails[appInfo.type].title,
-                    description: appInfo.description || defaultAppDetails[appInfo.type].description
-                });
-            } else {
-                launchApp(appInfo.type, {
-                    title: appInfo.title || defaultAppDetails[appInfo.type].title,
-                    description: appInfo.description || defaultAppDetails[appInfo.type].description,
-                });
-            }
+          launchApp(appInfo.type, {
+            title: appInfo.title || defaultAppDetails[appInfo.type].title,
+            description: appInfo.description || defaultAppDetails[appInfo.type].description,
+          });
         });
 
         result.suggestedCommands.forEach(cmd => {
