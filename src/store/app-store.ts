@@ -114,7 +114,7 @@ const defaultAppDetails: Record<MicroAppType, Omit<MicroApp, 'id' | 'position' |
   'barbara': { type: 'barbara', title: 'Agent Barbara™', description: 'Precise, passive-aggressive compliance.' },
 };
 
-const defaultAppSizes: Record<MicroAppType, { width: number, height: number }> = {
+const defaultAppSizes: Record<MicroAppType, { width: number; height: number }> = {
   'file-explorer': { width: 400, height: 300 },
   'terminal': { width: 450, height: 300 },
   'ai-suggestion': { width: 320, height: 120 },
