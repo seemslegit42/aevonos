@@ -2,13 +2,14 @@
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { OrbitControls, Sparkles, Line, Icosahedron, Edges, Html } from '@react-three/drei';
+import { OrbitControls, Sparkles, Line, Edges, Html } from '@react-three/drei';
 import * as THREE from 'three';
 import { type Agent as AgentData, AgentStatus } from '@prisma/client';
 import { cn } from '@/lib/utils';
 import { useAppStore } from '@/store/app-store';
 import type { MicroAppType } from '@/store/app-store';
 
+// Configuration for agent node visuals based on status
 const statusConfig: Record<AgentStatus, { color: THREE.Color; emissiveIntensity: number }> = {
     [AgentStatus.active]: { color: new THREE.Color('hsl(var(--accent))'), emissiveIntensity: 0.8 },
     [AgentStatus.processing]: { color: new THREE.Color('hsl(var(--primary))'), emissiveIntensity: 1.2 },
@@ -17,6 +18,7 @@ const statusConfig: Record<AgentStatus, { color: THREE.Color; emissiveIntensity:
     [AgentStatus.error]: { color: new THREE.Color('hsl(var(--destructive))'), emissiveIntensity: 1.0 },
 };
 
+// More robust AgentNode component
 function AgentNode({ agent, position }: { agent: AgentData, position: THREE.Vector3 }) {
     const { upsertApp } = useAppStore();
     const groupRef = useRef<THREE.Group>(null!);
@@ -36,7 +38,6 @@ function AgentNode({ agent, position }: { agent: AgentData, position: THREE.Vect
         e.stopPropagation();
         try {
             const appType = agent.type as MicroAppType;
-            // The app ID should be consistent for agent-specific apps to act as singletons
             const appId = `agent-app-${agent.type}`; 
             upsertApp(appType, { id: appId });
         } catch (e) {
@@ -53,7 +54,8 @@ function AgentNode({ agent, position }: { agent: AgentData, position: THREE.Vect
             className="cursor-pointer"
         >
             <group ref={groupRef}>
-              <Icosahedron args={[0.4, 1]}>
+              <mesh>
+                  <icosahedronGeometry args={[0.4, 1]} />
                   <meshStandardMaterial
                       color={config.color}
                       emissive={config.color}
@@ -62,7 +64,7 @@ function AgentNode({ agent, position }: { agent: AgentData, position: THREE.Vect
                       roughness={0.1}
                   />
                    <Edges scale={1.001} threshold={15} color="white" />
-              </Icosahedron>
+              </mesh>
             </group>
             <Html distanceFactor={10}>
                 <div
@@ -79,29 +81,84 @@ function AgentNode({ agent, position }: { agent: AgentData, position: THREE.Vect
     );
 }
 
-function BeepCore() {
-    const meshRef = useRef<THREE.Mesh>(null!);
-    useFrame((state) => {
-        const { clock } = state;
-        meshRef.current.scale.setScalar(1 + Math.sin(clock.getElapsedTime() * 2) * 0.1);
-        meshRef.current.rotation.y += 0.005;
-        meshRef.current.rotation.x += 0.002;
+// State-aware BEEP Core component, replacing the old one
+type BeepCoreState = 'idle' | 'listening' | 'speaking' | 'alert';
+
+function BeepCore({ state }: { state: BeepCoreState }) {
+    const groupRef = useRef<THREE.Group>(null!);
+    const materialRef = useRef<THREE.MeshStandardMaterial>(null!);
+
+    const targetState = useRef({
+        scale: 1,
+        color: new THREE.Color('hsl(var(--primary))'),
+        emissiveIntensity: 1.5,
+        rotationSpeed: 0.2,
     });
-     return (
-        <Icosahedron ref={meshRef} args={[0.8, 2]}>
-            <meshStandardMaterial
-                color="hsl(var(--primary))"
-                emissive="hsl(var(--primary))"
-                emissiveIntensity={1.5}
-                metalness={0.9}
-                roughness={0.1}
-            />
-             <Edges scale={1.001} threshold={15} color="hsl(var(--primary-foreground))" />
-        </Icosahedron>
-     );
+    
+    useEffect(() => {
+        const colors = {
+            primary: new THREE.Color('hsl(var(--primary))'),
+            accent: new THREE.Color('hsl(var(--accent))'),
+            destructive: new THREE.Color('hsl(var(--destructive))'),
+        };
+
+        switch (state) {
+            case 'listening':
+                targetState.current = { scale: 1.1, color: colors.accent, emissiveIntensity: 2.0, rotationSpeed: 1.5 };
+                break;
+            case 'speaking':
+                targetState.current = { scale: 1.1, color: colors.accent, emissiveIntensity: 1.8, rotationSpeed: 0.8 };
+                break;
+            case 'alert':
+                targetState.current = { scale: 1.2, color: colors.destructive, emissiveIntensity: 2.5, rotationSpeed: 5 };
+                break;
+            default: // idle
+                targetState.current = { scale: 1, color: colors.primary, emissiveIntensity: 1.5, rotationSpeed: 0.2 };
+                break;
+        }
+    }, [state]);
+
+    useFrame((state, delta) => {
+        const { clock } = state;
+        const group = groupRef.current;
+        const material = materialRef.current;
+        if (!group || !material) return;
+        
+        group.scale.lerp(new THREE.Vector3(1,1,1).multiplyScalar(targetState.current.scale), 0.1);
+        material.color.lerp(targetState.current.color, 0.1);
+        material.emissive.lerp(targetState.current.color, 0.1);
+        material.emissiveIntensity = THREE.MathUtils.lerp(material.emissiveIntensity, targetState.current.emissiveIntensity, 0.1);
+        
+        group.rotation.y += targetState.current.rotationSpeed * delta * 0.5;
+
+        if(state !== 'idle') {
+            group.rotation.x = THREE.MathUtils.lerp(group.rotation.x, Math.sin(clock.getElapsedTime() * targetState.current.rotationSpeed * 0.5) * 0.1, 0.1);
+            group.rotation.z = THREE.MathUtils.lerp(group.rotation.z, Math.cos(clock.getElapsedTime() * targetState.current.rotationSpeed * 0.5) * 0.1, 0.1);
+        } else {
+             group.rotation.x = THREE.MathUtils.lerp(group.rotation.x, 0, 0.1);
+             group.rotation.z = THREE.MathUtils.lerp(group.rotation.z, 0, 0.1);
+        }
+    });
+
+    return (
+        <group ref={groupRef}>
+            <mesh>
+                <icosahedronGeometry args={[0.8, 2]} />
+                <meshStandardMaterial
+                    ref={materialRef}
+                    metalness={0.9}
+                    roughness={0.1}
+                    // Initial values set here, then animated in useFrame
+                    color='hsl(var(--primary))'
+                    emissive='hsl(var(--primary))'
+                />
+                <Edges scale={1.001} threshold={15} color="hsl(var(--primary-foreground))" />
+            </mesh>
+        </group>
+    );
 }
 
-function Scene({ agents }: { agents: AgentData[] }) {
+function Scene({ agents, beepCoreState }: { agents: AgentData[], beepCoreState: BeepCoreState }) {
     const nodePositions = useMemo(() => {
         return agents.map((agent, index) => {
             const angle = (index / agents.length) * Math.PI * 2;
@@ -115,7 +172,7 @@ function Scene({ agents }: { agents: AgentData[] }) {
         <>
             <ambientLight intensity={0.2} />
             <pointLight position={[0, 0, 0]} color="hsl(var(--primary))" intensity={15} distance={20} />
-            <BeepCore />
+            <BeepCore state={beepCoreState} />
             {agents.map((agent, index) => (
                 <group key={agent.id}>
                     <AgentNode agent={agent} position={nodePositions[index]} />
@@ -130,12 +187,15 @@ function Scene({ agents }: { agents: AgentData[] }) {
 
 export default function OracleBackground({ initialAgents }: { initialAgents: AgentData[] }) {
   const [agents, setAgents] = useState<AgentData[]>(initialAgents);
+  const { isLoading, beepOutput } = useAppStore();
+  const [beepCoreState, setBeepCoreState] = useState<BeepCoreState>('idle');
+  const audioRef = useRef<HTMLAudioElement>(null);
 
   useEffect(() => {
     const fetchAgents = async () => {
         try {
             const response = await fetch('/api/agents');
-            if (!response.ok) return; // Don't crash if API is down, just don't update
+            if (!response.ok) return;
             const data: AgentData[] = await response.json();
             setAgents(data);
         } catch (err) {
@@ -146,12 +206,36 @@ export default function OracleBackground({ initialAgents }: { initialAgents: Age
     return () => clearInterval(interval);
   }, []);
 
+  useEffect(() => {
+    if (isLoading) {
+        setBeepCoreState('listening');
+    } else if (beepOutput?.agentReports?.some(r => r.agent === 'aegis' && r.report.isAnomalous)) {
+        setBeepCoreState('alert');
+    } else if (beepOutput?.responseAudioUri) {
+        setBeepCoreState('speaking');
+    } else {
+        setBeepCoreState('idle');
+    }
+  }, [isLoading, beepOutput]);
+
+  useEffect(() => {
+    if (beepCoreState === 'speaking' && beepOutput?.responseAudioUri && audioRef.current) {
+        audioRef.current.src = beepOutput.responseAudioUri;
+        audioRef.current.play().catch(e => console.error("Audio playback failed:", e));
+    }
+  }, [beepCoreState, beepOutput?.responseAudioUri]);
+
+  const handleAudioEnd = () => {
+      setBeepCoreState('idle');
+  };
+
   return (
       <div className="absolute inset-0 -z-10">
         <Canvas camera={{ position: [0, 8, 14], fov: 60 }}>
-            <Scene agents={agents} />
+            <Scene agents={agents} beepCoreState={beepCoreState} />
             <OrbitControls autoRotate autoRotateSpeed={0.2} enableZoom={true} enablePan={false} />
         </Canvas>
+         <audio ref={audioRef} onEnded={handleAudioEnd} className="hidden" />
       </div>
   );
 }

@@ -1,16 +1,9 @@
-
 'use client';
 
 import React from 'react';
 import { usePathname } from 'next/navigation';
 import TopBar from '@/components/layout/top-bar';
 import type { User, Workspace } from '@prisma/client';
-import dynamic from 'next/dynamic';
-
-// BeepAvatar is client-side only because it uses hooks like useFrame from r3f
-const BeepAvatar = dynamic(() => import('@/components/beep-avatar'), { 
-  ssr: false,
-});
 
 type UserProp = Pick<User, 'id' | 'email' | 'firstName' | 'lastName'> | null;
 
@@ -33,7 +26,6 @@ export function MainLayout({ children, user, workspace }: { children: React.Reac
         {/* Render children directly. Client/Server rendering is handled by the page. */}
         {children}
       </main>
-      <BeepAvatar />
     </div>
   );
 }
