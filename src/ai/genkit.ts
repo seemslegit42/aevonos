@@ -1,20 +1,31 @@
+
 import {genkit} from 'genkit';
 import {googleAI} from '@genkit-ai/googleai';
 import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
 
 // Be extra robust about the API key.
 // If it's missing or an empty string, use the placeholder.
-// The app will crash if an empty string is passed to the constructor.
 const apiKey = (process.env.GOOGLE_API_KEY && process.env.GOOGLE_API_KEY.trim() !== '') 
     ? process.env.GOOGLE_API_KEY 
     : 'YOUR_API_KEY_HERE';
 
+const hasValidApiKey = apiKey !== 'YOUR_API_KEY_HERE';
+
+if (!hasValidApiKey) {
+    console.warn(
+        '\x1b[33m%s\x1b[0m', // Yellow text
+        'WARNING: GOOGLE_API_KEY is not set in your .env file. AI features will be disabled and may throw errors at runtime. Please set a valid key to enable AI functionality.'
+    );
+}
 
 export const ai = genkit({
-  plugins: [googleAI({apiKey: apiKey})],
+  // Only add the googleAI plugin if the key is valid. This prevents startup crash.
+  plugins: hasValidApiKey ? [googleAI({apiKey: apiKey})] : [],
   model: 'googleai/gemini-2.0-flash',
 });
 
+// The LangChain model will likely fail on first use if the key is invalid, which is fine.
+// The key is to prevent the app from crashing on startup.
 export const geminiModel = new ChatGoogleGenerativeAI({
   modelName: "gemini-2.0-flash",
   maxOutputTokens: 8192,
