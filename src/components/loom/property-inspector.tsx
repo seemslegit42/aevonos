@@ -134,6 +134,106 @@ const VandelayProperties = ({ node, onUpdate }: { node: Node, onUpdate: (data: a
     )
 };
 
+const RolodexProperties = ({ node, onUpdate }: { node: Node, onUpdate: (data: any) => void }) => (
+    <div className="space-y-3">
+        <div>
+            <Label htmlFor="candidateName">Candidate Name</Label>
+            <Input id="candidateName" value={node.data.candidateName || ''} onChange={(e) => onUpdate({ ...node.data, candidateName: e.target.value })} className="bg-background/80" placeholder="e.g., John Smith" />
+        </div>
+        <div>
+            <Label htmlFor="candidateSummary">Candidate Summary</Label>
+            <Textarea id="candidateSummary" value={node.data.candidateSummary || ''} onChange={(e) => onUpdate({ ...node.data, candidateSummary: e.target.value })} className="bg-background/80" placeholder="Paste resume summary here..." rows={4} />
+        </div>
+        <div>
+            <Label htmlFor="jobDescription">Job Description</Label>
+            <Textarea id="jobDescription" value={node.data.jobDescription || ''} onChange={(e) => onUpdate({ ...node.data, jobDescription: e.target.value })} className="bg-background/80" placeholder="Paste job description here..." rows={4} />
+        </div>
+    </div>
+);
+
+const DrSyntaxProperties = ({ node, onUpdate }: { node: Node, onUpdate: (data: any) => void }) => (
+    <div className="space-y-3">
+        <div>
+            <Label>Content Type</Label>
+            <Select value={node.data.contentType || 'prompt'} onValueChange={(value) => onUpdate({ ...node.data, contentType: value })}>
+                <SelectTrigger className="bg-background/80"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                    <SelectItem value="prompt">Prompt</SelectItem>
+                    <SelectItem value="code">Code</SelectItem>
+                    <SelectItem value="copy">Copy</SelectItem>
+                </SelectContent>
+            </Select>
+        </div>
+        <div>
+            <Label htmlFor="content">Content to Critique</Label>
+            <Textarea id="content" value={node.data.content || ''} onChange={(e) => onUpdate({ ...node.data, content: e.target.value })} className="bg-background/80" placeholder="Paste content here..." rows={6} />
+        </div>
+    </div>
+);
+
+const JrocProperties = ({ node, onUpdate }: { node: Node, onUpdate: (data: any) => void }) => (
+    <div className="space-y-3">
+        <div>
+            <Label htmlFor="businessType">Business Type</Label>
+            <Input id="businessType" value={node.data.businessType || ''} onChange={(e) => onUpdate({ ...node.data, businessType: e.target.value })} className="bg-background/80" placeholder="e.g., mobile audio" />
+        </div>
+        <div>
+            <Label>Logo Style</Label>
+            <Select value={node.data.logoStyle || 'bling'} onValueChange={(value) => onUpdate({ ...node.data, logoStyle: value })}>
+                <SelectTrigger className="bg-background/80"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                    <SelectItem value="bling">Bling</SelectItem>
+                    <SelectItem value="chrome">Chrome</SelectItem>
+                    <SelectItem value="dank minimal">Dank Minimal</SelectItem>
+                </SelectContent>
+            </Select>
+        </div>
+    </div>
+);
+
+const LaheyProperties = ({ node, onUpdate }: { node: Node, onUpdate: (data: any) => void }) => (
+    <div>
+        <Label htmlFor="logEntry">Log Entry</Label>
+        <Textarea id="logEntry" value={node.data.logEntry || ''} onChange={(e) => onUpdate({ ...node.data, logEntry: e.target.value })} className="bg-background/80" placeholder="e.g., Kyle D. opened YouTube for 22 minutes." rows={4} />
+    </div>
+);
+
+const ForemanatorProperties = ({ node, onUpdate }: { node: Node, onUpdate: (data: any) => void }) => (
+    <div>
+        <Label htmlFor="logText">Daily Log Text</Label>
+        <Textarea id="logText" value={node.data.logText || ''} onChange={(e) => onUpdate({ ...node.data, logText: e.target.value })} className="bg-background/80" placeholder="Paste raw site log here..." rows={5} />
+    </div>
+);
+
+const SterileishProperties = ({ node, onUpdate }: { node: Node, onUpdate: (data: any) => void }) => (
+    <div className="space-y-3">
+        <div>
+            <Label>Entry Type</Label>
+            <Select value={node.data.entryType || 'general'} onValueChange={(value) => onUpdate({ ...node.data, entryType: value })}>
+                <SelectTrigger className="bg-background/80"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                    <SelectItem value="environment">Environment</SelectItem>
+                    <SelectItem value="calibration">Calibration</SelectItem>
+                    <SelectItem value="cleaning">Cleaning</SelectItem>
+                    <SelectItem value="general">General</SelectItem>
+                </SelectContent>
+            </Select>
+        </div>
+        <div>
+            <Label htmlFor="logText">Log Text</Label>
+            <Textarea id="logText" value={node.data.logText || ''} onChange={(e) => onUpdate({ ...node.data, logText: e.target.value })} className="bg-background/80" placeholder="e.g., Particle count for ISO-5 hood #3..." rows={4} />
+        </div>
+    </div>
+);
+
+const PaperTrailProperties = ({ node, onUpdate }: { node: Node, onUpdate: (data: any) => void }) => (
+     <div>
+        <Label htmlFor="caseFile">Case File Name</Label>
+        <Input id="caseFile" value={node.data.caseFile || ''} onChange={(e) => onUpdate({ ...node.data, caseFile: e.target.value })} className="bg-background/80" placeholder="e.g., The Chicago Incident" />
+        <p className="text-xs text-muted-foreground mt-1">Note: Receipt photo must be passed as a variable from a preceding node or trigger payload.</p>
+    </div>
+);
+
 const GenericProperties = ({ node, onUpdate }: { node: Node, onUpdate: (data: any) => void }) => (
     <div className="space-y-3">
         {Object.entries(node.data).map(([key, value]) => (
@@ -172,9 +272,23 @@ export default function PropertyInspector({ node, onUpdate }: PropertyInspectorP
           case 'tool-winston-wolfe':
               return <WinstonWolfeProperties node={node} onUpdate={handleDataUpdate} />;
           case 'tool-kif-kroker':
-                return <KifKrokerProperties node={node} onUpdate={handleDataUpdate} />;
+              return <KifKrokerProperties node={node} onUpdate={handleDataUpdate} />;
           case 'tool-vandelay':
-                return <VandelayProperties node={node} onUpdate={handleDataUpdate} />;
+              return <VandelayProperties node={node} onUpdate={handleDataUpdate} />;
+          case 'tool-rolodex':
+              return <RolodexProperties node={node} onUpdate={handleDataUpdate} />;
+          case 'tool-dr-syntax':
+              return <DrSyntaxProperties node={node} onUpdate={handleDataUpdate} />;
+          case 'tool-jroc':
+              return <JrocProperties node={node} onUpdate={handleDataUpdate} />;
+          case 'tool-lahey':
+              return <LaheyProperties node={node} onUpdate={handleDataUpdate} />;
+          case 'tool-foremanator':
+              return <ForemanatorProperties node={node} onUpdate={handleDataUpdate} />;
+          case 'tool-sterileish':
+              return <SterileishProperties node={node} onUpdate={handleDataUpdate} />;
+          case 'tool-paper-trail':
+              return <PaperTrailProperties node={node} onUpdate={handleDataUpdate} />;
           default:
               return <GenericProperties node={node} onUpdate={handleDataUpdate} />;
       }
