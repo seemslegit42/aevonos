@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
@@ -158,6 +159,42 @@ function BeepCore({ state }: { state: BeepCoreState }) {
     );
 }
 
+
+function AgentConnection({ agent, position }: { agent: AgentData, position: THREE.Vector3 }) {
+    const lineRef = useRef<any>(null); // Using `any` for ref as Line's type from drei can be complex
+    
+    const { color: targetColor, opacity: targetOpacity, lineWidth: targetWidth } = useMemo(() => {
+        switch(agent.status) {
+            case AgentStatus.processing:
+                return { color: statusConfig.processing.color, opacity: 0.7, lineWidth: 1 };
+            case AgentStatus.active:
+                return { color: statusConfig.active.color, opacity: 0.4, lineWidth: 0.75 };
+            default:
+                return { color: new THREE.Color('hsl(var(--muted-foreground))'), opacity: 0.2, lineWidth: 0.5 };
+        }
+    }, [agent.status]);
+
+    useFrame(() => {
+        if (!lineRef.current?.material) return;
+        
+        const material = lineRef.current.material;
+        material.color.lerp(targetColor, 0.1);
+        material.opacity = THREE.MathUtils.lerp(material.opacity, targetOpacity, 0.1);
+    });
+
+    return (
+        <Line
+            ref={lineRef}
+            points={[[0, 0, 0], position]}
+            color={targetColor}
+            lineWidth={targetWidth}
+            transparent
+            opacity={0.2} // Start with a low opacity, lerp to target
+        />
+    );
+}
+
+
 function Scene({ agents, beepCoreState }: { agents: AgentData[], beepCoreState: BeepCoreState }) {
     const nodePositions = useMemo(() => {
         return agents.map((agent, index) => {
@@ -176,7 +213,7 @@ function Scene({ agents, beepCoreState }: { agents: AgentData[], beepCoreState: 
             {agents.map((agent, index) => (
                 <group key={agent.id}>
                     <AgentNode agent={agent} position={nodePositions[index]} />
-                    <Line points={[[0,0,0], nodePositions[index]]} color="hsl(var(--muted-foreground))" lineWidth={0.5} opacity={0.3} transparent />
+                    <AgentConnection agent={agent} position={nodePositions[index]} />
                 </group>
             ))}
             <Sparkles count={200} scale={15} size={2} speed={0.3} color="hsl(var(--accent))" />
