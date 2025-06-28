@@ -21,7 +21,7 @@ const PLAN_LIMITS = {
 } as const;
 
 export default function BillingPopoverContent({ workspace }: BillingPopoverContentProps) {
-  const { handleCommandSubmit } = useAppStore();
+  const { upsertApp } = useAppStore();
 
   if (!workspace) {
     return <div className="p-4 text-sm text-muted-foreground">No workspace data.</div>;
@@ -38,8 +38,13 @@ export default function BillingPopoverContent({ workspace }: BillingPopoverConte
   };
   
   const openUsageMonitor = () => {
-      // Use a consistent command that BEEP can understand.
-      handleCommandSubmit('show my usage monitor');
+      // Directly launch or update the app
+      upsertApp('usage-monitor', { id: 'singleton-usage-monitor', contentProps: {
+          totalActionsUsed: workspace.agentActionsUsed,
+          planLimit,
+          planTier: workspace.planTier,
+          overageEnabled: workspace.overageEnabled
+      }});
   }
 
   return (
