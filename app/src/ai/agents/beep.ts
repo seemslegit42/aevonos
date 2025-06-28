@@ -515,12 +515,27 @@ class StonksBotTool extends Tool {
   schema = StonksBotInputSchema;
   
   async _call(input: z.infer<typeof StonksBotInputSchema>) {
-    const result = await getStonksAdvice(input);
-    const report: z.infer<typeof AgentReportSchema> = {
-      agent: 'stonks',
-      report: result,
-    };
-    return JSON.stringify(report);
+    try {
+      const result = await getStonksAdvice(input);
+      const report: z.infer<typeof AgentReportSchema> = {
+        agent: 'stonks',
+        report: result,
+      };
+      return JSON.stringify(report);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
+      const report: z.infer<typeof AgentReportSchema> = {
+          agent: 'stonks',
+          report: {
+            ticker: input.ticker.toUpperCase(),
+            priceInfo: { symbol: input.ticker.toUpperCase(), price: 'N/A', change: 'N/A', changePercent: 'N/A' },
+            advice: `The Stonks Bot short-circuited trying to process ${input.ticker.toUpperCase()}. ${errorMessage}`,
+            confidence: 'Ape strong together!',
+            rating: 'HODL',
+          },
+      };
+      return JSON.stringify(report);
+    }
   }
 }
 
@@ -532,12 +547,15 @@ class GetStockPriceTool extends Tool {
   async _call(input: z.infer<typeof StonksBotInputSchema>) {
     try {
       const priceInfo = await getStockPrice(input);
+      const priceText = priceInfo.price !== 'N/A'
+          ? `$${parseFloat(priceInfo.price).toFixed(2)}`
+          : 'currently unavailable';
       const report: z.infer<typeof AgentReportSchema> = {
         agent: 'stonks',
         report: {
           ticker: priceInfo.symbol,
           priceInfo: priceInfo,
-          advice: `The current price for ${priceInfo.symbol} is $${parseFloat(priceInfo.price).toFixed(2)}.`,
+          advice: `The current price for ${priceInfo.symbol} is ${priceText}.`,
           confidence: 'Diamond hands!',
           rating: 'HODL',
         },

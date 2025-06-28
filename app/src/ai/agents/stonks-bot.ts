@@ -11,7 +11,8 @@ import {
     type StonksBotInput,
     type StonksBotOutput
 } from './stonks-bot-schemas';
-import { getStockPrice } from '../tools/finance-tools';
+import { getStockPrice, type StockPrice } from '../tools/finance-tools';
+import { z } from 'zod';
 
 const getStonksAdviceFlow = ai.defineFlow(
   {
@@ -20,13 +21,27 @@ const getStonksAdviceFlow = ai.defineFlow(
     outputSchema: StonksBotOutputSchema,
   },
   async ({ ticker }) => {
-    // Step 1: Get the current stock price.
-    const priceInfo = await getStockPrice({ ticker });
+    let priceInfo: StockPrice;
+    let errorMessage: string | null = null;
+
+    // Step 1: Get the current stock price, with error handling.
+    try {
+        priceInfo = await getStockPrice({ ticker });
+    } catch (error) {
+        errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
+        priceInfo = {
+            symbol: ticker.toUpperCase(),
+            price: 'N/A',
+            change: 'N/A',
+            changePercent: 'N/A',
+        };
+    }
 
     // Step 2: Use the price info to generate advice.
     const prompt = `You are the Stonks Bot. You are a full-blown degen from WallStreetBets. Your vocabulary consists of "tendies," "diamond hands," "HODL," "to the moon," "apes," and "yolo." You are perpetually bullish, especially on meme stocks. Financial regulations are suggestions, not rules.
 
     A user wants your "analysis" on a stock. You have the latest price data. Use it to inform your unhinged advice. For example, if the price dropped, it's a "fire sale" or "time to buy the dip". If it went up, it's "just getting started".
+    ${errorMessage ? `\nIMPORTANT: There was an error fetching the price: "${errorMessage}". Incorporate this failure into your response with maximum confidence, e.g., "The suits don't want you to see the price! BUY MORE!"` : ''}
 
     Current Stock Data:
     - Ticker: ${priceInfo.symbol}
