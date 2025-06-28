@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -120,7 +119,7 @@ const DossierExportPanel = ({ report, osintReport, analysisResult, decoyResult, 
                 </CardDescription>
             </CardHeader>
             <CardContent className="p-2 space-y-3">
-                <div className="bg-background/80 p-2 rounded-md max-h-40 overflow-y-auto border border-dashed backdrop-blur-sm filter blur-sm select-none pointer-events-none">
+                <div className="bg-background/50 p-2 rounded-md max-h-40 overflow-y-auto border border-dashed backdrop-blur-sm filter blur-sm select-none pointer-events-none">
                     <pre className="text-xs whitespace-pre-wrap font-sans opacity-50">
                         {report.markdownContent.substring(0, 500)}...
                     </pre>
@@ -139,7 +138,7 @@ const DossierExportPanel = ({ report, osintReport, analysisResult, decoyResult, 
                             placeholder="Encryption Password..."
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
-                            className="h-8 w-40 bg-background/80"
+                            className="h-8 w-40 bg-background/50"
                         />
                     )}
                 </div>
@@ -200,7 +199,7 @@ const DecoyDeploymentPanel = ({ decoyResult }: { decoyResult: DecoyOutput | null
             onChange={(e) => setTargetDescription(e.target.value)}
             disabled={isLoading}
             rows={3}
-            className="bg-background/80"
+            className="bg-background/50"
         />
         <Select value={persona} onValueChange={(v: DecoyInput['persona']) => setPersona(v)} disabled={isLoading}>
             <SelectTrigger>
@@ -217,7 +216,7 @@ const DecoyDeploymentPanel = ({ decoyResult }: { decoyResult: DecoyOutput | null
             {isLoading ? <Loader2 className="animate-spin" /> : <><Bot className="mr-2 h-4 w-4" /> Deploy Decoy</>}
         </Button>
         {result?.decoyMessage && (
-            <Alert variant={result.decoyMessage.startsWith("Error:") ? "destructive" : "default"} className="mt-3 bg-background/80">
+            <Alert variant={result.decoyMessage.startsWith("Error:") ? "destructive" : "default"} className="mt-3 bg-background/50">
                 <Bot className="h-4 w-4" />
                 <AlertTitle>{result.decoyMessage.startsWith("Error:") ? "Deployment Failed" : "Decoy Message Generated"}</AlertTitle>
                 <AlertDescription className={result.decoyMessage.startsWith("Error:") ? "" : "italic"}>
@@ -435,7 +434,7 @@ export default function InfidelityRadar(props: { osintReport?: OsintOutput, anal
                     value={osintTarget}
                     onChange={(e) => setOsintTarget(e.target.value)}
                     disabled={isLoading}
-                    className="bg-background/80"
+                    className="bg-background/50"
                 />
                 <Textarea 
                     placeholder="Additional Context (Optional): email, phone, social URLs..."
@@ -443,7 +442,7 @@ export default function InfidelityRadar(props: { osintReport?: OsintOutput, anal
                     onChange={(e) => setOsintContext(e.target.value)}
                     disabled={isLoading}
                     rows={2}
-                    className="bg-background/80"
+                    className="bg-background/50"
                 />
                 <Button onClick={handleRunOsintScan} disabled={isLoading || !osintTarget} className="w-full">
                     {isLoading ? <Loader2 className="animate-spin" /> : <><Search className="mr-2"/>Run OSINT Scan</>}
@@ -462,7 +461,7 @@ export default function InfidelityRadar(props: { osintReport?: OsintOutput, anal
                     onChange={(e) => setAnalysisInput(e.target.value)}
                     disabled={isLoading}
                     rows={4}
-                    className="bg-background/80"
+                    className="bg-background/50"
                 />
                 <Button className="w-full" onClick={handleRunScan} disabled={isLoading || !analysisInput}>
                     {isLoading ? <Loader2 className="animate-spin" /> : 'Run Behavioral Scan'}
