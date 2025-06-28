@@ -8,7 +8,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { Icosahedron, Torus, Edges } from '@react-three/drei';
+import { Edges } from '@react-three/drei';
 import * as THREE from 'three';
 
 import { Button } from '@/components/ui/button';
@@ -40,10 +40,8 @@ const passwordPlaceholders = [
 ];
 
 function Crystal({ position }: { position: [number, number, number] }) {
-  const crystalRef = useRef<THREE.Mesh>(null!);
-  const ringRef = useRef<THREE.Mesh>(null!);
-  
-  // Each crystal gets its own unique properties for scale and rotation speed.
+  const crystalGroupRef = useRef<THREE.Group>(null!);
+
   const { scale, rotationSpeed } = useMemo(() => {
     return {
       scale: new THREE.Vector3(
@@ -61,21 +59,20 @@ function Crystal({ position }: { position: [number, number, number] }) {
 
 
   useFrame(() => {
-    if (crystalRef.current) {
+    if (crystalGroupRef.current) {
         // Apply independent, chaotic rotation to each crystal shard
-        crystalRef.current.rotation.x += rotationSpeed.x;
-        crystalRef.current.rotation.y += rotationSpeed.y;
-        crystalRef.current.rotation.z += rotationSpeed.z;
+        crystalGroupRef.current.rotation.x += rotationSpeed.x;
+        crystalGroupRef.current.rotation.y += rotationSpeed.y;
+        crystalGroupRef.current.rotation.z += rotationSpeed.z;
     }
-    // The ring remains static relative to the group, preserving the geometry.
   });
 
   return (
     <group position={position}>
       {/* The main crystal shard */}
-      <mesh ref={crystalRef} scale={scale}>
-        <Icosahedron args={[0.3, 1]}>
-             {/* A more realistic, transmissive, refractive material */}
+      <group ref={crystalGroupRef} scale={scale}>
+        <mesh>
+            <icosahedronGeometry args={[0.3, 1]} />
             <meshPhysicalMaterial 
                 color="hsl(var(--primary))"
                 transmission={1.0}
@@ -87,13 +84,14 @@ function Crystal({ position }: { position: [number, number, number] }) {
                 emissive="hsl(var(--accent))"
                 emissiveIntensity={0.2}
             />
-        </Icosahedron>
-         <Edges scale={1.01} threshold={15} color="white" />
-      </mesh>
+            <Edges scale={1.01} threshold={15} color="white" />
+        </mesh>
+      </group>
       
       {/* The ring that defines the sacred geometry */}
-      <mesh ref={ringRef}>
-        <Torus args={[1, 0.02, 16, 100]}>
+      <group>
+        <mesh>
+            <torusGeometry args={[1, 0.02, 16, 100]} />
             <meshStandardMaterial
                 color="hsl(var(--primary))"
                 emissive="hsl(var(--accent))"
@@ -101,12 +99,13 @@ function Crystal({ position }: { position: [number, number, number] }) {
                 metalness={0.9}
                 roughness={0.2}
             />
-        </Torus>
-         <Edges scale={1} threshold={15} color="white" />
-      </mesh>
+            <Edges scale={1} threshold={15} color="white" />
+        </mesh>
+      </group>
     </group>
   );
 }
+
 
 function Scene() {
   const groupRef = useRef<THREE.Group>(null!);
@@ -132,14 +131,19 @@ function Scene() {
     }
 
     const uniquePositionsSet = new Set(positions.map(p => JSON.stringify(p)));
-    const uniquePositions = Array.from(uniquePositionsSet).map(p => JSON.parse(p));
+    let uniquePositions = Array.from(uniquePositionsSet).map(p => JSON.parse(p));
     
     // Fallback to ensure we have 19 points if floating point issues occur
-    while(uniquePositions.length < 19 && uniquePositions.length > 0) {
-        uniquePositions.push([Math.random() * 2 - 1, Math.random() * 2 - 1, 0]);
+    if (uniquePositions.length !== 19 && uniquePositions.length > 0) {
+        uniquePositions = [
+            [0, 0, 0],
+            ...Array.from({ length: 6 }, (_, i) => [Math.cos(i * Math.PI / 3) * r, Math.sin(i * Math.PI / 3) * r, 0]),
+            ...Array.from({ length: 6 }, (_, i) => [Math.cos(i * Math.PI / 3) * r * 2, Math.sin(i * Math.PI / 3) * r * 2, 0]),
+            ...Array.from({ length: 6 }, (_, i) => [Math.cos((i + 0.5) * Math.PI / 3) * r * Math.sqrt(3), Math.sin((i + 0.5) * Math.PI / 3) * r * Math.sqrt(3), 0]),
+        ].filter((p, i, self) => self.findIndex(t => t[0] === p[0] && t[1] === p[1]) === i);
     }
-
-    return uniquePositions;
+    
+    return uniquePositions.slice(0, 19);
   }, []);
 
   useFrame(() => {
