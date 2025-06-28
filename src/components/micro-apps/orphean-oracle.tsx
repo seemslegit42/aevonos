@@ -41,9 +41,19 @@ function Scene({ visualizationData }: { visualizationData: OrpheanOracleOutput['
     // Simple spherical layout logic
     const positions = useMemo(() => {
         const posMap = new Map<string, [number, number, number]>();
+        const numNodes = visualizationData.nodes.length;
+        
+        if (numNodes === 0) {
+            return posMap;
+        }
+        if (numNodes === 1) {
+            posMap.set(visualizationData.nodes[0].id, [0, 0, 0]);
+            return posMap;
+        }
+
         visualizationData.nodes.forEach((node, i) => {
-            const phi = Math.acos(-1 + (2 * i) / (visualizationData.nodes.length -1));
-            const theta = Math.sqrt((visualizationData.nodes.length -1) * Math.PI) * phi;
+            const phi = Math.acos(-1 + (2 * i) / (numNodes - 1));
+            const theta = Math.sqrt((numNodes - 1) * Math.PI) * phi;
             const radius = 5;
             posMap.set(node.id, [
                 radius * Math.cos(theta) * Math.sin(phi),
