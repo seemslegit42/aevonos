@@ -42,29 +42,56 @@ const passwordPlaceholders = [
 function Crystal({ position }: { position: [number, number, number] }) {
   const crystalRef = useRef<THREE.Mesh>(null!);
   const ringRef = useRef<THREE.Mesh>(null!);
+  
+  // Each crystal gets its own unique properties for scale and rotation speed.
+  const { scale, rotationSpeed } = useMemo(() => {
+    return {
+      scale: new THREE.Vector3(
+          1 + Math.random() * 0.4, 
+          1 + Math.random() * 1.2, // Elongated on Y
+          1 + Math.random() * 0.4
+      ),
+      rotationSpeed: new THREE.Vector3(
+        (Math.random() - 0.5) * 0.01,
+        (Math.random() - 0.5) * 0.01,
+        (Math.random() - 0.5) * 0.01
+      )
+    };
+  }, []);
+
 
   useFrame(() => {
     if (crystalRef.current) {
-      crystalRef.current.rotation.x += 0.005;
-      crystalRef.current.rotation.y += 0.007;
+        // Apply independent, chaotic rotation to each crystal shard
+        crystalRef.current.rotation.x += rotationSpeed.x;
+        crystalRef.current.rotation.y += rotationSpeed.y;
+        crystalRef.current.rotation.z += rotationSpeed.z;
     }
+    // The ring remains static relative to the group, preserving the geometry.
   });
 
   return (
     <group position={position}>
-      <mesh ref={crystalRef}>
-        <Icosahedron args={[0.5, 1]}>
-          <meshStandardMaterial
-            color="hsl(var(--primary))"
-            emissive="hsl(var(--accent))"
-            emissiveIntensity={0.5}
-            metalness={0.9}
-            roughness={0.1}
-            transparent
-            opacity={0.8}
-          />
+      {/* The main crystal shard */}
+      <mesh ref={crystalRef} scale={scale}>
+        <Icosahedron args={[0.3, 1]}>
+             {/* A more realistic, transmissive, refractive material */}
+            <meshPhysicalMaterial 
+                color="hsl(var(--primary))"
+                transmission={1.0}
+                opacity={0.9}
+                roughness={0}
+                metalness={0.1}
+                thickness={0.8}
+                ior={2.3} // Index of Refraction, like diamond
+                emissive="hsl(var(--accent))"
+                emissiveIntensity={0.2}
+            />
         </Icosahedron>
+         <Edges scale={1.01} threshold={15} color="white" />
       </mesh>
+      
+      {/* The ring that defines the sacred geometry */}
       <mesh ref={ringRef}>
         <Torus args={[1, 0.02, 16, 100]}>
             <meshStandardMaterial
@@ -104,7 +131,8 @@ function Scene() {
         positions.push([Math.cos(angle2) * r * Math.sqrt(3), Math.sin(angle2) * r * Math.sqrt(3), 0]);
     }
 
-    const uniquePositions = Array.from(new Set(positions.map(p => JSON.stringify(p)))).map(p => JSON.parse(p));
+    const uniquePositionsSet = new Set(positions.map(p => JSON.stringify(p)));
+    const uniquePositions = Array.from(uniquePositionsSet).map(p => JSON.parse(p));
     
     // Fallback to ensure we have 19 points if floating point issues occur
     while(uniquePositions.length < 19 && uniquePositions.length > 0) {
@@ -290,4 +318,3 @@ export default function LoginPage() {
     </div>
   );
 }
-
