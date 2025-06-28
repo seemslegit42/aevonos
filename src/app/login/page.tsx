@@ -1,12 +1,15 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useRef, useMemo } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { Canvas, useFrame, useThree } from '@react-three/fiber';
+import { Icosahedron, Torus, Edges } from '@react-three/drei';
+import * as THREE from 'three';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,7 +17,6 @@ import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
-import { CrystalIcon } from '@/components/icons/CrystalIcon';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 const formSchema = z.object({
@@ -37,15 +39,109 @@ const passwordPlaceholders = [
     "The key to the universe... or just your password.",
 ];
 
+function Crystal({ position }: { position: [number, number, number] }) {
+  const crystalRef = useRef<THREE.Mesh>(null!);
+  const ringRef = useRef<THREE.Mesh>(null!);
+
+  useFrame(() => {
+    if (crystalRef.current) {
+      crystalRef.current.rotation.x += 0.005;
+      crystalRef.current.rotation.y += 0.007;
+    }
+  });
+
+  return (
+    <group position={position}>
+      <mesh ref={crystalRef}>
+        <Icosahedron args={[0.5, 1]}>
+          <meshStandardMaterial
+            color="hsl(var(--primary))"
+            emissive="hsl(var(--accent))"
+            emissiveIntensity={0.5}
+            metalness={0.9}
+            roughness={0.1}
+            transparent
+            opacity={0.8}
+          />
+        </Icosahedron>
+      </mesh>
+      <mesh ref={ringRef}>
+        <Torus args={[1, 0.02, 16, 100]}>
+            <meshStandardMaterial
+                color="hsl(var(--primary))"
+                emissive="hsl(var(--accent))"
+                emissiveIntensity={0.3}
+                metalness={0.9}
+                roughness={0.2}
+            />
+        </Torus>
+         <Edges scale={1} threshold={15} color="white" />
+      </mesh>
+    </group>
+  );
+}
+
+function Scene() {
+  const groupRef = useRef<THREE.Group>(null!);
+  const { mouse, viewport } = useThree();
+
+  const flowerOfLifePositions = useMemo(() => {
+    const positions: [number, number, number][] = [];
+    const r = 1;
+
+    positions.push([0, 0, 0]);
+
+    for (let i = 0; i < 6; i++) {
+        const angle = (Math.PI / 3) * i;
+        positions.push([Math.cos(angle) * r, Math.sin(angle) * r, 0]);
+    }
+    
+    for (let i = 0; i < 6; i++) {
+        const angle = (Math.PI / 3) * i;
+        positions.push([Math.cos(angle) * 2 * r, Math.sin(angle) * 2 * r, 0]);
+        
+        const angle2 = (Math.PI / 3) * (i + 0.5);
+        positions.push([Math.cos(angle2) * r * Math.sqrt(3), Math.sin(angle2) * r * Math.sqrt(3), 0]);
+    }
+
+    const uniquePositions = Array.from(new Set(positions.map(p => JSON.stringify(p)))).map(p => JSON.parse(p));
+    
+    // Fallback to ensure we have 19 points if floating point issues occur
+    while(uniquePositions.length < 19 && uniquePositions.length > 0) {
+        uniquePositions.push([Math.random() * 2 - 1, Math.random() * 2 - 1, 0]);
+    }
+
+    return uniquePositions;
+  }, []);
+
+  useFrame(() => {
+    if (groupRef.current) {
+      groupRef.current.rotation.y += 0.0005;
+      groupRef.current.rotation.x += 0.0003;
+      
+      const x = (mouse.x * viewport.width) / 100;
+      const y = (mouse.y * viewport.height) / 100;
+      groupRef.current.position.x = THREE.MathUtils.lerp(groupRef.current.position.x, x, 0.05);
+      groupRef.current.position.y = THREE.MathUtils.lerp(groupRef.current.position.y, y, 0.05);
+    }
+  });
+
+  return (
+    <group ref={groupRef}>
+      {flowerOfLifePositions.map((pos, i) => <Crystal key={i} position={pos} />)}
+    </group>
+  );
+}
+
 
 export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
 
-  const [emailPlaceholder, setEmailPlaceholder] = useState(emailPlaceholders[0]);
-  const [passwordPlaceholder, setPasswordPlaceholder] = useState(passwordPlaceholders[0]);
+  const [emailPlaceholder, setEmailPlaceholder] = React.useState(emailPlaceholders[0]);
+  const [passwordPlaceholder, setPasswordPlaceholder] = React.useState(passwordPlaceholders[0]);
 
-  useEffect(() => {
+  React.useEffect(() => {
       const emailInterval = setInterval(() => {
           setEmailPlaceholder(p => {
               const currentIndex = emailPlaceholders.indexOf(p);
@@ -107,18 +203,20 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex items-center justify-center min-h-screen p-4">
-      <Card className="w-full max-w-sm bg-black/30 backdrop-blur-lg border border-white/10 shadow-2xl text-white">
-        <CardHeader className="text-center space-y-4 pt-8">
-            <div className="flex justify-center">
-                <CrystalIcon className="w-16 h-16 text-primary crystal-pulse" />
-            </div>
-            <div>
-                <CardTitle className="text-3xl font-headline tracking-widest text-white">
-                    Identity Verification
-                </CardTitle>
-                <CardDescription className="text-white/70">The system requires a handshake.</CardDescription>
-            </div>
+    <div className="relative w-full h-screen">
+      <Canvas camera={{ position: [0, 0, 10], fov: 50 }}>
+        <ambientLight intensity={0.5} />
+        <pointLight position={[10, 10, 10]} intensity={1} color="hsl(var(--primary))"/>
+        <pointLight position={[-10, -10, -10]} intensity={1} color="hsl(var(--accent))" />
+        <Scene />
+      </Canvas>
+      <div className="absolute inset-0 flex items-center justify-center">
+        <Card className="w-full max-w-sm bg-black/30 backdrop-blur-lg border border-white/10 shadow-2xl text-white">
+        <CardHeader className="text-center">
+            <CardTitle className="text-3xl font-headline tracking-widest text-white">
+                Identity Verification
+            </CardTitle>
+            <CardDescription className="text-white/70">The system requires a handshake.</CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
@@ -188,6 +286,8 @@ export default function LoginPage() {
           </div>
         </CardContent>
       </Card>
+      </div>
     </div>
   );
 }
+
