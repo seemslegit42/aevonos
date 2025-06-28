@@ -51,15 +51,35 @@ export default function SubscribePage({ params }: { params: { plan: string } }) 
         return null; // Or a loading skeleton
     }
     
-    const handleSubscribe = () => {
+    const handleSubscribe = async () => {
         setIsLoading(true);
-        setTimeout(() => {
+        try {
+            const response = await fetch('/api/workspaces/me', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ planTier: plan.name })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Failed to upgrade plan.');
+            }
+
             toast({
-                title: 'Subscription Initiated!',
-                description: `Welcome to the ${plan.name} tier. Your canvas is being upgraded.`,
+                title: 'Subscription Upgraded!',
+                description: `Welcome to the ${plan.name} tier. Your canvas has been upgraded.`,
             });
             router.push('/');
-        }, 1500);
+            router.refresh(); // Important to refresh server components to reflect new plan status
+        } catch (error) {
+             toast({
+                variant: 'destructive',
+                title: 'Upgrade Failed',
+                description: (error as Error).message,
+            });
+        } finally {
+            setIsLoading(false);
+        }
     }
 
     return (

@@ -1,11 +1,13 @@
 
 import { NextResponse, NextRequest } from 'next/server';
+import { z } from 'zod';
 import { getSession } from '@/lib/auth';
 import prisma from '@/lib/prisma';
-import { z } from 'zod';
+import { PlanTier } from '@prisma/client';
 
 const WorkspaceUpdateSchema = z.object({
-  name: z.string().min(1, 'Workspace name cannot be empty.'),
+  name: z.string().min(1, 'Workspace name cannot be empty.').optional(),
+  planTier: z.nativeEnum(PlanTier).optional(),
 });
 
 
@@ -43,11 +45,14 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid input.', issues: validation.error.issues }, { status: 400 });
     }
     
+    // Ensure there's at least one field to update
+    if (Object.keys(validation.data).length === 0) {
+        return NextResponse.json({ error: 'No fields to update.' }, { status: 400 });
+    }
+    
     const updatedWorkspace = await prisma.workspace.update({
         where: { id: session.workspaceId },
-        data: {
-            name: validation.data.name,
-        }
+        data: validation.data
     });
 
     return NextResponse.json(updatedWorkspace);
