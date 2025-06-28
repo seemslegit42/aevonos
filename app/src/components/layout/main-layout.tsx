@@ -1,9 +1,11 @@
+
 'use client';
 
-import React, { useEffect, useRef } from 'react';
+import React from 'react';
+import { usePathname } from 'next/navigation';
+import dynamic from 'next/dynamic';
 import TopBar from '@/components/layout/top-bar';
 import { useAppStore } from '@/store/app-store';
-import dynamic from 'next/dynamic';
 import type { User } from '@prisma/client';
 
 const BeepAvatar = dynamic(() => import('@/components/beep-avatar'), { 
@@ -15,6 +17,14 @@ type UserProp = Pick<User, 'email' | 'firstName' | 'lastName'> | null;
 
 export function MainLayout({ children, user }: { children: React.ReactNode; user: UserProp }) {
   const { isLoading, handleCommandSubmit, beepOutput } = useAppStore();
+  const pathname = usePathname();
+
+  const publicPaths = ['/login', '/register', '/validator'];
+  const isPublicPage = publicPaths.some(p => pathname.startsWith(p));
+
+  if (isPublicPage) {
+    return <>{children}</>;
+  }
 
   return (
     <div className="flex flex-col h-screen p-4 gap-4">

@@ -2,7 +2,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster"
-import { AppLayout } from '@/components/layout/app-layout';
+import { MainLayout } from '@/components/layout/main-layout';
 import { getCurrentUser } from '@/lib/auth';
 import type { User } from '@prisma/client';
 
@@ -36,9 +36,9 @@ export default async function RootLayout({
           <div className="absolute inset-0 grain-overlay" />
         </div>
         
-        <AppLayout user={user}>
+        <MainLayout user={user}>
           {children}
-        </AppLayout>
+        </MainLayout>
 
         <Toaster />
       </body>
