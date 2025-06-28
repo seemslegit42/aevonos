@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useRef, useState, useEffect } from 'react';
@@ -26,6 +25,7 @@ import { useAppStore } from '@/store/app-store';
 import UserProfileDialog from '@/components/user-profile-dialog';
 import WorkspaceSettingsDialog from '@/components/workspace-settings-dialog';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Badge } from '@/components/ui/badge';
 
 type UserProp = Pick<User, 'id' | 'email' | 'firstName' | 'lastName'> | null;
 
@@ -72,6 +72,7 @@ export default function TopBar({ user, workspace }: TopBarProps) {
           <>
             <div className="h-6 w-px bg-border hidden md:block" />
             <span className="text-sm font-medium text-muted-foreground hidden md:inline">{workspace.name}</span>
+            <Badge variant="secondary" className="hidden lg:inline-flex capitalize">{workspace.planTier}</Badge>
           </>
         )}
       </div>
