@@ -102,7 +102,7 @@ export async function executeWorkflow(
     workflow: PrismaWorkflow, 
     payload: any, 
     context: ExecutionContext
-): Promise<any> {
+): Promise<{ finalPayload: any; executionLog: any[] }> {
     const definition = workflow.definition as unknown as Workflow['definition'];
     if (!definition || !definition.nodes || !definition.edges) {
         throw new Error('Invalid workflow definition: missing nodes or edges.');
@@ -120,31 +120,39 @@ export async function executeWorkflow(
     }
 
     let currentPayload = { ...payload };
-    const executionLog: {nodeId: string, type: string, result: any}[] = [];
+    const executionLog: {nodeId: string, type: string, label: string, result: any}[] = [];
     const MAX_STEPS = 10; // Prevent infinite loops
     let step = 0;
 
-    while (currentNode && step < MAX_STEPS) {
-        const result = await executeNode(currentNode, currentPayload, context);
-        executionLog.push({ nodeId: currentNode.id, type: currentNode.type, result });
+    try {
+        while (currentNode && step < MAX_STEPS) {
+            const result = await executeNode(currentNode, currentPayload, context);
+            executionLog.push({ nodeId: currentNode.id, type: currentNode.type, label: currentNode.data.label, result });
 
-        // The result of the previous node is merged into the payload for the next one.
-        currentPayload = { ...currentPayload, ...result };
-        
-        const nextEdge = edges.find(e => e.source === currentNode?.id);
-        if (nextEdge) {
-            currentNode = nodeMap.get(nextEdge.target);
-        } else {
-            currentNode = undefined; // End of the line
+            // The result of the previous node is merged into the payload for the next one.
+            currentPayload = { ...currentPayload, ...result };
+            
+            const nextEdge = edges.find(e => e.source === currentNode?.id);
+            if (nextEdge) {
+                currentNode = nodeMap.get(nextEdge.target);
+            } else {
+                currentNode = undefined; // End of the line
+            }
+            step++;
         }
-        step++;
+
+        if (step >= MAX_STEPS) {
+            console.warn(`Workflow execution stopped after ${MAX_STEPS} steps to prevent infinite loop.`);
+        }
+    } catch (e) {
+        // When an error occurs during execution, attach the log and re-throw
+        const error = e instanceof Error ? e : new Error("An unknown execution error occurred");
+        (error as any).executionLog = executionLog;
+        throw error;
     }
 
-    if (step >= MAX_STEPS) {
-        console.warn(`Workflow execution stopped after ${MAX_STEPS} steps to prevent infinite loop.`);
-    }
 
     console.log("Workflow execution complete. Final payload:", currentPayload);
-    // Return the payload from the final node.
-    return currentPayload;
+    // Return both the final payload and the execution log.
+    return { finalPayload: currentPayload, executionLog };
 }

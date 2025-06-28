@@ -8,9 +8,10 @@ import { Badge } from '@/components/ui/badge';
 import { RefreshCw, Play, CheckCircle, XCircle, Loader2 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { cn } from '@/lib/utils';
-import { WorkflowRunStatus, type WorkflowRun as FullWorkflowRun } from '@prisma/client';
+import { WorkflowRunStatus, type WorkflowRun as PrismaWorkflowRun } from '@prisma/client';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
 export interface WorkflowRunSummary {
   id: string;
@@ -20,6 +21,10 @@ export interface WorkflowRunSummary {
   workflow: {
     name: string;
   };
+}
+
+interface FullWorkflowRun extends PrismaWorkflowRun {
+    log?: any;
 }
 
 const statusConfig: Record<WorkflowRunStatus, { icon: React.ElementType, color: string, badgeVariant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
@@ -53,6 +58,34 @@ function RunDetails({ runId }: { runId: string }) {
         fetchDetails();
     }, [runId]);
 
+    const renderJsonPayload = (title: string, data: any) => (
+        <div>
+            <h4 className="font-semibold text-sm mb-1">{title}</h4>
+            <pre className="text-xs bg-muted/50 p-2 rounded-md max-h-40 overflow-auto">
+                {JSON.stringify(data, null, 2)}
+            </pre>
+        </div>
+    );
+    
+    const renderLogStep = (step: any, index: number) => {
+        return (
+            <AccordionItem value={`step-${index}`} key={index}>
+                <AccordionTrigger className="text-xs hover:no-underline">
+                    <div className="flex items-center gap-2">
+                        <div className="flex items-center justify-center w-6 h-6 rounded-full bg-primary/10 text-primary font-bold">{index + 1}</div>
+                        <span className="font-semibold">{step.label}</span>
+                        <span className="text-muted-foreground font-mono text-xs">({step.type})</span>
+                    </div>
+                </AccordionTrigger>
+                <AccordionContent>
+                    <pre className="text-xs bg-muted/50 p-2 rounded-md max-h-48 overflow-auto">
+                        {JSON.stringify(step.result, null, 2)}
+                    </pre>
+                </AccordionContent>
+            </AccordionItem>
+        );
+    };
+
     if (isLoading) {
         return (
             <div className="space-y-4">
@@ -75,18 +108,19 @@ function RunDetails({ runId }: { runId: string }) {
 
     if (!details) return null;
 
-    const renderJsonPayload = (title: string, data: any) => (
-        <div>
-            <h4 className="font-semibold text-sm mb-1">{title}</h4>
-            <pre className="text-xs bg-muted/50 p-2 rounded-md max-h-40 overflow-auto">
-                {JSON.stringify(data, null, 2)}
-            </pre>
-        </div>
-    );
-
     return (
         <div className="space-y-4">
             {details.triggerPayload && renderJsonPayload("Trigger Payload", details.triggerPayload)}
+
+            {details.log && details.log.length > 0 && (
+                <div>
+                    <h4 className="font-semibold text-sm mb-1">Execution Log</h4>
+                    <Accordion type="single" collapsible className="w-full">
+                       {details.log.map(renderLogStep)}
+                    </Accordion>
+                </div>
+            )}
+            
             {details.output && renderJsonPayload("Final Output", details.output)}
         </div>
     );
@@ -130,6 +164,11 @@ function RunItem({ run }: { run: WorkflowRunSummary }) {
             )}
         </Dialog>
     );
+}
+
+interface WorkflowRunHistoryProps {
+  activeWorkflowId: string | null;
+  triggerRefresh: number;
 }
 
 export default function WorkflowRunHistory({ activeWorkflowId, triggerRefresh }: WorkflowRunHistoryProps) {

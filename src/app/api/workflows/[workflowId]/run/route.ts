@@ -1,4 +1,6 @@
 
+'use server';
+
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { getSession } from '@/lib/auth';
@@ -47,8 +49,8 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
                 data: { status: WorkflowRunStatus.running }
             });
 
-            // Execute the actual workflow using the new executor
-            const result = await executeWorkflow(
+            // The executor will now return both the result and the log
+            const { finalPayload, executionLog } = await executeWorkflow(
                 workflow, 
                 trigger_payload, 
                 { workspaceId: session.workspaceId! }
@@ -59,18 +61,23 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
                 data: { 
                     status: WorkflowRunStatus.completed,
                     finishedAt: new Date(),
-                    output: result, // Store the actual result from the execution
+                    output: finalPayload, // Store the actual result from the execution
+                    log: executionLog, // Store the execution log
                 }
             });
         } catch (e) {
             console.error(`[Workflow Execution Error] for run ${workflowRun.id}:`, e);
             const errorMessage = e instanceof Error ? e.message : 'An unknown error occurred during execution.';
+            // Check if the error object contains our attached execution log
+            const logFromError = (e as any).executionLog || [];
+
              await prisma.workflowRun.update({
                 where: { id: workflowRun.id },
                 data: { 
                     status: WorkflowRunStatus.failed,
                     finishedAt: new Date(),
-                    output: { error: errorMessage }
+                    output: { error: errorMessage },
+                    log: logFromError, // Save the log up to the point of failure
                 }
             });
         }
