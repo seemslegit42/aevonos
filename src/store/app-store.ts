@@ -330,7 +330,7 @@ export const useAppStore = create<AppState>((set, get) => {
             launchApp('jroc-business-kit', { title: `Biz Kit: ${report.report.businessName}`, description: 'Your legit-as-frig business kit.', contentProps: report.report as JrocOutput });
             break;
         
-        case 'lahey':
+        case 'lahey-surveillance':
              launchApp('lahey-surveillance', { title: `Lahey Report`, description: 'Shit-storm report.', contentProps: report.report });
              break;
         
@@ -390,6 +390,13 @@ export const useAppStore = create<AppState>((set, get) => {
             launchApp('pam-poovey-onboarding', { contentProps: report.report as PamAudioOutput });
             break;
         
+        case 'rolodex':
+            upsertApp('rolodex', {
+                id: 'rolodex-main',
+                contentProps: report.report as RolodexAnalysisOutput
+            });
+            break;
+            
         case 'osint':
             infidelityProps.osintReport = report.report as OsintOutput;
             break;
