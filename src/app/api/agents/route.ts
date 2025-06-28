@@ -9,7 +9,7 @@ const AgentDeploymentRequestSchema = z.object({
   name: z.string(),
   type: z.string(),
   description: z.string().optional().nullable(),
-  configuration: z.record(z.any()).describe("JSON object containing agent-specific configuration."),
+  configuration: z.record(z.any()).describe("JSON object containing agent-specific configuration.").optional(),
 });
 
 export async function GET(request: NextRequest) {
