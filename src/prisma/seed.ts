@@ -10,8 +10,9 @@ async function main() {
   // Use a transaction to ensure the entire cleanup is atomic.
   // This prevents the database from being left in a partially-deleted,
   // inconsistent state if one of the steps fails.
+  // The deletion order is crucial to respect foreign key constraints.
   await prisma.$transaction([
-    // Start with models that have foreign keys to other models.
+    // Start with models that have foreign keys pointing to other models.
     prisma.workflowRun.deleteMany(),
     prisma.workflow.deleteMany(),
     prisma.securityAlert.deleteMany(),
@@ -19,7 +20,8 @@ async function main() {
     prisma.contact.deleteMany(),
     prisma.integration.deleteMany(),
     // Now delete Workspaces. This must happen before Users because
-    // a User cannot be deleted if they are the owner of a Workspace.
+    // a User cannot be deleted if they are the owner of a Workspace
+    // (due to the `onDelete: Restrict` rule in the schema).
     prisma.workspace.deleteMany(),
     // Finally, delete Users, as all dependencies have been removed.
     prisma.user.deleteMany(),

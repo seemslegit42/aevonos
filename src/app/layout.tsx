@@ -16,7 +16,16 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const user = await getCurrentUser();
+  let user: User | null = null;
+  try {
+    // This can throw an error if the database is unreachable.
+    // We wrap it in a try/catch to prevent the entire server from crashing.
+    user = await getCurrentUser();
+  } catch (error) {
+    console.error('[RootLayout] Failed to get current user, possibly a database connection issue:', error);
+    // Proceed with a null user, allowing the app to render in a logged-out state.
+  }
+
 
   return (
     <html lang="en" className="dark">
