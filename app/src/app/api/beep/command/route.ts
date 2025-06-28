@@ -32,13 +32,17 @@ export async function POST(request: NextRequest) {
         workspaceId: session.workspaceId,
     });
 
-    // Adapt the internal UserCommandOutput to the public API response schema from api-spec.md
+    // Adapt the internal UserCommandOutput to the public API response schema from api-spec.md.
+    // This provides a simpler, more ID-like summary for external consumers.
+    const actionSummary = {
+        launchedApps: beepResult.appsToLaunch.map(app => app.type),
+        generatedReports: beepResult.agentReports?.map(report => report.agent) ?? [],
+        suggestedCommandsCount: beepResult.suggestedCommands.length,
+    };
+    
     const apiResponse = {
       response: beepResult.responseText,
-      actionTriggered: {
-        appsToLaunch: beepResult.appsToLaunch,
-        agentReports: beepResult.agentReports,
-      },
+      actionTriggered: actionSummary,
     };
 
     return NextResponse.json(apiResponse, { status: 200 });
