@@ -1,13 +1,13 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { Loader2, Zap, Scale, FileWarning, Bomb, Brain } from 'lucide-react';
+import { Loader2, FileWarning, Bomb, Brain, FileUp } from 'lucide-react';
 import { useAppStore } from '@/store/app-store';
 import type { AuditorOutput, AuditedTransaction } from '@/ai/agents/auditor-generalissimo-schemas';
 import { useToast } from '@/hooks/use-toast';
@@ -15,6 +15,7 @@ import { Progress } from '../ui/progress';
 import { Badge } from '../ui/badge';
 import { cn } from '@/lib/utils';
 import { Separator } from '../ui/separator';
+import { Input } from '../ui/input';
 
 const BurnRateThermometer = ({ days }: { days: number }) => {
     const getStatus = (d: number) => {
@@ -103,12 +104,36 @@ export default function AuditorGeneralissimo(props: AuditorOutput | {}) {
     const [transactions, setTransactions] = useState('');
     const [report, setReport] = useState<AuditorOutput | null>(props && 'overallRoast' in props ? props : null);
     const { toast } = useToast();
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         if (props && 'overallRoast' in props) {
             setReport(props);
         }
     }, [props]);
+
+    const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const text = e.target?.result as string;
+                setTransactions(text);
+                toast({
+                    title: "File Loaded",
+                    description: `Contents of ${file.name} loaded for audit.`
+                });
+            };
+            reader.onerror = () => {
+                toast({
+                    variant: 'destructive',
+                    title: "File Error",
+                    description: "Could not read the selected file."
+                });
+            };
+            reader.readAsText(file);
+        }
+    };
 
     const handleRunAudit = () => {
         if (!transactions) {
@@ -121,20 +146,38 @@ export default function AuditorGeneralissimo(props: AuditorOutput | {}) {
     return (
         <div className="p-2 space-y-3 h-full flex flex-col font-typewriter bg-[hsl(var(--military-green))] text-[hsl(var(--military-green-foreground))] border border-military-green-foreground/20 rounded-lg">
              <Textarea 
-                placeholder="Paste transaction data here (e.g., date,description,amount)..."
+                placeholder="Paste transaction data here (e.g., date,description,amount) or upload a CSV/TXT log file..."
                 value={transactions}
                 onChange={(e) => setTransactions(e.target.value)}
                 disabled={isLoading}
                 rows={4}
                 className="bg-black/20 border-military-green-foreground/30 text-ledger-cream placeholder:text-ledger-cream/50 focus-visible:ring-ledger-cream"
             />
-             <Button 
-                onClick={handleRunAudit} 
-                disabled={isLoading || !transactions} 
-                className="w-full bg-ledger-cream text-military-green hover:bg-ledger-cream/80 font-bold"
-            >
-                {isLoading ? <Loader2 className="animate-spin" /> : 'Run Audit'}
-            </Button>
+            <Input 
+                type="file" 
+                ref={fileInputRef} 
+                onChange={handleFileChange} 
+                className="hidden" 
+                accept=".csv,.txt"
+            />
+             <div className="flex gap-2">
+                 <Button 
+                    variant="outline"
+                    onClick={() => fileInputRef.current?.click()} 
+                    disabled={isLoading} 
+                    className="w-full bg-ledger-cream/10 text-ledger-cream border-ledger-cream/30 hover:bg-ledger-cream/20"
+                >
+                    <FileUp className="mr-2" />
+                    Upload Log
+                </Button>
+                 <Button 
+                    onClick={handleRunAudit} 
+                    disabled={isLoading || !transactions} 
+                    className="w-full bg-ledger-cream text-military-green hover:bg-ledger-cream/80 font-bold"
+                >
+                    {isLoading ? <Loader2 className="animate-spin" /> : 'Run Audit'}
+                </Button>
+            </div>
             
             {report && (
                 <div className="flex-grow space-y-3 overflow-y-auto pr-1">
