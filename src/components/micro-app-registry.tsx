@@ -24,6 +24,8 @@ import { SterileishIcon } from './icons/SterileishIcon';
 import { BarbaraIcon } from './icons/BarbaraIcon';
 import { AuditorGeneralissimoIcon } from './icons/AuditorGeneralissimoIcon';
 import { BeepWingmanIcon } from './icons/BeepWingmanIcon';
+import { KendraIcon } from './icons/KendraIcon';
+import { StonksIcon } from './icons/StonksIcon';
 
 import { type MicroAppType } from '@/store/app-store';
 import ContactList from './micro-apps/contact-list';
@@ -46,6 +48,8 @@ import Sterileish from './micro-apps/sterileish';
 import Barbara from './micro-apps/barbara';
 import AuditorGeneralissimo from './micro-apps/auditor-generalissimo';
 import BeepWingman from './micro-apps/beep-wingman';
+import Kendra from './micro-apps/kendra';
+import StonksBot from './micro-apps/stonks-bot';
 
 type ComponentRegistry = {
     icon: React.ComponentType<any>;
@@ -144,6 +148,14 @@ export const microAppRegistry: Record<MicroAppType, ComponentRegistry> = {
   'beep-wingman': {
     icon: BeepWingmanIcon,
     content: BeepWingman,
+  },
+  'kendra': {
+    icon: KendraIcon,
+    content: Kendra,
+  },
+  'stonks-bot': {
+    icon: StonksIcon,
+    content: StonksBot,
   },
 };
 

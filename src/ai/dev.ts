@@ -31,3 +31,5 @@ import '@/ai/agents/osint.ts';
 import '@/ai/agents/dossier-agent.ts';
 import '@/ai/tools/osint-tools.ts';
 import '@/ai/tools/firecrawler-tools.ts';
+import '@/ai/agents/kendra.ts';
+import '@/ai/agents/stonks-bot.ts';

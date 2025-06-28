@@ -27,6 +27,8 @@ import type { PaperTrailScanOutput } from '@/ai/agents/paper-trail-schemas';
 import type { BarbaraOutput } from '@/ai/agents/barbara-schemas';
 import type { AuditorOutput } from '@/ai/agents/auditor-generalissimo-schemas';
 import type { WingmanOutput } from '@/ai/agents/wingman-schemas';
+import type { KendraOutput } from '@/ai/agents/kendra-schemas';
+import type { StonksBotOutput } from '@/ai/agents/stonks-bot-schemas';
 
 // Define the types of MicroApps available in the OS
 export type MicroAppType = 
@@ -53,7 +55,9 @@ export type MicroAppType =
   | 'sterileish'
   | 'barbara'
   | 'auditor-generalissimo'
-  | 'beep-wingman';
+  | 'beep-wingman'
+  | 'kendra'
+  | 'stonks-bot';
 
 // Define the shape of a MicroApp instance
 export interface MicroApp {
@@ -97,6 +101,8 @@ const defaultAppDetails: Record<MicroAppType, Omit<MicroApp, 'id' | 'position' |
   'barbara': { type: 'barbara', title: 'Agent Barbara™', description: 'The admin daemon you never knew you needed.' },
   'auditor-generalissimo': { type: 'auditor-generalissimo', title: 'The Auditor Generalissimo™', description: 'You are guilty until proven solvent.' },
   'beep-wingman': { type: 'beep-wingman', title: 'BEEP Wingman', description: "He's not your assistant. He's your closer." },
+  'kendra': { type: 'kendra', title: 'KENDRA.exe', description: 'This is branding with beef.' },
+  'stonks-bot': { type: 'stonks-bot', title: 'Stonks Bot 9000', description: 'Tendies incoming. Not financial advice.' },
 };
 
 const defaultAppSizes: Record<MicroAppType, { width: number; height: number }> = {
@@ -124,6 +130,8 @@ const defaultAppSizes: Record<MicroAppType, { width: number; height: number }> =
   'barbara': { width: 360, height: 500 },
   'auditor-generalissimo': { width: 360, height: 600 },
   'beep-wingman': { width: 360, height: 620 },
+  'kendra': { width: 360, height: 500 },
+  'stonks-bot': { width: 320, height: 380 },
 };
 
 export interface AppState {
@@ -334,6 +342,14 @@ export const useAppStore = create<AppState>((set, get) => {
 
         case 'wingman':
             launchApp('beep-wingman', { contentProps: report.report as WingmanOutput });
+            break;
+        
+        case 'kendra':
+            launchApp('kendra', { title: 'KENDRA.exe: Campaign Generated', description: 'Your unhinged marketing plan.', contentProps: report.report as KendraOutput });
+            break;
+        
+        case 'stonks':
+            launchApp('stonks-bot', { title: `Stonks: ${report.report.ticker}`, description: 'Your "financial" advice.', contentProps: report.report as StonksBotOutput });
             break;
       }
     }

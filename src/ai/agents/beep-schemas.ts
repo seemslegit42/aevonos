@@ -21,6 +21,8 @@ import { OsintOutputSchema } from './osint-schemas';
 import { InfidelityAnalysisOutputSchema } from './infidelity-analysis-schemas';
 import { DecoyOutputSchema } from './decoy-schemas';
 import { DossierOutputSchema } from './dossier-schemas';
+import { KendraOutputSchema } from './kendra-schemas';
+import { StonksBotOutputSchema } from './stonks-bot-schemas';
 
 
 // Schemas from the original BEEP agent, preserved for the public contract.
@@ -195,6 +197,14 @@ export const AgentReportSchema = z.discriminatedUnion('agent', [
   z.object({
     agent: z.literal('legal-dossier'),
     report: DossierOutputSchema.describe('The full report from the legal dossier generation agent.'),
+  }),
+  z.object({
+    agent: z.literal('kendra'),
+    report: KendraOutputSchema.describe('The full report from the KENDRA.exe agent.'),
+  }),
+  z.object({
+    agent: z.literal('stonks'),
+    report: StonksBotOutputSchema.describe('The full report from the Stonks Bot agent.'),
   }),
 ]);
 

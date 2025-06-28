@@ -65,6 +65,10 @@ import { deployDecoy } from '@/ai/agents/decoy';
 import { DecoyInputSchema } from './decoy-schemas';
 import { generateDossier } from '@/ai/agents/dossier-agent';
 import { DossierInputSchema } from './dossier-schemas';
+import { getKendraTake } from '@/ai/agents/kendra';
+import { KendraInputSchema } from './kendra-schemas';
+import { getStonksAdvice } from '@/ai/agents/stonks-bot';
+import { StonksBotInputSchema } from './stonks-bot-schemas';
 import {
     type UserCommandInput,
     UserCommandOutputSchema,
@@ -429,6 +433,31 @@ class DossierTool extends Tool {
   }
 }
 
+class KendraTool extends Tool {
+  name = 'getKendraTake';
+  description = "Gets an unhinged, but brilliant, marketing campaign strategy for a product idea from KENDRA.exe. Use this when a user has a product idea and wants marketing help.";
+  schema = KendraInputSchema;
+  
+  async _call(input: z.infer<typeof KendraInputSchema>) {
+    const result = await getKendraTake(input);
+    const report: z.infer<typeof AgentReportSchema> = { agent: 'kendra', report: result };
+    return JSON.stringify(report);
+  }
+}
+
+class StonksBotTool extends Tool {
+  name = 'getStonksAdvice';
+  description = 'Gets unhinged, but entertaining, stock advice for a given ticker symbol. Use this when the user asks about stocks, stonks, or the market.';
+  schema = StonksBotInputSchema;
+  
+  async _call(input: z.infer<typeof StonksBotInputSchema>) {
+    const result = await getStonksAdvice(input);
+    const report: z.infer<typeof AgentReportSchema> = { agent: 'stonks', report: result };
+    return JSON.stringify(report);
+  }
+}
+
+
 // LangGraph State
 interface AgentState {
   messages: BaseMessage[];
@@ -515,7 +544,7 @@ export async function processUserCommand(input: UserCommandInput): Promise<UserC
     new VandelayTool(), new JrocTool(), new LaheyTool(), new ForemanatorTool(),
     new SterileishTool(), new PaperTrailTool(), new BarbaraTool(), new AuditorTool(),
     new WingmanTool(), new OsintTool(), new InfidelityAnalysisTool(),
-    new DecoyTool(), new DossierTool(),
+    new DecoyTool(), new DossierTool(), new KendraTool(), new StonksBotTool(),
   ];
 
   // Re-bind the model with the schemas from the dynamically created tools for this request.
