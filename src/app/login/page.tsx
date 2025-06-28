@@ -175,7 +175,7 @@ export default function LoginPage() {
                 )}
               />
               <Button type="submit" className="w-full bg-primary/80 backdrop-blur-sm border border-primary text-white hover:bg-primary" disabled={isSubmitting}>
-                {isSubmitting ? <Loader2 className="animate-spin" /> : 'Enter Canvas'}
+                {isSubmitting ? <Loader2 className="animate-spin" /> : 'Authenticate & Enter'}
               </Button>
             </form>
           </Form>
