@@ -33,7 +33,7 @@ import { AuditorOutputSchema } from './auditor-generalissimo-schemas';
 const LaunchableAppTypeSchema = z.enum([
   'file-explorer',
   'terminal',
-  'echo-control',
+  'echo-recall',
   'pam-poovey-onboarding',
   'infidelity-radar',
   'vin-diesel',
@@ -57,6 +57,7 @@ const LaunchableAppTypeSchema = z.enum([
   'kendra',
   'stonks-bot',
   'auditor-generalissimo',
+  'contact-list',
 ]);
 
 export const AppToLaunchSchema = z.object({
