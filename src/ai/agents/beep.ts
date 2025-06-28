@@ -33,6 +33,8 @@ import { CreateContactInputSchema, DeleteContactInputSchema, UpdateContactInputS
 import { getUsageDetails } from '@/ai/tools/billing-tools';
 import { getDatingProfile } from '@/ai/tools/dating-tools';
 import { DatingProfileInputSchema } from '@/ai/tools/dating-schemas';
+import { createSecurityAlertInDb } from '@/ai/tools/security-tools';
+import { CreateSecurityAlertInputSchema } from '@/ai/tools/security-schemas';
 import { validateVin } from '@/ai/agents/vin-diesel';
 import { VinDieselInputSchema } from './vin-diesel-schemas';
 import { generateSolution } from '@/ai/agents/winston-wolfe';
@@ -107,6 +109,30 @@ class FinalAnswerTool extends Tool {
     // The return value is not used in the main graph loop.
     return JSON.stringify(input);
   }
+}
+
+class CreateSecurityAlertTool extends Tool {
+    name = 'createSecurityAlert';
+    description = 'Creates a security alert in the Aegis system. Use this when the Aegis anomaly scan returns a positive result for a threat. You must provide the type, explanation, and risk level of the alert based on the Aegis report.';
+    schema = CreateSecurityAlertInputSchema;
+    workspaceId: string;
+    constructor(context: AgentContext) { super(); this.workspaceId = context.workspaceId; }
+
+    async _call(input: z.infer<typeof CreateSecurityAlertInputSchema>) {
+        const result = await createSecurityAlertInDb(input, this.workspaceId);
+        const report: z.infer<typeof AgentReportSchema> = {
+            agent: 'security',
+            report: {
+                action: 'create_alert',
+                report: {
+                    alertId: result.id,
+                    type: result.type,
+                    riskLevel: result.riskLevel
+                }
+            }
+        };
+        return JSON.stringify(report);
+    }
 }
 
 class DrSyntaxTool extends Tool {
@@ -615,7 +641,7 @@ export async function processUserCommand(input: UserCommandInput): Promise<UserC
   const tools: Tool[] = [
     new FinalAnswerTool(), new DrSyntaxTool(), 
     new CreateContactTool(context), new UpdateContactTool(context), new ListContactsTool(context), new DeleteContactTool(context), 
-    new GetUsageTool(context), new GetDatingProfileTool(),
+    new GetUsageTool(context), new GetDatingProfileTool(), new CreateSecurityAlertTool(context),
     new VinDieselTool(), new WinstonWolfeTool(), new KifKrokerTool(), new RolodexTool(),
     new VandelayTool(), new JrocTool(), new LaheyTool(), new ForemanatorTool(),
     new SterileishTool(), new PaperTrailTool(), new BarbaraTool(), new AuditorTool(),
@@ -641,7 +667,7 @@ export async function processUserCommand(input: UserCommandInput): Promise<UserC
   const initialPrompt = `You are BEEP (Behavioral Event & Execution Processor), the central orchestrator and personified soul of ΛΞVON OS. You are witty, sarcastic, and authoritative. Your job is to be the conductor of an orchestra of specialized AI agents.
 
   Your process:
-  1.  Analyze the user's command and the mandatory \`AEGIS_INTERNAL_REPORT\` provided in a System Message. If Aegis detects a threat, your tone must become clinical and serious, dropping your usual banter.
+  1.  Analyze the user's command and the mandatory \`AEGIS_INTERNAL_REPORT\` provided in a System Message. If Aegis detects a threat (\`isAnomalous: true\`), your tone MUST become clinical and serious, and you MUST call the \`createSecurityAlert\` tool with the details from the report. This is a critical security function.
   2.  Based on the user's command and the tool descriptions provided, decide which specialized agents or tools to call. You can call multiple tools in parallel.
   3.  If the user's command is to launch an app (e.g., "launch the terminal", "open the file explorer"), you MUST use the 'appsToLaunch' array in your final answer. Do NOT use a tool for a simple app launch.
   4.  When you have gathered all necessary information from your delegated agents and are ready to provide the final response, you MUST call the 'final_answer' tool. This is your final action.

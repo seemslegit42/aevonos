@@ -37,7 +37,11 @@ You will receive a description of user activity. Your task is to analyze it agai
 
 Activity Description: {{{activityDescription}}}
 
-Based on this, determine if the activity is anomalous and provide a clear, concise, human-readable explanation. Set the isAnomalous output field appropriately. If it is anomalous, explain *why* based on the threat vectors above. If it is not, provide brief reassurance.
+Based on this, you must complete the full analysis:
+1.  **isAnomalous**: Determine if the activity is anomalous.
+2.  **anomalyType**: If anomalous, provide a short, categorical name for the threat (e.g., "Suspicious Command", "Data Access Violation", "Potential Phishing Attempt"). If not anomalous, this can be null.
+3.  **riskLevel**: If anomalous, assign a risk level: 'low', 'medium', 'high', or 'critical'. If not anomalous, this MUST be 'none'.
+4.  **anomalyExplanation**: Provide a clear, concise, human-readable explanation. If anomalous, explain *why*. If not, provide brief reassurance.
 `,
 });
 

@@ -1,6 +1,7 @@
 
 
 import { z } from 'zod';
+import { SecurityRiskLevel } from '@prisma/client';
 import { DrSyntaxOutputSchema } from './dr-syntax-schemas';
 import { AegisAnomalyScanOutputSchema } from './aegis-schemas';
 import { ContactSchema, DeleteContactOutputSchema } from '@/ai/tools/crm-schemas';
@@ -108,6 +109,15 @@ const DatingAgentReportSchema = z.object({
     report: DatingProfileSchema.describe('The fetched dating profile details.'),
 });
 
+const SecurityAgentReportSchema = z.object({
+    action: z.literal('create_alert'),
+    report: z.object({
+        alertId: z.string(),
+        type: z.string(),
+        riskLevel: z.nativeEnum(SecurityRiskLevel),
+    }).describe('Details of the created security alert.'),
+});
+
 
 export const AgentReportSchema = z.discriminatedUnion('agent', [
   z.object({
@@ -133,6 +143,10 @@ export const AgentReportSchema = z.discriminatedUnion('agent', [
   z.object({
     agent: z.literal('dating'),
     report: DatingAgentReportSchema,
+  }),
+  z.object({
+    agent: z.literal('security'),
+    report: SecurityAgentReportSchema,
   }),
   z.object({
     agent: z.literal('vin-diesel'),
