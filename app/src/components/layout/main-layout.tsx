@@ -15,15 +15,6 @@ type UserProp = Pick<User, 'email' | 'firstName' | 'lastName'> | null;
 
 export function MainLayout({ children, user }: { children: React.ReactNode; user: UserProp }) {
   const { isLoading, handleCommandSubmit, beepOutput } = useAppStore();
-  const recalledRef = useRef(false);
-
-  useEffect(() => {
-    // Initial action on load to recall the last session.
-    if (!recalledRef.current) {
-        handleCommandSubmit('recall last session');
-        recalledRef.current = true;
-    }
-  }, [handleCommandSubmit]);
 
   return (
     <div className="flex flex-col h-screen p-4 gap-4">
