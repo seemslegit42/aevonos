@@ -17,6 +17,11 @@ import { PaperTrailScanOutputSchema } from './paper-trail-schemas';
 import { BarbaraOutputSchema } from './barbara-schemas';
 import { AuditorOutputSchema } from './auditor-generalissimo-schemas';
 import { WingmanOutputSchema } from './wingman-schemas';
+import { OsintOutputSchema } from './osint-schemas';
+import { InfidelityAnalysisOutputSchema } from './infidelity-analysis-schemas';
+import { DecoyOutputSchema } from './decoy-schemas';
+import { DossierOutputSchema } from './dossier-schemas';
+
 
 // Schemas from the original BEEP agent, preserved for the public contract.
 const LaunchableAppTypeSchema = z.enum([
@@ -170,6 +175,26 @@ export const AgentReportSchema = z.discriminatedUnion('agent', [
     report: WingmanOutputSchema.describe(
         'The full report from the BEEP Wingman agent.'
     ),
+  }),
+  z.object({
+    agent: z.literal('osint'),
+    report: OsintOutputSchema.describe('The full report from the OSINT agent.'),
+  }),
+  z.object({
+    agent: z.literal('infidelity-analysis'),
+    report: InfidelityAnalysisOutputSchema.describe('The full report from the behavioral analysis agent.'),
+  }),
+  z.object({
+    agent: z.literal('decoy'),
+    report: DecoyOutputSchema.describe('The full report from the AI decoy agent.'),
+  }),
+  z.object({
+    agent: z.literal('dossier'),
+    report: DossierOutputSchema.describe('The full report from the dossier generation agent.'),
+  }),
+  z.object({
+    agent: z.literal('legal-dossier'),
+    report: DossierOutputSchema.describe('The full report from the legal dossier generation agent.'),
   }),
 ]);
 

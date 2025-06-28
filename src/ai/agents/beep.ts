@@ -57,6 +57,14 @@ import { auditFinances } from '@/ai/agents/auditor-generalissimo';
 import { AuditorInputSchema } from './auditor-generalissimo-schemas';
 import { generateWingmanMessage } from '@/ai/agents/wingman';
 import { WingmanInputSchema } from './wingman-schemas';
+import { performOsintScan } from '@/ai/agents/osint';
+import { OsintInputSchema } from './osint-schemas';
+import { performInfidelityAnalysis } from '@/ai/agents/infidelity-analysis';
+import { InfidelityAnalysisInputSchema } from './infidelity-analysis-schemas';
+import { deployDecoy } from '@/ai/agents/decoy';
+import { DecoyInputSchema } from './decoy-schemas';
+import { generateDossier } from '@/ai/agents/dossier-agent';
+import { DossierInputSchema } from './dossier-schemas';
 import {
     type UserCommandInput,
     UserCommandOutputSchema,
@@ -370,6 +378,57 @@ class WingmanTool extends Tool {
   }
 }
 
+class OsintTool extends Tool {
+  name = 'performOsintScan';
+  description = 'Performs an OSINT (Open-Source Intelligence) scan on a target person. Requires a name and optional context like email or social media URLs.';
+  schema = OsintInputSchema;
+
+  async _call(input: z.infer<typeof OsintInputSchema>) {
+      const result = await performOsintScan(input);
+      const report: z.infer<typeof AgentReportSchema> = { agent: 'osint', report: result };
+      return JSON.stringify(report);
+  }
+}
+
+class InfidelityAnalysisTool extends Tool {
+  name = 'performInfidelityAnalysis';
+  description = 'Analyzes a situation description for behavioral red flags and calculates an infidelity risk score.';
+  schema = InfidelityAnalysisInputSchema;
+
+  async _call(input: z.infer<typeof InfidelityAnalysisInputSchema>) {
+      const result = await performInfidelityAnalysis(input);
+      const report: z.infer<typeof AgentReportSchema> = { agent: 'infidelity-analysis', report: result };
+      return JSON.stringify(report);
+  }
+}
+
+class DecoyTool extends Tool {
+  name = 'deployDecoy';
+  description = 'Deploys an AI decoy with a specific persona to engage a target and test loyalty.';
+  schema = DecoyInputSchema;
+
+  async _call(input: z.infer<typeof DecoyInputSchema>) {
+      const result = await deployDecoy(input);
+      const report: z.infer<typeof AgentReportSchema> = { agent: 'decoy', report: result };
+      return JSON.stringify(report);
+  }
+}
+
+class DossierTool extends Tool {
+  name = 'generateDossier';
+  description = 'Compiles data from OSINT, behavioral analysis, and decoy reports into a formal dossier. Specify standard or legal mode.';
+  schema = DossierInputSchema;
+
+  async _call(input: z.infer<typeof DossierInputSchema>) {
+      const result = await generateDossier(input);
+      const report: z.infer<typeof AgentReportSchema> = { 
+          agent: input.mode === 'legal' ? 'legal-dossier' : 'dossier',
+          report: result 
+        };
+      return JSON.stringify(report);
+  }
+}
+
 // LangGraph State
 interface AgentState {
   messages: BaseMessage[];
@@ -455,7 +514,8 @@ export async function processUserCommand(input: UserCommandInput): Promise<UserC
     new VinDieselTool(), new WinstonWolfeTool(), new KifKrokerTool(),
     new VandelayTool(), new JrocTool(), new LaheyTool(), new ForemanatorTool(),
     new SterileishTool(), new PaperTrailTool(), new BarbaraTool(), new AuditorTool(),
-    new WingmanTool(),
+    new WingmanTool(), new OsintTool(), new InfidelityAnalysisTool(),
+    new DecoyTool(), new DossierTool(),
   ];
 
   // Re-bind the model with the schemas from the dynamically created tools for this request.

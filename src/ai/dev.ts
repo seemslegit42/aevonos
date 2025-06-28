@@ -27,3 +27,7 @@ import '@/ai/agents/sterileish.ts';
 import '@/ai/agents/barbara.ts';
 import '@/ai/agents/auditor-generalissimo.ts';
 import '@/ai/agents/wingman.ts';
+import '@/ai/agents/osint.ts';
+import '@/ai/agents/dossier-agent.ts';
+import '@/ai/tools/osint-tools.ts';
+import '@/ai/tools/firecrawler-tools.ts';
