@@ -41,7 +41,7 @@ import { analyzeComms } from '@/ai/agents/kif-kroker';
 import { KifKrokerAnalysisInputSchema } from './kif-kroker-schemas';
 import { createVandelayAlibi } from '@/ai/agents/vandelay';
 import { VandelayAlibiInputSchema } from './vandelay-schemas';
-import { generateBusinessKit } from '@/ai/agents/jroc';
+import { jrocBusinessKit } from '@/ai/agents/jroc';
 import { JrocInputSchema } from './jroc-schemas';
 import { analyzeLaheyLog } from '@/ai/agents/lahey';
 import { LaheyAnalysisInputSchema } from './lahey-schemas';
@@ -71,6 +71,8 @@ import { getStonksAdvice } from '@/ai/agents/stonks-bot';
 import { StonksBotInputSchema } from './stonks-bot-schemas';
 import { invokeOracle } from '@/ai/agents/orphean-oracle-flow';
 import { OrpheanOracleInputSchema } from './orphean-oracle-schemas';
+import { analyzeInvite } from '@/ai/agents/lumbergh';
+import { LumberghAnalysisInputSchema } from './lumbergh-schemas';
 import {
     type UserCommandInput,
     UserCommandOutputSchema,
@@ -291,7 +293,7 @@ class JrocTool extends Tool {
   schema = JrocInputSchema;
   
   async _call(input: z.infer<typeof JrocInputSchema>) {
-    const result = await generateBusinessKit(input);
+    const result = await jrocBusinessKit(input);
     const report: z.infer<typeof AgentReportSchema> = { agent: 'jroc', report: result };
     return JSON.stringify(report);
   }
@@ -471,6 +473,18 @@ class OrpheanOracleTool extends Tool {
   }
 }
 
+class LumberghTool extends Tool {
+  name = 'analyzeMeetingInvite';
+  description = 'Analyzes a meeting invite for pointlessness and generates passive-aggressive decline memos. Use this when a user asks to "check a meeting invite" or "get me out of this meeting".';
+  schema = LumberghAnalysisInputSchema;
+  
+  async _call(input: z.infer<typeof LumberghAnalysisInputSchema>) {
+    const result = await analyzeInvite(input);
+    const report: z.infer<typeof AgentReportSchema> = { agent: 'lumbergh', report: result };
+    return JSON.stringify(report);
+  }
+}
+
 
 // LangGraph State
 interface AgentState {
@@ -559,7 +573,7 @@ export async function processUserCommand(input: UserCommandInput): Promise<UserC
     new SterileishTool(), new PaperTrailTool(), new BarbaraTool(), new AuditorTool(),
     new WingmanTool(), new OsintTool(), new InfidelityAnalysisTool(),
     new DecoyTool(), new DossierTool(), new KendraTool(), new StonksBotTool(),
-    new OrpheanOracleTool(),
+    new OrpheanOracleTool(), new LumberghTool(),
   ];
 
   // Re-bind the model with the schemas from the dynamically created tools for this request.

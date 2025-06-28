@@ -363,6 +363,10 @@ export const useAppStore = create<AppState>((set, get) => {
                 contentProps: report.report as OrpheanOracleOutput
             });
             break;
+        
+        case 'lumbergh':
+            launchApp('project-lumbergh', { contentProps: report.report as LumberghAnalysisOutput });
+            break;
       }
     }
   };
