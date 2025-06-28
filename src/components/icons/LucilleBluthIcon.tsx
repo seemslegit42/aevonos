@@ -1,3 +1,4 @@
+
 import React from 'react';
 
 export const LucilleBluthIcon = (props: React.SVGProps<SVGSVGElement>) => (

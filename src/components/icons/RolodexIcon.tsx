@@ -1,3 +1,4 @@
+
 import React from 'react';
 
 export const RolodexIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -9,8 +10,8 @@ export const RolodexIcon = (props: React.SVGProps<SVGSVGElement>) => (
       </linearGradient>
     </defs>
     {/* Abstracted Rolodex shape */}
-    <path d="M20 30 C20 10, 80 10, 80 30 L80 70 C80 90, 20 90, 20 70 Z" fill="url(#rolodex-gradient)" opacity="0.3" />
-    <path d="M20 30 C20 10, 80 10, 80 30 L80 70 C80 90, 20 90, 20 70 Z" stroke="url(#rolodex-gradient)" strokeWidth="3" fill="none" />
+    <path d="M20 30 C 20 10, 80 10, 80 30 L80 70 C 80 90, 20 90, 20 70 Z" fill="url(#rolodex-gradient)" opacity="0.3" />
+    <path d="M20 30 C 20 10, 80 10, 80 30 L80 70 C 80 90, 20 90, 20 70 Z" stroke="url(#rolodex-gradient)" strokeWidth="3" fill="none" />
     
     {/* Handle/knob facets */}
     <circle cx="15" cy="50" r="5" fill="hsl(var(--foreground))" opacity="0.6" />

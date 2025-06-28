@@ -1,3 +1,4 @@
+
 import React from 'react';
 
 export const WinstonWolfeIcon = (props: React.SVGProps<SVGSVGElement>) => (

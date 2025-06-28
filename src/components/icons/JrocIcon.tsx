@@ -1,3 +1,4 @@
+
 import React from 'react';
 
 export const JrocIcon = (props: React.SVGProps<SVGSVGElement>) => (

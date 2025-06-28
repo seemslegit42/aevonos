@@ -10,7 +10,7 @@ import type { MicroAppManifest } from '@/config/micro-apps';
 
 export function MicroAppListingCard({ app }: { app: MicroAppManifest }) {
   return (
-    <Card className="bg-foreground/15 backdrop-blur-[20px] border border-foreground/30 shadow-[0_8px_32px_0_rgba(28,25,52,0.1)] hover:border-primary transition-all duration-300 flex flex-col group overflow-hidden">
+    <Card className="bg-foreground/10 backdrop-blur-xl border border-foreground/30 shadow-[0_8px_32px_0_rgba(28,25,52,0.1)] hover:border-primary transition-all duration-300 flex flex-col group overflow-hidden">
       <CardHeader className="p-0">
         <div className="relative aspect-video w-full overflow-hidden">
             <Image 

@@ -26,13 +26,15 @@ import { SessionRecallOutputSchema } from '@/ai/agents/echo-schemas';
 import { DossierOutputSchema } from './dossier-schemas';
 import { KendraOutputSchema } from './kendra-schemas';
 import { StonksBotOutputSchema } from './stonks-bot-schemas';
+import { AuditorOutputSchema } from './auditor-generalissimo-schemas';
+import { OrpheanOracleOutputSchema } from './orphean-oracle-schemas';
 
 
 // Schemas from the original BEEP agent, preserved for the public contract.
 const LaunchableAppTypeSchema = z.enum([
   'file-explorer',
   'terminal',
-  'echo-control',
+  'echo-recall',
   'pam-poovey-onboarding',
   'infidelity-radar',
   'vin-diesel',
@@ -43,7 +45,7 @@ const LaunchableAppTypeSchema = z.enum([
   'kif-kroker',
   'vandelay',
   'paper-trail',
-  'oracle',
+  'orphean-oracle',
   'jroc-business-kit',
   'lahey-surveillance',
   'the-foremanator',
@@ -55,6 +57,8 @@ const LaunchableAppTypeSchema = z.enum([
   'usage-monitor',
   'kendra',
   'stonks-bot',
+  'auditor-generalissimo',
+  'contact-list',
 ]);
 
 export const AppToLaunchSchema = z.object({
@@ -211,6 +215,14 @@ export const AgentReportSchema = z.discriminatedUnion('agent', [
   z.object({
     agent: z.literal('stonks'),
     report: StonksBotOutputSchema.describe('The full report from the Stonks Bot agent.'),
+  }),
+  z.object({
+    agent: z.literal('auditor-generalissimo'),
+    report: AuditorOutputSchema.describe('The full audit report from The Auditor Generalissimo™ agent.'),
+  }),
+  z.object({
+    agent: z.literal('orphean-oracle'),
+    report: OrpheanOracleOutputSchema.describe('The full data visualization and narrative from The Orphean Oracle.'),
   }),
 ]);
 

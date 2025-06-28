@@ -12,7 +12,7 @@ import { logout } from '@/app/auth/actions';
 import type { User } from '@prisma/client';
 import { useAppStore } from '@/store/app-store';
 
-type UserProp = Pick<User, 'id' | 'email' | 'firstName' | 'lastName'> | null;
+type UserProp = Pick<User, 'email' | 'firstName' | 'lastName'> | null;
 
 interface TopBarProps {
   user: UserProp;
@@ -44,7 +44,7 @@ export default function TopBar({ user }: TopBarProps) {
     formRef.current?.reset();
   };
 
-  const placeholderText = isMounted ? (isMobile ? "BEEP Command..." : "BEEP: Tell me what you want to achieve...") : "BEEP: Tell me what you want to achieve...";
+  const placeholderText = isMobile ? "BEEP Command..." : "BEEP: Tell me what you want to achieve...";
 
   return (
     <header className="flex items-center justify-between w-full px-2 sm:px-4 py-2 bg-foreground/10 backdrop-blur-xl rounded-lg border border-foreground/30 shadow-[0_8px_32px_0_rgba(28,25,52,0.1)] gap-2 sm:gap-4">
@@ -58,7 +58,7 @@ export default function TopBar({ user }: TopBarProps) {
           <Input
             name="command"
             type="text"
-            placeholder={placeholderText}
+            placeholder={isMounted ? placeholderText : "BEEP: Tell me what you want to achieve..."}
             className="w-full bg-input/10 border border-foreground/20 focus-visible:ring-1 focus-visible:ring-primary focus-visible:ring-offset-0 pl-10 h-10"
             disabled={isLoading}
           />

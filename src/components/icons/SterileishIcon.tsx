@@ -1,3 +1,4 @@
+
 import React from 'react';
 
 export const SterileishIcon = (props: React.SVGProps<SVGSVGElement>) => (

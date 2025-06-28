@@ -1,3 +1,4 @@
+
 import React from 'react';
 import Link from 'next/link';
 import { MicroAppListingCard } from '@/components/armory/micro-app-listing-card';
@@ -26,7 +27,7 @@ export default async function ArmoryPage() {
       <main className="flex-grow overflow-y-auto p-4">
         <section id="featured-bundle" className="mb-12">
             <h2 className="text-2xl font-headline font-semibold text-primary mb-4">Featured Drop</h2>
-            <Card className="bg-gradient-to-br from-primary/20 to-accent/20 border-primary/50">
+            <Card className="bg-foreground/10 backdrop-blur-xl border-primary/50">
                 <CardHeader>
                     <CardTitle className="text-2xl font-headline text-foreground">🔻 The Disgruntled Employee Pack</CardTitle>
                     <CardDescription className="text-foreground/80">The essential toolkit for surviving corporate life. Free forever for solo founders and burned-out teams.</CardDescription>

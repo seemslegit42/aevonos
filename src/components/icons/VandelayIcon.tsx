@@ -1,3 +1,4 @@
+
 import React from 'react';
 
 export const VandelayIcon = (props: React.SVGProps<SVGSVGElement>) => (

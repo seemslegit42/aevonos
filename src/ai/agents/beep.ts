@@ -75,6 +75,10 @@ import { getKendraTake } from './kendra';
 import { KendraInputSchema } from './kendra-schemas';
 import { getStonksAdvice } from '@/ai/agents/stonks-bot';
 import { StonksBotInputSchema } from '@/ai/agents/stonks-bot-schemas';
+import { auditFinances } from './auditor-generalissimo';
+import { AuditorInputSchema } from './auditor-generalissimo-schemas';
+import { invokeOracle } from './orphean-oracle-flow';
+import { OrpheanOracleInputSchema } from './orphean-oracle-schemas';
 
 
 import {
@@ -521,6 +525,36 @@ class StonksBotTool extends Tool {
   }
 }
 
+class AuditorGeneralissimoTool extends Tool {
+  name = 'auditFinances';
+  description = 'Audits a list of financial transactions with oppressive precision. Use this when the user asks to "audit my books", "review my expenses", etc.';
+  schema = AuditorInputSchema;
+  
+  async _call(input: z.infer<typeof AuditorInputSchema>) {
+    const result = await auditFinances(input);
+    const report: z.infer<typeof AgentReportSchema> = {
+        agent: 'auditor-generalissimo',
+        report: result,
+    };
+    return JSON.stringify(report);
+  }
+}
+
+class OrpheanOracleTool extends Tool {
+    name = 'invokeOrpheanOracle';
+    description = 'Use this when the user asks a deep, analytical question about their business data that requires a visual, metaphorical answer. Phrases like "show me my sales data", "analyze what drove Q3 growth", or "what is the story of my customer churn?".';
+    schema = OrpheanOracleInputSchema;
+
+    async _call(input: z.infer<typeof OrpheanOracleInputSchema>) {
+        const result = await invokeOracle(input);
+        const report: z.infer<typeof AgentReportSchema> = {
+            agent: 'orphean-oracle',
+            report: result,
+        };
+        return JSON.stringify(report);
+    }
+}
+
 // LangGraph State
 interface AgentState {
   messages: BaseMessage[];
@@ -610,6 +644,7 @@ export async function processUserCommand(input: UserCommandInput): Promise<UserC
     new LumberghTool(), new LucilleBluthTool(), new RolodexTool(),
     new PamPooveyTool(), new InfidelityAnalysisTool(), new DecoyTool(),
     new EchoTool(), new DossierTool(), new KendraTool(), new StonksBotTool(),
+    new AuditorGeneralissimoTool(), new OrpheanOracleTool(),
   ];
 
   // Re-bind the model with the schemas from the dynamically created tools for this request.

@@ -7,18 +7,16 @@ import dynamic from 'next/dynamic';
 import TopBar from '@/components/layout/top-bar';
 import type { User } from '@prisma/client';
 import { Skeleton } from '../ui/skeleton';
-import { useAppStore } from '@/store/app-store';
 
 const BeepAvatar = dynamic(() => import('@/components/beep-avatar'), { 
   ssr: false,
 });
 
-type UserProp = Pick<User, 'id' | 'email' | 'firstName' | 'lastName'> | null;
+type UserProp = Pick<User, 'email' | 'firstName' | 'lastName'> | null;
 
 export function MainLayout({ children, user }: { children: React.ReactNode; user: UserProp }) {
   const pathname = usePathname();
   const [isMounted, setIsMounted] = useState(false);
-  const { isLoading, beepOutput } = useAppStore();
 
   useEffect(() => {
     setIsMounted(true);
@@ -49,7 +47,7 @@ export function MainLayout({ children, user }: { children: React.ReactNode; user
       <main className="flex-grow flex flex-col min-h-0 overflow-y-auto">
         {renderContent()}
       </main>
-      <BeepAvatar isLoading={isLoading} beepOutput={beepOutput} />
+      <BeepAvatar />
     </div>
   );
 }

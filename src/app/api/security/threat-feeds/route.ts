@@ -11,14 +11,8 @@ const ThreatFeedsSchema = z.object({
 // Corresponds to operationId `getThreatFeeds`
 export async function GET(request: NextRequest) {
   const session = await getSession(request);
-  // This is a public-facing demo, so we'll allow access but use a default workspace.
-  // In a real app with enforced login, you'd return 401 if !session?.workspaceId.
   if (!session?.workspaceId) {
-    const firstWorkspace = await prisma.workspace.findFirst();
-    if (!firstWorkspace) {
-      return NextResponse.json({ error: 'No workspaces found.' }, { status: 404 });
-    }
-    session.workspaceId = firstWorkspace.id;
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   try {
@@ -42,12 +36,7 @@ export async function GET(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   const session = await getSession(request);
   if (!session?.workspaceId) {
-     // This is a public-facing demo, so we'll allow access but use a default workspace.
-    const firstWorkspace = await prisma.workspace.findFirst();
-    if (!firstWorkspace) {
-      return NextResponse.json({ error: 'No workspaces found.' }, { status: 404 });
-    }
-    session.workspaceId = firstWorkspace.id;
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   try {

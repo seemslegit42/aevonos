@@ -13,16 +13,6 @@ export async function GET(request: NextRequest) {
 
   const workspace = await prisma.workspace.findUnique({
     where: { id: session.workspaceId },
-    include: {
-        members: {
-            select: {
-                id: true,
-                firstName: true,
-                lastName: true,
-                email: true,
-            }
-        }
-    }
   });
 
   if (!workspace) {

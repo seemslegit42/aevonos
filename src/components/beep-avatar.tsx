@@ -6,16 +6,11 @@ import { Canvas, useFrame } from '@react-three/fiber';
 import { Icosahedron, Edges } from '@react-three/drei';
 import * as THREE from 'three';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useAppStore } from '@/store/app-store';
 
-import type { UserCommandOutput } from '@/store/app-store';
 import { Bot, AlertTriangle } from 'lucide-react';
 
 type AvatarState = 'idle' | 'listening' | 'speaking' | 'alert';
-
-interface BeepAvatarProps {
-    isLoading: boolean;
-    beepOutput: UserCommandOutput | null;
-}
 
 const AnimatedIcosahedron = ({ avatarState }: { avatarState: AvatarState }) => {
     const groupRef = useRef<THREE.Group>(null!);
@@ -23,16 +18,16 @@ const AnimatedIcosahedron = ({ avatarState }: { avatarState: AvatarState }) => {
 
     const targetState = useRef({
         scale: 1,
-        color: new THREE.Color('hsl(275, 86%, 37%)'), // primary
+        color: new THREE.Color('hsl(195, 90%, 45%)'), // primary
         emissiveIntensity: 0.2,
         rotationSpeed: 0.2,
     });
     
     useEffect(() => {
         const colors = {
-            primary: new THREE.Color('hsl(275, 86%, 37%)'),
-            accent: new THREE.Color('hsl(177, 69%, 41%)'),
-            destructive: new THREE.Color('hsl(0, 62.8%, 30.6%)'),
+            primary: new THREE.Color('hsl(195, 90%, 45%)'), // New Primary
+            accent: new THREE.Color('hsl(320, 85%, 60%)'), // New Accent
+            destructive: new THREE.Color('hsl(0, 84.2%, 60.2%)'),
         };
 
         switch (avatarState) {
@@ -80,7 +75,7 @@ const AnimatedIcosahedron = ({ avatarState }: { avatarState: AvatarState }) => {
                     ref={materialRef}
                     roughness={0.1}
                     metalness={0.9}
-                    emissive={new THREE.Color('hsl(275, 86%, 37%)')}
+                    emissive={new THREE.Color('hsl(195, 90%, 45%)')}
                 />
                  <Edges scale={1.001} threshold={15} color="white" />
             </Icosahedron>
@@ -88,7 +83,8 @@ const AnimatedIcosahedron = ({ avatarState }: { avatarState: AvatarState }) => {
     );
 };
 
-export default function BeepAvatar({ isLoading, beepOutput }: BeepAvatarProps) {
+export default function BeepAvatar() {
+    const { isLoading, beepOutput } = useAppStore();
     const [avatarState, setAvatarState] = useState<AvatarState>('idle');
     const [isHovered, setIsHovered] = useState(false);
     const audioRef = useRef<HTMLAudioElement>(null);
@@ -153,7 +149,7 @@ export default function BeepAvatar({ isLoading, beepOutput }: BeepAvatarProps) {
                 <AnimatePresence>
                     {(isHovered || avatarState !== 'idle') && (
                         <motion.div
-                            className="absolute bottom-full mb-2 w-48 right-0 bg-background/70 backdrop-blur-md p-3 rounded-lg border border-border text-center shadow-lg"
+                            className="absolute bottom-full mb-2 w-48 right-0 bg-background/70 backdrop-blur-xl p-3 rounded-lg border border-border text-center shadow-lg"
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: 10 }}
