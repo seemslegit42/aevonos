@@ -1,27 +1,110 @@
 
 'use client';
 
-import React from 'react';
+import React, { useMemo, useRef, useState, useEffect } from 'react';
+import { Canvas, useFrame } from '@react-three/fiber';
+import { Edges } from '@react-three/drei';
+import * as THREE from 'three';
+import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { motion } from 'framer-motion';
-
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
-import { FlowerOfLifeIcon } from '@/components/icons/FlowerOfLifeIcon';
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+
+
+const Crystal = React.memo(({ position, scale, rotation }: { position: [number, number, number], scale: [number, number, number], rotation: [number, number, number] }) => {
+  const meshRef = useRef<THREE.Mesh>(null!);
+  const geomRef = useRef<THREE.IcosahedronGeometry>(null!);
+
+  useFrame(() => {
+    if (meshRef.current) {
+      meshRef.current.rotation.x += rotation[0] * 0.01;
+      meshRef.current.rotation.y += rotation[1] * 0.01;
+      meshRef.current.rotation.z += rotation[2] * 0.01;
+    }
+  });
+
+  return (
+    <group position={position}>
+      <mesh ref={meshRef} scale={scale}>
+        <icosahedronGeometry ref={geomRef} args={[1, 15]} />
+        <meshPhysicalMaterial
+          roughness={0}
+          transmission={1}
+          thickness={0.5}
+          ior={2.3}
+          color="white"
+        />
+        <Edges>
+          <lineBasicMaterial color="white" />
+        </Edges>
+      </mesh>
+    </group>
+  );
+});
+Crystal.displayName = 'Crystal';
+
+
+const Scene = () => {
+    const groupRef = useRef<THREE.Group>(null!);
+    
+    useFrame(() => {
+        if(groupRef.current) {
+            groupRef.current.rotation.y += 0.001;
+        }
+    });
+
+    const crystals = useMemo(() => {
+        const temp = [];
+        const r = 2;
+        
+        const calculatedPositions = [
+            [0, 0], // Center
+            ...Array.from({ length: 6 }, (_, i) => [r * Math.cos(i * Math.PI / 3), r * Math.sin(i * Math.PI / 3)]),
+            ...Array.from({ length: 6 }, (_, i) => [r * 2 * Math.cos(i * Math.PI / 3), r * 2 * Math.sin(i * Math.PI / 3)]),
+            ...Array.from({ length: 6 }, (_, i) => [r * Math.sqrt(3) * Math.cos(i * Math.PI / 3 + Math.PI / 6), r * Math.sqrt(3) * Math.sin(i * Math.PI / 3 + Math.PI / 6)])
+        ];
+        
+        const uniquePositions = Array.from(
+            new Map(calculatedPositions.map(p => [`${p[0].toFixed(2)},${p[1].toFixed(2)}`, p])).values()
+        ).slice(0, 19);
+
+        for (let i = 0; i < uniquePositions.length; i++) {
+            const [x, z] = uniquePositions[i];
+            temp.push({
+                key: i,
+                position: [x, 0, z] as [number, number, number],
+                scale: [Math.random() * 0.4 + 0.2, Math.random() * 0.8 + 0.3, Math.random() * 0.4 + 0.2] as [number, number, number],
+                rotation: [Math.random() * 2 - 1, Math.random() * 2 - 1, Math.random() * 2 - 1] as [number, number, number],
+            });
+        }
+        return temp;
+    }, []);
+
+  return (
+    <group ref={groupRef}>
+      <ambientLight intensity={0.5} />
+      <pointLight position={[10, 10, 10]} intensity={1} color="hsl(var(--primary))"/>
+      <pointLight position={[-10, -10, -10]} intensity={0.5} color="hsl(var(--accent))" />
+      {crystals.map((crystal) => (
+        <Crystal key={crystal.key} {...crystal} />
+      ))}
+    </group>
+  );
+};
 
 const formSchema = z.object({
   email: z.string().email({ message: "A valid email is required for system entry." }),
@@ -110,13 +193,11 @@ export default function LoginPage() {
 
   return (
     <div className="relative w-full h-screen">
-      {/* Background element - now guaranteed to be full screen */}
-      <div className="absolute inset-0 z-0 overflow-hidden">
-        <div className="absolute inset-0 bg-background" />
-        <FlowerOfLifeIcon className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[100vw] h-[100vw] md:w-[100vh] md:h-[100vh] max-w-full max-h-full" />
+      <div className="absolute inset-0 z-0">
+         <Canvas camera={{ position: [0, 8, 12], fov: 50 }}>
+            <Scene />
+        </Canvas>
       </div>
-
-      {/* Centering container for the card */}
       <div className="relative w-full h-full flex items-center justify-center p-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
