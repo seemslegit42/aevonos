@@ -53,6 +53,8 @@ import { scanEvidence } from '@/ai/agents/paper-trail';
 import { PaperTrailScanInputSchema } from './paper-trail-schemas';
 import { processDocument } from '@/ai/agents/barbara';
 import { BarbaraInputSchema } from './barbara-schemas';
+import { auditFinances } from '@/ai/agents/auditor-generalissimo';
+import { AuditorInputSchema } from './auditor-generalissimo-schemas';
 import {
     type UserCommandInput,
     UserCommandOutputSchema,
@@ -342,6 +344,18 @@ class BarbaraTool extends Tool {
   }
 }
 
+class AuditorTool extends Tool {
+  name = 'auditFinances';
+  description = "Audits a list of financial transactions with extreme prejudice. Use this for commands like 'audit my expenses', 'review these transactions', etc.";
+  schema = AuditorInputSchema;
+  
+  async _call(input: z.infer<typeof AuditorInputSchema>) {
+    const result = await auditFinances(input);
+    const report: z.infer<typeof AgentReportSchema> = { agent: 'auditor', report: result };
+    return JSON.stringify(report);
+  }
+}
+
 // LangGraph State
 interface AgentState {
   messages: BaseMessage[];
@@ -426,7 +440,7 @@ export async function processUserCommand(input: UserCommandInput): Promise<UserC
     new GetUsageTool(context), new GetDatingProfileTool(),
     new VinDieselTool(), new WinstonWolfeTool(), new KifKrokerTool(),
     new VandelayTool(), new JrocTool(), new LaheyTool(), new ForemanatorTool(),
-    new SterileishTool(), new PaperTrailTool(), new BarbaraTool(),
+    new SterileishTool(), new PaperTrailTool(), new BarbaraTool(), new AuditorTool(),
   ];
 
   // Re-bind the model with the schemas from the dynamically created tools for this request.

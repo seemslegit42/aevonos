@@ -287,7 +287,7 @@ export const microAppManifests: MicroAppManifest[] = [
     imageUrl: 'https://placehold.co/600x400.png',
     imageHint: 'dossier stamp military',
     permissionsRequired: ['read:billing', 'read:expenses'],
-    routingPath: '/auditor',
+    routingPath: '/auditor-generalissimo',
     contextAwareCapabilities: ['expense_stream', 'stripe_integration_hook'],
     isFeatured: true,
   },
