@@ -40,17 +40,11 @@ export default function Home() {
     useSensor(KeyboardSensor)
   );
 
-  const initialAppCount = useAppStore.getState().apps.length || 1;
-
   if (!isMounted) {
     return (
       <div className="flex flex-col h-full">
         <div className="flex-grow p-4 rounded-lg">
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-            {[...Array(initialAppCount)].map((_, i) => (
-              <Skeleton key={i} className="h-40 w-full" />
-            ))}
-          </div>
+           <Skeleton className="h-full w-full" />
         </div>
          <footer className="text-center text-xs text-muted-foreground flex-shrink-0">
             <p>ΛΞVON OS - All rights reserved. | <Link href="/armory" className="hover:text-primary underline">Visit the Armory</Link> | <Link href="/loom" className="hover:text-primary underline">Enter Loom Studio</Link> | <Link href="/validator" className="hover:text-primary underline">Verify Dossier</Link></p>
