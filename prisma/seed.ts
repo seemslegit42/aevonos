@@ -7,29 +7,37 @@ const prisma = new PrismaClient()
 async function main() {
   console.log(`Start seeding ...`)
 
-  // Clear existing data to ensure a clean slate
-  await prisma.workflowRun.deleteMany();
-  await prisma.workflow.deleteMany();
-  await prisma.securityAlert.deleteMany();
-  await prisma.agent.deleteMany();
-  await prisma.contact.deleteMany();
-  await prisma.integration.deleteMany();
-  
-  // We need to delete workspaces and users carefully due to relations
-  const workspaces = await prisma.workspace.findMany({ select: { id: true }});
-  if (workspaces.length > 0) {
-    await prisma.workspace.deleteMany({ where: { id: { in: workspaces.map(w => w.id) }}});
+  // Disconnect all user-workspace relations first to handle m-n relations.
+  const workspaces = await prisma.workspace.findMany({
+      include: { members: { select: { id: true }}}
+  });
+  for (const workspace of workspaces) {
+      if (workspace.members.length > 0) {
+        await prisma.workspace.update({
+            where: { id: workspace.id },
+            data: {
+                members: {
+                    disconnect: workspace.members.map(m => ({ id: m.id }))
+                }
+            }
+        });
+      }
   }
-  
-  const users = await prisma.user.findMany({ select: { id: true }});
-   if (users.length > 0) {
-    await prisma.user.deleteMany({ where: { id: { in: users.map(u => u.id) }}});
-  }
+  console.log('Disconnected user-workspace relations.');
 
+  // By deleting Workspaces, all related models with `onDelete: Cascade` will be removed.
+  // This includes: Agent, SecurityAlert, Contact, Integration, Workflow (and its runs).
+  await prisma.workspace.deleteMany();
+  console.log('Deleted all workspaces and their cascaded data.');
 
-  console.log('Cleared existing data.');
+  // Now we can safely delete all users.
+  await prisma.user.deleteMany();
+  console.log('Deleted all users.');
 
-  // Create a default user and workspace
+  console.log('Cleared existing data successfully.');
+
+  // --- Re-create the default user and workspace ---
+
   const hashedPassword = await bcrypt.hash('password123', 10);
   const user = await prisma.user.create({
     data: {
