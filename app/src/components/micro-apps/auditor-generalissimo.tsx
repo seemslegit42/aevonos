@@ -11,7 +11,6 @@ import { Loader2, FileWarning, Bomb, Brain, FileUp, Volume2 } from 'lucide-react
 import { useAppStore } from '@/store/app-store';
 import type { AuditorOutput, AuditedTransaction } from '@/ai/agents/auditor-generalissimo-schemas';
 import { useToast } from '@/hooks/use-toast';
-import { Progress } from '../ui/progress';
 import { Badge } from '../ui/badge';
 import { cn } from '@/lib/utils';
 import { Separator } from '../ui/separator';
