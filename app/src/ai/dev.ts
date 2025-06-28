@@ -34,3 +34,4 @@ import '@/ai/agents/dossier-agent.ts';
 import '@/ai/agents/kendra.ts';
 import '@/ai/tools/finance-tools.ts';
 import '@/ai/agents/stonks-bot.ts';
+import '@/ai/agents/auditor-generalissimo.ts';

@@ -76,6 +76,8 @@ import { KendraInputSchema } from './kendra-schemas';
 import { getStonksAdvice } from '@/ai/agents/stonks-bot';
 import { StonksBotInputSchema } from '@/ai/agents/stonks-bot-schemas';
 import { getStockPrice } from '../tools/finance-tools';
+import { auditFinances } from './auditor-generalissimo';
+import { AuditorInputSchema } from './auditor-generalissimo-schemas';
 
 
 import {
@@ -558,6 +560,21 @@ class GetStockPriceTool extends Tool {
   }
 }
 
+class AuditorGeneralissimoTool extends Tool {
+  name = 'auditFinances';
+  description = 'Audits a list of financial transactions with oppressive precision. Use this when the user asks to "audit my books", "review my expenses", etc.';
+  schema = AuditorInputSchema;
+  
+  async _call(input: z.infer<typeof AuditorInputSchema>) {
+    const result = await auditFinances(input);
+    const report: z.infer<typeof AgentReportSchema> = {
+        agent: 'auditor-generalissimo',
+        report: result,
+    };
+    return JSON.stringify(report);
+  }
+}
+
 // LangGraph State
 interface AgentState {
   messages: BaseMessage[];
@@ -648,6 +665,7 @@ export async function processUserCommand(input: UserCommandInput): Promise<UserC
     new PamPooveyTool(), new InfidelityAnalysisTool(), new DecoyTool(),
     new EchoTool(), new DossierTool(), new KendraTool(), 
     new StonksBotTool(), new GetStockPriceTool(),
+    new AuditorGeneralissimoTool(),
   ];
 
   // Re-bind the model with the schemas from the dynamically created tools for this request.
