@@ -20,7 +20,7 @@ const MoraleDisplay = ({ level, name }: { level: KifKrokerAnalysisOutput['morale
     const styles = {
         Nominal: 'text-accent border-accent/50',
         Strained: 'text-ring border-ring/50',
-        Tense: 'text-yellow-500 border-yellow-500/50', // No direct theme color for orange
+        Tense: 'text-ring border-ring/50',
         Sigh: 'text-destructive border-destructive/50',
     };
     return (
