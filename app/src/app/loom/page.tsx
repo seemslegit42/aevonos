@@ -3,7 +3,6 @@
 'use client';
 
 import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import { DndContext, DragEndEvent, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 
 import NodesSidebar, { NodeType } from '@/components/loom/nodes-sidebar';
@@ -13,7 +12,6 @@ import LoomHeader from '@/components/loom/loom-header';
 import WorkflowList from '@/components/loom/workflow-list';
 import WorkflowRunHistory from '@/components/loom/workflow-run-history';
 import { useToast } from '@/hooks/use-toast';
-import { useAppStore } from '@/store/app-store';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 
 
@@ -71,9 +69,6 @@ export default function LoomPage() {
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
     const { toast } = useToast();
-    const router = useRouter();
-    const handleCommandSubmit = useAppStore(state => state.handleCommandSubmit);
-
 
     useEffect(() => {
         setNodes(activeWorkflow.definition.nodes);
@@ -138,45 +133,40 @@ export default function LoomPage() {
             setIsSaving(false);
         }
     };
-
-    const translateWorkflowToCommand = (workflow: Workflow): string => {
-        const crmNode = workflow.definition.nodes.find(n => n.type === 'tool-crm');
-        if (!crmNode) {
-            // A simple fallback if no recognizable action node is found
-            return "show suggested commands for managing contacts";
-        }
-
-        const action = crmNode.data.action || 'list';
-        
-        switch (action) {
-            case 'create':
-                let cmd = `create a new contact`;
-                if (crmNode.data.firstName) cmd += ` named ${crmNode.data.firstName}`;
-                if (crmNode.data.lastName) cmd += ` ${crmNode.data.lastName}`;
-                if (crmNode.data.email) cmd += ` with email ${crmNode.data.email}`;
-                if (crmNode.data.phone) cmd += ` and phone ${crmNode.data.phone}`;
-                return cmd;
-            case 'list':
-            default:
-                return "list all contacts";
-        }
-    };
     
-    const handleRun = () => {
-        if (!activeWorkflow) return;
+    const handleRun = async () => {
+        if (!activeWorkflow?.id) return;
         setIsRunning(true);
-
-        const command = translateWorkflowToCommand({ ...activeWorkflow, definition: { nodes, edges }});
         
-        toast({ title: 'Executing Command', description: `BEEP is running: "${command}"` });
+        // This would be where you define a trigger payload. For now, it's empty.
+        const triggerPayload = {};
 
-        handleCommandSubmit(command);
+        try {
+            const response = await fetch(`/api/workflows/${activeWorkflow.id}/run`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(triggerPayload)
+            });
 
-        // After submitting, redirect back to the canvas to see the result
-        router.push('/');
+            if (response.status !== 202) { // 202 Accepted is the expected success status
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Failed to trigger workflow.');
+            }
+            
+            const runData = await response.json();
+            toast({
+                title: "Workflow Triggered",
+                description: `Run ID: ${runData.runId}. Check history for status.`
+            });
+            // Refresh the run history list
+            setListRefreshTrigger(val => val + 1);
 
-        // The redirect will unmount this page anyway.
-        setIsRunning(false);
+        } catch (e) {
+            const error = e as Error;
+            toast({ variant: 'destructive', title: 'Error', description: error.message || 'Could not trigger workflow run.' });
+        } finally {
+            setIsRunning(false);
+        }
     };
 
     const handleDeleteConfirm = async () => {
