@@ -14,6 +14,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Progress } from '../ui/progress';
 import { Badge } from '../ui/badge';
 import { cn } from '@/lib/utils';
+import { Separator } from '../ui/separator';
 
 const BurnRateThermometer = ({ days }: { days: number }) => {
     const getStatus = (d: number) => {
@@ -51,28 +52,51 @@ const HealthScore = ({ score }: { score: number }) => {
     )
 }
 
-const AuditedTransactionItem = ({ item }: { item: AuditedTransaction }) => (
-    <div className="p-2 border-b border-military-green/20">
-        <div className="flex justify-between items-start">
-            <div className="flex-grow">
-                <p className="font-semibold">{item.description}</p>
-                <p className="text-xs text-military-green-foreground/70">{item.date}</p>
+const AuditedTransactionItem = ({ item }: { item: AuditedTransaction }) => {
+    const hasWarning = !!item.warning;
+
+    return (
+        <div className={cn(
+            "p-3 transition-all",
+            hasWarning ? "bg-destructive/10" : ""
+        )}>
+            <div className="flex justify-between items-start">
+                <div className="flex-grow pr-4">
+                    <p className="font-semibold">{item.description}</p>
+                    <p className="text-xs text-military-green-foreground/70">{item.date}</p>
+                </div>
+                <p className={cn(
+                    "font-mono font-bold text-lg",
+                    hasWarning ? "text-destructive" : ""
+                )}>${item.amount.toFixed(2)}</p>
             </div>
-            <p className="font-mono font-bold text-lg">${item.amount.toFixed(2)}</p>
+            <div className="flex flex-wrap gap-1 mt-2">
+                {item.aiTags.map(tag => (
+                    <Badge 
+                        key={tag} 
+                        variant={hasWarning ? "destructive" : "secondary"} 
+                        className={cn(
+                            "font-normal capitalize", 
+                            !hasWarning && "bg-ledger-cream/20 text-ledger-cream"
+                        )}
+                    >
+                        {tag.replace(/_/g, ' ')}
+                    </Badge>
+                ))}
+            </div>
+            {item.warning && (
+                <Alert variant="destructive" className="mt-2 text-xs py-2 px-3 bg-destructive/20 border-destructive/30">
+                    <FileWarning className="h-4 w-4" />
+                    <AlertTitle className="font-semibold">Auditor's Note</AlertTitle>
+                    <AlertDescription className="text-destructive-foreground/90">
+                       {item.warning}
+                    </AlertDescription>
+                </Alert>
+            )}
         </div>
-        {item.warning && (
-            <Alert variant="destructive" className="mt-2 text-xs py-1 px-2 bg-destructive/10 border-destructive/20">
-                <FileWarning className="h-3 w-3" />
-                <AlertDescription className="text-destructive/80">
-                   <span className="font-bold">Auditor's Note:</span> {item.warning}
-                </AlertDescription>
-            </Alert>
-        )}
-        <div className="flex flex-wrap gap-1 mt-2">
-            {item.aiTags.map(tag => <Badge key={tag} variant="secondary" className="bg-ledger-cream/20 text-ledger-cream font-normal">{tag}</Badge>)}
-        </div>
-    </div>
-)
+    );
+};
+
 
 export default function AuditorGeneralissimo(props: AuditorOutput | {}) {
     const { handleCommandSubmit, isLoading } = useAppStore();
@@ -126,9 +150,16 @@ export default function AuditorGeneralissimo(props: AuditorOutput | {}) {
                     </Card>
                     <Accordion type="multiple" className="w-full">
                         <AccordionItem value="item-1" className="border-military-green-foreground/30">
-                            <AccordionTrigger className="hover:no-underline font-bold">Audited Line Items</AccordionTrigger>
-                            <AccordionContent>
-                                {report.auditedTransactions.map((item, i) => <AuditedTransactionItem key={i} item={item} />)}
+                            <AccordionTrigger className="hover:no-underline font-bold">Line Item Interrogation</AccordionTrigger>
+                            <AccordionContent className="p-0">
+                                <div className="bg-black/10 rounded-b-md">
+                                    {report.auditedTransactions.map((item, i) => (
+                                    <React.Fragment key={i}>
+                                            <AuditedTransactionItem item={item} />
+                                            {i < report.auditedTransactions.length - 1 && <Separator className="bg-military-green/20" />}
+                                    </React.Fragment>
+                                    ))}
+                                </div>
                             </AccordionContent>
                         </AccordionItem>
                         <AccordionItem value="item-2" className="border-military-green-foreground/30 border-b-0">
