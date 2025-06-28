@@ -55,7 +55,7 @@ export const microAppManifests: MicroAppManifest[] = [
     permissionsRequired: ['read:agent_status'],
     routingPath: '/orphean-oracle',
     contextAwareCapabilities: ['agent_telemetry_stream'],
-    isFeatured: false,
+    isFeatured: true,
   },
   {
     id: 'dr-syntax',
