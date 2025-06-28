@@ -292,7 +292,7 @@ export const useAppStore = create<AppState>((set, get) => {
         case 'billing':
             launchApp('ai-suggestion', {
                 title: 'Billing Usage Report',
-                description: `Plan: ${report.report.report.planTier}\nUsage: ${report.report.report.report.totalActionsUsed}/${report.report.report.planLimit} Agent Actions`,
+                description: `Plan: ${report.report.report.planTier}\nUsage: ${report.report.report.totalActionsUsed}/${report.report.report.planLimit} Agent Actions`,
             });
             break;
         
