@@ -1,12 +1,12 @@
 
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, DragEvent } from 'react';
 import CryptoJS from 'crypto-js';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { FileCheck, FileX, Loader2, Upload, Fingerprint } from 'lucide-react';
+import { Loader2, Upload, Fingerprint, ShieldCheck, ShieldAlert, FileIcon } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 
@@ -18,15 +18,36 @@ export default function ValidatorTool() {
   const [isVerifying, setIsVerifying] = useState(false);
   const [resultStatus, setResultStatus] = useState<VerificationStatus>('idle');
   const [resultMessage, setResultMessage] = useState('');
+  const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setFile(e.target.files[0]);
+  const handleFileSelect = (selectedFile: File | null) => {
+    if (selectedFile) {
+      setFile(selectedFile);
       setResultStatus('idle');
     }
   };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    handleFileSelect(e.target.files?.[0] || null);
+  };
+  
+  const handleDragEvents = (e: DragEvent<HTMLDivElement>, isEntering: boolean) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setIsDragging(isEntering);
+  };
+
+  const handleDrop = (e: DragEvent<HTMLDivElement>) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setIsDragging(false);
+      if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+          handleFileSelect(e.dataTransfer.files[0]);
+      }
+  };
+
 
   const handleVerify = () => {
     if (!file || !inputHash) {
@@ -50,10 +71,10 @@ export default function ValidatorTool() {
 
         if (calculatedHash === inputHash.toLowerCase().trim()) {
           setResultStatus('success');
-          setResultMessage(`INTEGRITY CONFIRMED. This dossier is pure, uncut truth. Computed hash: ${calculatedHash}`);
+          setResultMessage(`INTEGRITY CONFIRMED. This artifact is pure, uncut truth.`);
         } else {
           setResultStatus('error');
-          setResultMessage(`TAMPERING DETECTED. The hash does not match. This artifact is compromised. Computed hash: ${calculatedHash}`);
+          setResultMessage(`TAMPERING DETECTED. The hash does not match. This artifact is compromised.`);
         }
       } catch (error) {
         setResultStatus('error');
@@ -71,32 +92,69 @@ export default function ValidatorTool() {
     reader.readAsArrayBuffer(file);
   };
 
+  const ResultAlert = () => {
+      if (resultStatus === 'idle') return null;
+      const isSuccess = resultStatus === 'success';
+      const Icon = isSuccess ? ShieldCheck : ShieldAlert;
+      const variant = isSuccess ? 'default' : 'destructive';
+      const title = isSuccess ? "Verification Successful" : "Verification Failed";
+      const className = isSuccess ? "border-accent text-accent" : "border-destructive text-destructive";
+
+      return (
+           <Alert variant={variant} className={cn('bg-background/80', className)}>
+              <Icon className="h-4 w-4" />
+              <AlertTitle className="font-bold">{title}</AlertTitle>
+              <AlertDescription className="text-foreground/80 text-xs">
+                  {resultMessage}
+              </AlertDescription>
+           </Alert>
+      )
+  };
+
   return (
     <div className="space-y-4">
-      <div>
-        <Button
-          variant="outline"
-          className="w-full border-dashed"
+       <div 
+          className={cn(
+              "relative border-2 border-dashed border-muted-foreground/30 rounded-lg p-6 text-center cursor-pointer transition-colors duration-200",
+              isDragging && "border-primary bg-primary/10"
+          )}
           onClick={() => fileInputRef.current?.click()}
-        >
-          <Upload className="mr-2" />
-          {file ? `Selected: ${file.name}` : 'Select Dossier File (.pdf, .json)'}
-        </Button>
-        <Input
-          type="file"
-          ref={fileInputRef}
-          onChange={handleFileChange}
-          className="hidden"
-          accept=".pdf,.json"
-        />
-      </div>
+          onDragEnter={(e) => handleDragEvents(e, true)}
+          onDragLeave={(e) => handleDragEvents(e, false)}
+          onDragOver={(e) => e.preventDefault()}
+          onDrop={handleDrop}
+       >
+          <div className="flex flex-col items-center justify-center space-y-2 text-muted-foreground">
+              {file ? (
+                  <>
+                    <FileIcon className="h-8 w-8 text-primary" />
+                    <p className="text-sm font-medium text-foreground">{file.name}</p>
+                    <p className="text-xs">{(file.size / 1024).toFixed(2)} KB</p>
+                  </>
+              ) : (
+                  <>
+                    <Upload className="h-8 w-8" />
+                    <p className="text-sm">Drag & drop a file here or <span className="font-bold text-primary">browse</span></p>
+                    <p className="text-xs">Supports .pdf and .json</p>
+                  </>
+              )}
+          </div>
+          <Input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileChange}
+            className="hidden"
+            accept=".pdf,.json,.txt"
+          />
+       </div>
+
       <div className="relative">
         <Fingerprint className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
         <Input
           placeholder="Paste SHA256 integrity hash here..."
           value={inputHash}
           onChange={(e) => setInputHash(e.target.value)}
-          className="pl-10 font-mono"
+          className="pl-10 font-mono bg-background/80"
           disabled={isVerifying}
         />
       </div>
@@ -104,13 +162,7 @@ export default function ValidatorTool() {
         {isVerifying ? <Loader2 className="animate-spin" /> : 'Verify Integrity'}
       </Button>
 
-      {resultStatus !== 'idle' && (
-        <Alert variant={resultStatus === 'success' ? 'default' : 'destructive'} className={cn(resultStatus === 'success' && 'border-accent')}>
-          {resultStatus === 'success' ? <FileCheck className="h-4 w-4" /> : <FileX className="h-4 w-4" />}
-          <AlertTitle>{resultStatus === 'success' ? 'Verification Successful' : 'Verification Failed'}</AlertTitle>
-          <AlertDescription className="text-xs break-all">{resultMessage}</AlertDescription>
-        </Alert>
-      )}
+      {resultStatus !== 'idle' && <ResultAlert />}
     </div>
   );
 }

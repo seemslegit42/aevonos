@@ -9,7 +9,7 @@ export default function ValidatorPage() {
       <Card className="w-full max-w-2xl bg-foreground/10 backdrop-blur-xl border-foreground/20">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl font-headline tracking-wider text-primary">Uncut Truth Engine</CardTitle>
-          <CardDescription>"No tampering tolerated. The hash doesn't lie."</CardDescription>
+          <CardDescription>"When suspicion becomes evidence, verify its soul. The hash doesn't lie."</CardDescription>
         </CardHeader>
         <CardContent>
           <ValidatorTool />
