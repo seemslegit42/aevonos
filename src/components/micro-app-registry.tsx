@@ -30,6 +30,7 @@ import { KendraIcon } from './icons/KendraIcon';
 import { StonksIcon } from './icons/StonksIcon';
 import { AuditorGeneralissimoIcon } from './icons/AuditorGeneralissimoIcon';
 import { BarbaraIcon } from './icons/BarbaraIcon';
+import { OracleIcon } from './icons/OracleIcon';
 
 
 import { type MicroAppType } from '@/store/app-store';
@@ -60,6 +61,7 @@ import Kendra from './micro-apps/kendra';
 import StonksBot from './micro-apps/stonks-bot';
 import AuditorGeneralissimo from './micro-apps/auditor-generalissimo';
 import Barbara from './micro-apps/barbara';
+import Oracle from './micro-apps/oracle';
 
 
 type ComponentRegistry = {
@@ -184,7 +186,11 @@ export const microAppRegistry: Record<MicroAppType, ComponentRegistry> = {
   'barbara': {
     icon: BarbaraIcon,
     content: Barbara,
-  }
+  },
+  'oracle': {
+    icon: OracleIcon,
+    content: Oracle,
+  },
 };
 
 export const getAppIcon = (type: MicroAppType) => {

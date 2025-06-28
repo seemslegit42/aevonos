@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { OrbitControls, Sparkles, Html } from '@react-three/drei';
+import { OrbitControls, Sparkles, Html, Line, Icosahedron, Edges } from '@react-three/drei';
 import * as THREE from 'three';
 import { type Agent as AgentData, AgentStatus } from '@prisma/client';
 import { Skeleton } from '../ui/skeleton';
@@ -20,15 +20,10 @@ const statusConfig: Record<AgentStatus, { color: THREE.Color; emissiveIntensity:
     [AgentStatus.error]: { color: new THREE.Color('hsl(0, 84.2%, 60.2%)'), emissiveIntensity: 1.0 }, // destructive
 };
 
-function AgentNode({ agent, index }: { agent: AgentData, index: number }) {
-    const meshRef = useRef<THREE.Mesh>(null!);
+function AgentNode({ agent, position }: { agent: AgentData, position: THREE.Vector3 }) {
+    const meshRef = useRef<THREE.Group>(null!);
     const [isHovered, setIsHovered] = useState(false);
     const config = statusConfig[agent.status] || statusConfig.idle;
-
-    // Calculate a stable position in a circular orbit
-    const angle = (index / 10) * Math.PI * 2;
-    const radius = 3 + Math.floor(index / 5) * 1.5;
-    const position = useMemo(() => new THREE.Vector3(Math.cos(angle) * radius, (Math.random() - 0.5) * 2, Math.sin(angle) * radius), [angle, radius]);
 
     useFrame((state) => {
         const { clock } = state;
@@ -37,65 +32,97 @@ function AgentNode({ agent, index }: { agent: AgentData, index: number }) {
 
         // Pulsating effect based on status
         const pulseSpeed = agent.status === AgentStatus.processing ? 4 : 1;
-        const pulseIntensity = agent.status === AgentStatus.processing ? 0.15 : 0.05;
+        const pulseIntensity = agent.status === AgentStatus.processing ? 0.25 : 0.1;
         group.scale.setScalar(1 + Math.sin(clock.getElapsedTime() * pulseSpeed) * pulseIntensity);
     });
 
     return (
         <group position={position}>
-            <mesh
+            <group
                 ref={meshRef}
                 onPointerOver={() => setIsHovered(true)}
                 onPointerOut={() => setIsHovered(false)}
             >
-                <sphereGeometry args={[0.3, 32, 32]} />
-                <meshStandardMaterial
-                    color={config.color}
-                    emissive={config.color}
-                    emissiveIntensity={config.emissiveIntensity}
-                    metalness={0.8}
-                    roughness={0.1}
-                />
-            </mesh>
+              <Icosahedron
+                  args={[0.4, 1]}
+              >
+                  <meshStandardMaterial
+                      color={config.color}
+                      emissive={config.color}
+                      emissiveIntensity={config.emissiveIntensity}
+                      metalness={0.8}
+                      roughness={0.1}
+                  />
+                   <Edges scale={1.001} threshold={15} color="white" />
+              </Icosahedron>
+            </group>
             <Html distanceFactor={10}>
                 <div
                     className={cn(
-                        'transition-opacity duration-300 pointer-events-none p-2 rounded-md text-xs bg-background/50 backdrop-blur-sm border border-border',
+                        'transition-opacity duration-300 pointer-events-none p-2 rounded-md text-xs bg-background/70 backdrop-blur-sm border border-border w-32 text-center',
                         isHovered ? 'opacity-100' : 'opacity-0'
                     )}
                 >
-                    <p className="font-bold">{agent.name}</p>
-                    <p className="capitalize" style={{ color: config.color.getStyle() }}>{agent.status}</p>
+                    <p className="font-bold truncate">{agent.name}</p>
+                    <p className="capitalize font-medium" style={{ color: config.color.getStyle() }}>{agent.status}</p>
                 </div>
             </Html>
         </group>
     );
 }
 
+function BeepCore() {
+    const meshRef = useRef<THREE.Mesh>(null!);
+    useFrame((state) => {
+        const { clock } = state;
+        meshRef.current.scale.setScalar(1 + Math.sin(clock.getElapsedTime() * 2) * 0.1);
+        meshRef.current.rotation.y += 0.005;
+    });
+     return (
+        <Icosahedron ref={meshRef} args={[0.6, 1]}>
+            <meshStandardMaterial
+                color="hsl(var(--primary))"
+                emissive="hsl(var(--primary))"
+                emissiveIntensity={1.5}
+                metalness={0.9}
+                roughness={0.1}
+            />
+             <Edges scale={1.001} threshold={15} color="white" />
+        </Icosahedron>
+     );
+}
 
 function Scene({ agents }: { agents: AgentData[] }) {
+    const nodePositions = useMemo(() => {
+        return agents.map((agent, index) => {
+            const angle = (index / agents.length) * Math.PI * 2;
+            const radius = 2.5 + Math.floor(index / 8) * 1.5; // Spiral out
+            const yPos = (Math.random() - 0.5) * 3;
+            return new THREE.Vector3(Math.cos(angle) * radius, yPos, Math.sin(angle) * radius)
+        });
+    }, [agents]);
+
     return (
         <>
             <ambientLight intensity={0.2} />
-            <pointLight position={[0, 0, 0]} color="hsl(var(--primary))" intensity={50} distance={10} />
+            <pointLight position={[0, 0, 0]} color="hsl(var(--primary))" intensity={15} distance={20} />
             
-            {/* BEEP Core */}
-            <mesh>
-                <sphereGeometry args={[0.5, 32, 32]} />
-                <meshStandardMaterial
-                    color="hsl(var(--primary))"
-                    emissive="hsl(var(--primary))"
-                    emissiveIntensity={1.5}
-                    metalness={0.9}
-                    roughness={0.2}
-                />
-            </mesh>
+            <BeepCore />
             
             {agents.map((agent, index) => (
-                <AgentNode key={agent.id} agent={agent} index={index} />
+                <group key={agent.id}>
+                    <AgentNode agent={agent} position={nodePositions[index]} />
+                    <Line
+                        points={[[0,0,0], nodePositions[index]]}
+                        color="hsl(var(--muted-foreground))"
+                        lineWidth={0.5}
+                        opacity={0.3}
+                        transparent
+                    />
+                </group>
             ))}
             
-            <Sparkles count={100} scale={10} size={2} speed={0.4} color="hsl(var(--accent))" />
+            <Sparkles count={150} scale={12} size={2} speed={0.3} color="hsl(var(--accent))" />
         </>
     );
 }
@@ -132,7 +159,7 @@ export default function Oracle() {
 
   const renderContent = () => {
     if (isLoading && agents.length === 0) {
-        return <Skeleton className="w-full h-full" />;
+        return <Skeleton className="w-full h-full bg-foreground/10" />;
     }
 
     if (error) {
@@ -146,15 +173,15 @@ export default function Oracle() {
     }
 
     return (
-        <Canvas camera={{ position: [0, 5, 10], fov: 60 }}>
+        <Canvas camera={{ position: [0, 6, 12], fov: 60 }}>
             <Scene agents={agents} />
-            <OrbitControls autoRotate autoRotateSpeed={0.5} enableZoom={true} enablePan={true} />
+            <OrbitControls autoRotate autoRotateSpeed={0.3} enableZoom={true} enablePan={true} />
         </Canvas>
     )
   }
 
   return (
-    <div className="w-full h-full flex items-center justify-center p-2">
+    <div className="w-full h-full flex items-center justify-center p-0">
         {renderContent()}
     </div>
   );

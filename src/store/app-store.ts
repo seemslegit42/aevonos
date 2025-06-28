@@ -62,7 +62,8 @@ export type MicroAppType =
   | 'kendra'
   | 'stonks-bot'
   | 'auditor-generalissimo'
-  | 'barbara';
+  | 'barbara'
+  | 'oracle';
 
 // Define the shape of a MicroApp instance
 export interface MicroApp {
@@ -112,6 +113,7 @@ const defaultAppDetails: Record<MicroAppType, Omit<MicroApp, 'id' | 'position' |
   'stonks-bot': { type: 'stonks-bot', title: 'Stonks Bot', description: 'This is not financial advice.' },
   'auditor-generalissimo': { type: 'auditor-generalissimo', title: 'The Auditor Generalissimo', description: 'Guilty until proven solvent.' },
   'barbara': { type: 'barbara', title: 'Agent Barbara™', description: 'Precise, passive-aggressive compliance.' },
+  'oracle': { type: 'oracle', title: 'Agent Oracle', description: 'A living visualization of your AI agent constellation.' },
 };
 
 const defaultAppSizes: Record<MicroAppType, { width: number; height: number }> = {
@@ -145,6 +147,7 @@ const defaultAppSizes: Record<MicroAppType, { width: number; height: number }> =
   'stonks-bot': { width: 340, height: 550 },
   'auditor-generalissimo': { width: 360, height: 550 },
   'barbara': { width: 360, height: 550 },
+  'oracle': { width: 400, height: 400 },
 };
 
 export interface AppState {
@@ -497,11 +500,29 @@ export const useAppStore = create<AppState>((set, get) => {
         processAgentReports(result.agentReports);
 
         result.appsToLaunch.forEach(appInfo => {
-            const defaults = defaultAppDetails[appInfo.type];
-            launchApp(appInfo.type, {
-                title: appInfo.title || defaults.title,
-                description: appInfo.description || defaults.description,
-            });
+            // Check for existing 'singleton' apps and upsert instead of launching new
+            const singletonApps: Record<string, string> = {
+              'oracle': 'agent-oracle-main',
+              'aegis-threatscope': 'aegis-threatscope-main',
+              'aegis-command': 'aegis-command-main',
+              'usage-monitor': 'usage-monitor-main',
+              // Add other app types that should only have one instance
+            };
+
+            const singletonId = (singletonApps as any)[appInfo.type];
+
+            if (singletonId) {
+                upsertApp(appInfo.type, {
+                    id: singletonId,
+                    title: appInfo.title || defaultAppDetails[appInfo.type].title,
+                    description: appInfo.description || defaultAppDetails[appInfo.type].description
+                });
+            } else {
+                launchApp(appInfo.type, {
+                    title: appInfo.title || defaultAppDetails[appInfo.type].title,
+                    description: appInfo.description || defaultAppDetails[appInfo.type].description,
+                });
+            }
         });
 
         result.suggestedCommands.forEach(cmd => {
