@@ -72,17 +72,17 @@ function Crystal({ position }: { position: [number, number, number] }) {
       {/* The main crystal shard */}
       <group ref={crystalGroupRef} scale={scale}>
         <mesh>
-            <icosahedronGeometry args={[0.3, 1]} />
+            <icosahedronGeometry args={[0.3, 3]} />
             <meshPhysicalMaterial 
                 color="hsl(var(--primary))"
                 transmission={1.0}
                 opacity={0.9}
                 roughness={0}
                 metalness={0.1}
-                thickness={0.8}
+                thickness={1.2}
                 ior={2.3} // Index of Refraction, like diamond
-                emissive="hsl(var(--accent))"
-                emissiveIntensity={0.2}
+                emissive="hsl(var(--primary))"
+                emissiveIntensity={0.25}
             />
             <Edges scale={1.01} threshold={15} color="white" />
         </mesh>
@@ -148,9 +148,10 @@ function Scene() {
 
   useFrame(() => {
     if (groupRef.current) {
+      // Keep a slow, steady rotation on one axis for a more stable, celestial feel
       groupRef.current.rotation.y += 0.0005;
-      groupRef.current.rotation.x += 0.0003;
       
+      // The mouse-follow interaction adds a nice parallax effect
       const x = (mouse.x * viewport.width) / 100;
       const y = (mouse.y * viewport.height) / 100;
       groupRef.current.position.x = THREE.MathUtils.lerp(groupRef.current.position.x, x, 0.05);
@@ -239,7 +240,7 @@ export default function LoginPage() {
       <Canvas camera={{ position: [0, 0, 10], fov: 50 }}>
         <ambientLight intensity={0.5} />
         <pointLight position={[10, 10, 10]} intensity={1} color="hsl(var(--primary))"/>
-        <pointLight position={[-10, -10, -10]} intensity={1} color="hsl(var(--accent))" />
+        <pointLight position={[-10, -10, 10]} intensity={1} color="hsl(var(--accent))" />
         <Scene />
       </Canvas>
       <div className="absolute inset-0 flex items-center justify-center">
