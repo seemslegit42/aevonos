@@ -74,7 +74,7 @@ export const microAppManifests: MicroAppManifest[] = [
     id: 'beep-wingman',
     name: 'BEEP Wingman',
     author: 'ΛΞVON OS',
-    description: "Generates compelling opening messages for dating apps. High cringe potential, high reward.",
+    description: "He's not your assistant. He's your closer. Crafts the perfect message for any tricky social situation.",
     price: '$12/mo',
     imageUrl: 'https://placehold.co/600x400.png',
     imageHint: 'cockpit heart neon',

@@ -55,6 +55,8 @@ import { processDocument } from '@/ai/agents/barbara';
 import { BarbaraInputSchema } from './barbara-schemas';
 import { auditFinances } from '@/ai/agents/auditor-generalissimo';
 import { AuditorInputSchema } from './auditor-generalissimo-schemas';
+import { generateWingmanMessage } from '@/ai/agents/wingman';
+import { WingmanInputSchema } from './wingman-schemas';
 import {
     type UserCommandInput,
     UserCommandOutputSchema,
@@ -356,6 +358,18 @@ class AuditorTool extends Tool {
   }
 }
 
+class WingmanTool extends Tool {
+  name = 'generateWingmanMessage';
+  description = "Crafts the perfect message for a tricky social situation. The user must provide the situation context and a desired message mode (e.g., 'Charming AF', 'Help Me Say No').";
+  schema = WingmanInputSchema;
+  
+  async _call(input: z.infer<typeof WingmanInputSchema>) {
+    const result = await generateWingmanMessage(input);
+    const report: z.infer<typeof AgentReportSchema> = { agent: 'wingman', report: result };
+    return JSON.stringify(report);
+  }
+}
+
 // LangGraph State
 interface AgentState {
   messages: BaseMessage[];
@@ -441,6 +455,7 @@ export async function processUserCommand(input: UserCommandInput): Promise<UserC
     new VinDieselTool(), new WinstonWolfeTool(), new KifKrokerTool(),
     new VandelayTool(), new JrocTool(), new LaheyTool(), new ForemanatorTool(),
     new SterileishTool(), new PaperTrailTool(), new BarbaraTool(), new AuditorTool(),
+    new WingmanTool(),
   ];
 
   // Re-bind the model with the schemas from the dynamically created tools for this request.

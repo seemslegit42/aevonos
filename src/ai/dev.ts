@@ -26,3 +26,4 @@ import '@/ai/agents/foremanator.ts';
 import '@/ai/agents/sterileish.ts';
 import '@/ai/agents/barbara.ts';
 import '@/ai/agents/auditor-generalissimo.ts';
+import '@/ai/agents/wingman.ts';

@@ -23,6 +23,7 @@ import { ForemanatorIcon } from './icons/ForemanatorIcon';
 import { SterileishIcon } from './icons/SterileishIcon';
 import { BarbaraIcon } from './icons/BarbaraIcon';
 import { AuditorGeneralissimoIcon } from './icons/AuditorGeneralissimoIcon';
+import { BeepWingmanIcon } from './icons/BeepWingmanIcon';
 
 import { type MicroAppType } from '@/store/app-store';
 import ContactList from './micro-apps/contact-list';
@@ -44,6 +45,7 @@ import TheForemanator from './micro-apps/the-foremanator';
 import Sterileish from './micro-apps/sterileish';
 import Barbara from './micro-apps/barbara';
 import AuditorGeneralissimo from './micro-apps/auditor-generalissimo';
+import BeepWingman from './micro-apps/beep-wingman';
 
 type ComponentRegistry = {
     icon: React.ComponentType<any>;
@@ -138,6 +140,10 @@ export const microAppRegistry: Record<MicroAppType, ComponentRegistry> = {
   'auditor-generalissimo': {
     icon: AuditorGeneralissimoIcon,
     content: AuditorGeneralissimo,
+  },
+  'beep-wingman': {
+    icon: BeepWingmanIcon,
+    content: BeepWingman,
   },
 };
 
