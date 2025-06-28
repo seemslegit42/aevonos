@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useRef } from 'react';
@@ -39,7 +40,7 @@ export default function TopBar({ onCommandSubmit, isLoading, user }: TopBarProps
   };
 
   return (
-    <header className="flex items-center justify-between w-full px-2 sm:px-4 py-2 bg-foreground/15 backdrop-blur-[20px] rounded-lg border border-foreground/30 shadow-[0_8px_32px_0_rgba(28,25,52,0.1)] gap-2 sm:gap-4">
+    <header className="flex items-center justify-between w-full px-2 sm:px-4 py-2 bg-foreground/10 backdrop-blur-xl rounded-lg border border-foreground/30 shadow-[0_8px_32px_0_rgba(28,25,52,0.1)] gap-2 sm:gap-4">
       <div className="flex items-center">
         <h1 className="text-xl font-headline font-bold text-foreground tracking-widest">
           <span className="text-primary">ΛΞ</span>VON
