@@ -324,7 +324,7 @@ class LaheyTool extends Tool {
   
   async _call(input: z.infer<typeof LaheyAnalysisInputSchema>) {
     const result = await analyzeLaheyLog(input);
-    const report: z.infer<typeof AgentReportSchema> = { agent: 'lahey', report: result };
+    const report: z.infer<typeof AgentReportSchema> = { agent: 'lahey-surveillance', report: result };
     return JSON.stringify(report);
   }
 }

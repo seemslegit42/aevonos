@@ -160,7 +160,7 @@ export const AgentReportSchema = z.discriminatedUnion('agent', [
     report: JrocOutputSchema.describe('The full report from the J-ROC agent.'),
   }),
   z.object({
-    agent: z.literal('lahey'),
+    agent: z.literal('lahey-surveillance'),
     report: LaheyAnalysisOutputSchema.describe('The full report from the Lahey Surveillance agent.'),
   }),
   z.object({
