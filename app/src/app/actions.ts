@@ -6,23 +6,6 @@ import type { UserCommandOutput } from '@/ai/agents/beep-schemas';
 import { revalidatePath } from 'next/cache';
 import { scanEvidence as scanEvidenceFlow, type PaperTrailScanInput, type PaperTrailScanOutput } from '@/ai/agents/paper-trail';
 import { getServerActionSession } from '@/lib/auth';
-import prisma from '@/lib/prisma';
-
-export async function getCurrentUser() {
-  const session = await getServerActionSession();
-  if (!session?.userId) {
-    return null;
-  }
-  const user = await prisma.user.findUnique({
-    where: { id: session.userId },
-    select: {
-      email: true,
-      firstName: true,
-      lastName: true,
-    },
-  });
-  return user;
-}
 
 export async function handleCommand(command: string): Promise<UserCommandOutput> {
   const session = await getServerActionSession();

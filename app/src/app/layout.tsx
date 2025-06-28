@@ -3,7 +3,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster"
 import { AppLayout } from '@/components/layout/app-layout';
-import { getCurrentUser } from '@/app/actions';
+import { getCurrentUser } from '@/lib/auth';
 import type { User } from '@prisma/client';
 
 export const metadata: Metadata = {
