@@ -1,7 +1,6 @@
-
 'use client';
 
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef } from 'react';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -9,30 +8,19 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { Sparkles, ShieldCheck, LogOut, Settings } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { logout } from '@/app/auth/actions';
-import { getCurrentUser } from '@/app/actions';
 import type { User } from '@prisma/client';
+
+type UserProp = Pick<User, 'email' | 'firstName' | 'lastName'> | null;
 
 interface TopBarProps {
   onCommandSubmit: (command: string) => void;
   isLoading: boolean;
+  user: UserProp;
 }
 
-export default function TopBar({ onCommandSubmit, isLoading }: TopBarProps) {
+export default function TopBar({ onCommandSubmit, isLoading, user }: TopBarProps) {
   const formRef = useRef<HTMLFormElement>(null);
   const isMobile = useIsMobile();
-  const [user, setUser] = useState<Pick<User, 'email' | 'firstName' | 'lastName'> | null>(null);
-
-  useEffect(() => {
-    async function fetchUser() {
-        try {
-            const currentUser = await getCurrentUser();
-            setUser(currentUser);
-        } catch (error) {
-            console.error("Failed to fetch user:", error);
-        }
-    }
-    fetchUser();
-  }, []);
 
   const getInitials = () => {
     if (!user) return 'A';

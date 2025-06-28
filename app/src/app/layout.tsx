@@ -2,17 +2,21 @@ import type { Metadata } from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster"
 import { AppLayout } from '@/components/layout/app-layout';
+import { getCurrentUser } from '@/app/actions';
+import type { User } from '@prisma/client';
 
 export const metadata: Metadata = {
   title: 'ΛΞVON OS',
   description: 'An agentic operating system interface.',
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const user = await getCurrentUser();
+
   return (
     <html lang="en" className="dark">
       <head>
@@ -33,7 +37,7 @@ export default function RootLayout({
           />
         </div>
         
-        <AppLayout>
+        <AppLayout user={user}>
           {children}
         </AppLayout>
 

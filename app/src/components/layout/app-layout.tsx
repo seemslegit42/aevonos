@@ -4,6 +4,7 @@ import React from 'react';
 import { usePathname } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { Skeleton } from '@/components/ui/skeleton';
+import type { User } from '@prisma/client';
 
 const MainLayout = dynamic(() => 
   import('@/components/layout/main-layout').then((mod) => mod.MainLayout), 
@@ -20,8 +21,9 @@ const MainLayout = dynamic(() =>
   }
 );
 
+type UserProp = Pick<User, 'email' | 'firstName' | 'lastName'> | null;
 
-export function AppLayout({ children }: { children: React.ReactNode }) {
+export function AppLayout({ children, user }: { children: React.ReactNode, user: UserProp }) {
   const pathname = usePathname();
 
   // Define public paths that don't need the main authenticated layout
@@ -33,7 +35,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <MainLayout>
+    <MainLayout user={user}>
         {children}
     </MainLayout>
   );
