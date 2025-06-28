@@ -1,16 +1,17 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Loader2, TrendingUp, Hand, Rocket, Gem, ArrowDown, ArrowUp } from 'lucide-react';
+import { Loader2, TrendingUp, Hand, Rocket, Gem, ArrowDown, ArrowUp, Bell, X } from 'lucide-react';
 import { useAppStore } from '@/store/app-store';
 import type { StonksBotOutput } from '@/ai/agents/stonks-bot-schemas';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { fetchPrice } from '@/app/actions';
 
 const confidenceIcons: Record<string, React.ElementType> = {
     'To the moon!': Rocket,
@@ -24,12 +25,39 @@ export default function StonksBot(props: StonksBotOutput | {}) {
     const [result, setResult] = useState<StonksBotOutput | null>(props && 'ticker' in props ? props : null);
     const { toast } = useToast();
 
+    const [watchlist, setWatchlist] = useState<string[]>([]);
+    const [watchTicker, setWatchTicker] = useState('');
+    const lastPrices = useRef<Record<string, string>>({});
+
     useEffect(() => {
         if (props && 'ticker' in props) {
             setResult(props);
         }
     }, [props]);
 
+    useEffect(() => {
+        if (watchlist.length === 0) return;
+
+        const intervalId = setInterval(async () => {
+        for (const t of watchlist) {
+            const priceResult = await fetchPrice(t);
+            if (!('error' in priceResult)) {
+                const currentPrice = parseFloat(priceResult.price).toFixed(2);
+                const lastPrice = lastPrices.current[t];
+
+                if (lastPrice && lastPrice !== currentPrice) {
+                    toast({
+                        title: `Stonks Update: ${t}`,
+                        description: `Price is now $${currentPrice}`,
+                    });
+                }
+                lastPrices.current[t] = currentPrice;
+            }
+        }
+        }, 30000); // Poll every 30 seconds
+
+        return () => clearInterval(intervalId);
+    }, [watchlist, toast]);
 
     const handleGetAdvice = async () => {
         if (!ticker) {
@@ -39,6 +67,28 @@ export default function StonksBot(props: StonksBotOutput | {}) {
         const command = `get stonks advice for ticker ${ticker}`;
         handleCommandSubmit(command);
     };
+    
+    const handleAddToWatchlist = () => {
+        if (watchTicker && !watchlist.includes(watchTicker)) {
+            const newTicker = watchTicker.trim();
+            setWatchlist([...watchlist, newTicker]);
+            
+            // Fetch initial price to avoid a notification on the first poll
+            (async () => {
+                const priceResult = await fetchPrice(newTicker);
+                if (!('error' in priceResult)) {
+                    lastPrices.current[newTicker] = parseFloat(priceResult.price).toFixed(2);
+                }
+            })();
+        }
+        setWatchTicker('');
+    };
+
+    const handleRemoveFromWatchlist = (tickerToRemove: string) => {
+        setWatchlist(watchlist.filter((t) => t !== tickerToRemove));
+        delete lastPrices.current[tickerToRemove];
+    };
+
 
     const getChangeInfo = (change: string) => {
         if (!change || change === 'N/A') return { color: 'text-muted-foreground', icon: null };
@@ -76,7 +126,7 @@ export default function StonksBot(props: StonksBotOutput | {}) {
             </Card>
 
             {result && (
-                <Card className="bg-accent/10 border-accent/50 flex-grow text-foreground">
+                <Card className="bg-accent/10 border-accent/50 text-foreground">
                      <CardHeader className="p-3">
                         <div className="flex justify-between items-baseline">
                             <CardTitle className="text-2xl font-mono text-accent">{result.ticker}</CardTitle>
@@ -107,6 +157,42 @@ export default function StonksBot(props: StonksBotOutput | {}) {
                     </CardContent>
                 </Card>
             )}
+
+            <Card className="bg-background/50 border-border/50">
+                <CardHeader className="p-2">
+                    <CardTitle className="text-base flex items-center gap-2">
+                        <Bell className="h-4 w-4 text-primary" />
+                        Watchlist Alerts
+                    </CardTitle>
+                    <CardDescription className="text-xs">Get in-app notifications for price changes.</CardDescription>
+                </CardHeader>
+                <CardContent className="p-2 space-y-2">
+                    <div className="flex gap-2">
+                        <Input
+                            placeholder="Add ticker to watchlist"
+                            value={watchTicker}
+                            onChange={(e) => setWatchTicker(e.target.value.toUpperCase())}
+                            onKeyDown={(e) => e.key === 'Enter' && handleAddToWatchlist()}
+                            className="font-mono"
+                        />
+                        <Button onClick={handleAddToWatchlist}>Add</Button>
+                    </div>
+                    <div className="space-y-1 max-h-24 overflow-y-auto">
+                        {watchlist.length === 0 ? (
+                            <p className="text-xs text-muted-foreground text-center py-2">Watchlist is empty.</p>
+                        ) : (
+                             watchlist.map((t) => (
+                                <div key={t} className="flex items-center justify-between p-1 rounded-md hover:bg-muted/50">
+                                    <span className="font-mono font-bold">{t}</span>
+                                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleRemoveFromWatchlist(t)}>
+                                        <X className="h-4 w-4" />
+                                    </Button>
+                                </div>
+                            ))
+                        )}
+                    </div>
+                </CardContent>
+            </Card>
         </div>
     );
 }
