@@ -86,7 +86,7 @@ export default function StonksBot(props: StonksBotOutput | {}) {
 
     const handleRemoveFromWatchlist = (tickerToRemove: string) => {
         setWatchlist(watchlist.filter((t) => t !== tickerToRemove));
-        delete lastPrices.current[tickerToRemove];
+        delete lastPrices.current[t];
     };
 
 
