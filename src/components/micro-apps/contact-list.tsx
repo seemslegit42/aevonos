@@ -31,7 +31,7 @@ export default function ContactList({ contacts }: ContactListProps) {
       {contacts.length === 0 ? (
         <p className="text-muted-foreground text-sm p-4 text-center">No contacts found. Click "New Contact" to add one.</p>
       ) : (
-        <div className="max-h-80 overflow-y-auto">
+        <div className="flex-grow overflow-y-auto">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                 {contacts.map((contact) => (
                 <ContactCard key={contact.id} contact={contact} />
@@ -44,3 +44,5 @@ export default function ContactList({ contacts }: ContactListProps) {
     </div>
   );
 }
+
+    
