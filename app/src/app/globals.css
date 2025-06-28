@@ -56,7 +56,9 @@
     --ring: 51 100% 50%; /* Gilded Accent */
     
     /* For Iridescent Aurora background */
-    --patina-green: 158 49% 48%;
+    --iridescent-one: 197 100% 50%;
+    --iridescent-two: 275 86% 50%;
+    --iridescent-three: 320 100% 55%;
     --pale-green: 140 50% 85%; /* Pale Green for Sterileish */
     --military-green: 82 20% 30%; /* A dark, desaturated green */
     --military-green-foreground: 82 40% 90%; /* A pale cream/green for text */
