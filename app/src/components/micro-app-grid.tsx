@@ -1,4 +1,3 @@
-
 'use client';
 
 import React from 'react';
@@ -6,11 +5,11 @@ import MicroAppCard from './micro-app-card';
 import { type MicroApp } from '@/store/app-store';
 import EmptyCanvas from './canvas/empty-canvas';
 
-interface MicroAppCanvasProps {
+interface MicroAppGridProps {
   apps: MicroApp[];
 }
 
-export default function MicroAppCanvas({ apps }: MicroAppCanvasProps) {
+export default function MicroAppGrid({ apps }: MicroAppGridProps) {
   if (apps.length === 0) {
       return <EmptyCanvas />;
   }

@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -12,7 +11,7 @@ import {
   useSensors,
 } from '@dnd-kit/core';
 
-import MicroAppCanvas from '@/components/micro-app-grid';
+import MicroAppGrid from '@/components/micro-app-grid';
 import { useAppStore } from '@/store/app-store';
 import { Skeleton } from '@/components/ui/skeleton';
 import EmptyCanvas from '@/components/canvas/empty-canvas';
@@ -58,7 +57,7 @@ export default function Home() {
           onDragEnd={handleDragEnd}
         >
           {apps.length > 0 ? (
-            <MicroAppCanvas apps={apps} />
+            <MicroAppGrid apps={apps} />
           ) : (
             <EmptyCanvas />
           )}
