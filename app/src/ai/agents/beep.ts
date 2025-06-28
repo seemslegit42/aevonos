@@ -76,6 +76,7 @@ import { KendraInputSchema } from './kendra-schemas';
 import { getStonksAdvice } from '@/ai/agents/stonks-bot';
 import { StonksBotInputSchema } from '@/ai/agents/stonks-bot-schemas';
 import { getStockPrice } from '../tools/finance-tools';
+import { GetStockPriceInputSchema } from '../tools/finance-tools';
 import { auditFinances } from './auditor-generalissimo';
 import { AuditorInputSchema } from './auditor-generalissimo-schemas';
 
@@ -542,38 +543,16 @@ class StonksBotTool extends Tool {
 class GetStockPriceTool extends Tool {
   name = 'getStockPrice';
   description = 'Fetches the current stock price and daily change for a given ticker symbol. Use this for simple price checks when the user does not ask for "advice".';
-  schema = StonksBotInputSchema; // Input is just a ticker
+  schema = GetStockPriceInputSchema;
 
-  async _call(input: z.infer<typeof StonksBotInputSchema>) {
+  async _call(input: z.infer<typeof GetStockPriceInputSchema>) {
     try {
       const priceInfo = await getStockPrice(input);
-      const priceText = priceInfo.price !== 'N/A'
-          ? `$${parseFloat(priceInfo.price).toFixed(2)}`
-          : 'currently unavailable';
-      const report: z.infer<typeof AgentReportSchema> = {
-        agent: 'stonks',
-        report: {
-          ticker: priceInfo.symbol,
-          priceInfo: priceInfo,
-          advice: `The current price for ${priceInfo.symbol} is ${priceText}.`,
-          confidence: 'Diamond hands!',
-          rating: 'HODL',
-        },
-      };
-      return JSON.stringify(report);
+      return JSON.stringify(priceInfo); // Return simple JSON for the agent to use in its text response
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
-      const report: z.infer<typeof AgentReportSchema> = {
-        agent: 'stonks',
-        report: {
-          ticker: input.ticker.toUpperCase(),
-          priceInfo: { symbol: input.ticker.toUpperCase(), price: 'N/A', change: 'N/A', changePercent: 'N/A' },
-          advice: `Couldn't fetch the price for ${input.ticker.toUpperCase()}. ${errorMessage}`,
-          confidence: 'Ape strong together!',
-          rating: 'HODL',
-        },
-      };
-      return JSON.stringify(report);
+      // Return a JSON string with an error message
+      return JSON.stringify({ error: errorMessage });
     }
   }
 }
@@ -704,11 +683,14 @@ export async function processUserCommand(input: UserCommandInput): Promise<UserC
   Your process:
   1.  Analyze the user's command and the mandatory \`AEGIS_INTERNAL_REPORT\` provided in a System Message. If Aegis detects a threat, your tone must become clinical and serious, dropping your usual banter. If the user asks for KENDRA.exe, your response should be "Routing to KENDRA.exe. Brace yourself."
   2.  Based on the user's command and the tool descriptions provided, decide which specialized agents or tools to call. You can call multiple tools in parallel.
-  3.  If the user's command is to launch an app (e.g., "launch the terminal", "open the file explorer"), you MUST use the 'appsToLaunch' array in your final answer. Do NOT use a tool for a simple app launch.
-  4.  When you have gathered all necessary information from your delegated agents and are ready to provide the final response, you MUST call the 'final_answer' tool. This is your final action.
-  5.  Your 'responseText' should be in character—witty, confident, and direct. It should confirm the actions taken and what the user should expect next.
-  6.  Populate all arguments for the 'final_answer' tool correctly, especially the 'agentReports' array, which must include the initial Aegis report and any subsequent reports from tools you called.
-  7.  **Full Intelligence Pipeline**: For commands like "burn the bridge", "run a full analysis", or "get everything on them", you MUST execute the full intelligence pipeline in a specific order. You will call one tool at a time, wait for the result, and then decide the next step. The sequence is:
+  3.  **Tool Usage Rules:**
+      - For simple stock price queries (e.g., "what's the price of TSLA?"), use the \`getStockPrice\` tool and state the result directly in your \`responseText\`. Do NOT launch an app for this.
+      - For stock *advice* or queries involving slang (e.g., "should I buy GME?", "stonks", "yolo"), you MUST use the \`getStonksAdvice\` tool, which will launch the Stonks Bot app.
+  4.  If the user's command is to launch an app (e.g., "launch the terminal", "open the file explorer"), you MUST use the 'appsToLaunch' array in your final answer. Do NOT use a tool for a simple app launch.
+  5.  When you have gathered all necessary information from your delegated agents and are ready to provide the final response, you MUST call the 'final_answer' tool. This is your final action.
+  6.  Your 'responseText' should be in character—witty, confident, and direct. It should confirm the actions taken and what the user should expect next.
+  7.  Populate all arguments for the 'final_answer' tool correctly, especially the 'agentReports' array, which must include the initial Aegis report and any subsequent reports from tools you called.
+  8.  **Full Intelligence Pipeline**: For commands like "burn the bridge", "run a full analysis", or "get everything on them", you MUST execute the full intelligence pipeline in a specific order. You will call one tool at a time, wait for the result, and then decide the next step. The sequence is:
       a. Call \`performOsintScan\` on the target.
       b. Call \`performInfidelityAnalysis\` using the situation context.
       c. (Optional) Call \`deployDecoy\` if the situation warrants it.
@@ -738,7 +720,8 @@ export async function processUserCommand(input: UserCommandInput): Promise<UserC
               const report = AgentReportSchema.parse(JSON.parse(msg.content as string));
               agentReports.push(report);
           } catch (e) {
-              console.error("Failed to parse tool message content as AgentReport:", e);
+              // This is expected for tools like getStockPrice that don't return an AgentReport
+              // console.error("Failed to parse tool message content as AgentReport:", e);
           }
       }
   }

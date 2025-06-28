@@ -8,7 +8,7 @@ import { ai } from '@/ai/genkit';
 import 'dotenv/config';
 
 // Define the schema for the tool input
-const GetStockPriceInputSchema = z.object({
+export const GetStockPriceInputSchema = z.object({
   ticker: z.string().describe('The stock ticker symbol, e.g., GME, TSLA.'),
 });
 
