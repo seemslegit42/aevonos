@@ -43,7 +43,7 @@ import { createVandelayAlibi } from '@/ai/agents/vandelay';
 import { VandelayAlibiInputSchema } from './vandelay-schemas';
 import { analyzeCandidate } from '@/ai/agents/rolodex';
 import { RolodexAnalysisInputSchema } from './rolodex-schemas';
-import { jrocBusinessKit } from '@/ai/agents/jroc';
+import { generateBusinessKit } from '@/ai/agents/jroc';
 import { JrocInputSchema } from './jroc-schemas';
 import { analyzeLaheyLog } from '@/ai/agents/lahey';
 import { LaheyAnalysisInputSchema } from './lahey-schemas';
@@ -311,7 +311,7 @@ class JrocTool extends Tool {
   schema = JrocInputSchema;
   
   async _call(input: z.infer<typeof JrocInputSchema>) {
-    const result = await jrocBusinessKit(input);
+    const result = await generateBusinessKit(input);
     const report: z.infer<typeof AgentReportSchema> = { agent: 'jroc', report: result };
     return JSON.stringify(report);
   }

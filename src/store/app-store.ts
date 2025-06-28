@@ -29,6 +29,7 @@ import type { WingmanOutput } from '@/ai/agents/wingman-schemas';
 import type { KendraOutput } from '@/ai/agents/kendra-schemas';
 import type { StonksBotOutput } from '@/ai/agents/stonks-bot-schemas';
 import { type OrpheanOracleOutput } from '@/ai/agents/orphean-oracle-schemas';
+import type { DossierOutput } from '@/ai/agents/dossier-schemas';
 import { generateSpeech } from '@/ai/flows/tts-flow';
 
 // Define the types of MicroApps available in the OS
@@ -281,6 +282,10 @@ export const useAppStore = create<AppState>((set, get) => {
     if (!reports) return;
     const { toast } = useToast.getState();
 
+    const infidelityRadarId = 'infidelity-radar-main';
+    const infidelityApp = get().apps.find(a => a.id === infidelityRadarId);
+    let infidelityProps = infidelityApp?.contentProps || {};
+
     for (const report of reports) {
       switch (report.agent) {
         case 'aegis':
@@ -387,7 +392,30 @@ export const useAppStore = create<AppState>((set, get) => {
         case 'pam-poovey':
             launchApp('pam-poovey-onboarding', { contentProps: report.report as PamAudioOutput });
             break;
+        
+        case 'osint':
+            infidelityProps.osintReport = report.report as OsintOutput;
+            break;
+        case 'infidelity-analysis':
+            infidelityProps.analysisResult = report.report as InfidelityAnalysisOutput;
+            break;
+        case 'decoy':
+            infidelityProps.decoyResult = report.report as DecoyOutput;
+            break;
+        case 'dossier':
+            infidelityProps.dossierReport = report.report as DossierOutput;
+            break;
+        case 'legal-dossier':
+            infidelityProps.legalDossierReport = report.report as DossierOutput;
+            break;
       }
+    }
+
+    if (Object.keys(infidelityProps).length > 0) {
+        upsertApp('infidelity-radar', {
+            id: infidelityRadarId,
+            contentProps: infidelityProps
+        });
     }
   };
 
