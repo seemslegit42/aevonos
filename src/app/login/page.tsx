@@ -8,7 +8,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { Html, Icosahedron, Edges } from '@react-three/drei';
+import { Html, Icosahedron, Edges, Torus } from '@react-three/drei';
 import * as THREE from 'three';
 
 import { Button } from '@/components/ui/button';
@@ -41,28 +41,38 @@ const passwordPlaceholders = [
 ];
 
 
-// Individual crystal component with its own animation logic
+// A single component for the crystal sphere and its corresponding ring
 function Crystal({ config }: { config: any }) {
     const ref = useRef<THREE.Group>(null!);
 
     return (
-        <group ref={ref} position={config.position} rotation={config.rotation}>
+        <group ref={ref} position={config.position}>
+            {/* The crystal sphere at the center of the circle */}
             <Icosahedron
-              args={[1, 4]} // Increased detail for smoother spheres
-              scale={config.scale}
+                args={[config.sphereRadius, 4]} // Use a dynamic radius for the sphere
             >
-              <meshStandardMaterial
-                color="hsl(var(--primary))"
-                emissive="hsl(var(--accent))"
-                emissiveIntensity={0.3}
-                roughness={0.05}
-                metalness={0.1}
-                transmission={0.95}
-                thickness={1.5}
-                ior={1.7}
-              />
-              <Edges scale={1.001} color="white" />
+                <meshStandardMaterial
+                    color="hsl(var(--primary))"
+                    emissive="hsl(var(--accent))"
+                    emissiveIntensity={0.3}
+                    roughness={0.05}
+                    metalness={0.1}
+                    transmission={0.95}
+                    thickness={1.5}
+                    ior={1.7}
+                />
+                <Edges scale={1.001} color="white" />
             </Icosahedron>
+            {/* The ring representing the circle itself */}
+            <Torus args={[config.ringRadius, 0.02, 16, 100]}>
+                 <meshStandardMaterial
+                    color="hsl(var(--primary))"
+                    emissive="hsl(var(--accent))"
+                    emissiveIntensity={0.6}
+                    roughness={0.2}
+                    metalness={0.8}
+                />
+            </Torus>
         </group>
     );
 }
@@ -73,7 +83,8 @@ function LoginScene() {
 
   const crystals = useMemo(() => {
     const points: [number, number, number][] = [];
-    const radius = 2.0; // This now defines the radius of each circle in the pattern
+    const ringRadius = 2.0; // This is the radius of the circles in the pattern
+    const sphereRadius = 0.5; // The center spheres are smaller than the rings
 
     // The 19 points of the Flower of Life
     points.push([0, 0, 0]); // Center
@@ -81,31 +92,30 @@ function LoginScene() {
     // First ring of 6
     for (let i = 0; i < 6; i++) {
         const angle = (Math.PI / 3) * i;
-        points.push([Math.cos(angle) * radius, Math.sin(angle) * radius, 0]);
+        points.push([Math.cos(angle) * ringRadius, Math.sin(angle) * ringRadius, 0]);
     }
 
-    // Second ring of 12
-    const r2 = radius * 2;
+    // Second ring of 12 (creates the outer petals)
+    const r2 = ringRadius * 2;
     for (let i = 0; i < 6; i++) {
         const angle = (Math.PI / 3) * i;
         points.push([Math.cos(angle) * r2, Math.sin(angle) * r2, 0]);
     }
-    const r3 = radius * Math.sqrt(3);
+    const r3 = ringRadius * Math.sqrt(3);
     for (let i = 0; i < 6; i++) {
         const angle = (Math.PI / 3) * i + (Math.PI / 6);
         points.push([Math.cos(angle) * r3, Math.sin(angle) * r3, 0]);
     }
 
-    // Use a Set to ensure unique points, in case of floating point inaccuracies
     const uniquePoints = Array.from(new Set(points.map(p => JSON.stringify(p)))).map(s => JSON.parse(s));
 
     return uniquePoints.map(p => ({
       position: p as [number, number, number],
-      rotation: [Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI] as const, // Keep some random initial rotation for shimmer
-      scale: [radius, radius, radius], // Each sphere should have a radius equal to the distance between centers to overlap
-      rotationSpeed: 0.1 // A gentle, uniform rotation for each crystal
+      ringRadius: ringRadius,
+      sphereRadius: sphereRadius,
     }));
   }, []);
+
 
   useFrame((state, delta) => {
     if (group.current) {
