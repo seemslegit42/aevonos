@@ -41,7 +41,7 @@ const performOsintScanFlow = ai.defineFlow(
   },
   async ({ targetName, context }) => {
     const contextData = extractContextData(context || '');
-    let toolResults: Partial<OsintOutput> = {};
+    let toolResults: any = {};
     
     const promises = [];
 
@@ -88,7 +88,6 @@ const performOsintScanFlow = ai.defineFlow(
     synthesizedOutput.breaches = toolResults.breaches || [];
     synthesizedOutput.intelXLeaks = toolResults.intelXLeaks || [];
     synthesizedOutput.burnerPhoneCheck = toolResults.burnerPhoneCheck;
-    synthesizedOutput.firecrawlerReports = toolResults.firecrawlerReports; // Pass along raw reports for transparency
 
     return synthesizedOutput;
   }

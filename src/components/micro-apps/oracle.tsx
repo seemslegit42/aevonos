@@ -13,11 +13,11 @@ import { cn } from '@/lib/utils';
 
 // Define colors for different agent statuses using HSL values from the theme
 const statusConfig: Record<AgentStatus, { color: THREE.Color; emissiveIntensity: number }> = {
-    [AgentStatus.active]: { color: new THREE.Color('hsl(177, 69%, 41%)'), emissiveIntensity: 0.8 }, // accent
-    [AgentStatus.processing]: { color: new THREE.Color('hsl(275, 86%, 37%)'), emissiveIntensity: 1.2 }, // primary
-    [AgentStatus.idle]: { color: new THREE.Color('hsl(223, 14%, 60%)'), emissiveIntensity: 0.2 }, // muted-foreground
-    [AgentStatus.paused]: { color: new THREE.Color('hsl(51, 100%, 50%)'), emissiveIntensity: 0.6 }, // ring (yellow)
-    [AgentStatus.error]: { color: new THREE.Color('hsl(0, 62.8%, 30.6%)'), emissiveIntensity: 1.0 }, // destructive
+    [AgentStatus.active]: { color: new THREE.Color('hsl(320, 85%, 60%)'), emissiveIntensity: 0.8 }, // accent
+    [AgentStatus.processing]: { color: new THREE.Color('hsl(195, 90%, 45%)'), emissiveIntensity: 1.2 }, // primary
+    [AgentStatus.idle]: { color: new THREE.Color('hsl(215, 20.2%, 65.1%)'), emissiveIntensity: 0.2 }, // muted-foreground
+    [AgentStatus.paused]: { color: new THREE.Color('hsl(45, 90%, 55%)'), emissiveIntensity: 0.6 }, // ring (yellow)
+    [AgentStatus.error]: { color: new THREE.Color('hsl(0, 84.2%, 60.2%)'), emissiveIntensity: 1.0 }, // destructive
 };
 
 function AgentNode({ agent, index }: { agent: AgentData, index: number }) {

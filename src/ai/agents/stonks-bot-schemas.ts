@@ -1,4 +1,3 @@
-
 import { z } from 'zod';
 import { StockPriceSchema } from '../tools/finance-tools';
 
