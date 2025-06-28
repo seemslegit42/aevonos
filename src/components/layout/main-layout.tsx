@@ -4,7 +4,7 @@
 import React from 'react';
 import { usePathname } from 'next/navigation';
 import TopBar from '@/components/layout/top-bar';
-import type { User } from '@prisma/client';
+import type { User, Workspace } from '@prisma/client';
 import dynamic from 'next/dynamic';
 
 // BeepAvatar is client-side only because it uses hooks like useFrame from r3f
@@ -14,7 +14,7 @@ const BeepAvatar = dynamic(() => import('@/components/beep-avatar'), {
 
 type UserProp = Pick<User, 'id' | 'email' | 'firstName' | 'lastName'> | null;
 
-export function MainLayout({ children, user }: { children: React.ReactNode; user: UserProp }) {
+export function MainLayout({ children, user, workspace }: { children: React.ReactNode; user: UserProp; workspace: Workspace | null }) {
   const pathname = usePathname();
 
   const publicPaths = ['/login', '/register', '/validator'];
@@ -28,7 +28,7 @@ export function MainLayout({ children, user }: { children: React.ReactNode; user
   // The main application layout for authenticated pages
   return (
     <div className="flex flex-col h-screen p-4 gap-4">
-      <TopBar user={user} />
+      <TopBar user={user} workspace={workspace} />
       <main className="flex-grow flex flex-col min-h-0 overflow-y-auto">
         {/* Render children directly. Client/Server rendering is handled by the page. */}
         {children}

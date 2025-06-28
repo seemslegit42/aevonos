@@ -3,8 +3,9 @@ import type { Metadata } from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster"
 import { MainLayout } from '@/components/layout/main-layout';
-import { getCurrentUser } from '@/lib/auth';
-import type { User } from '@prisma/client';
+import { getServerActionSession } from '@/lib/auth';
+import prisma from '@/lib/prisma';
+import type { User, Workspace } from '@prisma/client';
 
 export const metadata: Metadata = {
   title: 'ΛΞVON OS',
@@ -17,13 +18,30 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   let user: User | null = null;
+  let workspace: Workspace | null = null;
+
   try {
-    // This can throw an error if the database is unreachable.
-    // We wrap it in a try/catch to prevent the entire server from crashing.
-    user = await getCurrentUser();
+    const session = await getServerActionSession();
+    if (session?.userId && session?.workspaceId) {
+        // Fetch user and workspace in parallel
+        [user, workspace] = await Promise.all([
+            prisma.user.findUnique({
+                where: { id: session.userId },
+                 select: {
+                  id: true,
+                  email: true,
+                  firstName: true,
+                  lastName: true,
+                },
+            }),
+            prisma.workspace.findUnique({
+                where: { id: session.workspaceId }
+            })
+        ]);
+    }
   } catch (error) {
-    console.error('[RootLayout] Failed to get current user, possibly a database connection issue:', error);
-    // Proceed with a null user, allowing the app to render in a logged-out state.
+    console.error('[RootLayout] Failed to get session data, possibly a database connection issue:', error);
+    // Proceed with null user/workspace, allowing the app to render in a logged-out state.
   }
 
 
@@ -45,7 +63,7 @@ export default async function RootLayout({
           <div className="absolute inset-0 grain-overlay" />
         </div>
         
-        <MainLayout user={user}>
+        <MainLayout user={user} workspace={workspace}>
           {children}
         </MainLayout>
 
