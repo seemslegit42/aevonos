@@ -27,27 +27,34 @@ export async function POST(request: Request) {
         where: { email },
     });
 
-    if (!user) {
+    if (!user || !user.password) {
         return NextResponse.json({ error: 'Invalid credentials.' }, { status: 401 });
     }
 
-    const isPasswordValid = await bcrypt.compare(password, user.password || '');
+    const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
         return NextResponse.json({ error: 'Invalid credentials.' }, { status: 401 });
     }
     
+    // Find *any* workspace the user is a member of, not just one they own.
     const workspace = await prisma.workspace.findFirst({
-        where: { ownerId: user.id }
+        where: { members: { some: { id: user.id } } }
     });
     
     if (!workspace) {
-        return NextResponse.json({ error: 'User does not have a primary workspace.' }, { status: 403 });
+        return NextResponse.json({ error: 'User is not a member of any workspace.' }, { status: 403 });
     }
+
+    // Atomically update last login time and get the fresh user data.
+    const updatedUser = await prisma.user.update({
+        where: { id: user.id },
+        data: { lastLoginAt: new Date() },
+    });
 
     // Create the session payload
     const expires = new Date(Date.now() + 3600 * 1000); // 1 hour from now
     const sessionPayload = {
-        userId: user.id,
+        userId: updatedUser.id,
         workspaceId: workspace.id,
         expires: expires,
     };
@@ -55,7 +62,7 @@ export async function POST(request: Request) {
     const token = await encrypt(sessionPayload);
     
     // We don't want to send the password hash back to the client
-    const { password: _, ...userResponse } = user;
+    const { password: _, ...userResponse } = updatedUser;
 
     // Response must match AuthResponse schema in api-spec.md
     const apiResponse = {
