@@ -69,6 +69,7 @@ export interface MicroApp {
   title: string;
   description: string;
   position: { x: number; y: number };
+  size: { width: number; height: number };
   zIndex: number;
   contentProps?: any; // Props for content components, e.g., report data
 }
@@ -78,7 +79,7 @@ let appInstanceId = 0;
 const generateId = () => `app-instance-${appInstanceId++}-${Date.now()}`;
 
 
-const defaultAppDetails: Record<MicroAppType, Omit<MicroApp, 'id' | 'position' | 'zIndex' | 'contentProps'>> = {
+const defaultAppDetails: Record<MicroAppType, Omit<MicroApp, 'id' | 'position' | 'zIndex' | 'size' | 'contentProps'>> = {
   'file-explorer': { type: 'file-explorer', title: 'File Explorer', description: 'Access and manage your files.' },
   'terminal': { type: 'terminal', title: 'Terminal', description: 'Direct command-line access.' },
   'ai-suggestion': { type: 'ai-suggestion', title: 'AI Suggestion', description: 'Click to execute this command.' },
@@ -110,12 +111,44 @@ const defaultAppDetails: Record<MicroAppType, Omit<MicroApp, 'id' | 'position' |
   'auditor-generalissimo': { type: 'auditor-generalissimo', title: 'The Auditor Generalissimo', description: 'Guilty until proven solvent.' },
 };
 
+const defaultAppSizes: Record<MicroAppType, { width: number, height: number }> = {
+  'file-explorer': { width: 400, height: 300 },
+  'terminal': { width: 450, height: 300 },
+  'ai-suggestion': { width: 320, height: 120 },
+  'echo-recall': { width: 320, height: 250 },
+  'aegis-control': { width: 320, height: 220 },
+  'contact-list': { width: 680, height: 450 },
+  'pam-poovey-onboarding': { width: 320, height: 350 },
+  'infidelity-radar': { width: 360, height: 500 },
+  'vin-diesel': { width: 320, height: 400 },
+  'project-lumbergh': { width: 320, height: 400 },
+  'lucille-bluth': { width: 320, height: 350 },
+  'rolodex': { width: 340, height: 500 },
+  'winston-wolfe': { width: 320, height: 380 },
+  'kif-kroker': { width: 320, height: 420 },
+  'vandelay': { width: 320, height: 280 },
+  'orphean-oracle': { width: 400, height: 500 },
+  'paper-trail': { width: 340, height: 500 },
+  'jroc-business-kit': { width: 320, height: 500 },
+  'lahey-surveillance': { width: 400, height: 500 },
+  'the-foremanator': { width: 340, height: 500 },
+  'sterileish': { width: 340, height: 500 },
+  'dr-syntax': { width: 340, height: 480 },
+  'beep-wingman': { width: 340, height: 520 },
+  'aegis-threatscope': { width: 360, height: 500 },
+  'aegis-command': { width: 360, height: 400 },
+  'usage-monitor': { width: 320, height: 350 },
+  'kendra': { width: 360, height: 550 },
+  'stonks-bot': { width: 340, height: 550 },
+  'auditor-generalissimo': { width: 360, height: 550 },
+};
 
 export interface AppState {
   apps: MicroApp[];
   isLoading: boolean;
   beepOutput: UserCommandOutput | null;
   handleDragEnd: (event: DragEndEvent) => void;
+  handleResize: (appId: string, size: { width: number; height: number }) => void;
   handleCommandSubmit: (command: string) => void;
   triggerAppAction: (appId: string) => void;
   bringToFront: (appId: string) => void;
@@ -144,6 +177,7 @@ export const useAppStore = create<AppState>((set, get) => {
 
   const launchApp = (type: MicroAppType, overrides: Partial<Omit<MicroApp, 'type'>> = {}) => {
     const defaults = defaultAppDetails[type];
+    const defaultSize = defaultAppSizes[type] || { width: 320, height: 400 };
     const existingAppsCount = get().apps.length;
     
     const newApp: MicroApp = {
@@ -153,6 +187,7 @@ export const useAppStore = create<AppState>((set, get) => {
         description: overrides.description || defaults.description,
         contentProps: overrides.contentProps || {},
         position: overrides.position || { x: 40 + (existingAppsCount % 8) * 30, y: 40 + (existingAppsCount % 8) * 30 },
+        size: overrides.size || defaultSize,
         zIndex: ++zIndexCounter,
     };
     
@@ -402,6 +437,14 @@ export const useAppStore = create<AppState>((set, get) => {
     isLoading: false,
     beepOutput: null,
     bringToFront,
+
+    handleResize: (appId: string, size: { width: number; height: number }) => {
+        set(state => ({
+            apps: state.apps.map(app => 
+            app.id === appId ? { ...app, size } : app
+            ),
+        }));
+    },
 
     handleDragEnd: (event: DragEndEvent) => {
       const { active, delta } = event;
