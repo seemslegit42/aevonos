@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useRef, useState, useEffect } from 'react';
@@ -22,6 +23,7 @@ import { logout } from '@/app/auth/actions';
 import type { User, Workspace } from '@prisma/client';
 import { useAppStore } from '@/store/app-store';
 import UserProfileDialog from '@/components/user-profile-dialog';
+import WorkspaceSettingsDialog from '@/components/workspace-settings-dialog';
 
 type UserProp = Pick<User, 'id' | 'email' | 'firstName' | 'lastName'> | null;
 
@@ -112,10 +114,12 @@ export default function TopBar({ user, workspace }: TopBarProps) {
                         <span>Profile Settings</span>
                     </DropdownMenuItem>
                 </UserProfileDialog>
-                <DropdownMenuItem>
-                    <Settings className="mr-2 h-4 w-4" />
-                    <span>Workspace Settings</span>
-                </DropdownMenuItem>
+                <WorkspaceSettingsDialog workspace={workspace}>
+                  <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="cursor-pointer">
+                      <Settings className="mr-2 h-4 w-4" />
+                      <span>Workspace Settings</span>
+                  </DropdownMenuItem>
+                </WorkspaceSettingsDialog>
                 <DropdownMenuSeparator />
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
