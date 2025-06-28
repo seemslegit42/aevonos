@@ -138,8 +138,14 @@ export default function LoomPage() {
         if (!activeWorkflow?.id) return;
         setIsRunning(true);
         
-        // This would be where you define a trigger payload. For now, it's empty.
-        const triggerPayload = {};
+        // This is where you would define a trigger payload. For now, we'll use a sample.
+        const triggerPayload = {
+            message: "This is a test trigger from Loom Studio.",
+            // Example data for a 'create contact' node if one exists
+            firstName: "Loom",
+            lastName: "User",
+            email: "loom.user@aevonos.com"
+        };
 
         try {
             const response = await fetch(`/api/workflows/${activeWorkflow.id}/run`, {
@@ -156,7 +162,7 @@ export default function LoomPage() {
             const runData = await response.json();
             toast({
                 title: "Workflow Triggered",
-                description: `Run ID: ${runData.runId}. Check history for status.`
+                description: `Run ID: ${runData.runId}. Check history for status updates.`
             });
             // Refresh the run history list
             setListRefreshTrigger(val => val + 1);
