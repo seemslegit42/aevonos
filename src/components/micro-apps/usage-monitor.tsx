@@ -1,89 +1,66 @@
+
 'use client';
 
 import React from 'react';
 import type { BillingUsage } from '@/ai/tools/billing-schemas';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
 import { ArrowUpRight } from 'lucide-react';
-import { motion } from 'framer-motion';
+import Link from 'next/link';
+import { cn } from '@/lib/utils';
+import { useToast } from '@/hooks/use-toast';
 
-const Gauge = ({ value, maxValue }: { value: number; maxValue: number }) => {
-    const percentage = Math.min((value / maxValue) * 100, 100);
-    const circumference = 2 * Math.PI * 45; // 2 * PI * radius
-    const strokeDashoffset = circumference - (percentage / 100) * circumference;
+export default function UsageMonitor(props: Partial<BillingUsage>) {
+    const { toast } = useToast();
 
-    const getColor = (p: number) => {
-        if (p < 50) return 'hsl(var(--accent))';
-        if (p < 85) return 'hsl(var(--ring))';
-        return 'hsl(var(--destructive))';
+    const handleManagePlan = () => {
+        toast({
+            title: "Redirecting...",
+            description: "Opening the pricing page in a new tab.",
+        });
+        window.open('/pricing', '_blank');
+    }
+
+    if (!props.planTier) {
+        return (
+             <div className="p-4 text-center text-muted-foreground">
+                <p>No usage data loaded.</p>
+                <p className="text-xs">Ask BEEP: "What is my current usage?"</p>
+            </div>
+        )
+    }
+
+    const { totalActionsUsed = 0, planLimit = 0, planTier, overageEnabled } = props;
+    const percentage = planLimit > 0 ? Math.min((totalActionsUsed / planLimit) * 100, 100) : 0;
+
+    const getIndicatorColor = (p: number) => {
+        if (p < 50) return 'bg-accent';
+        if (p < 85) return 'bg-yellow-400';
+        return 'bg-destructive';
     };
 
-    const color = getColor(percentage);
-
     return (
-        <div className="relative w-48 h-48">
-            <svg className="w-full h-full" viewBox="0 0 100 100">
-                {/* Background track */}
-                <circle
-                    cx="50"
-                    cy="50"
-                    r="45"
-                    fill="none"
-                    stroke="hsl(var(--muted) / 0.3)"
-                    strokeWidth="8"
-                />
-                {/* Foreground progress */}
-                <motion.circle
-                    cx="50"
-                    cy="50"
-                    r="45"
-                    fill="none"
-                    stroke={color}
-                    strokeWidth="8"
-                    strokeLinecap="round"
-                    strokeDasharray={circumference}
-                    strokeDashoffset={strokeDashoffset}
-                    transform="rotate(-90 50 50)"
-                    initial={{ strokeDashoffset: circumference }}
-                    animate={{ strokeDashoffset }}
-                    transition={{ duration: 1, ease: "easeInOut" }}
-                />
-            </svg>
-            <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="text-3xl font-bold font-headline" style={{ color }}>
-                    {Math.round(percentage)}%
-                </span>
-                <span className="text-xs text-muted-foreground">Used</span>
+        <div className="p-4 flex flex-col items-center text-center space-y-4">
+            <div className="w-full">
+                <h3 className="font-bold text-lg text-primary">{planTier} Plan</h3>
+                <p className="text-xs text-muted-foreground">Current Billing Period</p>
             </div>
-        </div>
-    );
-};
-
-
-export default function UsageMonitor({
-    currentPeriod,
-    totalActionsUsed,
-    planLimit,
-    planTier,
-    overageEnabled
-}: BillingUsage) {
-
-    return (
-        <div className="p-2 flex flex-col items-center text-center">
-            <h3 className="font-bold text-lg text-primary">{planTier} Plan</h3>
-            <p className="text-xs text-muted-foreground mb-4">Usage for current period</p>
             
-            <Gauge value={totalActionsUsed} maxValue={planLimit} />
-            
-            <p className="font-mono text-lg mt-4">{totalActionsUsed.toLocaleString()} / {planLimit.toLocaleString()}</p>
-            <p className="text-xs text-muted-foreground">Agent Actions</p>
+            <div className="w-full px-4 space-y-2">
+                 <Progress value={percentage} indicatorClassName={cn(getIndicatorColor(percentage))} />
+                 <div className="flex justify-between items-baseline font-mono">
+                    <p className="text-lg">{totalActionsUsed.toLocaleString()}</p>
+                    <p className="text-sm text-muted-foreground">/ {planLimit.toLocaleString()} Actions</p>
+                 </div>
+            </div>
 
-            <div className="mt-4 flex items-center justify-center gap-4">
+            <div className="flex items-center justify-center gap-4 pt-2">
                 <Badge variant={overageEnabled ? "default" : "secondary"}>
                     Overage: {overageEnabled ? "Enabled" : "Disabled"}
                 </Badge>
-                <Button variant="outline" size="sm">
-                    Upgrade Plan <ArrowUpRight className="ml-2 h-4 w-4" />
+                <Button variant="outline" size="sm" onClick={handleManagePlan}>
+                    Manage Plan <ArrowUpRight className="ml-2 h-4 w-4" />
                 </Button>
             </div>
         </div>
