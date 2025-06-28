@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -18,9 +17,9 @@ import { useAppStore } from '@/store/app-store';
 
 const MoraleDisplay = ({ level, name }: { level: KifKrokerAnalysisOutput['moraleLevel'], name: string }) => {
     const styles = {
-        Nominal: 'text-green-400 border-green-400/50',
-        Strained: 'text-yellow-400 border-yellow-400/50',
-        Tense: 'text-orange-400 border-orange-400/50',
+        Nominal: 'text-accent border-accent/50',
+        Strained: 'text-ring border-ring/50',
+        Tense: 'text-ring border-ring/50',
         Sigh: 'text-destructive border-destructive/50',
     };
     return (

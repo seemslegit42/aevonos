@@ -10,7 +10,6 @@ import { cn } from '@/lib/utils';
 import { ResizableBox } from 'react-resizable';
 import 'react-resizable/css/styles.css';
 
-
 interface MicroAppCardProps {
   app: MicroApp;
 }
