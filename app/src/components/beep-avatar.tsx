@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -6,16 +5,11 @@ import { Canvas, useFrame } from '@react-three/fiber';
 import { Icosahedron, Edges } from '@react-three/drei';
 import * as THREE from 'three';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useAppStore } from '@/store/app-store';
 
-import type { UserCommandOutput } from '@/store/app-store';
 import { Bot, AlertTriangle } from 'lucide-react';
 
 type AvatarState = 'idle' | 'listening' | 'speaking' | 'alert';
-
-interface BeepAvatarProps {
-    isLoading: boolean;
-    beepOutput: UserCommandOutput | null;
-}
 
 const AnimatedIcosahedron = ({ avatarState }: { avatarState: AvatarState }) => {
     const groupRef = useRef<THREE.Group>(null!);
@@ -88,7 +82,8 @@ const AnimatedIcosahedron = ({ avatarState }: { avatarState: AvatarState }) => {
     );
 };
 
-export default function BeepAvatar({ isLoading, beepOutput }: BeepAvatarProps) {
+export default function BeepAvatar() {
+    const { isLoading, beepOutput } = useAppStore();
     const [avatarState, setAvatarState] = useState<AvatarState>('idle');
     const [isHovered, setIsHovered] = useState(false);
     const audioRef = useRef<HTMLAudioElement>(null);

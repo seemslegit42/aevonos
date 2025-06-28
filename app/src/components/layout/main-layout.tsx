@@ -1,11 +1,9 @@
-
 'use client';
 
 import React from 'react';
 import { usePathname } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import TopBar from '@/components/layout/top-bar';
-import { useAppStore } from '@/store/app-store';
 import type { User } from '@prisma/client';
 
 const BeepAvatar = dynamic(() => import('@/components/beep-avatar'), { 
@@ -16,7 +14,6 @@ const BeepAvatar = dynamic(() => import('@/components/beep-avatar'), {
 type UserProp = Pick<User, 'email' | 'firstName' | 'lastName'> | null;
 
 export function MainLayout({ children, user }: { children: React.ReactNode; user: UserProp }) {
-  const { isLoading, handleCommandSubmit, beepOutput } = useAppStore();
   const pathname = usePathname();
 
   const publicPaths = ['/login', '/register', '/validator'];
@@ -28,11 +25,11 @@ export function MainLayout({ children, user }: { children: React.ReactNode; user
 
   return (
     <div className="flex flex-col h-screen p-4 gap-4">
-      <TopBar onCommandSubmit={handleCommandSubmit} isLoading={isLoading} user={user} />
+      <TopBar user={user} />
       <main className="flex-grow flex flex-col min-h-0 overflow-y-auto">
         {children}
       </main>
-      <BeepAvatar isLoading={isLoading} beepOutput={beepOutput} />
+      <BeepAvatar />
     </div>
   );
 }

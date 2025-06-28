@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useRef, useState, useEffect } from 'react';
@@ -10,19 +9,19 @@ import { Sparkles, ShieldCheck, LogOut, Settings } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { logout } from '@/app/auth/actions';
 import type { User } from '@prisma/client';
+import { useAppStore } from '@/store/app-store';
 
 type UserProp = Pick<User, 'email' | 'firstName' | 'lastName'> | null;
 
 interface TopBarProps {
-  onCommandSubmit: (command: string) => void;
-  isLoading: boolean;
   user: UserProp;
 }
 
-export default function TopBar({ onCommandSubmit, isLoading, user }: TopBarProps) {
+export default function TopBar({ user }: TopBarProps) {
   const formRef = useRef<HTMLFormElement>(null);
   const isMobile = useIsMobile();
   const [isMounted, setIsMounted] = useState(false);
+  const { handleCommandSubmit, isLoading } = useAppStore();
 
   useEffect(() => {
     setIsMounted(true);
@@ -40,7 +39,7 @@ export default function TopBar({ onCommandSubmit, isLoading, user }: TopBarProps
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
     const command = formData.get('command') as string;
-    onCommandSubmit(command);
+    handleCommandSubmit(command);
     formRef.current?.reset();
   };
 
