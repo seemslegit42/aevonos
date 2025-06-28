@@ -687,7 +687,7 @@ export async function processUserCommand(input: UserCommandInput): Promise<UserC
   3.  If the user's command is to launch an app (e.g., "launch the terminal", "open the file explorer"), you MUST use the 'appsToLaunch' array in your final answer. Do NOT use a tool for a simple app launch.
   4.  When you have gathered all necessary information from your delegated agents and are ready to provide the final response, you MUST call the 'final_answer' tool. This is your final action.
   5.  Your 'responseText' should be in character—witty, confident, and direct. It should confirm the actions taken and what the user should expect next.
-  6.  Populate all arguments for the 'final_answer' tool correctly, especially the 'agentReports' array, which must include the initial Aegis report and any subsequent reports from tools you called.
+  6.  The 'agentReports' field will be populated automatically based on the tools you call. You only need to provide 'appsToLaunch', 'suggestedCommands', and 'responseText'.
   7.  **Full Intelligence Pipeline**: For commands like "burn the bridge", "run a full analysis", or "get everything on them", you MUST execute the full intelligence pipeline in a specific order. You will call one tool at a time, wait for the result, and then decide the next step. The sequence is:
       a. Call \`performOsintScan\` on the target.
       b. Call \`performInfidelityAnalysis\` using the situation context.
@@ -733,11 +733,8 @@ export async function processUserCommand(input: UserCommandInput): Promise<UserC
       if (finalAnswerCall) {
           try {
               const parsed = UserCommandOutputSchema.parse(finalAnswerCall.args);
-              // Inject the agent reports gathered from all tool calls into the final response
-              const existingReports = new Set(parsed.agentReports?.map(r => JSON.stringify(r)) || []);
-              const allReports = [...(parsed.agentReports || []), ...agentReports.filter(r => !existingReports.has(JSON.stringify(r)))];
-              
-              parsed.agentReports = allReports;
+              // The model is no longer responsible for agentReports. We construct it ourselves from the tool call history.
+              parsed.agentReports = agentReports;
               finalResponse = parsed;
           } catch (e) {
               console.error("Failed to parse final_answer tool arguments:", e);
