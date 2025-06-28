@@ -7,21 +7,23 @@ const prisma = new PrismaClient()
 async function main() {
   console.log(`Start seeding ...`)
 
-  // --- Robust Cleanup ---
-  // Delete records in an order that respects foreign key constraints.
-  // Start with models that depend on others.
-  await prisma.workflowRun.deleteMany();
-  await prisma.workflow.deleteMany();
-  await prisma.securityAlert.deleteMany();
-  await prisma.agent.deleteMany();
-  await prisma.contact.deleteMany();
-  await prisma.integration.deleteMany();
-  
-  // Workspaces must be deleted before the users that own them or are members.
-  await prisma.workspace.deleteMany();
-  
-  // Users can be deleted last.
-  await prisma.user.deleteMany();
+  // Use a transaction to ensure the entire cleanup is atomic.
+  // This prevents the database from being left in a partially-deleted,
+  // inconsistent state if one of the steps fails.
+  await prisma.$transaction([
+    // Start with models that have foreign keys to other models.
+    prisma.workflowRun.deleteMany(),
+    prisma.workflow.deleteMany(),
+    prisma.securityAlert.deleteMany(),
+    prisma.agent.deleteMany(),
+    prisma.contact.deleteMany(),
+    prisma.integration.deleteMany(),
+    // Now delete Workspaces. This must happen before Users because
+    // a User cannot be deleted if they are the owner of a Workspace.
+    prisma.workspace.deleteMany(),
+    // Finally, delete Users, as all dependencies have been removed.
+    prisma.user.deleteMany(),
+  ]);
 
   console.log('Cleared existing data.');
 
