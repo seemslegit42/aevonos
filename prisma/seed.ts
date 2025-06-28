@@ -1,5 +1,5 @@
 
-import { PrismaClient, AgentStatus, SecurityRiskLevel, TransactionType } from '@prisma/client'
+import { PrismaClient, AgentStatus, SecurityRiskLevel, TransactionType, PlanTier } from '@prisma/client'
 import bcrypt from 'bcryptjs'
 
 const prisma = new PrismaClient()
@@ -35,6 +35,7 @@ async function main() {
     data: {
       name: 'Primary Canvas',
       ownerId: user.id,
+      planTier: PlanTier.Artisan,
       // The ledger service will handle setting the initial credits via a transaction.
       // We set it to 0 here initially.
       credits: 0.0,
