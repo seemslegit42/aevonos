@@ -45,13 +45,6 @@ const passwordPlaceholders = [
 function Crystal({ config }: { config: any }) {
     const ref = useRef<THREE.Group>(null!);
 
-    useFrame((_, delta) => {
-        if (ref.current) {
-            ref.current.rotation.y += delta * config.rotationSpeed;
-            ref.current.rotation.x += delta * config.rotationSpeed * 0.5;
-        }
-    });
-
     return (
         <group ref={ref} position={config.position} rotation={config.rotation}>
             <Icosahedron
