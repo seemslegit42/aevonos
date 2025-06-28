@@ -50,12 +50,6 @@ export default {
         border: 'hsl(var(--border))',
         input: 'hsl(var(--input))',
         ring: 'hsl(var(--ring))',
-        'pale-green': 'hsl(var(--pale-green))',
-        'steely-lavender': 'hsl(var(--steely-lavender))',
-        'polished-chrome': 'hsl(var(--polished-chrome))',
-        'faded-cream': 'hsl(var(--faded-cream))',
-        'military-green': 'hsl(var(--military-green))',
-        'ledger-cream': 'hsl(var(--ledger-cream))',
         chart: {
           '1': 'hsl(var(--chart-1))',
           '2': 'hsl(var(--chart-2))',

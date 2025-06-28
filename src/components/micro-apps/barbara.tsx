@@ -60,11 +60,11 @@ export default function Barbara(props: BarbaraOutput | {}) {
     const ApprovalIcon = report?.isApproved ? CheckCircle : XCircle;
 
     return (
-        <div className={cn("p-2 space-y-3 h-full flex flex-col rounded-lg transition-all duration-500", bananaBreadMode ? "bg-yellow-950/20" : "bg-steely-lavender/10")}>
-            <Card className="bg-background/50 border-polished-chrome/30 text-faded-cream">
+        <div className={cn("p-2 space-y-3 h-full flex flex-col rounded-lg transition-all duration-500", bananaBreadMode ? "bg-yellow-950/20" : "bg-secondary/20")}>
+            <Card className="bg-background/50 border-border text-foreground">
                 <CardHeader className="p-2">
-                    <CardTitle className="text-base font-headline text-steely-lavender">Barbara: Compliance</CardTitle>
-                    <CardDescription className="text-xs text-polished-chrome/80">Submit documents for immediate, judgmental review.</CardDescription>
+                    <CardTitle className="text-base font-headline text-primary">Barbara: Compliance</CardTitle>
+                    <CardDescription className="text-xs text-muted-foreground">Submit documents for immediate, judgmental review.</CardDescription>
                 </CardHeader>
                 <CardContent className="p-2 space-y-2">
                     <Textarea 
@@ -73,11 +73,11 @@ export default function Barbara(props: BarbaraOutput | {}) {
                         onChange={(e) => setDocumentText(e.target.value)}
                         disabled={isLoading}
                         rows={3}
-                        className="bg-background/80 border-polished-chrome/50 focus-visible:ring-steely-lavender"
+                        className="bg-background/80 border-border focus-visible:ring-primary"
                     />
                     <div className="flex gap-2">
                         <Select value={task} onValueChange={(v: any) => setTask(v)} disabled={isLoading}>
-                            <SelectTrigger className="bg-background/80 border-polished-chrome/50 focus:ring-steely-lavender">
+                            <SelectTrigger className="bg-background/80 border-border focus:ring-primary">
                                 <SelectValue placeholder="Select Task..." />
                             </SelectTrigger>
                             <SelectContent>
@@ -87,7 +87,7 @@ export default function Barbara(props: BarbaraOutput | {}) {
                                 <SelectItem value="file_insurance_update">File Insurance Update</SelectItem>
                             </SelectContent>
                         </Select>
-                        <Button className="w-full bg-steely-lavender text-background hover:bg-steely-lavender/80" onClick={handleSubmit} disabled={isLoading || !documentText}>
+                        <Button className="w-full" onClick={handleSubmit} disabled={isLoading || !documentText}>
                             {isLoading ? <Loader2 className="animate-spin" /> : 'Submit for Review'}
                         </Button>
                     </div>
@@ -95,11 +95,11 @@ export default function Barbara(props: BarbaraOutput | {}) {
             </Card>
 
             {report && (
-                <Card className="bg-background/50 border-polished-chrome/30 text-faded-cream flex-grow overflow-y-auto">
+                <Card className="bg-background/50 border-border text-foreground flex-grow overflow-y-auto">
                     <CardHeader className="p-2">
-                        <CardTitle className="text-base text-steely-lavender flex justify-between items-center">
+                        <CardTitle className="text-base text-primary flex justify-between items-center">
                             <span>Compliance Report</span>
-                            <span className={cn("flex items-center gap-1 text-sm", report.isApproved ? "text-green-400" : "text-destructive")}>
+                            <span className={cn("flex items-center gap-1 text-sm", report.isApproved ? "text-accent" : "text-destructive")}>
                                 <ApprovalIcon className="h-4 w-4" />
                                 {report.isApproved ? "Approved" : "Rejected"}
                             </span>
@@ -126,8 +126,8 @@ export default function Barbara(props: BarbaraOutput | {}) {
                         )}
                         {report.correctedText && (
                             <div>
-                                <h4 className="font-semibold text-steely-lavender mb-1">Corrected Document:</h4>
-                                <div className="p-2 bg-background/80 rounded-md border border-dashed border-polished-chrome/50 text-xs whitespace-pre-wrap">
+                                <h4 className="font-semibold text-primary mb-1">Corrected Document:</h4>
+                                <div className="p-2 bg-background/80 rounded-md border border-dashed border-border text-xs whitespace-pre-wrap">
                                     {report.correctedText}
                                 </div>
                             </div>

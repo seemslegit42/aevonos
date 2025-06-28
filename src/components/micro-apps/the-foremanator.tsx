@@ -38,11 +38,11 @@ export default function TheForemanator(props: ForemanatorLogOutput | {}) {
     };
 
     return (
-        <div className="p-2 space-y-3 h-full flex flex-col bg-yellow-950/20 border border-yellow-400/20 rounded-lg">
-            <Card className="bg-black/20 border-yellow-400/30 text-yellow-50">
+        <div className="p-2 space-y-3 h-full flex flex-col bg-secondary/20 border border-border/50 rounded-lg">
+            <Card className="bg-secondary border-border text-secondary-foreground">
                 <CardHeader className="p-2">
-                    <CardTitle className="text-base text-yellow-400 font-headline">Daily Site Log</CardTitle>
-                    <CardDescription className="text-xs text-yellow-50/70">What'd you get done? Don't waste my time.</CardDescription>
+                    <CardTitle className="text-base text-primary font-headline">Daily Site Log</CardTitle>
+                    <CardDescription className="text-xs text-muted-foreground">What'd you get done? Don't waste my time.</CardDescription>
                 </CardHeader>
                 <CardContent className="p-2 space-y-2">
                     <Textarea 
@@ -51,13 +51,12 @@ export default function TheForemanator(props: ForemanatorLogOutput | {}) {
                         onChange={(e) => setLogText(e.target.value)}
                         disabled={isLoading}
                         rows={4}
-                        className="bg-black/30 border-yellow-400/50 text-yellow-50 placeholder:text-yellow-50/50 focus-visible:ring-yellow-400"
                     />
                     <div className="flex gap-2">
-                        <Button variant="outline" size="icon" className="border-yellow-400/50 text-yellow-400 hover:bg-yellow-400/10" disabled={isLoading}>
+                        <Button variant="outline" size="icon" disabled={isLoading}>
                             <Mic />
                         </Button>
-                        <Button className="w-full bg-yellow-400 text-black hover:bg-yellow-300" onClick={handleSubmitLog} disabled={isLoading}>
+                        <Button className="w-full" onClick={handleSubmitLog} disabled={isLoading}>
                             {isLoading ? <Loader2 className="animate-spin" /> : 'Submit Daily Log'}
                         </Button>
                     </div>
@@ -65,21 +64,21 @@ export default function TheForemanator(props: ForemanatorLogOutput | {}) {
             </Card>
 
             {report && (
-                <Card className="bg-black/20 border-yellow-400/30 text-yellow-50 flex-grow">
+                <Card className="bg-secondary border-border text-secondary-foreground flex-grow">
                     <CardHeader className="p-2">
-                        <CardTitle className="text-base text-yellow-400 font-headline">Processed Report</CardTitle>
-                        <CardDescription className="text-xs text-yellow-50/70">{report.summary}</CardDescription>
+                        <CardTitle className="text-base text-primary font-headline">Processed Report</CardTitle>
+                        <CardDescription className="text-xs text-muted-foreground">{report.summary}</CardDescription>
                     </CardHeader>
                     <CardContent className="p-2 space-y-2 text-sm">
                         <div>
-                            <h4 className="font-bold text-yellow-400/80">Tasks Completed:</h4>
-                            <ul className="list-disc pl-5 text-yellow-50/90">
+                            <h4 className="font-bold text-primary/80">Tasks Completed:</h4>
+                            <ul className="list-disc pl-5 text-secondary-foreground/90">
                                 {report.tasksCompleted.map((task, i) => <li key={i}>{task}</li>)}
                             </ul>
                         </div>
                          <div>
-                            <h4 className="font-bold text-yellow-400/80">Materials Used:</h4>
-                            <ul className="list-disc pl-5 text-yellow-50/90">
+                            <h4 className="font-bold text-primary/80">Materials Used:</h4>
+                            <ul className="list-disc pl-5 text-secondary-foreground/90">
                                 {report.materialsUsed.map((item, i) => <li key={i}>{item}</li>)}
                             </ul>
                         </div>
@@ -91,11 +90,11 @@ export default function TheForemanator(props: ForemanatorLogOutput | {}) {
                                 </ul>
                             </div>
                         )}
-                        <Separator className="my-2 bg-yellow-400/30"/>
-                        <Alert className="border-yellow-400/50 bg-black/10">
-                            <ChevronsRight className="h-4 w-4 text-yellow-400"/>
-                            <AlertTitle className="text-yellow-400">Foremanator's Orders</AlertTitle>
-                            <AlertDescription className="text-yellow-50/80 italic">
+                        <Separator className="my-2 bg-border"/>
+                        <Alert className="border-primary/50 bg-background/50">
+                            <ChevronsRight className="h-4 w-4 text-primary"/>
+                            <AlertTitle className="text-primary">Foremanator's Orders</AlertTitle>
+                            <AlertDescription className="text-muted-foreground italic">
                                 "{report.foremanatorCommentary}"
                             </AlertDescription>
                         </Alert>
