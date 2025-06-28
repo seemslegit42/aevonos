@@ -46,10 +46,10 @@ export default function Sterileish(props: SterileishAnalysisOutput | {}) {
     const ratingPercent = report ? report.sterileRating * 10 : 0;
 
     return (
-        <div className="p-2 space-y-3 h-full flex flex-col bg-secondary/20 border border-border/50 rounded-lg">
-            <Card className="bg-secondary border-border text-foreground">
+        <div className="p-2 space-y-3 h-full flex flex-col bg-pale-green/10 border border-pale-green/50 rounded-lg">
+            <Card className="bg-background/80 border-pale-green/50 text-foreground">
                 <CardHeader className="p-2">
-                    <CardTitle className="text-base text-primary font-headline">Cleanroom Log Entry</CardTitle>
+                    <CardTitle className="text-base text-pale-green font-headline">Cleanroom Log Entry</CardTitle>
                     <CardDescription className="text-xs text-muted-foreground">"It's probably fine."</CardDescription>
                 </CardHeader>
                 <CardContent className="p-2 space-y-2">
@@ -59,10 +59,11 @@ export default function Sterileish(props: SterileishAnalysisOutput | {}) {
                         onChange={(e) => setLogText(e.target.value)}
                         disabled={isLoading}
                         rows={3}
+                        className="bg-background/80 border-border focus-visible:ring-pale-green"
                     />
                     <div className="flex gap-2">
                         <Select value={entryType} onValueChange={(v: any) => setEntryType(v)} disabled={isLoading}>
-                            <SelectTrigger>
+                            <SelectTrigger className="focus:ring-pale-green">
                                 <SelectValue placeholder="Entry Type" />
                             </SelectTrigger>
                             <SelectContent>
@@ -80,22 +81,22 @@ export default function Sterileish(props: SterileishAnalysisOutput | {}) {
             </Card>
 
             {report && (
-                <Card className="bg-secondary border-border text-foreground flex-grow">
+                <Card className="bg-background/80 border-pale-green/50 text-foreground flex-grow">
                     <CardHeader className="p-2">
-                        <CardTitle className="text-base text-primary font-headline">Compliance Analysis</CardTitle>
+                        <CardTitle className="text-base text-pale-green font-headline">Compliance Analysis</CardTitle>
                     </CardHeader>
                     <CardContent className="p-2 space-y-2 text-sm">
                         <div>
                             <div className="flex justify-between items-center mb-1">
-                                <span className="text-xs font-medium text-primary">Sanitation Level</span>
-                                <span className="text-lg font-bold text-primary">{report.sterileRating.toFixed(1)}</span>
+                                <span className="text-xs font-medium text-pale-green">Sanitation Level</span>
+                                <span className="text-lg font-bold text-pale-green">{report.sterileRating.toFixed(1)}</span>
                             </div>
-                            <Progress value={ratingPercent} className="h-2 [&>div]:bg-primary" />
+                            <Progress value={ratingPercent} className="h-2 [&>div]:bg-pale-green" />
                         </div>
 
-                        <Alert className={report.isCompliant ? "border-accent/50" : "border-destructive/50"}>
-                            {report.isCompliant ? <Check className="h-4 w-4 text-accent"/> : <X className="h-4 w-4 text-destructive"/>}
-                            <AlertTitle className={report.isCompliant ? "text-accent" : "text-destructive"}>
+                        <Alert className={report.isCompliant ? "border-pale-green/50" : "border-destructive/50"}>
+                            {report.isCompliant ? <Check className="h-4 w-4 text-pale-green"/> : <X className="h-4 w-4 text-destructive"/>}
+                            <AlertTitle className={report.isCompliant ? "text-pale-green" : "text-destructive"}>
                                 {report.isCompliant ? "Basically Compliant" : "Compliance Issue Flagged"}
                             </AlertTitle>
                             <AlertDescription className="text-foreground/80 italic">
@@ -103,9 +104,9 @@ export default function Sterileish(props: SterileishAnalysisOutput | {}) {
                             </AlertDescription>
                         </Alert>
 
-                        <Alert className="border-primary/50 bg-background/50">
-                            <ListChecks className="h-4 w-4 text-primary"/>
-                            <AlertTitle className="text-primary">Audit Summary</AlertTitle>
+                        <Alert className="border-pale-green/50 bg-background/50">
+                            <ListChecks className="h-4 w-4 text-pale-green"/>
+                            <AlertTitle className="text-pale-green">Audit Summary</AlertTitle>
                             <AlertDescription className="text-muted-foreground italic">
                                 "{report.snarkySummary}"
                             </AlertDescription>

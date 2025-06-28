@@ -38,10 +38,10 @@ export default function TheForemanator(props: ForemanatorLogOutput | {}) {
     };
 
     return (
-        <div className="p-2 space-y-3 h-full flex flex-col bg-secondary/20 border border-border/50 rounded-lg">
-            <Card className="bg-secondary border-border text-secondary-foreground">
+        <div className="p-2 space-y-3 h-full flex flex-col bg-gilded-accent/10 border border-gilded-accent/50 rounded-lg">
+            <Card className="bg-background/50 border-gilded-accent/50 text-foreground">
                 <CardHeader className="p-2">
-                    <CardTitle className="text-base text-primary font-headline">Daily Site Log</CardTitle>
+                    <CardTitle className="text-base text-gilded-accent font-headline">Daily Site Log</CardTitle>
                     <CardDescription className="text-xs text-muted-foreground">What'd you get done? Don't waste my time.</CardDescription>
                 </CardHeader>
                 <CardContent className="p-2 space-y-2">
@@ -51,6 +51,7 @@ export default function TheForemanator(props: ForemanatorLogOutput | {}) {
                         onChange={(e) => setLogText(e.target.value)}
                         disabled={isLoading}
                         rows={4}
+                        className="bg-background/80 border-border focus-visible:ring-gilded-accent"
                     />
                     <div className="flex gap-2">
                         <Button variant="outline" size="icon" disabled={isLoading}>
@@ -64,21 +65,21 @@ export default function TheForemanator(props: ForemanatorLogOutput | {}) {
             </Card>
 
             {report && (
-                <Card className="bg-secondary border-border text-secondary-foreground flex-grow">
+                <Card className="bg-background/50 border-gilded-accent/50 text-foreground flex-grow">
                     <CardHeader className="p-2">
-                        <CardTitle className="text-base text-primary font-headline">Processed Report</CardTitle>
+                        <CardTitle className="text-base text-gilded-accent font-headline">Processed Report</CardTitle>
                         <CardDescription className="text-xs text-muted-foreground">{report.summary}</CardDescription>
                     </CardHeader>
                     <CardContent className="p-2 space-y-2 text-sm">
                         <div>
-                            <h4 className="font-bold text-primary/80">Tasks Completed:</h4>
-                            <ul className="list-disc pl-5 text-secondary-foreground/90">
+                            <h4 className="font-bold text-gilded-accent/80">Tasks Completed:</h4>
+                            <ul className="list-disc pl-5 text-foreground/90">
                                 {report.tasksCompleted.map((task, i) => <li key={i}>{task}</li>)}
                             </ul>
                         </div>
                          <div>
-                            <h4 className="font-bold text-primary/80">Materials Used:</h4>
-                            <ul className="list-disc pl-5 text-secondary-foreground/90">
+                            <h4 className="font-bold text-gilded-accent/80">Materials Used:</h4>
+                            <ul className="list-disc pl-5 text-foreground/90">
                                 {report.materialsUsed.map((item, i) => <li key={i}>{item}</li>)}
                             </ul>
                         </div>
@@ -91,9 +92,9 @@ export default function TheForemanator(props: ForemanatorLogOutput | {}) {
                             </div>
                         )}
                         <Separator className="my-2 bg-border"/>
-                        <Alert className="border-primary/50 bg-background/50">
-                            <ChevronsRight className="h-4 w-4 text-primary"/>
-                            <AlertTitle className="text-primary">Foremanator's Orders</AlertTitle>
+                        <Alert className="border-gilded-accent/50 bg-background/50">
+                            <ChevronsRight className="h-4 w-4 text-gilded-accent"/>
+                            <AlertTitle className="text-gilded-accent">Foremanator's Orders</AlertTitle>
                             <AlertDescription className="text-muted-foreground italic">
                                 "{report.foremanatorCommentary}"
                             </AlertDescription>

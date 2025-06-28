@@ -60,10 +60,10 @@ export default function Barbara(props: BarbaraOutput | {}) {
     const ApprovalIcon = report?.isApproved ? CheckCircle : XCircle;
 
     return (
-        <div className={cn("p-2 space-y-3 h-full flex flex-col rounded-lg transition-all duration-500", bananaBreadMode ? "bg-yellow-950/20" : "bg-secondary/20")}>
-            <Card className="bg-background/50 border-border text-foreground">
+        <div className={cn("p-2 space-y-3 h-full flex flex-col rounded-lg transition-all duration-500", bananaBreadMode ? "bg-yellow-950/20" : "bg-steely-lavender/10")}>
+            <Card className="bg-background/50 border-steely-lavender/50 text-foreground">
                 <CardHeader className="p-2">
-                    <CardTitle className="text-base font-headline text-primary">Barbara: Compliance</CardTitle>
+                    <CardTitle className="text-base font-headline text-steely-lavender">Barbara: Compliance</CardTitle>
                     <CardDescription className="text-xs text-muted-foreground">Submit documents for immediate, judgmental review.</CardDescription>
                 </CardHeader>
                 <CardContent className="p-2 space-y-2">
@@ -73,11 +73,11 @@ export default function Barbara(props: BarbaraOutput | {}) {
                         onChange={(e) => setDocumentText(e.target.value)}
                         disabled={isLoading}
                         rows={3}
-                        className="bg-background/80 border-border focus-visible:ring-primary"
+                        className="bg-background/80 border-border focus-visible:ring-steely-lavender"
                     />
                     <div className="flex gap-2">
                         <Select value={task} onValueChange={(v: any) => setTask(v)} disabled={isLoading}>
-                            <SelectTrigger className="bg-background/80 border-border focus:ring-primary">
+                            <SelectTrigger className="bg-background/80 border-border focus:ring-steely-lavender">
                                 <SelectValue placeholder="Select Task..." />
                             </SelectTrigger>
                             <SelectContent>
@@ -95,9 +95,9 @@ export default function Barbara(props: BarbaraOutput | {}) {
             </Card>
 
             {report && (
-                <Card className="bg-background/50 border-border text-foreground flex-grow overflow-y-auto">
+                <Card className="bg-background/50 border-steely-lavender/50 text-foreground flex-grow overflow-y-auto">
                     <CardHeader className="p-2">
-                        <CardTitle className="text-base text-primary flex justify-between items-center">
+                        <CardTitle className="text-base text-steely-lavender flex justify-between items-center">
                             <span>Compliance Report</span>
                             <span className={cn("flex items-center gap-1 text-sm", report.isApproved ? "text-accent" : "text-destructive")}>
                                 <ApprovalIcon className="h-4 w-4" />
@@ -106,9 +106,9 @@ export default function Barbara(props: BarbaraOutput | {}) {
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="p-2 space-y-2 text-sm">
-                         <Alert className="border-accent/50 bg-background/50">
-                            <Wand2 className="h-4 w-4 text-accent"/>
-                            <AlertTitle className="text-accent">Barbara's Remark</AlertTitle>
+                         <Alert className="border-steely-lavender/50 bg-background/50">
+                            <Wand2 className="h-4 w-4 text-steely-lavender"/>
+                            <AlertTitle className="text-steely-lavender">Barbara's Remark</AlertTitle>
                             <AlertDescription className="text-foreground/80 italic">
                                 "{report.judgmentalRemark}"
                             </AlertDescription>
@@ -126,8 +126,8 @@ export default function Barbara(props: BarbaraOutput | {}) {
                         )}
                         {report.correctedText && (
                             <div>
-                                <h4 className="font-semibold text-primary mb-1">Corrected Document:</h4>
-                                <div className="p-2 bg-background/80 rounded-md border border-dashed border-border text-xs whitespace-pre-wrap">
+                                <h4 className="font-semibold text-steely-lavender mb-1">Corrected Document:</h4>
+                                <div className="p-2 bg-background/80 rounded-md border border-dashed border-steely-lavender/30 text-xs whitespace-pre-wrap">
                                     {report.correctedText}
                                 </div>
                             </div>

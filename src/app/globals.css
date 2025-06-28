@@ -62,6 +62,13 @@
     --iridescent-three: 320 85% 65%; /* Pink */
     
     /* Themed app colors */
+    --military-green: 82 20% 30%;
+    --ledger-cream: 45 33% 95%;
+    --steely-lavender: 247 25% 60%;
+    --polished-chrome: 240 5% 50%;
+    --faded-cream: 39 52% 94%;
+    --gilded-accent: 51 100% 50%;
+    --pale-green: 145 58% 82%;
   }
 
   * {

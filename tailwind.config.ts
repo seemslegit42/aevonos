@@ -67,6 +67,14 @@ export default {
           border: 'hsl(var(--sidebar-border))',
           ring: 'hsl(var(--sidebar-ring))',
         },
+        // Thematic colors
+        'military-green': 'hsl(var(--military-green))',
+        'ledger-cream': 'hsl(var(--ledger-cream))',
+        'steely-lavender': 'hsl(var(--steely-lavender))',
+        'polished-chrome': 'hsl(var(--polished-chrome))',
+        'faded-cream': 'hsl(var(--faded-cream))',
+        'gilded-accent': 'hsl(var(--gilded-accent))',
+        'pale-green': 'hsl(var(--pale-green))',
       },
       borderRadius: {
         lg: 'var(--radius)',
