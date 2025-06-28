@@ -17,9 +17,9 @@ import { useAppStore } from '@/store/app-store';
 
 const MoraleDisplay = ({ level, name }: { level: KifKrokerAnalysisOutput['moraleLevel'], name: string }) => {
     const styles = {
-        Nominal: 'text-green-400 border-green-400/50',
-        Strained: 'text-yellow-400 border-yellow-400/50',
-        Tense: 'text-orange-400 border-orange-400/50',
+        Nominal: 'text-accent border-accent/50',
+        Strained: 'text-ring border-ring/50',
+        Tense: 'text-yellow-500 border-yellow-500/50', // No direct theme color for orange
         Sigh: 'text-destructive border-destructive/50',
     };
     return (
@@ -95,7 +95,7 @@ export default function TheKifKroker(props: KifKrokerAnalysisOutput | {}) {
                                 <p>Passive Aggression Index: <span className="font-bold font-mono">{result.passiveAggressionIndex}%</span></p>
                                 <p>Team Burnout Probability: <span className="font-bold font-mono">{result.burnoutProbability}%</span></p>
                             </div>
-                            <Alert variant="default" className="bg-background/50">
+                            <Alert variant="default" className="bg-background/80">
                               <Zap className="h-4 w-4" />
                               <AlertTitle>Weary Nudge</AlertTitle>
                               <AlertDescription className="italic text-foreground">

@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -44,7 +43,7 @@ export default function StonksBot(props: StonksBotOutput | {}) {
         if (!change || change === 'N/A') return { color: 'text-muted-foreground', icon: null };
         const changeValue = parseFloat(change);
         if (changeValue > 0) {
-            return { color: 'text-green-400', icon: <ArrowUp className="h-3 w-3" /> };
+            return { color: 'text-accent', icon: <ArrowUp className="h-3 w-3" /> };
         }
         if (changeValue < 0) {
             return { color: 'text-destructive', icon: <ArrowDown className="h-3 w-3" /> };
@@ -76,10 +75,10 @@ export default function StonksBot(props: StonksBotOutput | {}) {
             </Card>
 
             {result && (
-                <Card className="bg-gradient-to-br from-green-500/10 to-green-500/20 border-green-400/50 flex-grow text-foreground">
+                <Card className="bg-accent/10 border-accent/50 flex-grow text-foreground">
                      <CardHeader className="p-3">
                         <div className="flex justify-between items-baseline">
-                            <CardTitle className="text-2xl font-mono text-green-300">{result.ticker}</CardTitle>
+                            <CardTitle className="text-2xl font-mono text-accent">{result.ticker}</CardTitle>
                              {result.priceInfo.price !== 'N/A' && (
                                 <span className="text-2xl font-bold font-mono text-foreground">${parseFloat(result.priceInfo.price).toFixed(2)}</span>
                              )}
@@ -90,17 +89,17 @@ export default function StonksBot(props: StonksBotOutput | {}) {
                                <span>{parseFloat(result.priceInfo.change).toFixed(2)} ({result.priceInfo.changePercent})</span>
                             </div>
                         )}
-                        <CardDescription className="font-bold text-lg text-green-400 text-left pt-2">{result.rating}</CardDescription>
+                        <CardDescription className="font-bold text-lg text-accent text-left pt-2">{result.rating}</CardDescription>
                     </CardHeader>
                     <CardContent className="p-3 pt-0">
-                         <Alert className="border-green-400/50 bg-background/80">
-                            <Rocket className="h-4 w-4 text-green-400" />
+                         <Alert className="border-accent/50 bg-background/80">
+                            <Rocket className="h-4 w-4 text-accent" />
                             <AlertTitle>The Play</AlertTitle>
                             <AlertDescription className="italic">
                                 {result.advice}
                             </AlertDescription>
                         </Alert>
-                        <div className="mt-2 text-center text-green-300">
+                        <div className="mt-2 text-center text-accent">
                             {React.createElement(confidenceIcons[result.confidence] || Rocket, { className: "h-6 w-6 mx-auto mb-1" })}
                             <p className="text-xs font-bold">{result.confidence}</p>
                         </div>
