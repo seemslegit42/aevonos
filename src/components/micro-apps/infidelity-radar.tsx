@@ -12,7 +12,7 @@ import type { DecoyOutput } from '@/ai/agents/decoy-schemas';
 import type { OsintOutput } from '@/ai/agents/osint-schemas';
 import type { DossierOutput } from '@/ai/agents/dossier-schemas';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { useIsMobile } from '@/hooks/use-is-mobile';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Label } from '../ui/label';
 import { Switch } from '../ui/switch';
@@ -80,10 +80,14 @@ export default function InfidelityRadar(props: { osintReport?: OsintOutput, anal
 
   const handleBurnBridge = () => {
     if (!osintTarget) {
-        toast({ variant: 'destructive', title: "Target Required", description: "You must specify a target to burn the bridge with." });
+        toast({ variant: 'destructive', title: "Target Required", description: "The Burn Bridge Protocol requires a target name for the OSINT scan." });
         return;
     }
-    const command = `burn the bridge with target "${osintTarget}" using this context: "${osintContext}"`;
+     if (!analysisInput) {
+        toast({ variant: 'destructive', title: "Situation Required", description: "The Burn Bridge Protocol requires a situation description for behavioral analysis." });
+        return;
+    }
+    const command = `burn the bridge with target "${osintTarget}" using this context: "${osintContext}". The situation description for analysis is: "${analysisInput}"`;
     handleCommandSubmit(command);
     setIsArmed(false);
   }
@@ -123,7 +127,7 @@ export default function InfidelityRadar(props: { osintReport?: OsintOutput, anal
                         This will trigger a full-spectrum analysis, including OSINT, behavioral scans, and decoy deployment, culminating in a final dossier. This action is irreversible.
                     </p>
                     {!isArmed ? (
-                        <Button variant="destructive" className="w-full" onClick={() => setIsArmed(true)} disabled={isLoading || !osintTarget}>
+                        <Button variant="destructive" className="w-full" onClick={() => setIsArmed(true)} disabled={isLoading || !osintTarget || !analysisInput}>
                             {isLoading ? <Loader2 className="animate-spin" /> : <>Initiate Full Scan</>}
                         </Button>
                     ) : (

@@ -3,7 +3,8 @@ import { z } from 'zod';
 export const DecoyInputSchema = z.object({
   targetDescription: z.string().describe('A brief description of the target, including name, interests, and context.'),
   persona: z.enum(['sapiosexual', 'alpha-hustler', 'chill-demon', 'awkward-sweetheart'])
-    .describe('The persona the decoy agent should adopt for the message.'),
+    .optional()
+    .describe('The persona the decoy agent should adopt for the message. If not provided, one will be chosen.'),
 });
 export type DecoyInput = z.infer<typeof DecoyInputSchema>;
 

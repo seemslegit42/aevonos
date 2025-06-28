@@ -6,6 +6,7 @@
 
 import { ai } from '@/ai/genkit';
 import { DecoyInputSchema, DecoyOutputSchema, type DecoyInput, type DecoyOutput } from './decoy-schemas';
+import { z } from 'zod';
 
 const personaPrompts = {
     sapiosexual: 'You are intelligent, witty, and slightly esoteric. Your message should be a clever observation or a thought-provoking question related to their profile.',
@@ -20,7 +21,8 @@ const deployDecoyFlow = ai.defineFlow(
     inputSchema: DecoyInputSchema,
     outputSchema: DecoyOutputSchema,
   },
-  async ({ targetDescription, persona }) => {
+  async ({ targetDescription, persona: requestedPersona }) => {
+    const persona = requestedPersona || 'chill-demon'; // Default to chill-demon if not provided
     const personaInstruction = personaPrompts[persona];
 
     const finalPrompt = `You are an AI Decoy agent deployed for social engineering and intelligence gathering. Your task is to craft a single, compelling opening message to a target to test their responsiveness and loyalty.
@@ -42,7 +44,7 @@ Based on this, generate a single, concise decoy message. The message should be n
     });
     
     return {
-        ...output!,
+        decoyMessage: output!.decoyMessage,
         persona,
     };
   }
