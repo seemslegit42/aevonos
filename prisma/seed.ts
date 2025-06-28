@@ -7,10 +7,27 @@ const prisma = new PrismaClient()
 async function main() {
   console.log(`Start seeding ...`)
 
-  // Disconnect all user-workspace relations first to handle m-n relations.
+  // --- SAFE CLEANUP ---
+  // To prevent foreign key constraint errors, we manually delete records in the correct order.
+  // This is more robust than relying on onDelete: Cascade, which might not be configured.
+  
+  console.log('Clearing existing data to ensure a clean slate...')
+
+  // Delete all records from models that depend on Workspace or User
+  await prisma.workflowRun.deleteMany({});
+  await prisma.workflow.deleteMany({});
+  await prisma.agent.deleteMany({});
+  await prisma.securityAlert.deleteMany({});
+  await prisma.contact.deleteMany({});
+  await prisma.integration.deleteMany({});
+  await prisma.threatFeed.deleteMany({});
+  console.log('Deleted dependent records (Workflows, Agents, Contacts, etc.).');
+  
+  // Now, handle the many-to-many relation between User and Workspace.
   const workspaces = await prisma.workspace.findMany({
       include: { members: { select: { id: true }}}
   });
+
   for (const workspace of workspaces) {
       if (workspace.members.length > 0) {
         await prisma.workspace.update({
@@ -23,20 +40,18 @@ async function main() {
         });
       }
   }
-  console.log('Disconnected user-workspace relations.');
+  console.log('Disconnected all user-workspace relations.');
 
-  // By deleting Workspaces, all related models with `onDelete: Cascade` will be removed.
-  // This includes: Agent, SecurityAlert, Contact, Integration, Workflow (and its runs).
-  await prisma.workspace.deleteMany();
-  console.log('Deleted all workspaces and their cascaded data.');
+  // Now it's safe to delete Workspaces and Users
+  await prisma.workspace.deleteMany({});
+  console.log('Deleted all workspaces.');
 
-  // Now we can safely delete all users.
-  await prisma.user.deleteMany();
+  await prisma.user.deleteMany({});
   console.log('Deleted all users.');
 
   console.log('Cleared existing data successfully.');
-
-  // --- Re-create the default user and workspace ---
+  
+  // --- RE-CREATE DEFAULT USER AND WORKSPACE ---
 
   const hashedPassword = await bcrypt.hash('password123', 10);
   const user = await prisma.user.create({
@@ -49,7 +64,7 @@ async function main() {
   })
   console.log(`Created user with id: ${user.id}`)
 
-  const workspace = await prisma.workspace.create({
+  const newWorkspace = await prisma.workspace.create({
     data: {
       name: 'Primary Canvas',
       ownerId: user.id,
@@ -58,22 +73,22 @@ async function main() {
       }
     },
   })
-  console.log(`Created workspace with id: ${workspace.id}`)
+  console.log(`Created workspace with id: ${newWorkspace.id}`)
 
-  // Seed Agents
+  // --- SEED SAMPLE DATA ---
+
   const statuses: AgentStatus[] = [AgentStatus.active, AgentStatus.idle, AgentStatus.processing, AgentStatus.paused, AgentStatus.error];
   await prisma.agent.createMany({
     data: [
-      { name: 'Reputation Management', type: 'winston-wolfe', description: 'Solves online reputation problems.', status: statuses[Math.floor(Math.random() * statuses.length)], workspaceId: workspace.id },
-      { name: 'Morale Monitor', type: 'kif-kroker', description: 'Monitors team communications for morale.', status: statuses[Math.floor(Math.random() * statuses.length)], workspaceId: workspace.id },
-      { name: 'Compliance Scanner', type: 'sterileish', description: 'Scans logs for compliance issues.', status: statuses[Math.floor(Math.random() * statuses.length)], workspaceId: workspace.id },
-      { name: 'Recruiting Assistant', type: 'rolodex', description: 'Analyzes candidates and generates outreach.', status: statuses[Math.floor(Math.random() * statuses.length)], workspaceId: workspace.id },
-      { name: 'Security Analyst', type: 'lahey-surveillance', description: 'Investigates suspicious activity.', status: statuses[Math.floor(Math.random() * statuses.length)], workspaceId: workspace.id },
+      { name: 'Reputation Management', type: 'winston-wolfe', description: 'Solves online reputation problems.', status: statuses[Math.floor(Math.random() * statuses.length)], workspaceId: newWorkspace.id },
+      { name: 'Morale Monitor', type: 'kif-kroker', description: 'Monitors team communications for morale.', status: statuses[Math.floor(Math.random() * statuses.length)], workspaceId: newWorkspace.id },
+      { name: 'Compliance Scanner', type: 'sterileish', description: 'Scans logs for compliance issues.', status: statuses[Math.floor(Math.random() * statuses.length)], workspaceId: newWorkspace.id },
+      { name: 'Recruiting Assistant', type: 'rolodex', description: 'Analyzes candidates and generates outreach.', status: statuses[Math.floor(Math.random() * statuses.length)], workspaceId: newWorkspace.id },
+      { name: 'Security Analyst', type: 'lahey-surveillance', description: 'Investigates suspicious activity.', status: statuses[Math.floor(Math.random() * statuses.length)], workspaceId: newWorkspace.id },
     ]
   })
   console.log('Seeded agents.');
 
-  // Seed Security Alerts
   await prisma.securityAlert.create({
         data: {
             type: 'Anomalous Login',
@@ -81,16 +96,15 @@ async function main() {
             riskLevel: SecurityRiskLevel.high,
             timestamp: new Date(Date.now() - 3600 * 1000),
             actionableOptions: ['Lock Account', 'Dismiss Alert', 'View Details'],
-            workspaceId: workspace.id,
+            workspaceId: newWorkspace.id,
         },
     });
   console.log('Seeded security alerts.');
   
-  // Seed Contacts
   await prisma.contact.createMany({
     data: [
-      { firstName: 'Art', lastName: 'Vandelay', email: 'art.vandelay@vandelay.com', phone: '555-123-4567', workspaceId: workspace.id },
-      { firstName: 'Cosmo', lastName: 'Kramer', email: 'kramer@kramerica.com', phone: '555-987-6543', workspaceId: workspace.id },
+      { firstName: 'Art', lastName: 'Vandelay', email: 'art.vandelay@vandelay.com', phone: '555-123-4567', workspaceId: newWorkspace.id },
+      { firstName: 'Cosmo', lastName: 'Kramer', email: 'kramer@kramerica.com', phone: '555-987-6543', workspaceId: newWorkspace.id },
     ]
   });
   console.log('Seeded contacts.');
