@@ -7,6 +7,7 @@ import { z } from 'zod';
 import { ai } from '@/ai/genkit';
 import { BillingUsageSchema, type BillingUsage } from './billing-schemas';
 import prisma from '@/lib/prisma';
+import { incrementAgentActions } from '@/services/billing-service';
 
 const PLAN_LIMITS = {
   'Apprentice': 100,
@@ -22,6 +23,10 @@ const getUsageDetailsFlow = ai.defineFlow(
     outputSchema: BillingUsageSchema,
   },
   async ({ workspaceId }) => {
+    // Reading usage is also a billable agent action.
+    // It's a query against the system on behalf of the user.
+    await incrementAgentActions(workspaceId);
+    
     const workspace = await prisma.workspace.findUnique({
         where: { id: workspaceId }
     });
