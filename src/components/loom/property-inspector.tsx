@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 
 interface PropertyInspectorProps {
     node: Node | null;
@@ -19,7 +20,6 @@ const CRMProperties = ({ node, onUpdate }: { node: Node, onUpdate: (data: any) =
     
     const handleFieldChange = (field: string, value: string) => {
         const newData = { ...node.data, [field]: value };
-        // Also update the label dynamically
         if (field === 'action') {
             newData.label = value === 'create' ? 'CRM: Create Contact' : 'CRM: List Contacts';
         }
@@ -62,6 +62,78 @@ const CRMProperties = ({ node, onUpdate }: { node: Node, onUpdate: (data: any) =
     )
 };
 
+const WinstonWolfeProperties = ({ node, onUpdate }: { node: Node, onUpdate: (data: any) => void }) => {
+    return (
+        <div className="space-y-3">
+            <div>
+                <Label htmlFor="reviewText">Review Text</Label>
+                <Textarea 
+                    id="reviewText"
+                    value={node.data.reviewText || ''} 
+                    onChange={(e) => onUpdate({ ...node.data, reviewText: e.target.value })} 
+                    className="bg-background/80" 
+                    placeholder="Paste the negative review here..."
+                    rows={5}
+                />
+            </div>
+        </div>
+    )
+};
+
+const KifKrokerProperties = ({ node, onUpdate }: { node: Node, onUpdate: (data: any) => void }) => {
+    return (
+        <div className="space-y-3">
+            <div>
+                <Label htmlFor="channelName">Channel Name</Label>
+                <Input 
+                    id="channelName"
+                    value={node.data.channelName || ''} 
+                    onChange={(e) => onUpdate({ ...node.data, channelName: e.target.value })} 
+                    className="bg-background/80" 
+                    placeholder="#project-phoenix"
+                />
+            </div>
+            <div>
+                <Label htmlFor="messageSamples">Message Samples</Label>
+                <Textarea 
+                    id="messageSamples"
+                    value={Array.isArray(node.data.messageSamples) ? node.data.messageSamples.join('\n') : ''}
+                    onChange={(e) => onUpdate({ ...node.data, messageSamples: e.target.value.split('\n') })} 
+                    className="bg-background/80" 
+                    placeholder="One message per line..."
+                    rows={5}
+                />
+                 <p className="text-xs text-muted-foreground mt-1">Enter one message sample per line.</p>
+            </div>
+        </div>
+    )
+};
+
+const VandelayProperties = ({ node, onUpdate }: { node: Node, onUpdate: (data: any) => void }) => {
+    return (
+        <div className="space-y-3">
+            <div>
+                <Label htmlFor="topicHint">Topic Hint</Label>
+                <Input 
+                    id="topicHint"
+                    value={node.data.topicHint || ''} 
+                    onChange={(e) => onUpdate({ ...node.data, topicHint: e.target.value })} 
+                    className="bg-background/80" 
+                    placeholder="e.g., design review"
+                />
+            </div>
+            <div className="flex items-center space-x-2">
+                <Switch 
+                    id="addAttendees"
+                    checked={node.data.addAttendees || false}
+                    onCheckedChange={(checked) => onUpdate({ ...node.data, addAttendees: checked })}
+                />
+                <Label htmlFor="addAttendees">Add Fake Attendees</Label>
+            </div>
+        </div>
+    )
+};
+
 const GenericProperties = ({ node, onUpdate }: { node: Node, onUpdate: (data: any) => void }) => (
     <div className="space-y-3">
         {Object.entries(node.data).map(([key, value]) => (
@@ -97,6 +169,12 @@ export default function PropertyInspector({ node, onUpdate }: PropertyInspectorP
       switch(node.type) {
           case 'tool-crm':
               return <CRMProperties node={node} onUpdate={handleDataUpdate} />;
+          case 'tool-winston-wolfe':
+              return <WinstonWolfeProperties node={node} onUpdate={handleDataUpdate} />;
+          case 'tool-kif-kroker':
+                return <KifKrokerProperties node={node} onUpdate={handleDataUpdate} />;
+          case 'tool-vandelay':
+                return <VandelayProperties node={node} onUpdate={handleDataUpdate} />;
           default:
               return <GenericProperties node={node} onUpdate={handleDataUpdate} />;
       }
