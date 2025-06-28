@@ -72,6 +72,9 @@ export default {
           foreground: 'hsl(var(--military-green-foreground))',
         },
         'ledger-cream': 'hsl(var(--ledger-cream))',
+        'steely-lavender': 'hsl(var(--steely-lavender))',
+        'faded-cream': 'hsl(var(--faded-cream))',
+        'polished-chrome': 'hsl(var(--polished-chrome))',
       },
       borderRadius: {
         lg: 'var(--radius)',

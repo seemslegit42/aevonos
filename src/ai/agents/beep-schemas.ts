@@ -28,6 +28,7 @@ import { KendraOutputSchema } from './kendra-schemas';
 import { StonksBotOutputSchema } from './stonks-bot-schemas';
 import { AuditorOutputSchema } from './auditor-generalissimo-schemas';
 import { OrpheanOracleOutputSchema } from './orphean-oracle-schemas';
+import { BarbaraOutputSchema } from './barbara-schemas';
 
 
 // Schemas from the original BEEP agent, preserved for the public contract.
@@ -59,6 +60,7 @@ const LaunchableAppTypeSchema = z.enum([
   'stonks-bot',
   'auditor-generalissimo',
   'contact-list',
+  'barbara',
 ]);
 
 export const AppToLaunchSchema = z.object({
@@ -223,6 +225,10 @@ export const AgentReportSchema = z.discriminatedUnion('agent', [
   z.object({
     agent: z.literal('orphean-oracle'),
     report: OrpheanOracleOutputSchema.describe('The full data visualization and narrative from The Orphean Oracle.'),
+  }),
+  z.object({
+    agent: z.literal('barbara'),
+    report: BarbaraOutputSchema.describe('The full compliance report from Agent Barbara.'),
   }),
 ]);
 

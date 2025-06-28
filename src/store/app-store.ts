@@ -28,6 +28,7 @@ import type { KendraOutput } from '@/ai/agents/kendra-schemas';
 import type { StonksBotOutput } from '@/ai/agents/stonks-bot-schemas';
 import type { AuditorOutput } from '@/ai/agents/auditor-generalissimo-schemas';
 import type { OrpheanOracleOutput } from '@/ai/agents/orphean-oracle-schemas';
+import type { BarbaraOutput } from '@/ai/agents/barbara-schemas';
 
 
 // Define the types of MicroApps available in the OS
@@ -60,7 +61,8 @@ export type MicroAppType =
   | 'usage-monitor'
   | 'kendra'
   | 'stonks-bot'
-  | 'auditor-generalissimo';
+  | 'auditor-generalissimo'
+  | 'barbara';
 
 // Define the shape of a MicroApp instance
 export interface MicroApp {
@@ -109,6 +111,7 @@ const defaultAppDetails: Record<MicroAppType, Omit<MicroApp, 'id' | 'position' |
   'kendra': { type: 'kendra', title: 'Get Me KENDRA', description: 'Routing to KENDRA.exe. Brace yourself.' },
   'stonks-bot': { type: 'stonks-bot', title: 'Stonks Bot', description: 'This is not financial advice.' },
   'auditor-generalissimo': { type: 'auditor-generalissimo', title: 'The Auditor Generalissimo', description: 'Guilty until proven solvent.' },
+  'barbara': { type: 'barbara', title: 'Agent Barbara™', description: 'Precise, passive-aggressive compliance.' },
 };
 
 const defaultAppSizes: Record<MicroAppType, { width: number, height: number }> = {
@@ -141,6 +144,7 @@ const defaultAppSizes: Record<MicroAppType, { width: number, height: number }> =
   'kendra': { width: 360, height: 550 },
   'stonks-bot': { width: 340, height: 550 },
   'auditor-generalissimo': { width: 360, height: 550 },
+  'barbara': { width: 360, height: 550 },
 };
 
 export interface AppState {
@@ -425,6 +429,12 @@ export const useAppStore = create<AppState>((set, get) => {
             upsertApp('orphean-oracle', {
                 id: 'orphean-oracle-main',
                 contentProps: report.report as OrpheanOracleOutput,
+            });
+            break;
+        case 'barbara':
+            upsertApp('barbara', {
+                id: 'barbara-main',
+                contentProps: report.report as BarbaraOutput,
             });
             break;
       }

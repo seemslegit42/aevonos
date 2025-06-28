@@ -79,6 +79,8 @@ import { auditFinances } from './auditor-generalissimo';
 import { AuditorInputSchema } from './auditor-generalissimo-schemas';
 import { invokeOracle } from './orphean-oracle-flow';
 import { OrpheanOracleInputSchema } from './orphean-oracle-schemas';
+import { processDocument } from './barbara';
+import { BarbaraInputSchema } from './barbara-schemas';
 
 
 import {
@@ -555,6 +557,22 @@ class OrpheanOracleTool extends Tool {
     }
 }
 
+class BarbaraTool extends Tool {
+    name = 'invokeBarbara';
+    description = 'Invoke Agent Barbara for administrative and compliance tasks. Use this when the user wants to validate a document, draft a formal email, or check compliance. You must extract the document text and the specific task from the user command.';
+    schema = BarbaraInputSchema;
+
+    async _call(input: z.infer<typeof BarbaraInputSchema>) {
+        const result = await processDocument(input);
+        const report: z.infer<typeof AgentReportSchema> = {
+            agent: 'barbara',
+            report: result,
+        };
+        return JSON.stringify(report);
+    }
+}
+
+
 // LangGraph State
 interface AgentState {
   messages: BaseMessage[];
@@ -645,6 +663,7 @@ export async function processUserCommand(input: UserCommandInput): Promise<UserC
     new PamPooveyTool(), new InfidelityAnalysisTool(), new DecoyTool(),
     new EchoTool(), new DossierTool(), new KendraTool(), new StonksBotTool(),
     new AuditorGeneralissimoTool(), new OrpheanOracleTool(),
+    new BarbaraTool(),
   ];
 
   // Re-bind the model with the schemas from the dynamically created tools for this request.

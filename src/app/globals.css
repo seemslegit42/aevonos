@@ -66,6 +66,9 @@
     --military-green: 82 20% 30%; /* A dark, desaturated green */
     --military-green-foreground: 82 40% 90%; /* A pale cream/green for text */
     --ledger-cream: 39 54% 92%; /* A creamy off-white */
+    --steely-lavender: 250 20% 60%;
+    --faded-cream: 40 30% 90%;
+    --polished-chrome: 210 10% 75%;
   }
 }
  

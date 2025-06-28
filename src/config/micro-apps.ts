@@ -4,7 +4,7 @@
 // In a larger system, this could be stored in a database and managed via an admin interface.
 
 export type MicroAppManifest = {
-  id: string; // This is the app type string like 'oracle'
+  id: string; // This is the app type string like 'orphean-oracle'
   name: string;
   description: string;
   author: string;
@@ -45,15 +45,15 @@ export const microAppManifests: MicroAppManifest[] = [
     isFeatured: false,
   },
   {
-    id: 'oracle',
-    name: 'The Oracle',
+    id: 'orphean-oracle',
+    name: 'The Orphean Oracle',
     author: 'ΛΞVON OS',
-    description: 'Visualize the real-time pulse of your agentic network, replacing static dashboards with an evolving, biomorphic data stream.',
+    description: 'Descend into the data stream and return with a story. A metaphorical, 3D data visualization engine.',
     price: 'Included',
     imageUrl: 'https://placehold.co/600x400.png',
     imageHint: 'data visualization network',
     permissionsRequired: ['read:agent_status'],
-    routingPath: '/oracle',
+    routingPath: '/orphean-oracle',
     contextAwareCapabilities: ['agent_telemetry_stream'],
     isFeatured: false,
   },
@@ -277,5 +277,57 @@ export const microAppManifests: MicroAppManifest[] = [
     routingPath: '/stonks-bot',
     contextAwareCapabilities: [],
     isFeatured: false,
+  },
+  {
+    id: 'auditor-generalissimo',
+    name: 'The Auditor Generalissimo™',
+    author: 'The State',
+    description: '“Welcome to your books, comrade. You are guilty until proven solvent.” Audits finances with oppressive precision.',
+    price: '$25/mo',
+    imageUrl: 'https://placehold.co/600x400.png',
+    imageHint: 'dossier stamp military',
+    permissionsRequired: ['read:billing', 'read:expenses'],
+    routingPath: '/auditor',
+    contextAwareCapabilities: ['expense_stream', 'stripe_integration_hook'],
+    isFeatured: true,
+  },
+  {
+    id: 'vin-diesel',
+    name: 'VIN Diesel',
+    author: 'The Family',
+    description: 'Turbocharged compliance. For family. Validates Vehicle Identification Numbers with speed and swagger.',
+    price: '$9/mo',
+    imageUrl: 'https://placehold.co/600x400.png',
+    imageHint: 'muscle car tire',
+    permissionsRequired: [],
+    routingPath: '/vin-diesel',
+    contextAwareCapabilities: ['vin_validation_hook'],
+    isFeatured: false,
+  },
+  {
+    id: 'pam-poovey-onboarding',
+    name: 'Pam Poovey: Un-HR',
+    author: 'HR (Questionable)',
+    description: "Sarcastic, cynical, and vaguely unhelpful HR scripts and audio. For when you're fresh out of... you know.",
+    price: '$7/mo',
+    imageUrl: 'https://placehold.co/600x400.png',
+    imageHint: 'hr office mess',
+    permissionsRequired: [],
+    routingPath: '/pam-poovey',
+    contextAwareCapabilities: [],
+    isFeatured: false,
+  },
+  {
+    id: 'barbara',
+    name: 'Agent Barbara™',
+    author: 'The Bureau',
+    description: "The admin daemon you never knew you needed. She detects paperwork issues before they occur. She does not ask for thanks.",
+    price: '$35/mo',
+    imageUrl: 'https://placehold.co/600x400.png',
+    imageHint: 'paperwork compliance government',
+    permissionsRequired: ['read:documents', 'write:documents'],
+    routingPath: '/barbara',
+    contextAwareCapabilities: ['document_upload_hook', 'compliance_check_trigger'],
+    isFeatured: true,
   }
 ];

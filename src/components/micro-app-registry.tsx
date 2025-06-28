@@ -30,6 +30,7 @@ import { UsageMonitorIcon } from './icons/UsageMonitorIcon';
 import { KendraIcon } from './icons/KendraIcon';
 import { StonksIcon } from './icons/StonksIcon';
 import { AuditorGeneralissimoIcon } from './icons/AuditorGeneralissimoIcon';
+import { BarbaraIcon } from './icons/BarbaraIcon';
 
 
 import { type MicroAppType } from '@/store/app-store';
@@ -59,6 +60,7 @@ import EchoRecall from './micro-apps/echo-recall';
 import Kendra from './micro-apps/kendra';
 import StonksBot from './micro-apps/stonks-bot';
 import AuditorGeneralissimo from './micro-apps/auditor-generalissimo';
+import Barbara from './micro-apps/barbara';
 
 
 type ComponentRegistry = {
@@ -180,6 +182,10 @@ export const microAppRegistry: Record<MicroAppType, ComponentRegistry> = {
     icon: AuditorGeneralissimoIcon,
     content: AuditorGeneralissimo,
   },
+  'barbara': {
+    icon: BarbaraIcon,
+    content: Barbara,
+  }
 };
 
 export const getAppIcon = (type: MicroAppType) => {
