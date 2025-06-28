@@ -55,7 +55,7 @@ function Crystal({ config }: { config: any }) {
     return (
         <group ref={ref} position={config.position} rotation={config.rotation}>
             <Icosahedron
-              args={[1, 1]}
+              args={[1, 4]} // Increased detail for smoother spheres
               scale={config.scale}
             >
               <meshStandardMaterial
@@ -79,23 +79,54 @@ function LoginScene() {
   const group = useRef<THREE.Group>(null!);
 
   const crystals = useMemo(() => {
-    return Array.from({ length: 100 }, () => ({
-      position: [(Math.random() - 0.5) * 25, (Math.random() - 0.5) * 15, (Math.random() - 0.5) * 20 - 5],
-      rotation: [Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI] as const,
-      scale: [Math.random() * 0.3 + 0.1, Math.random() * 0.8 + 0.2, Math.random() * 0.3 + 0.1] as const,
-      rotationSpeed: (Math.random() - 0.5) * 0.2
+    const points: [number, number, number][] = [];
+    const radius = 2.0; // This now defines the radius of each circle in the pattern
+
+    // The 19 points of the Flower of Life
+    points.push([0, 0, 0]); // Center
+
+    // First ring of 6
+    for (let i = 0; i < 6; i++) {
+        const angle = (Math.PI / 3) * i;
+        points.push([Math.cos(angle) * radius, Math.sin(angle) * radius, 0]);
+    }
+
+    // Second ring of 12
+    const r2 = radius * 2;
+    for (let i = 0; i < 6; i++) {
+        const angle = (Math.PI / 3) * i;
+        points.push([Math.cos(angle) * r2, Math.sin(angle) * r2, 0]);
+    }
+    const r3 = radius * Math.sqrt(3);
+    for (let i = 0; i < 6; i++) {
+        const angle = (Math.PI / 3) * i + (Math.PI / 6);
+        points.push([Math.cos(angle) * r3, Math.sin(angle) * r3, 0]);
+    }
+
+    // Use a Set to ensure unique points, in case of floating point inaccuracies
+    const uniquePoints = Array.from(new Set(points.map(p => JSON.stringify(p)))).map(s => JSON.parse(s));
+
+    return uniquePoints.map(p => ({
+      position: p as [number, number, number],
+      rotation: [Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI] as const, // Keep some random initial rotation for shimmer
+      scale: [radius, radius, radius], // Each sphere should have a radius equal to the distance between centers to overlap
+      rotationSpeed: 0.1 // A gentle, uniform rotation for each crystal
     }));
   }, []);
 
   useFrame((state, delta) => {
     if (group.current) {
-      group.current.position.lerp(new THREE.Vector3(state.mouse.x * 1.5, state.mouse.y * 1.5, 0), 0.05);
+      // Mouse parallax effect
+      group.current.position.lerp(new THREE.Vector3(state.mouse.x * 0.5, state.mouse.y * 0.5, 0), 0.05);
+      // Constant rotation of the whole pattern
+      group.current.rotation.x += delta * 0.01;
       group.current.rotation.y += delta * 0.02;
+      group.current.rotation.z -= delta * 0.01;
     }
   });
 
   return (
-    <group ref={group}>
+    <group ref={group} scale={0.4} rotation={[Math.PI / 5, 0, 0]}>
       {crystals.map((config, i) => (
         <Crystal key={i} config={config} />
       ))}
