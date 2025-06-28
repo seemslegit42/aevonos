@@ -62,8 +62,7 @@ export type MicroAppType =
   | 'stonks-bot'
   | 'aegis-threatscope'
   | 'aegis-command'
-  | 'usage-monitor'
-  | 'oracle';
+  | 'usage-monitor';
 
 // Define the shape of a MicroApp instance
 export interface MicroApp {
@@ -115,7 +114,6 @@ const defaultAppDetails: Record<MicroAppType, Omit<MicroApp, 'id' | 'position' |
   'aegis-threatscope': { type: 'aegis-threatscope', title: 'Aegis ThreatScope', description: 'Real-time threat feed from the Aegis subsystem.' },
   'aegis-command': { type: 'aegis-command', title: 'Aegis Command', description: 'Configure Aegis threat intelligence feeds.' },
   'usage-monitor': { type: 'usage-monitor', title: 'Usage Monitor', description: 'Track your Agent Action consumption.' },
-  'oracle': { type: 'oracle', title: 'The Oracle', description: 'A living visualization of your AI agent constellation.' },
 };
 
 const defaultAppSizes: Record<MicroAppType, { width: number; height: number }> = {
@@ -148,7 +146,6 @@ const defaultAppSizes: Record<MicroAppType, { width: number; height: number }> =
   'aegis-threatscope': { width: 380, height: 450 },
   'aegis-command': { width: 380, height: 350 },
   'usage-monitor': { width: 320, height: 380 },
-  'oracle': { width: 500, height: 500 },
 };
 
 export interface AppState {
@@ -516,5 +513,3 @@ export const useAppStore = create<AppState>((set, get) => {
     },
   };
 });
-
-    
