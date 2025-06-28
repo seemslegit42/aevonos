@@ -1,15 +1,12 @@
 
 'use client';
 
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Canvas, useFrame } from '@react-three/fiber';
-import { Html, Icosahedron, Edges } from '@react-three/drei';
-import * as THREE from 'three';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -39,90 +36,6 @@ const passwordPlaceholders = [
     "It's definitely not '123456'",
     "The key to the universe... or just your password.",
 ];
-
-
-function Crystal({ config }: { config: any }) {
-    const groupRef = useRef<THREE.Group>(null!);
-
-    useFrame((state, delta) => {
-        const group = groupRef.current;
-        if (group) {
-            // Add a subtle, independent rotation to each crystal to make it feel more alive.
-            group.rotation.x += delta * 0.1;
-            group.rotation.y += delta * 0.15;
-        }
-    });
-
-    return (
-        <group position={config.position} ref={groupRef}>
-            <Icosahedron
-                args={[config.sphereRadius, 4]}
-            >
-                <meshStandardMaterial
-                    color="hsl(var(--primary))"
-                    emissive="hsl(var(--accent))"
-                    emissiveIntensity={0.3}
-                    roughness={0.05}
-                    metalness={0.1}
-                    transmission={0.95}
-                    thickness={1.5}
-                    ior={1.7}
-                />
-                <Edges scale={1.001} color="white" />
-            </Icosahedron>
-        </group>
-    );
-}
-
-
-function LoginScene() {
-  const group = useRef<THREE.Group>(null!);
-
-  const crystals = useMemo(() => {
-    const totalCrystals = 19;
-    const constellationRadius = 4;
-    const crystalSphereRadius = 0.4;
-
-    const points: [number, number, number][] = [];
-    // Using the golden angle to distribute points evenly on a sphere (Fibonacci lattice)
-    const phi = Math.PI * (Math.sqrt(5) - 1);
-
-    for (let i = 0; i < totalCrystals; i++) {
-        const y = 1 - (i / (totalCrystals - 1)) * 2;  // y goes from 1 to -1
-        const radiusAtY = Math.sqrt(1 - y * y);   // radius at y
-
-        const theta = phi * i;
-
-        const x = Math.cos(theta) * radiusAtY * constellationRadius;
-        const z = Math.sin(theta) * radiusAtY * constellationRadius;
-        
-        points.push([x, y, z]);
-    }
-    
-    return points.map(p => ({
-      position: p,
-      sphereRadius: crystalSphereRadius,
-    }));
-  }, []);
-
-
-  useFrame((state, delta) => {
-    if (group.current) {
-      // Mouse parallax effect
-      group.current.position.lerp(new THREE.Vector3(state.mouse.x * 0.5, state.mouse.y * 0.5, 0), 0.05);
-      // Controlled, graceful rotation
-      group.current.rotation.y += delta * 0.02;
-    }
-  });
-
-  return (
-    <group ref={group} rotation={[Math.PI / 8, 0, 0]}>
-      {crystals.map((config, i) => (
-        <Crystal key={i} config={config} />
-      ))}
-    </group>
-  );
-}
 
 
 export default function LoginPage() {
@@ -194,97 +107,87 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="w-full h-screen bg-background">
-      <Canvas camera={{ position: [0, 0, 10], fov: 60 }}>
-        <ambientLight intensity={1} />
-        <pointLight position={[10, 10, 10]} intensity={5} color="hsl(var(--primary))" />
-        <pointLight position={[-10, -10, 5]} intensity={3} color="hsl(var(--accent))" />
-        
-        <LoginScene />
-        
-        <Html center>
-           <Card className="w-full max-w-sm bg-black/30 backdrop-blur-lg border border-white/10 shadow-2xl text-white">
-            <CardHeader className="text-center space-y-4 pt-8">
-                <div className="flex justify-center">
-                    <CrystalIcon className="w-16 h-16 text-primary crystal-pulse" />
-                </div>
-                <div>
-                    <CardTitle className="text-3xl font-headline tracking-widest text-white">
-                        Identity Verification
-                    </CardTitle>
-                    <CardDescription className="text-white/70">The system requires a handshake.</CardDescription>
-                </div>
-            </CardHeader>
-            <CardContent>
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                  <FormField
-                    control={form.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-white/80">System Handle</FormLabel>
-                        <FormControl>
-                          <Input 
-                            type="email" 
-                            placeholder={emailPlaceholder} 
-                            {...field} 
-                            disabled={isSubmitting} 
-                            className="bg-white/5 border-white/20 placeholder:text-white/40 focus:border-primary"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="password"
-                    render={({ field }) => (
-                      <FormItem>
-                        <div className="flex justify-between items-center">
-                            <FormLabel className="text-white/80">Encryption Key</FormLabel>
-                            <TooltipProvider>
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        <Link href="#" className="text-xs text-primary/70 hover:text-primary transition-colors">
-                                            Key forgotten?
-                                        </Link>
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                        <p>Tough luck. Try to remember it. I'm an OS, not a locksmith.</p>
-                                    </TooltipContent>
-                                </Tooltip>
-                            </TooltipProvider>
-                        </div>
-                        <FormControl>
-                          <Input 
-                            type="password"
-                            placeholder={passwordPlaceholder}
-                            {...field} 
-                            disabled={isSubmitting} 
-                            className="bg-white/5 border-white/20 placeholder:text-white/40 focus:border-primary"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <Button type="submit" className="w-full bg-primary/80 backdrop-blur-sm border border-primary text-white hover:bg-primary" disabled={isSubmitting}>
-                    {isSubmitting ? <Loader2 className="animate-spin" /> : 'Authenticate & Enter'}
-                  </Button>
-                </form>
-              </Form>
-              <div className="mt-4 text-center text-sm text-white/60">
-                Need system access?{' '}
-                <Link href="/register" className="font-bold text-primary hover:text-primary/80 transition-colors">
-                  Request a build.
-                </Link>
-              </div>
-            </CardContent>
-          </Card>
-        </Html>
-      </Canvas>
+    <div className="flex items-center justify-center min-h-screen p-4">
+      <Card className="w-full max-w-sm bg-black/30 backdrop-blur-lg border border-white/10 shadow-2xl text-white">
+        <CardHeader className="text-center space-y-4 pt-8">
+            <div className="flex justify-center">
+                <CrystalIcon className="w-16 h-16 text-primary crystal-pulse" />
+            </div>
+            <div>
+                <CardTitle className="text-3xl font-headline tracking-widest text-white">
+                    Identity Verification
+                </CardTitle>
+                <CardDescription className="text-white/70">The system requires a handshake.</CardDescription>
+            </div>
+        </CardHeader>
+        <CardContent>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-white/80">System Handle</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="email" 
+                        placeholder={emailPlaceholder} 
+                        {...field} 
+                        disabled={isSubmitting} 
+                        className="bg-white/5 border-white/20 placeholder:text-white/40 focus:border-primary"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <div className="flex justify-between items-center">
+                        <FormLabel className="text-white/80">Encryption Key</FormLabel>
+                        <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Link href="#" className="text-xs text-primary/70 hover:text-primary transition-colors">
+                                        Key forgotten?
+                                    </Link>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                    <p>Tough luck. Try to remember it. I'm an OS, not a locksmith.</p>
+                                </TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
+                    </div>
+                    <FormControl>
+                      <Input 
+                        type="password"
+                        placeholder={passwordPlaceholder}
+                        {...field} 
+                        disabled={isSubmitting} 
+                        className="bg-white/5 border-white/20 placeholder:text-white/40 focus:border-primary"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <Button type="submit" className="w-full bg-primary/80 backdrop-blur-sm border border-primary text-white hover:bg-primary" disabled={isSubmitting}>
+                {isSubmitting ? <Loader2 className="animate-spin" /> : 'Authenticate & Enter'}
+              </Button>
+            </form>
+          </Form>
+          <div className="mt-4 text-center text-sm text-white/60">
+            Need system access?{' '}
+            <Link href="/register" className="font-bold text-primary hover:text-primary/80 transition-colors">
+              Request a build.
+            </Link>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
