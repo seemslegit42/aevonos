@@ -58,7 +58,7 @@ Do not just report the data. Interpret it. Give it meaning. Reveal the story hid
     const { output } = await ai.generate({
       prompt,
       output: { schema: OrpheanOracleOutputSchema },
-      model: 'googleai/gemini-2.0-flash',
+      model: 'googleai/gemini-1.5-flash-latest',
     });
 
     return output!;

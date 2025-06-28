@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview Agent Kernel for the BEEP Wingman.
@@ -45,7 +46,7 @@ Execute the mission. Provide your full analysis in the specified JSON format.`;
     const { output } = await ai.generate({
         prompt: finalPrompt,
         output: { schema: WingmanOutputSchema },
-        model: 'googleai/gemini-2.0-flash',
+        model: 'googleai/gemini-1.5-flash-latest',
     });
     
     return output!;

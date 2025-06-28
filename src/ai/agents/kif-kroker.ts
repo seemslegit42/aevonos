@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview Agent Kernel for The Kif Kroker.
@@ -40,7 +41,7 @@ const analyzeCommsFlow = ai.defineFlow(
     const { output } = await ai.generate({
       prompt,
       output: { schema: KifKrokerAnalysisOutputSchema },
-      model: 'googleai/gemini-2.0-flash',
+      model: 'googleai/gemini-1.5-flash-latest',
     });
 
     return output!;

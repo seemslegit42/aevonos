@@ -73,7 +73,7 @@ Now, execute the audit, comrade. No mercy.
     const { output: textOutput } = await ai.generate({
       prompt,
       output: { schema: AuditorOutputSchema.omit({ overallRoastAudioUri: true }) },
-      model: 'googleai/gemini-2.0-flash',
+      model: 'googleai/gemini-1.5-flash-latest',
     });
 
     if (!textOutput) {

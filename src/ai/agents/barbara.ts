@@ -53,7 +53,7 @@ const processDocumentFlow = ai.defineFlow(
     const { output } = await ai.generate({
       prompt,
       output: { schema: BarbaraOutputSchema },
-      model: 'googleai/gemini-2.0-flash',
+      model: 'googleai/gemini-1.5-flash-latest',
     });
 
     return output!;

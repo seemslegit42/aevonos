@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview Agent Kernel for KENDRA.exe
@@ -51,7 +52,7 @@ const getKendraTakeFlow = ai.defineFlow(
     const { output: textOutput } = await ai.generate({
       prompt: textGenerationPrompt,
       output: { schema: textSchema },
-      model: 'googleai/gemini-2.0-flash',
+      model: 'googleai/gemini-1.5-flash-latest',
     });
 
     if (!textOutput?.imageDescription) {

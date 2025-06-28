@@ -80,7 +80,7 @@ const performOsintScanFlow = ai.defineFlow(
     const { output } = await ai.generate({
         prompt: prompt,
         output: { schema: OsintOutputSchema },
-        model: 'googleai/gemini-2.0-flash',
+        model: 'googleai/gemini-1.5-flash-latest',
     });
     
     // The LLM does the synthesis, we just pass the raw data it might have missed.

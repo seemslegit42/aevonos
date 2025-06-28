@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview Agent Kernel for J-ROC'S LEGIT-AS-FRIG BUSINESS KIT™.
@@ -38,7 +39,7 @@ const generateBusinessKitFlow = ai.defineFlow(
     const { output: textOutput } = await ai.generate({
       prompt: textGenerationPrompt,
       output: { schema: textSchema },
-      model: 'googleai/gemini-2.0-flash',
+      model: 'googleai/gemini-1.5-flash-latest',
     });
 
     if (!textOutput?.logoDescription) {

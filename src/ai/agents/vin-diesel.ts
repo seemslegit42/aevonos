@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview Agent Kernel for VIN Diesel.
@@ -11,6 +12,7 @@ import {
     type VinDieselInput, 
     type VinDieselOutput 
 } from './vin-diesel-schemas';
+import { z } from 'zod';
 
 const vinDieselValidationFlow = ai.defineFlow(
   {
@@ -68,7 +70,7 @@ const vinDieselValidationFlow = ai.defineFlow(
                 message: z.string(),
             })
         },
-        model: 'googleai/gemini-2.0-flash'
+        model: 'googleai/gemini-1.5-flash-latest'
     });
     
     return {

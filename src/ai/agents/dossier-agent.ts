@@ -176,7 +176,7 @@ The subject demonstrates a consistent pattern of concealment, behavioral inconsi
 
     const { output } = await ai.generate({
       prompt: prompt,
-      model: 'googleai/gemini-2.0-flash',
+      model: 'googleai/gemini-1.5-flash-latest',
       output: { schema: z.object({ markdownContent: z.string() }) },
     });
     

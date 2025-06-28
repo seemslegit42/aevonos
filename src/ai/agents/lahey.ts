@@ -37,7 +37,7 @@ const analyzeLogFlow = ai.defineFlow(
     const { output } = await ai.generate({
       prompt,
       output: { schema: LaheyAnalysisOutputSchema },
-      model: 'googleai/gemini-2.0-flash',
+      model: 'googleai/gemini-1.5-flash-latest',
       config: {
         // We're dealing with Lahey, so let's be a little more lenient
         safetySettings: [{ category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' }]

@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview Agent Kernel for Vandelay Industries.
@@ -44,7 +45,7 @@ const generateAlibiFlow = ai.defineFlow(
     const { output } = await ai.generate({
       prompt,
       output: { schema: VandelayAlibiOutputSchema },
-      model: 'googleai/gemini-2.0-flash',
+      model: 'googleai/gemini-1.5-flash-latest',
     });
 
     return output!;

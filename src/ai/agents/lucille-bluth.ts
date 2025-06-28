@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview Agent Kernel for The Lucille Bluth.
@@ -34,7 +35,7 @@ const analyzeExpenseFlow = ai.defineFlow(
     const { output } = await ai.generate({
       prompt,
       output: { schema: LucilleBluthOutputSchema },
-      model: 'googleai/gemini-2.0-flash',
+      model: 'googleai/gemini-1.5-flash-latest',
     });
 
     return output!;

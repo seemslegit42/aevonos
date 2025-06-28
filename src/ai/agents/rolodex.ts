@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview Agent Kernel for The Rolodex.
@@ -42,7 +43,7 @@ Structure your entire output according to the JSON schema.`;
     const { output } = await ai.generate({
       prompt,
       output: { schema: RolodexAnalysisOutputSchema },
-      model: 'googleai/gemini-2.0-flash',
+      model: 'googleai/gemini-1.5-flash-latest',
     });
 
     return output!;

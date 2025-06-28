@@ -26,7 +26,7 @@ export const ai = genkit({
 // The LangChain model will likely fail on first use if the key is invalid, which is fine.
 // The key is to prevent the app from crashing on startup.
 export const geminiModel = new ChatGoogleGenerativeAI({
-  modelName: "gemini-2.0-flash",
+  modelName: "gemini-1.5-flash-latest",
   maxOutputTokens: 8192,
   apiKey: apiKey,
 });
