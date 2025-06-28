@@ -15,7 +15,7 @@ import {
 import MicroAppGrid from '@/components/micro-app-grid';
 import { useAppStore } from '@/store/app-store';
 import { Skeleton } from '@/components/ui/skeleton';
-import { CrystalIcon } from '@/components/icons/CrystalIcon';
+import EmptyCanvas from '@/components/canvas/empty-canvas';
 
 export default function Home() {
   const { apps, handleDragEnd, handleCommandSubmit, isLoading } = useAppStore();
@@ -60,14 +60,7 @@ export default function Home() {
           {apps.length > 0 ? (
             <MicroAppGrid apps={apps} />
           ) : (
-             !isLoading && (
-                <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground animate-in fade-in-50 duration-500">
-                    <CrystalIcon className="w-24 h-24 text-primary/30 mb-4" />
-                    <h2 className="text-xl font-headline text-foreground">Canvas is Clear</h2>
-                    <p>Use the command bar above to get started.</p>
-                    <p className="text-xs mt-2">Try: "list all contacts" or "open the armory"</p>
-                </div>
-            )
+            <EmptyCanvas />
           )}
         </DndContext>
       </div>
