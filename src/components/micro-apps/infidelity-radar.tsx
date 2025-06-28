@@ -48,6 +48,7 @@ export default function InfidelityRadar(props: { osintReport?: OsintOutput, anal
   const [decoyResult, setDecoyResult] = useState<DecoyOutput | null>(thisAppProps.decoyResult || null);
   const [dossierReport, setDossierReport] = useState<DossierOutput | null>(thisAppProps.dossierReport || null);
   const [legalDossierReport, setLegalDossierReport] = useState<DossierOutput | null>(thisAppProps.legalDossierReport || null);
+  const [isArmed, setIsArmed] = useState(false);
 
 
   const [isDecoyPanelOpen, setIsDecoyPanelOpen] = useState(false);
@@ -84,6 +85,7 @@ export default function InfidelityRadar(props: { osintReport?: OsintOutput, anal
     }
     const command = `burn the bridge with target "${osintTarget}" using this context: "${osintContext}"`;
     handleCommandSubmit(command);
+    setIsArmed(false);
   }
   
   const handleCompileDossier = async (mode: 'standard' | 'legal' = 'standard') => {
@@ -120,9 +122,22 @@ export default function InfidelityRadar(props: { osintReport?: OsintOutput, anal
                     <p className="text-xs text-destructive/70">
                         This will trigger a full-spectrum analysis, including OSINT, behavioral scans, and decoy deployment, culminating in a final dossier. This action is irreversible.
                     </p>
-                    <Button variant="destructive" className="w-full" onClick={handleBurnBridge} disabled={isLoading || !osintTarget}>
-                        {isLoading ? <Loader2 className="animate-spin" /> : <>Initiate Full Scan</>}
-                    </Button>
+                    {!isArmed ? (
+                        <Button variant="destructive" className="w-full" onClick={() => setIsArmed(true)} disabled={isLoading || !osintTarget}>
+                            {isLoading ? <Loader2 className="animate-spin" /> : <>Initiate Full Scan</>}
+                        </Button>
+                    ) : (
+                        <Card className="bg-destructive/20 border-destructive p-3">
+                            <p className="text-center text-sm font-bold text-destructive">CONFIRM: BURN BRIDGE</p>
+                            <p className="text-center text-xs text-destructive/80 mb-3">This action is irreversible and will consume significant Agent Actions.</p>
+                            <div className="flex gap-2">
+                                <Button variant="secondary" className="w-full" onClick={() => setIsArmed(false)} disabled={isLoading}>Cancel</Button>
+                                <Button variant="destructive" className="w-full" onClick={handleBurnBridge} disabled={isLoading}>
+                                    {isLoading ? <Loader2 className="animate-spin" /> : <><Flame className="mr-2 h-4 w-4"/>Execute</>}
+                                </Button>
+                            </div>
+                        </Card>
+                    )}
                 </CardContent>
             </Card>
 
