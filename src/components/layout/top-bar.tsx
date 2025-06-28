@@ -6,11 +6,12 @@ import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Sparkles, ShieldCheck, LogOut, Settings } from 'lucide-react';
+import { Sparkles, ShieldCheck, LogOut, Settings, User as UserIcon } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { logout } from '@/app/auth/actions';
 import type { User } from '@prisma/client';
 import { useAppStore } from '@/store/app-store';
+import UserProfileDialog from '@/components/user-profile-dialog';
 
 type UserProp = Pick<User, 'id' | 'email' | 'firstName' | 'lastName'> | null;
 
@@ -88,6 +89,12 @@ export default function TopBar({ user }: TopBarProps) {
                     </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
+                <UserProfileDialog user={user}>
+                    <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="cursor-pointer">
+                        <UserIcon className="mr-2 h-4 w-4" />
+                        <span>Profile Settings</span>
+                    </DropdownMenuItem>
+                </UserProfileDialog>
                 <DropdownMenuItem>
                     <Settings className="mr-2 h-4 w-4" />
                     <span>Workspace Settings</span>
