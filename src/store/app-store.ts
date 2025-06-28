@@ -21,6 +21,7 @@ import type { PamAudioOutput } from '@/ai/agents/pam-poovey-schemas';
 import type { InfidelityAnalysisOutput } from '@/ai/agents/infidelity-analysis-schemas';
 import type { DecoyOutput } from '@/ai/agents/decoy-schemas';
 import type { JrocOutput } from '@/ai/agents/jroc-schemas';
+import type { LaheyAnalysisOutput } from '@/ai/agents/lahey-schemas';
 import type { SterileishAnalysisOutput } from '@/ai/agents/sterileish-schemas';
 import type { PaperTrailScanOutput } from '@/ai/agents/paper-trail-schemas';
 import type { BarbaraOutput } from '@/ai/agents/barbara-schemas';
