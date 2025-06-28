@@ -57,7 +57,9 @@ async function main() {
         // Also update the workspace balance since this is a seed script bypassing the service
         workspace: {
           update: {
-            credits: 100.0
+            data: {
+              credits: 100.0
+            }
           }
         }
     }

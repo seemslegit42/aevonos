@@ -1,77 +1,25 @@
+
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
-  provider        = "prisma-client-js"
+  provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+  url = env("DATABASE_URL")
+  directUrl = env("DIRECT_DATABASE_URL")
 }
 
-model User {
-  id            String        @id @default(cuid())
-  email         String        @unique
-  password      String
-  firstName     String?
-  lastName      String?
-  lastLoginAt   DateTime?
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
-  ownedWorkspaces Workspace[] @relation("WorkspaceOwner")
-  workspaces    Workspace[]   @relation("WorkspaceMembers")
-  transactions  Transaction[]
-}
-
-model Workspace {
-  id              String        @id @default(cuid())
-  name            String
-  ownerId         String
-  owner           User          @relation("WorkspaceOwner", fields: [ownerId], references: [id])
-  members         User[]        @relation("WorkspaceMembers")
-  agents          Agent[]
-  contacts        Contact[]
-  securityAlerts  SecurityAlert[]
-  threatFeeds     ThreatFeed[]
-  integrations    Integration[]
-  workflows       Workflow[]
-  workflowRuns    WorkflowRun[]
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-  
-  credits         Decimal       @default(0.0)
-  planTier        PlanTier      @default(Apprentice)
-  overageEnabled  Boolean       @default(true)
-  agentActionsUsed Int          @default(0)
-  transactions    Transaction[]
-
-  @@index([ownerId])
-}
+// --------------------------------------
+// ENUMS
+// --------------------------------------
 
 enum PlanTier {
   Apprentice
   Artisan
   Priesthood
-}
-
-model Agent {
-  id          String    @id @default(cuid())
-  name        String
-  type        String // This can be a string representing the agent's 'class' or 'model'
-  description String?
-  status      AgentStatus @default(idle)
-  workspaceId String
-  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  lastActivityAt DateTime?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  transactions Transaction[]
-
-  @@index([workspaceId])
 }
 
 enum AgentStatus {
@@ -82,99 +30,12 @@ enum AgentStatus {
   error
 }
 
-
-model Contact {
-  id        String   @id @default(cuid())
-  workspaceId String
-  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  email     String?
-  firstName String?
-  lastName  String?
-  phone     String?
-  customProperties Json?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@unique([workspaceId, email])
-  @@index([workspaceId])
-}
-
-model SecurityAlert {
-  id                String            @id @default(cuid())
-  workspaceId       String
-  workspace         Workspace         @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  type              String
-  explanation       String
-  riskLevel         SecurityRiskLevel
-  timestamp         DateTime          @default(now())
-  actionableOptions String[]
-
-  @@index([workspaceId])
-}
-
 enum SecurityRiskLevel {
   none
   low
   medium
   high
   critical
-}
-
-model ThreatFeed {
-  id          String   @id @default(cuid())
-  url         String
-  workspaceId String
-  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  createdAt   DateTime @default(now())
-
-  @@index([workspaceId])
-}
-
-
-model Integration {
-  id                    String   @id @default(cuid())
-  workspaceId           String
-  workspace             Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  integrationManifestId String // The UUID from the manifest config file
-  name                  String
-  status                String   @default("inactive") // e.g., active, inactive, error
-  configDetails         Json?
-  createdAt             DateTime @default(now())
-  updatedAt             DateTime @updatedAt
-
-  @@index([workspaceId])
-}
-
-model Workflow {
-  id           String          @id @default(cuid())
-  workspaceId  String
-  workspace    Workspace       @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  name         String
-  isActive     Boolean         @default(true)
-  triggerType  String          @default("api") // "api", "schedule", "event"
-  definition   Json
-  runs         WorkflowRun[]
-  createdAt    DateTime        @default(now())
-  updatedAt    DateTime        @updatedAt
-
-  @@index([workspaceId])
-}
-
-model WorkflowRun {
-  id             String            @id @default(cuid())
-  workspaceId    String
-  workspace      Workspace         @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  workflowId     String
-  workflow       Workflow          @relation(fields: [workflowId], references: [id], onDelete: Cascade)
-  status         WorkflowRunStatus @default(pending)
-  triggerPayload Json?
-  output         Json?
-  log            Json?             @default("[]")
-  startedAt      DateTime          @default(now())
-  finishedAt     DateTime?
-
-  @@index([workspaceId])
-  @@index([workflowId])
 }
 
 enum WorkflowRunStatus {
@@ -185,29 +46,164 @@ enum WorkflowRunStatus {
   paused
 }
 
-// Obelisk Pay Models
 enum TransactionType {
   CREDIT
   DEBIT
 }
 
+// --------------------------------------
+// MODELS
+// --------------------------------------
+
+model User {
+  id          String      @id @default(cuid())
+  email       String      @unique
+  password    String
+  firstName   String?
+  lastName    String?
+  lastLoginAt DateTime?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  
+  ownedWorkspaces Workspace[] @relation("WorkspaceOwner")
+  workspaces      Workspace[] @relation("WorkspaceMembers")
+  transactions    Transaction[]
+}
+
+model Workspace {
+  id          String      @id @default(cuid())
+  name        String
+  ownerId     String
+  planTier    PlanTier    @default(Apprentice)
+  credits     Decimal     @default(0.0)
+  agentActionsUsed Int    @default(0)
+  overageEnabled Boolean  @default(true)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  owner         User          @relation("WorkspaceOwner", fields: [ownerId], references: [id])
+  members       User[]        @relation("WorkspaceMembers")
+  agents        Agent[]
+  contacts      Contact[]
+  workflows     Workflow[]
+  workflowRuns  WorkflowRun[]
+  securityAlerts SecurityAlert[]
+  threatFeeds   ThreatFeed[]
+  integrations  Integration[]
+  transactions  Transaction[]
+}
+
+model Agent {
+  id          String      @id @default(cuid())
+  name        String
+  type        String // e.g., winston-wolfe, kif-kroker
+  description String?
+  status      AgentStatus @default(idle)
+  lastActivityAt DateTime?
+  
+  workspaceId String
+  workspace   Workspace   @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  transactions Transaction[]
+
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
+
+model Contact {
+  id          String   @id @default(cuid())
+  firstName   String?
+  lastName    String?
+  email       String?
+  phone       String?
+  customProperties Json?
+
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@unique([workspaceId, email])
+}
+
+model SecurityAlert {
+  id          String            @id @default(cuid())
+  type        String
+  explanation String
+  riskLevel   SecurityRiskLevel @default(low)
+  timestamp   DateTime          @default(now())
+  actionableOptions String[]
+
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+}
+
+model ThreatFeed {
+  id          String      @id @default(cuid())
+  url         String
+  
+  workspaceId String
+  workspace   Workspace   @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  
+  createdAt   DateTime    @default(now())
+}
+
+model Integration {
+  id            String    @id @default(cuid())
+  integrationManifestId String // Corresponds to the ID in the static manifest config
+  name          String
+  status        String    @default("active") // "active", "inactive", "error"
+  configDetails Json
+  
+  workspaceId   String
+  workspace     Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+
+model Workflow {
+  id          String      @id @default(cuid())
+  name        String
+  isActive    Boolean     @default(true)
+  triggerType String      @default("api") // "api", "schedule", "event"
+  definition  Json
+
+  workspaceId String
+  workspace   Workspace     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  runs        WorkflowRun[]
+
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
+
+model WorkflowRun {
+  id             String            @id @default(cuid())
+  status         WorkflowRunStatus @default(pending)
+  triggerPayload Json?
+  output         Json?
+  log            Json?
+  startedAt      DateTime          @default(now())
+  finishedAt     DateTime?
+
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  workflowId  String
+  workflow    Workflow  @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+}
+
 model Transaction {
   id          String          @id @default(cuid())
-  workspaceId String
-  workspace   Workspace       @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  
   type        TransactionType
   amount      Decimal
   description String
-
-  // Optional relations for audit trail
-  userId      String?
-  user        User?           @relation(fields: [userId], references: [id], onDelete: SetNull)
-  agentId     String?
-  agent       Agent?          @relation(fields: [agentId], references: [id], onDelete: SetNull)
-  
   createdAt   DateTime        @default(now())
 
-  @@index([workspaceId])
-  @@index([userId])
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id])
+  userId      String?
+  user        User?     @relation(fields: [userId], references: [id])
+  agentId     String?
+  agent       Agent?    @relation(fields: [agentId], references: [id])
 }
