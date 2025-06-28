@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useRef } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -22,6 +22,11 @@ interface TopBarProps {
 export default function TopBar({ onCommandSubmit, isLoading, user }: TopBarProps) {
   const formRef = useRef<HTMLFormElement>(null);
   const isMobile = useIsMobile();
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const getInitials = () => {
     if (!user) return 'A';
@@ -39,6 +44,8 @@ export default function TopBar({ onCommandSubmit, isLoading, user }: TopBarProps
     formRef.current?.reset();
   };
 
+  const placeholderText = isMobile ? "BEEP Command..." : "BEEP: Tell me what you want to achieve...";
+
   return (
     <header className="flex items-center justify-between w-full px-2 sm:px-4 py-2 bg-foreground/10 backdrop-blur-xl rounded-lg border border-foreground/30 shadow-[0_8px_32px_0_rgba(28,25,52,0.1)] gap-2 sm:gap-4">
       <div className="flex items-center">
@@ -51,7 +58,7 @@ export default function TopBar({ onCommandSubmit, isLoading, user }: TopBarProps
           <Input
             name="command"
             type="text"
-            placeholder={isMobile ? "BEEP Command..." : "BEEP: Tell me what you want to achieve..."}
+            placeholder={isMounted ? placeholderText : "BEEP: Tell me what you want to achieve..."}
             className="w-full bg-input/10 border border-foreground/20 focus-visible:ring-1 focus-visible:ring-primary focus-visible:ring-offset-0 pl-10 h-10"
             disabled={isLoading}
           />
