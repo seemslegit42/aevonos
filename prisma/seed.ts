@@ -1,5 +1,5 @@
 
-import { PrismaClient, AgentStatus, SecurityRiskLevel } from '@prisma/client'
+import { PrismaClient, AgentStatus, SecurityRiskLevel, TransactionType } from '@prisma/client'
 import bcrypt from 'bcryptjs'
 
 const prisma = new PrismaClient()
@@ -35,13 +35,26 @@ async function main() {
     data: {
       name: 'Primary Canvas',
       ownerId: user.id,
-      credits: 100,
+      credits: 100.0,
       members: {
         connect: { id: user.id }
       }
     },
   })
   console.log(`Created workspace with id: ${newWorkspace.id}`)
+
+  // Seed the genesis transaction for the initial credits
+  await prisma.transaction.create({
+    data: {
+        workspaceId: newWorkspace.id,
+        type: TransactionType.CREDIT,
+        amount: 100.0,
+        description: "Initial workspace credit grant.",
+        userId: user.id,
+    }
+  });
+  console.log('Seeded genesis credit transaction.');
+
 
   const statuses: AgentStatus[] = [AgentStatus.active, AgentStatus.idle, AgentStatus.processing, AgentStatus.paused, AgentStatus.error];
   await prisma.agent.createMany({
