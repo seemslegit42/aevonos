@@ -26,6 +26,10 @@ import { AuditorGeneralissimoIcon } from './icons/AuditorGeneralissimoIcon';
 import { BeepWingmanIcon } from './icons/BeepWingmanIcon';
 import { KendraIcon } from './icons/KendraIcon';
 import { StonksIcon } from './icons/StonksIcon';
+import { AegisThreatScopeIcon } from './icons/AegisThreatScopeIcon';
+import { AegisCommandIcon } from './icons/AegisCommandIcon';
+import { UsageMonitorIcon } from './icons/UsageMonitorIcon';
+import { OracleIcon } from './icons/OracleIcon';
 
 import { type MicroAppType } from '@/store/app-store';
 import ContactList from './micro-apps/contact-list';
@@ -50,6 +54,10 @@ import AuditorGeneralissimo from './micro-apps/auditor-generalissimo';
 import BeepWingman from './micro-apps/beep-wingman';
 import Kendra from './micro-apps/kendra';
 import StonksBot from './micro-apps/stonks-bot';
+import AegisThreatScope from './micro-apps/aegis-threatscope';
+import AegisCommand from './micro-apps/aegis-command';
+import UsageMonitor from './micro-apps/usage-monitor';
+import Oracle from './micro-apps/oracle';
 
 type ComponentRegistry = {
     icon: React.ComponentType<any>;
@@ -156,6 +164,22 @@ export const microAppRegistry: Record<MicroAppType, ComponentRegistry> = {
   'stonks-bot': {
     icon: StonksIcon,
     content: StonksBot,
+  },
+  'aegis-threatscope': {
+    icon: AegisThreatScopeIcon,
+    content: AegisThreatScope,
+  },
+  'aegis-command': {
+    icon: AegisCommandIcon,
+    content: AegisCommand,
+  },
+  'usage-monitor': {
+    icon: UsageMonitorIcon,
+    content: UsageMonitor,
+  },
+  'oracle': {
+    icon: OracleIcon,
+    content: Oracle,
   },
 };
 

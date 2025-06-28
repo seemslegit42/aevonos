@@ -60,6 +60,7 @@ const LaunchableAppTypeSchema = z.enum([
   'auditor-generalissimo',
   'contact-list',
   'barbara',
+  'oracle',
 ]);
 
 export const AppToLaunchSchema = z.object({

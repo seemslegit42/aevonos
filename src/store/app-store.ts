@@ -58,7 +58,11 @@ export type MicroAppType =
   | 'auditor-generalissimo'
   | 'beep-wingman'
   | 'kendra'
-  | 'stonks-bot';
+  | 'stonks-bot'
+  | 'aegis-threatscope'
+  | 'aegis-command'
+  | 'usage-monitor'
+  | 'oracle';
 
 // Define the shape of a MicroApp instance
 export interface MicroApp {
@@ -87,7 +91,7 @@ const defaultAppDetails: Record<MicroAppType, Omit<MicroApp, 'id' | 'position' |
   'echo-recall': { type: 'echo-recall', title: 'Echo: Session Recall', description: "A summary of the last session's activity." },
   'aegis-control': { type: 'aegis-control', title: 'Aegis Security Report', description: "Analysis of the last command's security profile." },
   'contact-list': { type: 'contact-list', title: 'Contact List', description: 'A list of your contacts.' },
-  'pam-poovey-onboarding': { type: 'pam-poovey-onboarding', title: 'Pam Poovey: HR', description: 'Onboarding, complaints, and questionable life advice.' },
+  'pam-poovey-onboarding': { type: 'pam-poovey-onboarding', title: 'Pam Poovey: Un-HR', description: 'Onboarding, complaints, and questionable life advice.' },
   'infidelity-radar': { type: 'infidelity-radar', title: 'Infidelity Radar', description: 'Because intuition deserves evidence.' },
   'vin-diesel': { type: 'vin-diesel', title: 'VIN Diesel', description: 'Turbocharged compliance. For family.' },
   'project-lumbergh': { type: 'project-lumbergh', title: 'Project Lumbergh', description: 'Yeah, about those meetings...' },
@@ -107,6 +111,10 @@ const defaultAppDetails: Record<MicroAppType, Omit<MicroApp, 'id' | 'position' |
   'beep-wingman': { type: 'beep-wingman', title: 'BEEP Wingman', description: "He's not your assistant. He's your closer." },
   'kendra': { type: 'kendra', title: 'KENDRA.exe', description: 'This is branding with beef.' },
   'stonks-bot': { type: 'stonks-bot', title: 'Stonks Bot 9000', description: 'Tendies incoming. Not financial advice.' },
+  'aegis-threatscope': { type: 'aegis-threatscope', title: 'Aegis ThreatScope', description: 'Real-time threat feed from the Aegis subsystem.' },
+  'aegis-command': { type: 'aegis-command', title: 'Aegis Command', description: 'Configure Aegis threat intelligence feeds.' },
+  'usage-monitor': { type: 'usage-monitor', title: 'Usage Monitor', description: 'Track your Agent Action consumption.' },
+  'oracle': { type: 'oracle', title: 'The Oracle', description: 'A living visualization of your AI agent constellation.' },
 };
 
 const defaultAppSizes: Record<MicroAppType, { width: number; height: number }> = {
@@ -136,6 +144,10 @@ const defaultAppSizes: Record<MicroAppType, { width: number; height: number }> =
   'beep-wingman': { width: 360, height: 620 },
   'kendra': { width: 360, height: 500 },
   'stonks-bot': { width: 320, height: 380 },
+  'aegis-threatscope': { width: 380, height: 450 },
+  'aegis-command': { width: 380, height: 350 },
+  'usage-monitor': { width: 320, height: 380 },
+  'oracle': { width: 500, height: 500 },
 };
 
 export interface AppState {
@@ -290,9 +302,9 @@ export const useAppStore = create<AppState>((set, get) => {
           break;
         
         case 'billing':
-            launchApp('ai-suggestion', {
-                title: 'Billing Usage Report',
-                description: `Plan: ${report.report.report.planTier}\nUsage: ${report.report.report.totalActionsUsed}/${report.report.report.planLimit} Agent Actions`,
+            upsertApp('usage-monitor', {
+                id: 'singleton-usage-monitor',
+                contentProps: report.report.report
             });
             break;
         
@@ -355,7 +367,7 @@ export const useAppStore = create<AppState>((set, get) => {
         case 'stonks':
             launchApp('stonks-bot', { title: `Stonks: ${report.report.ticker}`, description: 'Your "financial" advice.', contentProps: report.report as StonksBotOutput });
             break;
-
+        
         case 'orphean-oracle':
             launchApp('orphean-oracle', {
                 title: 'Oracle\'s Vision',
