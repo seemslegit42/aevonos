@@ -21,6 +21,7 @@ import { JrocIcon } from './icons/JrocIcon';
 import { LaheyIcon } from './icons/LaheyIcon';
 import { ForemanatorIcon } from './icons/ForemanatorIcon';
 import { SterileishIcon } from './icons/SterileishIcon';
+import { BarbaraIcon } from './icons/BarbaraIcon';
 
 import { type MicroAppType } from '@/store/app-store';
 import ContactList from './micro-apps/contact-list';
@@ -40,6 +41,7 @@ import JrocBusinessKit from './micro-apps/jroc-business-kit';
 import LaheyCommander from './micro-apps/lahey-commander';
 import TheForemanator from './micro-apps/the-foremanator';
 import Sterileish from './micro-apps/sterileish';
+import Barbara from './micro-apps/barbara';
 
 type ComponentRegistry = {
     icon: React.ComponentType<any>;
@@ -126,6 +128,10 @@ export const microAppRegistry: Record<MicroAppType, ComponentRegistry> = {
   'sterileish': {
       icon: SterileishIcon,
       content: Sterileish,
+  },
+  'barbara': {
+      icon: BarbaraIcon,
+      content: Barbara,
   },
 };
 

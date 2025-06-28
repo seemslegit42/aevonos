@@ -51,6 +51,8 @@ import { analyzeCompliance } from '@/ai/agents/sterileish';
 import { SterileishAnalysisInputSchema } from './sterileish-schemas';
 import { scanEvidence } from '@/ai/agents/paper-trail';
 import { PaperTrailScanInputSchema } from './paper-trail-schemas';
+import { processDocument } from '@/ai/agents/barbara';
+import { BarbaraInputSchema } from './barbara-schemas';
 import {
     type UserCommandInput,
     UserCommandOutputSchema,
@@ -328,6 +330,18 @@ class PaperTrailTool extends Tool {
     }
 }
 
+class BarbaraTool extends Tool {
+  name = 'processDocumentForBarbara';
+  description = "Delegates a document processing or compliance task to Agent Barbara. Use this for tasks like validating VINs, drafting professional emails, or checking compliance. Specify the task and provide the document text.";
+  schema = BarbaraInputSchema;
+  
+  async _call(input: z.infer<typeof BarbaraInputSchema>) {
+    const result = await processDocument(input);
+    const report: z.infer<typeof AgentReportSchema> = { agent: 'barbara', report: result };
+    return JSON.stringify(report);
+  }
+}
+
 // LangGraph State
 interface AgentState {
   messages: BaseMessage[];
@@ -412,7 +426,7 @@ export async function processUserCommand(input: UserCommandInput): Promise<UserC
     new GetUsageTool(context), new GetDatingProfileTool(),
     new VinDieselTool(), new WinstonWolfeTool(), new KifKrokerTool(),
     new VandelayTool(), new JrocTool(), new LaheyTool(), new ForemanatorTool(),
-    new SterileishTool(), new PaperTrailTool(),
+    new SterileishTool(), new PaperTrailTool(), new BarbaraTool(),
   ];
 
   // Re-bind the model with the schemas from the dynamically created tools for this request.

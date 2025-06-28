@@ -23,6 +23,7 @@ import type { DecoyOutput } from '@/ai/agents/decoy-schemas';
 import type { JrocOutput } from '@/ai/agents/jroc-schemas';
 import type { SterileishAnalysisOutput } from '@/ai/agents/sterileish-schemas';
 import type { PaperTrailScanOutput } from '@/ai/agents/paper-trail-schemas';
+import type { BarbaraOutput } from '@/ai/agents/barbara-schemas';
 
 // Define the types of MicroApps available in the OS
 export type MicroAppType = 
@@ -46,7 +47,8 @@ export type MicroAppType =
   | 'jroc-business-kit'
   | 'lahey-surveillance'
   | 'the-foremanator'
-  | 'sterileish';
+  | 'sterileish'
+  | 'barbara';
 
 // Define the shape of a MicroApp instance
 export interface MicroApp {
@@ -87,6 +89,7 @@ const defaultAppDetails: Record<MicroAppType, Omit<MicroApp, 'id' | 'position' |
   'lahey-surveillance': { type: 'lahey-surveillance', title: 'Lahey Surveillance', description: 'I am the liquor. And I am watching.' },
   'the-foremanator': { type: 'the-foremanator', title: 'The Foremanator', description: 'He doesn’t sleep. He doesn’t eat. He just yells about deadlines.' },
   'sterileish': { type: 'sterileish', title: 'STERILE-ish™', description: 'We’re basically compliant.' },
+  'barbara': { type: 'barbara', title: 'Agent Barbara™', description: 'The admin daemon you never knew you needed.' },
 };
 
 const defaultAppSizes: Record<MicroAppType, { width: number; height: number }> = {
@@ -111,6 +114,7 @@ const defaultAppSizes: Record<MicroAppType, { width: number; height: number }> =
   'lahey-surveillance': { width: 400, height: 500 },
   'the-foremanator': { width: 340, height: 500 },
   'sterileish': { width: 340, height: 500 },
+  'barbara': { width: 360, height: 500 },
 };
 
 export interface AppState {
@@ -122,6 +126,7 @@ export interface AppState {
   handleCommandSubmit: (command: string) => void;
   triggerAppAction: (appId: string) => void;
   bringToFront: (appId: string) => void;
+  upsertApp: (type: MicroAppType, props: Partial<Omit<MicroApp, 'type'>>) => MicroApp | undefined;
 }
 
 // A registry for app actions, decoupling them from the component.
@@ -309,6 +314,10 @@ export const useAppStore = create<AppState>((set, get) => {
             const newLog = [report.report, ...existingLog];
             upsertApp('paper-trail', { id: paperTrailAppId, title: 'Paper Trail P.I.', contentProps: { evidenceLog: newLog as PaperTrailScanOutput[] } });
             break;
+        
+        case 'barbara':
+            launchApp('barbara', { contentProps: report.report as BarbaraOutput });
+            break;
       }
     }
   };
@@ -319,6 +328,7 @@ export const useAppStore = create<AppState>((set, get) => {
     isLoading: false,
     beepOutput: null,
     bringToFront,
+    upsertApp,
 
     handleResize: (appId: string, size: { width: number; height: number }) => {
         set(state => ({
@@ -369,7 +379,8 @@ export const useAppStore = create<AppState>((set, get) => {
         processAgentReports(result.agentReports);
 
         result.appsToLaunch.forEach(appInfo => {
-          launchApp(appInfo.type, {
+          upsertApp(appInfo.type, {
+            id: `agent-app-${appInfo.type}`, // Use a consistent ID to make agent apps singletons
             title: appInfo.title || defaultAppDetails[appInfo.type].title,
             description: appInfo.description || defaultAppDetails[appInfo.type].description,
           });

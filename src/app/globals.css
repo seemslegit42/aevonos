@@ -63,6 +63,11 @@
     
     /* Themed app colors */
     --pale-green: 140 50% 85%; /* Pale Green for Sterileish */
+    --steely-lavender: 247 21% 53%;
+    --polished-chrome: 240 5% 84%;
+    --faded-cream: 43 33% 92%;
+    --military-green: 82 20% 30%;
+    --ledger-cream: 45 67% 91%;
   }
 }
  

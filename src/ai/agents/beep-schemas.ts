@@ -14,6 +14,7 @@ import { LaheyAnalysisOutputSchema } from './lahey-schemas';
 import { ForemanatorLogOutputSchema } from './foremanator-schemas';
 import { SterileishAnalysisOutputSchema } from './sterileish-schemas';
 import { PaperTrailScanOutputSchema } from './paper-trail-schemas';
+import { BarbaraOutputSchema } from './barbara-schemas';
 
 // Schemas from the original BEEP agent, preserved for the public contract.
 const LaunchableAppTypeSchema = z.enum([
@@ -153,6 +154,10 @@ export const AgentReportSchema = z.discriminatedUnion('agent', [
   z.object({
     agent: z.literal('paper-trail'),
     report: PaperTrailScanOutputSchema.describe('The full report from the Paper Trail agent.'),
+  }),
+  z.object({
+    agent: z.literal('barbara'),
+    report: BarbaraOutputSchema.describe('The full report from Agent Barbara.'),
   }),
 ]);
 
