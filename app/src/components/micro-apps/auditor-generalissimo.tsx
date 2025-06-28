@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { Loader2, FileWarning, Bomb, Brain, FileUp } from 'lucide-react';
+import { Loader2, FileWarning, Bomb, Brain, FileUp, Volume2 } from 'lucide-react';
 import { useAppStore } from '@/store/app-store';
 import type { AuditorOutput, AuditedTransaction } from '@/ai/agents/auditor-generalissimo-schemas';
 import { useToast } from '@/hooks/use-toast';
@@ -105,6 +105,7 @@ export default function AuditorGeneralissimo(props: AuditorOutput | {}) {
     const [report, setReport] = useState<AuditorOutput | null>(props && 'overallRoast' in props ? props : null);
     const { toast } = useToast();
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const audioRef = useRef<HTMLAudioElement>(null);
 
     useEffect(() => {
         if (props && 'overallRoast' in props) {
@@ -141,7 +142,13 @@ export default function AuditorGeneralissimo(props: AuditorOutput | {}) {
             return;
         }
         handleCommandSubmit(`audit my finances with these transactions: "${transactions}"`);
-    }
+    };
+
+    const playAudio = () => {
+        if (audioRef.current) {
+            audioRef.current.play();
+        }
+    };
 
     return (
         <div className="p-2 space-y-3 h-full flex flex-col font-typewriter bg-[hsl(var(--military-green))] text-[hsl(var(--military-green-foreground))] border border-military-green-foreground/20 rounded-lg">
@@ -184,7 +191,14 @@ export default function AuditorGeneralissimo(props: AuditorOutput | {}) {
                     <Card className="bg-black/20 border-military-green-foreground/30 text-military-green-foreground">
                         <CardHeader className="p-3">
                             <CardTitle className="text-base">Financial Atrocities Report</CardTitle>
-                            <CardDescription className="text-military-green-foreground/70 italic">"{report.overallRoast}"</CardDescription>
+                            <CardDescription className="text-military-green-foreground/70 italic flex items-center gap-1">
+                                <span>"{report.overallRoast}"</span>
+                                {report.overallRoastAudioUri && (
+                                    <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0" onClick={playAudio}>
+                                        <Volume2 className="h-4 w-4" />
+                                    </Button>
+                                )}
+                            </CardDescription>
                         </CardHeader>
                         <CardContent className="p-3 grid grid-cols-2 gap-4">
                             <BurnRateThermometer days={report.burnRateDays} />
@@ -212,6 +226,9 @@ export default function AuditorGeneralissimo(props: AuditorOutput | {}) {
                             </AccordionContent>
                         </AccordionItem>
                     </Accordion>
+                    {report.overallRoastAudioUri && (
+                        <audio ref={audioRef} src={report.overallRoastAudioUri} className="hidden" />
+                    )}
                 </div>
             )}
         </div>

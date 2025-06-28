@@ -21,6 +21,7 @@ export const AuditorOutputSchema = z.object({
     financialHealthScore: z.number().min(0).max(100).describe('A score from 0-100 indicating financial health, where 0 is financial ruin and 100 is solvency.'),
     burnRateDays: z.number().describe('The number of days left until financial collapse, based on current spending.'),
     overallRoast: z.string().describe('A general, sarcastic roast of the user\'s financial situation.'),
+    overallRoastAudioUri: z.string().optional().describe('A data URI for the text-to-speech audio of the overallRoast.'),
     auditedTransactions: z.array(AuditedTransactionSchema).describe('The list of transactions, now audited with AI commentary.'),
     irsAuditSimulation: z.string().describe('A satirical simulation of an IRS audit based on the provided transactions.'),
 });

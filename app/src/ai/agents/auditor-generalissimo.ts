@@ -5,12 +5,41 @@
  * Guilty until proven solvent.
  */
 import { ai } from '@/ai/genkit';
+import { googleAI } from '@genkit-ai/googleai';
+import wav from 'wav';
 import { 
     AuditorInputSchema,
     AuditorOutputSchema,
     type AuditorInput,
     type AuditorOutput
 } from './auditor-generalissimo-schemas';
+
+async function toWav(
+  pcmData: Buffer,
+  channels = 1,
+  rate = 24000,
+  sampleWidth = 2
+): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const writer = new wav.Writer({
+      channels,
+      sampleRate: rate,
+      bitDepth: sampleWidth * 8,
+    });
+
+    let bufs: any[] = [];
+    writer.on('error', reject);
+    writer.on('data', function (d) {
+      bufs.push(d);
+    });
+    writer.on('end', function () {
+      resolve(Buffer.concat(bufs).toString('base64'));
+    });
+
+    writer.write(pcmData);
+    writer.end();
+  });
+}
 
 const auditFinancesFlow = ai.defineFlow(
   {
@@ -41,13 +70,51 @@ ${transactions}
 Now, execute the audit, comrade. No mercy.
 `;
 
-    const { output } = await ai.generate({
+    const { output: textOutput } = await ai.generate({
       prompt,
-      output: { schema: AuditorOutputSchema },
+      output: { schema: AuditorOutputSchema.omit({ overallRoastAudioUri: true }) },
       model: 'googleai/gemini-2.0-flash',
     });
 
-    return output!;
+    if (!textOutput) {
+      throw new Error('Audit generation failed.');
+    }
+    
+    let overallRoastAudioUri = '';
+    if (textOutput.overallRoast) {
+        try {
+            const { media } = await ai.generate({
+                model: googleAI.model('gemini-2.5-flash-preview-tts'),
+                config: {
+                    responseModalities: ['AUDIO'],
+                    speechConfig: {
+                        voiceConfig: {
+                            // A deep, serious voice for the "tribunal"
+                            prebuiltVoiceConfig: { voiceName: 'Pherkad' },
+                        },
+                    },
+                },
+                prompt: textOutput.overallRoast,
+            });
+
+            if (media) {
+                const audioBuffer = Buffer.from(
+                    media.url.substring(media.url.indexOf(',') + 1),
+                    'base64'
+                );
+                const wavData = await toWav(audioBuffer);
+                overallRoastAudioUri = 'data:audio/wav;base64,' + wavData;
+            }
+        } catch (e) {
+            console.error('[Auditor TTS Error]', e);
+            // Fail gracefully, we can proceed without audio
+        }
+    }
+
+    return {
+        ...textOutput,
+        overallRoastAudioUri,
+    };
   }
 );
 
