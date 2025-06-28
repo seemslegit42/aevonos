@@ -147,7 +147,7 @@ const defaultAppSizes: Record<MicroAppType, { width: number; height: number }> =
   'stonks-bot': { width: 320, height: 380 },
   'aegis-threatscope': { width: 380, height: 450 },
   'aegis-command': { width: 380, height: 350 },
-  'usage-monitor': { width: 320, height: 300 },
+  'usage-monitor': { width: 400, height: 600 },
   'armory': { width: 800, height: 600 },
 };
 
