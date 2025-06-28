@@ -1,1 +1,0 @@
-// This file has been consolidated into /prisma/seed.ts and can be deleted.
