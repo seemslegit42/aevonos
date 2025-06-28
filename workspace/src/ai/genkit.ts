@@ -1,2 +1,1 @@
-
-// This file is obsolete after project consolidation.
+// This file has been consolidated and can be deleted.
