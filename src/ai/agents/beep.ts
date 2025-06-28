@@ -73,6 +73,8 @@ import { invokeOracle } from '@/ai/agents/orphean-oracle-flow';
 import { OrpheanOracleInputSchema } from './orphean-oracle-schemas';
 import { analyzeInvite } from '@/ai/agents/lumbergh';
 import { LumberghAnalysisInputSchema } from './lumbergh-schemas';
+import { analyzeExpense } from '@/ai/agents/lucille-bluth';
+import { LucilleBluthInputSchema } from './lucille-bluth-schemas';
 import {
     type UserCommandInput,
     UserCommandOutputSchema,
@@ -485,6 +487,21 @@ class LumberghTool extends Tool {
   }
 }
 
+class LucilleBluthTool extends Tool {
+  name = 'getLucilleBluthTake';
+  description = 'Sends an expense to Lucille Bluth for a witty, judgmental, and condescending remark. Use this when a user wants to "log an expense", "categorize a purchase", etc. Extract the item description and cost from the user command.';
+  schema = LucilleBluthInputSchema;
+  
+  async _call(input: z.infer<typeof LucilleBluthInputSchema>) {
+    const result = await analyzeExpense(input);
+    const report: z.infer<typeof AgentReportSchema> = {
+        agent: 'lucille-bluth',
+        report: result,
+    };
+    return JSON.stringify(report);
+  }
+}
+
 
 // LangGraph State
 interface AgentState {
@@ -573,7 +590,7 @@ export async function processUserCommand(input: UserCommandInput): Promise<UserC
     new SterileishTool(), new PaperTrailTool(), new BarbaraTool(), new AuditorTool(),
     new WingmanTool(), new OsintTool(), new InfidelityAnalysisTool(),
     new DecoyTool(), new DossierTool(), new KendraTool(), new StonksBotTool(),
-    new OrpheanOracleTool(), new LumberghTool(),
+    new OrpheanOracleTool(), new LumberghTool(), new LucilleBluthTool(),
   ];
 
   // Re-bind the model with the schemas from the dynamically created tools for this request.
