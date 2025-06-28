@@ -7,7 +7,6 @@ import TopBar from '@/components/layout/top-bar';
 import type { User } from '@prisma/client';
 
 const BeepAvatar = dynamic(() => import('@/components/beep-avatar'), { 
-  ssr: false,
   loading: () => <div className="fixed bottom-6 right-6 z-50 w-28 h-28" />
 });
 
