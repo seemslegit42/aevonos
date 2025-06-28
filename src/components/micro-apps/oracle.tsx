@@ -10,6 +10,8 @@ import { Skeleton } from '../ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 import { ServerCrash } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useAppStore } from '@/store/app-store';
+import type { MicroAppType } from '@/store/app-store';
 
 // Define colors for different agent statuses using HSL values from the theme
 const statusConfig: Record<AgentStatus, { color: THREE.Color; emissiveIntensity: number }> = {
@@ -20,7 +22,7 @@ const statusConfig: Record<AgentStatus, { color: THREE.Color; emissiveIntensity:
     [AgentStatus.error]: { color: new THREE.Color('hsl(0, 84.2%, 60.2%)'), emissiveIntensity: 1.0 }, // destructive
 };
 
-function AgentNode({ agent, position }: { agent: AgentData, position: THREE.Vector3 }) {
+function AgentNode({ agent, position, onNodeClick }: { agent: AgentData, position: THREE.Vector3, onNodeClick: (agent: AgentData) => void }) {
     const meshRef = useRef<THREE.Group>(null!);
     const [isHovered, setIsHovered] = useState(false);
     const config = statusConfig[agent.status] || statusConfig.idle;
@@ -37,7 +39,11 @@ function AgentNode({ agent, position }: { agent: AgentData, position: THREE.Vect
     });
 
     return (
-        <group position={position}>
+        <group 
+            position={position}
+            onPointerDown={(e) => { e.stopPropagation(); onNodeClick(agent); }}
+            className="cursor-pointer"
+        >
             <group
                 ref={meshRef}
                 onPointerOver={() => setIsHovered(true)}
@@ -92,7 +98,7 @@ function BeepCore() {
      );
 }
 
-function Scene({ agents }: { agents: AgentData[] }) {
+function Scene({ agents, onNodeClick }: { agents: AgentData[], onNodeClick: (agent: AgentData) => void }) {
     const nodePositions = useMemo(() => {
         return agents.map((agent, index) => {
             const angle = (index / agents.length) * Math.PI * 2;
@@ -111,7 +117,7 @@ function Scene({ agents }: { agents: AgentData[] }) {
             
             {agents.map((agent, index) => (
                 <group key={agent.id}>
-                    <AgentNode agent={agent} position={nodePositions[index]} />
+                    <AgentNode agent={agent} position={nodePositions[index]} onNodeClick={onNodeClick} />
                     <Line
                         points={[[0,0,0], nodePositions[index]]}
                         color="hsl(var(--muted-foreground))"
@@ -132,6 +138,7 @@ export default function Oracle() {
   const [agents, setAgents] = useState<AgentData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { upsertApp } = useAppStore();
 
   useEffect(() => {
     const fetchAgents = async () => {
@@ -157,6 +164,19 @@ export default function Oracle() {
     return () => clearInterval(interval);
   }, []);
 
+  const handleNodeClick = (agent: AgentData) => {
+    try {
+      const appType = agent.type as MicroAppType;
+      // Use the agent type to generate a consistent ID, making it a singleton
+      const appId = `agent-app-${agent.type}`;
+      // This will either launch a new app or bring an existing one to the front
+      upsertApp(appType, { id: appId });
+    } catch (e) {
+      console.error(`Error launching app for agent type: ${agent.type}`, e);
+    }
+  };
+
+
   const renderContent = () => {
     if (isLoading && agents.length === 0) {
         return <Skeleton className="w-full h-full bg-foreground/10" />;
@@ -174,7 +194,7 @@ export default function Oracle() {
 
     return (
         <Canvas camera={{ position: [0, 6, 12], fov: 60 }}>
-            <Scene agents={agents} />
+            <Scene agents={agents} onNodeClick={handleNodeClick} />
             <OrbitControls autoRotate autoRotateSpeed={0.3} enableZoom={true} enablePan={true} />
         </Canvas>
     )
