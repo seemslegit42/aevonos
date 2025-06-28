@@ -19,26 +19,11 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    let agents = await prisma.agent.findMany({
+    const agents = await prisma.agent.findMany({
         where: {
             workspaceId: session.workspaceId,
         }
     });
-
-    if (agents.length === 0) {
-      const statuses: AgentStatus[] = [AgentStatus.active, AgentStatus.idle, AgentStatus.processing, AgentStatus.paused, AgentStatus.error];
-      await prisma.agent.createMany({
-        data: [
-          { name: 'Reputation Management', type: 'winston-wolfe', description: 'Solves online reputation problems.', status: statuses[Math.floor(Math.random() * statuses.length)], workspaceId: session.workspaceId },
-          { name: 'Morale Monitor', type: 'kif-kroker', description: 'Monitors team communications for morale.', status: statuses[Math.floor(Math.random() * statuses.length)], workspaceId: session.workspaceId },
-          { name: 'Compliance Scanner', type: 'sterileish', description: 'Scans logs for compliance issues.', status: statuses[Math.floor(Math.random() * statuses.length)], workspaceId: session.workspaceId },
-          { name: 'Recruiting Assistant', type: 'rolodex', description: 'Analyzes candidates and generates outreach.', status: statuses[Math.floor(Math.random() * statuses.length)], workspaceId: session.workspaceId },
-          { name: 'Security Analyst', type: 'lahey-surveillance', description: 'Investigates suspicious activity.', status: statuses[Math.floor(Math.random() * statuses.length)], workspaceId: session.workspaceId },
-        ]
-      });
-      agents = await prisma.agent.findMany({ where: { workspaceId: session.workspaceId } });
-    }
-
 
     return NextResponse.json(agents);
   } catch (error) {
