@@ -1,4 +1,3 @@
-
 'use client';
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
@@ -37,6 +36,12 @@ const statusConfig: Record<WorkflowRunStatus, { icon: React.ElementType, color: 
 function RunItem({ run }: { run: WorkflowRunSummary }) {
     const config = statusConfig[run.status] || statusConfig.pending;
     const Icon = config.icon;
+    const [isMounted, setIsMounted] = useState(false);
+
+    useEffect(() => {
+        setIsMounted(true);
+    }, []);
+
     return (
         <div className="p-2 rounded-md border border-foreground/15 hover:bg-accent/10 transition-colors">
             <div className="flex justify-between items-start">
@@ -50,7 +55,7 @@ function RunItem({ run }: { run: WorkflowRunSummary }) {
                 <Badge variant={config.badgeVariant} className="capitalize text-xs">{run.status}</Badge>
             </div>
             <p className="text-xs text-muted-foreground text-right mt-1">
-                Triggered {formatDistanceToNow(new Date(run.startedAt), { addSuffix: true })}
+                Triggered {isMounted ? formatDistanceToNow(new Date(run.startedAt), { addSuffix: true }) : ''}
             </p>
         </div>
     );
