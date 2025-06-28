@@ -45,6 +45,13 @@ const passwordPlaceholders = [
 function Crystal({ config }: { config: any }) {
     const ref = useRef<THREE.Group>(null!);
 
+    useFrame((state, delta) => {
+        const group = ref.current;
+        if (group) {
+            // Remove individual rotation to let the parent group control it
+        }
+    });
+
     return (
         <group ref={ref} position={config.position}>
             {/* The crystal sphere at the center of the circle */}
@@ -84,10 +91,10 @@ function LoginScene() {
 
   const crystals = useMemo(() => {
     const points: [number, number, number][] = [];
-    const ringRadius = 2.0; // This is the radius of the circles in the pattern
-    const sphereRadius = 0.5; // The center spheres are smaller than the rings
+    const ringRadius = 2.0; 
+    const sphereRadius = 0.5;
 
-    // The 19 points of the Flower of Life
+    // The 19 points for the Flower of Life center points
     points.push([0, 0, 0]); // Center
 
     // First ring of 6
@@ -96,7 +103,7 @@ function LoginScene() {
         points.push([Math.cos(angle) * ringRadius, Math.sin(angle) * ringRadius, 0]);
     }
 
-    // Second ring of 12 (creates the outer petals)
+    // Second ring of 12
     const r2 = ringRadius * 2;
     for (let i = 0; i < 6; i++) {
         const angle = (Math.PI / 3) * i;
@@ -107,11 +114,10 @@ function LoginScene() {
         const angle = (Math.PI / 3) * i + (Math.PI / 6);
         points.push([Math.cos(angle) * r3, Math.sin(angle) * r3, 0]);
     }
-
-    const uniquePoints = Array.from(new Set(points.map(p => JSON.stringify(p)))).map(s => JSON.parse(s));
-
-    return uniquePoints.map(p => ({
-      position: p as [number, number, number],
+    
+    // Removed the unstable `uniquePoints` logic. We now trust the math to generate 19 unique points.
+    return points.map(p => ({
+      position: p,
       ringRadius: ringRadius,
       sphereRadius: sphereRadius,
     }));
@@ -122,7 +128,7 @@ function LoginScene() {
     if (group.current) {
       // Mouse parallax effect
       group.current.position.lerp(new THREE.Vector3(state.mouse.x * 0.5, state.mouse.y * 0.5, 0), 0.05);
-      // A more controlled, graceful rotation instead of chaotic tumbling
+      // Controlled, graceful rotation
       group.current.rotation.z += delta * 0.02; // Primary spin
       group.current.rotation.y += delta * 0.005; // Gentle wobble
     }
