@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { motion } from 'framer-motion';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -72,72 +73,79 @@ export default function LoginPage() {
       </div>
 
       {/* Foreground Login Card */}
-      <Card className="w-full max-w-sm bg-black/30 backdrop-blur-lg border border-white/10 shadow-2xl text-white z-10">
-        <CardHeader className="text-center">
-            <CardTitle className="text-3xl font-headline tracking-widest text-white">
-                Identity Verification
-            </CardTitle>
-            <CardDescription className="text-white/70">The system requires a handshake.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-white/80">System Handle</FormLabel>
-                    <FormControl>
-                      <Input 
-                        type="email" 
-                        placeholder="architect@aevonos.com" 
-                        {...field} 
-                        disabled={isSubmitting} 
-                        className="bg-white/5 border-white/20 placeholder:text-white/40 focus:border-primary"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <div className="flex justify-between items-center">
-                        <FormLabel className="text-white/80">Encryption Key</FormLabel>
-                        <Link href="#" className="text-xs text-primary/70 hover:text-primary transition-colors">
-                            Key forgotten?
-                        </Link>
-                    </div>
-                    <FormControl>
-                      <Input 
-                        type="password"
-                        placeholder="••••••••••••••••"
-                        {...field} 
-                        disabled={isSubmitting} 
-                        className="bg-white/5 border-white/20 placeholder:text-white/40 focus:border-primary"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <Button type="submit" className="w-full bg-primary/80 backdrop-blur-sm border border-primary text-primary-foreground hover:bg-primary" disabled={isSubmitting}>
-                {isSubmitting ? <Loader2 className="animate-spin" /> : 'Authenticate & Enter'}
-              </Button>
-            </form>
-          </Form>
-          <div className="mt-4 text-center text-sm text-white/60">
-            Need system access?{' '}
-            <Link href="/register" className="font-bold text-primary hover:text-primary/80 transition-colors">
-              Request a build.
-            </Link>
-          </div>
-        </CardContent>
-      </Card>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8, ease: "easeInOut" }}
+        className="w-full max-w-sm z-10"
+      >
+        <Card className="bg-black/30 backdrop-blur-lg border border-white/10 shadow-2xl text-white">
+          <CardHeader className="text-center">
+              <CardTitle className="text-3xl font-headline tracking-widest text-white">
+                  Identity Verification
+              </CardTitle>
+              <CardDescription className="text-white/70">The system requires a handshake.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-white/80">System Handle</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="email" 
+                          placeholder="architect@aevonos.com" 
+                          {...field} 
+                          disabled={isSubmitting} 
+                          className="bg-white/5 border-white/20 placeholder:text-white/40 focus:border-primary"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <div className="flex justify-between items-center">
+                          <FormLabel className="text-white/80">Encryption Key</FormLabel>
+                          <Link href="#" className="text-xs text-primary/70 hover:text-primary transition-colors">
+                              Key forgotten?
+                          </Link>
+                      </div>
+                      <FormControl>
+                        <Input 
+                          type="password"
+                          placeholder="••••••••••••••••"
+                          {...field} 
+                          disabled={isSubmitting} 
+                          className="bg-white/5 border-white/20 placeholder:text-white/40 focus:border-primary"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <Button type="submit" className="w-full bg-primary/80 backdrop-blur-sm border border-primary text-primary-foreground hover:bg-primary" disabled={isSubmitting}>
+                  {isSubmitting ? <Loader2 className="animate-spin" /> : 'Authenticate & Enter'}
+                </Button>
+              </form>
+            </Form>
+            <div className="mt-4 text-center text-sm text-white/60">
+              Need system access?{' '}
+              <Link href="/register" className="font-bold text-primary hover:text-primary/80 transition-colors">
+                Request a build.
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
     </div>
   );
 }

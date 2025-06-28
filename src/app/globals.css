@@ -97,6 +97,9 @@
   .crystal-pulse {
     animation: crystal-pulse 5s ease-in-out infinite;
   }
+  .animate-subtle-pulse {
+    animation: subtle-pulse 8s ease-in-out infinite;
+  }
 }
 
 @keyframes crystal-pulse {
@@ -107,5 +110,14 @@
     50% {
         transform: scale(1.05);
         opacity: 1;
+    }
+}
+
+@keyframes subtle-pulse {
+    0%, 100% {
+        opacity: 0.2;
+    }
+    50% {
+        opacity: 0.35;
     }
 }
