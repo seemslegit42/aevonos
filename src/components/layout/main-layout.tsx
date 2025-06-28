@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -12,7 +11,7 @@ const BeepAvatar = dynamic(() => import('@/components/beep-avatar'), {
   ssr: false,
 });
 
-type UserProp = Pick<User, 'email' | 'firstName' | 'lastName'> | null;
+type UserProp = Pick<User, 'id' | 'email' | 'firstName' | 'lastName'> | null;
 
 export function MainLayout({ children, user }: { children: React.ReactNode; user: UserProp }) {
   const pathname = usePathname();
