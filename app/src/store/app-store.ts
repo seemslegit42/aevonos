@@ -1,4 +1,5 @@
 
+
 import { create } from 'zustand';
 import type { DragEndEvent } from '@dnd-kit/core';
 import React from 'react';
@@ -26,6 +27,7 @@ import type { DossierOutput } from '@/ai/agents/dossier-schemas';
 import type { KendraOutput } from '@/ai/agents/kendra-schemas';
 import type { StonksBotOutput } from '@/ai/agents/stonks-bot-schemas';
 import type { AuditorOutput } from '@/ai/agents/auditor-generalissimo-schemas';
+import type { OrpheanOracleOutput } from '@/ai/agents/orphean-oracle-schemas';
 
 
 // Define the types of MicroApps available in the OS
@@ -45,7 +47,7 @@ export type MicroAppType =
   | 'winston-wolfe'
   | 'kif-kroker'
   | 'vandelay'
-  | 'oracle'
+  | 'orphean-oracle'
   | 'paper-trail'
   | 'jroc-business-kit'
   | 'lahey-surveillance'
@@ -94,7 +96,7 @@ const defaultAppDetails: Record<MicroAppType, Omit<MicroApp, 'id' | 'position' |
   'winston-wolfe': { type: 'winston-wolfe', title: 'The Winston Wolfe', description: "Bad review? Thirty minutes away. I'll be there in ten." },
   'kif-kroker': { type: 'kif-kroker', title: 'The Kif Kroker', description: "Sigh. The team's conflict metrics are escalating again." },
   'vandelay': { type: 'vandelay', title: 'Vandelay Industries', description: 'Importing, exporting, and ghosting.' },
-  'oracle': { type: 'oracle', title: 'The Oracle', description: 'Agentic pulse network status.' },
+  'orphean-oracle': { type: 'orphean-oracle', title: 'The Orphean Oracle', description: 'Data analysis as a metaphorical journey.' },
   'paper-trail': { type: 'paper-trail', title: 'Paper Trail P.I.', description: 'The receipts don\'t lie.' },
   'jroc-business-kit': { type: 'jroc-business-kit', title: "J-ROC'S BIZ KIT™", description: 'Get dat cheddar legit, my dawg.' },
   'lahey-surveillance': { type: 'lahey-surveillance', title: 'Lahey Surveillance', description: 'I am the liquor. And I am watching.' },
@@ -382,6 +384,12 @@ export const useAppStore = create<AppState>((set, get) => {
             upsertApp('auditor-generalissimo', {
                 id: 'auditor-generalissimo-main',
                 contentProps: report.report as AuditorOutput,
+            });
+            break;
+        case 'orphean-oracle':
+            upsertApp('orphean-oracle', {
+                id: 'orphean-oracle-main',
+                contentProps: report.report as OrpheanOracleOutput,
             });
             break;
       }

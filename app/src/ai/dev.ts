@@ -32,6 +32,6 @@ import '@/ai/flows/tts-flow.ts';
 import '@/ai/flows/tts-schemas.ts';
 import '@/ai/agents/dossier-agent.ts';
 import '@/ai/agents/kendra.ts';
-import '@/ai/tools/finance-tools.ts';
 import '@/ai/agents/stonks-bot.ts';
 import '@/ai/agents/auditor-generalissimo.ts';
+import '@/ai/agents/orphean-oracle-flow.ts';

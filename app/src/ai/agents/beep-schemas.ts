@@ -27,6 +27,7 @@ import { DossierOutputSchema } from './dossier-schemas';
 import { KendraOutputSchema } from './kendra-schemas';
 import { StonksBotOutputSchema } from './stonks-bot-schemas';
 import { AuditorOutputSchema } from './auditor-generalissimo-schemas';
+import { OrpheanOracleOutputSchema } from './orphean-oracle-schemas';
 
 
 // Schemas from the original BEEP agent, preserved for the public contract.
@@ -44,7 +45,7 @@ const LaunchableAppTypeSchema = z.enum([
   'kif-kroker',
   'vandelay',
   'paper-trail',
-  'oracle',
+  'orphean-oracle',
   'jroc-business-kit',
   'lahey-surveillance',
   'the-foremanator',
@@ -218,6 +219,10 @@ export const AgentReportSchema = z.discriminatedUnion('agent', [
   z.object({
     agent: z.literal('auditor-generalissimo'),
     report: AuditorOutputSchema.describe('The full audit report from The Auditor Generalissimo™ agent.'),
+  }),
+  z.object({
+    agent: z.literal('orphean-oracle'),
+    report: OrpheanOracleOutputSchema.describe('The full data visualization and narrative from The Orphean Oracle.'),
   }),
 ]);
 

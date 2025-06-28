@@ -4,7 +4,7 @@
 // In a larger system, this could be stored in a database and managed via an admin interface.
 
 export type MicroAppManifest = {
-  id: string; // This is the app type string like 'oracle'
+  id: string; // This is the app type string like 'orphean-oracle'
   name: string;
   description: string;
   author: string;
@@ -45,15 +45,15 @@ export const microAppManifests: MicroAppManifest[] = [
     isFeatured: false,
   },
   {
-    id: 'oracle',
-    name: 'The Oracle',
+    id: 'orphean-oracle',
+    name: 'The Orphean Oracle',
     author: 'ΛΞVON OS',
-    description: 'Visualize the real-time pulse of your agentic network, replacing static dashboards with an evolving, biomorphic data stream.',
+    description: 'Descend into the data stream and return with a story. A metaphorical, 3D data visualization engine.',
     price: 'Included',
     imageUrl: 'https://placehold.co/600x400.png',
     imageHint: 'data visualization network',
     permissionsRequired: ['read:agent_status'],
-    routingPath: '/oracle',
+    routingPath: '/orphean-oracle',
     contextAwareCapabilities: ['agent_telemetry_stream'],
     isFeatured: false,
   },

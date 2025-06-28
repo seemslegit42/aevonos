@@ -75,10 +75,10 @@ import { getKendraTake } from './kendra';
 import { KendraInputSchema } from './kendra-schemas';
 import { getStonksAdvice } from '@/ai/agents/stonks-bot';
 import { StonksBotInputSchema } from '@/ai/agents/stonks-bot-schemas';
-import { getStockPrice } from '../tools/finance-tools';
-import { GetStockPriceInputSchema } from '../tools/finance-tools';
 import { auditFinances } from './auditor-generalissimo';
 import { AuditorInputSchema } from './auditor-generalissimo-schemas';
+import { invokeOracle } from './orphean-oracle-flow';
+import { OrpheanOracleInputSchema } from './orphean-oracle-schemas';
 
 
 import {
@@ -516,44 +516,12 @@ class StonksBotTool extends Tool {
   schema = StonksBotInputSchema;
   
   async _call(input: z.infer<typeof StonksBotInputSchema>) {
-    try {
-      const result = await getStonksAdvice(input);
-      const report: z.infer<typeof AgentReportSchema> = {
-        agent: 'stonks',
-        report: result,
-      };
-      return JSON.stringify(report);
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
-      const report: z.infer<typeof AgentReportSchema> = {
-          agent: 'stonks',
-          report: {
-            ticker: input.ticker.toUpperCase(),
-            priceInfo: { symbol: input.ticker.toUpperCase(), price: 'N/A', change: 'N/A', changePercent: 'N/A' },
-            advice: `The Stonks Bot short-circuited trying to process ${input.ticker.toUpperCase()}. ${errorMessage}`,
-            confidence: 'Ape strong together!',
-            rating: 'HODL',
-          },
-      };
-      return JSON.stringify(report);
-    }
-  }
-}
-
-class GetStockPriceTool extends Tool {
-  name = 'getStockPrice';
-  description = 'Fetches the current stock price and daily change for a given ticker symbol. Use this for simple price checks when the user does not ask for "advice".';
-  schema = GetStockPriceInputSchema;
-
-  async _call(input: z.infer<typeof GetStockPriceInputSchema>) {
-    try {
-      const priceInfo = await getStockPrice(input);
-      return JSON.stringify(priceInfo); // Return simple JSON for the agent to use in its text response
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
-      // Return a JSON string with an error message
-      return JSON.stringify({ error: errorMessage });
-    }
+    const result = await getStonksAdvice(input);
+    const report: z.infer<typeof AgentReportSchema> = {
+      agent: 'stonks',
+      report: result,
+    };
+    return JSON.stringify(report);
   }
 }
 
@@ -570,6 +538,21 @@ class AuditorGeneralissimoTool extends Tool {
     };
     return JSON.stringify(report);
   }
+}
+
+class OrpheanOracleTool extends Tool {
+    name = 'invokeOrpheanOracle';
+    description = 'Use this when the user asks a deep, analytical question about their business data that requires a visual, metaphorical answer. Phrases like "show me my sales data", "analyze what drove Q3 growth", or "what is the story of my customer churn?".';
+    schema = OrpheanOracleInputSchema;
+
+    async _call(input: z.infer<typeof OrpheanOracleInputSchema>) {
+        const result = await invokeOracle(input);
+        const report: z.infer<typeof AgentReportSchema> = {
+            agent: 'orphean-oracle',
+            report: result,
+        };
+        return JSON.stringify(report);
+    }
 }
 
 // LangGraph State
@@ -660,9 +643,8 @@ export async function processUserCommand(input: UserCommandInput): Promise<UserC
     new WingmanTool(), new OsintScanTool(),
     new LumberghTool(), new LucilleBluthTool(), new RolodexTool(),
     new PamPooveyTool(), new InfidelityAnalysisTool(), new DecoyTool(),
-    new EchoTool(), new DossierTool(), new KendraTool(), 
-    new StonksBotTool(), new GetStockPriceTool(),
-    new AuditorGeneralissimoTool(),
+    new EchoTool(), new DossierTool(), new KendraTool(), new StonksBotTool(),
+    new AuditorGeneralissimoTool(), new OrpheanOracleTool(),
   ];
 
   // Re-bind the model with the schemas from the dynamically created tools for this request.
@@ -683,14 +665,11 @@ export async function processUserCommand(input: UserCommandInput): Promise<UserC
   Your process:
   1.  Analyze the user's command and the mandatory \`AEGIS_INTERNAL_REPORT\` provided in a System Message. If Aegis detects a threat, your tone must become clinical and serious, dropping your usual banter. If the user asks for KENDRA.exe, your response should be "Routing to KENDRA.exe. Brace yourself."
   2.  Based on the user's command and the tool descriptions provided, decide which specialized agents or tools to call. You can call multiple tools in parallel.
-  3.  **Tool Usage Rules:**
-      - For simple stock price queries (e.g., "what's the price of TSLA?"), use the \`getStockPrice\` tool and state the result directly in your \`responseText\`. Do NOT launch an app for this.
-      - For stock *advice* or queries involving slang (e.g., "should I buy GME?", "stonks", "yolo"), you MUST use the \`getStonksAdvice\` tool, which will launch the Stonks Bot app.
-  4.  If the user's command is to launch an app (e.g., "launch the terminal", "open the file explorer"), you MUST use the 'appsToLaunch' array in your final answer. Do NOT use a tool for a simple app launch.
-  5.  When you have gathered all necessary information from your delegated agents and are ready to provide the final response, you MUST call the 'final_answer' tool. This is your final action.
-  6.  Your 'responseText' should be in character—witty, confident, and direct. It should confirm the actions taken and what the user should expect next.
-  7.  Populate all arguments for the 'final_answer' tool correctly, especially the 'agentReports' array, which must include the initial Aegis report and any subsequent reports from tools you called.
-  8.  **Full Intelligence Pipeline**: For commands like "burn the bridge", "run a full analysis", or "get everything on them", you MUST execute the full intelligence pipeline in a specific order. You will call one tool at a time, wait for the result, and then decide the next step. The sequence is:
+  3.  If the user's command is to launch an app (e.g., "launch the terminal", "open the file explorer"), you MUST use the 'appsToLaunch' array in your final answer. Do NOT use a tool for a simple app launch.
+  4.  When you have gathered all necessary information from your delegated agents and are ready to provide the final response, you MUST call the 'final_answer' tool. This is your final action.
+  5.  Your 'responseText' should be in character—witty, confident, and direct. It should confirm the actions taken and what the user should expect next.
+  6.  Populate all arguments for the 'final_answer' tool correctly, especially the 'agentReports' array, which must include the initial Aegis report and any subsequent reports from tools you called.
+  7.  **Full Intelligence Pipeline**: For commands like "burn the bridge", "run a full analysis", or "get everything on them", you MUST execute the full intelligence pipeline in a specific order. You will call one tool at a time, wait for the result, and then decide the next step. The sequence is:
       a. Call \`performOsintScan\` on the target.
       b. Call \`performInfidelityAnalysis\` using the situation context.
       c. (Optional) Call \`deployDecoy\` if the situation warrants it.
@@ -720,8 +699,7 @@ export async function processUserCommand(input: UserCommandInput): Promise<UserC
               const report = AgentReportSchema.parse(JSON.parse(msg.content as string));
               agentReports.push(report);
           } catch (e) {
-              // This is expected for tools like getStockPrice that don't return an AgentReport
-              // console.error("Failed to parse tool message content as AgentReport:", e);
+              console.error("Failed to parse tool message content as AgentReport:", e);
           }
       }
   }

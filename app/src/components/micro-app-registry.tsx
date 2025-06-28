@@ -16,7 +16,7 @@ import { WinstonWolfeIcon } from '@/components/icons/WinstonWolfeIcon';
 import { KifKrokerIcon } from '@/components/icons/KifKrokerIcon';
 import { VandelayIcon } from '@/components/icons/VandelayIcon';
 import { EyeOff } from 'lucide-react';
-import { OracleIcon } from './icons/OracleIcon';
+import { OrpheanOracleIcon } from './icons/OrpheanOracleIcon';
 import { PaperTrailIcon } from './icons/PaperTrailIcon';
 import { JrocIcon } from './icons/JrocIcon';
 import { LaheyIcon } from './icons/LaheyIcon';
@@ -45,7 +45,7 @@ import TheRolodex from './micro-apps/rolodex';
 import TheWinstonWolfe from './micro-apps/winston-wolfe';
 import TheKifKroker from './micro-apps/kif-kroker';
 import Vandelay from './micro-apps/vandelay';
-import Oracle from './micro-apps/oracle';
+import OrpheanOracle from './micro-apps/orphean-oracle';
 import PaperTrail from './micro-apps/paper-trail';
 import JrocBusinessKit from './micro-apps/jroc-business-kit';
 import LaheyCommander from './micro-apps/lahey-commander';
@@ -136,9 +136,9 @@ export const microAppRegistry: Record<MicroAppType, ComponentRegistry> = {
     icon: VandelayIcon,
     content: Vandelay,
   },
-  'oracle': {
-    icon: OracleIcon,
-    content: Oracle,
+  'orphean-oracle': {
+    icon: OrpheanOracleIcon,
+    content: OrpheanOracle,
   },
   'paper-trail': {
       icon: PaperTrailIcon,
