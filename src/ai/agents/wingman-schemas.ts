@@ -10,6 +10,7 @@ export const WingmanInputSchema = z.object({
       'Make Me Seem Smarter', 
       'Help Me Say No'
     ]).describe("The desired tone and style of the message."),
+  workspaceId: z.string().describe('The ID of the workspace performing the action.'),
 });
 export type WingmanInput = z.infer<typeof WingmanInputSchema>;
 

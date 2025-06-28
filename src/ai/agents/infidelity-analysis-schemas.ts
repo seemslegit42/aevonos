@@ -2,6 +2,7 @@ import { z } from 'zod';
 
 export const InfidelityAnalysisInputSchema = z.object({
   situationDescription: z.string().describe('A detailed description of the situation, including behaviors, communication patterns, and any specific incidents.'),
+  workspaceId: z.string().describe('The ID of the workspace performing the action.'),
 });
 export type InfidelityAnalysisInput = z.infer<typeof InfidelityAnalysisInputSchema>;
 

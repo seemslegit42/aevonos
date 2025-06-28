@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview Tool for fetching dating app profile data.
@@ -6,15 +7,19 @@
 import { z } from 'zod';
 import { ai } from '@/ai/genkit';
 import { DatingProfileInputSchema, DatingProfileSchema, type DatingProfileInput, type DatingProfile } from './dating-schemas';
+import { incrementAgentActions } from '@/services/billing-service';
 
-// This is a functional implementation that calls our mock API.
+// This flow now requires a workspaceId to track usage.
 const getDatingProfileFlow = ai.defineFlow(
   {
     name: 'getDatingProfileFlow',
-    inputSchema: DatingProfileInputSchema,
+    inputSchema: DatingProfileInputSchema.extend({ workspaceId: z.string() }),
     outputSchema: DatingProfileSchema,
   },
-  async ({ profileId }) => {
+  async ({ profileId, workspaceId }) => {
+    // This is an external data fetch, so it counts as one agent action.
+    await incrementAgentActions(workspaceId);
+
     // In a real app, this would use an authenticated HTTP client.
     // For this environment, we'll use a relative fetch to our mock API endpoint.
     // This assumes the dev server is running on localhost. In production, this would need an absolute URL.
@@ -35,6 +40,6 @@ const getDatingProfileFlow = ai.defineFlow(
   }
 );
 
-export async function getDatingProfile(input: DatingProfileInput): Promise<DatingProfile> {
-    return getDatingProfileFlow(input);
+export async function getDatingProfile(input: DatingProfileInput, workspaceId: string): Promise<DatingProfile> {
+    return getDatingProfileFlow({ ...input, workspaceId });
 }

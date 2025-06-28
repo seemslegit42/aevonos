@@ -3,6 +3,7 @@ import { z } from 'zod';
 
 export const LaheyAnalysisInputSchema = z.object({
   logEntry: z.string().describe('A single log entry describing a staff event. e.g., "Kyle D. opened YouTube for 22 minutes."'),
+  workspaceId: z.string().describe('The ID of the workspace performing the action.'),
 });
 export type LaheyAnalysisInput = z.infer<typeof LaheyAnalysisInputSchema>;
 

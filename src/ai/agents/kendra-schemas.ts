@@ -2,6 +2,7 @@ import { z } from 'zod';
 
 export const KendraInputSchema = z.object({
   productIdea: z.string().describe('The user\'s raw, unfiltered product idea or startup concept.'),
+  workspaceId: z.string().describe('The ID of the workspace performing the action.'),
 });
 export type KendraInput = z.infer<typeof KendraInputSchema>;
 

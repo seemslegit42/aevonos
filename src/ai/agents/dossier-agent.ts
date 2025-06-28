@@ -5,6 +5,7 @@ import { ai } from '@/ai/genkit';
 import { DossierInputSchema, DossierOutputSchema, type DossierInput, type DossierOutput } from './dossier-schemas';
 import { format } from 'date-fns';
 import { createHash } from 'crypto';
+import { incrementAgentActions } from '@/services/billing-service';
 
 const generateDossierFlow = ai.defineFlow(
   {
@@ -13,6 +14,8 @@ const generateDossierFlow = ai.defineFlow(
     outputSchema: DossierOutputSchema,
   },
   async (input) => {
+    await incrementAgentActions(input.workspaceId);
+
     const today = format(new Date(), 'yyyy-MM-dd');
     const caseFileName = (input.targetName || 'UNKNOWN_SUBJECT').toLowerCase().replace(/\s/g, '-');
     const fileName = `dossier-${caseFileName}${input.mode === 'legal' ? '-legal' : ''}.pdf`;
@@ -92,7 +95,7 @@ ${input.decoyResult
 
 ## 1. Executive Summary
 
-This report presents behavioral and digital evidence suggesting a pattern of infidelity by the subject, ${input.targetName}. Compiled using the ΛΞVON OS Intelligence Engine, the dossier aggregates OSINT, metadata analysis, and AI behavioral review.
+This report presents behavioral and digital evidence suggesting a pattern of infidelity by the subject, ${input.targetName}. Compiled using the ΛΞVON OS Intelligence Engine, the dossier aggregates OSINT, behavioral analysis, and AI behavioral review.
 
 **Key Findings:**
 ${

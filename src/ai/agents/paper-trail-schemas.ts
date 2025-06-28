@@ -4,6 +4,7 @@ import { z } from 'zod';
 export const PaperTrailScanInputSchema = z.object({
   receiptPhotoUri: z.string().describe("A photo of a receipt, as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'."),
   caseFile: z.string().optional().describe("The name of the case file this evidence belongs to."),
+  workspaceId: z.string().describe('The ID of the workspace performing the action.'),
 });
 export type PaperTrailScanInput = z.infer<typeof PaperTrailScanInputSchema>;
 

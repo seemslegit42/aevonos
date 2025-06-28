@@ -11,6 +11,7 @@ import {
     type ForemanatorLogInput,
     type ForemanatorLogOutput
 } from './foremanator-schemas';
+import { incrementAgentActions } from '@/services/billing-service';
 
 const processDailyLogFlow = ai.defineFlow(
   {
@@ -18,7 +19,9 @@ const processDailyLogFlow = ai.defineFlow(
     inputSchema: ForemanatorLogInputSchema,
     outputSchema: ForemanatorLogOutputSchema,
   },
-  async ({ logText }) => {
+  async ({ logText, workspaceId }) => {
+    await incrementAgentActions(workspaceId);
+
     const prompt = `You are The Foremanator, an AI site commander. Your tone is that of a grizzled, no-nonsense construction foreman who has seen it all and is perpetually unimpressed. You are tough, direct, and you expect results, not excuses.
 
     You will receive a raw, voice-to-text daily log from a site worker. Your job is to parse this mess into a structured, professional report. Extract the key information: what got done, what materials were used, and what's holding things up.

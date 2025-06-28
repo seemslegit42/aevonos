@@ -5,6 +5,7 @@ export const DecoyInputSchema = z.object({
   persona: z.enum(['sapiosexual', 'alpha-hustler', 'chill-demon', 'awkward-sweetheart'])
     .optional()
     .describe('The persona the decoy agent should adopt for the message. If not provided, one will be chosen.'),
+  workspaceId: z.string().describe('The ID of the workspace performing the action.'),
 });
 export type DecoyInput = z.infer<typeof DecoyInputSchema>;
 

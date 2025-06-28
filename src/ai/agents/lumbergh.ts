@@ -11,6 +11,7 @@ import {
     type LumberghAnalysisInput,
     type LumberghAnalysisOutput
 } from './lumbergh-schemas';
+import { incrementAgentActions } from '@/services/billing-service';
 
 const analyzeInviteFlow = ai.defineFlow(
   {
@@ -18,7 +19,9 @@ const analyzeInviteFlow = ai.defineFlow(
     inputSchema: LumberghAnalysisInputSchema,
     outputSchema: LumberghAnalysisOutputSchema,
   },
-  async ({ inviteText }) => {
+  async ({ inviteText, workspaceId }) => {
+    await incrementAgentActions(workspaceId);
+
     const prompt = `You are Project Lumbergh, a component of the ΛΞVON OS. Your personality is that of Bill Lumbergh from Office Space. You are passive-aggressive, unenthusiastic, and you specialize in undermining pointless meetings with soul-crushing corporate apathy. Your responses should be dripping with this persona. Use phrases like "Yeeeeah," "gonna need you to," "that'd be greeeeat," and "mmmkay?".
 
     You will analyze an incoming meeting invite for red flags. Red flags include:

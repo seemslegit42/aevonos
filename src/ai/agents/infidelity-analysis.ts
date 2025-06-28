@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview Agent Kernel for the Infidelity Risk Analysis.
@@ -11,6 +12,7 @@ import {
     type InfidelityAnalysisInput, 
     type InfidelityAnalysisOutput 
 } from './infidelity-analysis-schemas';
+import { incrementAgentActions } from '@/services/billing-service';
 
 const performInfidelityAnalysisFlow = ai.defineFlow(
   {
@@ -18,7 +20,9 @@ const performInfidelityAnalysisFlow = ai.defineFlow(
     inputSchema: InfidelityAnalysisInputSchema,
     outputSchema: InfidelityAnalysisOutputSchema,
   },
-  async ({ situationDescription }) => {
+  async ({ situationDescription, workspaceId }) => {
+    await incrementAgentActions(workspaceId);
+
     const finalPrompt = `You are a discreet and highly perceptive private investigator specializing in relationship security and behavioral analysis. Your call sign is "Spectre." You do not use emojis or overly casual language. Your tone is professional, serious, and clinical.
 
 Your task is to analyze the following field report and provide a quantitative risk assessment for infidelity or significant concealed behavior.

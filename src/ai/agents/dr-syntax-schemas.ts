@@ -7,6 +7,7 @@ export const DrSyntaxInputSchema = z.object({
   contentType: z
     .enum(['prompt', 'code', 'copy'])
     .describe('The type of content being submitted.'),
+  workspaceId: z.string().describe('The ID of the workspace performing the action.'),
 });
 export type DrSyntaxInput = z.infer<typeof DrSyntaxInputSchema>;
 

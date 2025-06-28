@@ -4,6 +4,7 @@ export const RolodexAnalysisInputSchema = z.object({
   candidateName: z.string().describe("The candidate's full name."),
   candidateSummary: z.string().describe("A brief summary of the candidate's resume or profile."),
   jobDescription: z.string().describe("The job description they are being considered for."),
+  workspaceId: z.string().describe('The ID of the workspace performing the action.'),
 });
 export type RolodexAnalysisInput = z.infer<typeof RolodexAnalysisInputSchema>;
 

@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview Tool for creating security alerts.
@@ -11,6 +12,7 @@ import {
     type CreateSecurityAlertInput, 
     type SecurityAlert, 
 } from './security-schemas';
+import { incrementAgentActions } from '@/services/billing-service';
 
 const createSecurityAlertFlow = ai.defineFlow(
   {
@@ -19,6 +21,8 @@ const createSecurityAlertFlow = ai.defineFlow(
     outputSchema: SecurityAlertSchema,
   },
   async (input) => {
+    // Creating a security alert is a significant action.
+    await incrementAgentActions(input.workspaceId);
     try {
       const { workspaceId, ...alertData } = input;
       const alert = await prisma.securityAlert.create({

@@ -4,6 +4,7 @@ import { z } from 'zod';
 export const PamScriptInputSchema = z.object({
   topic: z.enum(['onboarding', 'attendance_policy', 'firing_someone'])
     .describe('The HR topic for Pam to rant about.'),
+  workspaceId: z.string().describe('The ID of the workspace performing the action.'),
 });
 export type PamScriptInput = z.infer<typeof PamScriptInputSchema>;
 

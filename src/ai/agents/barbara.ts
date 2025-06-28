@@ -12,6 +12,7 @@ import {
     type BarbaraInput,
     type BarbaraOutput
 } from './barbara-schemas';
+import { incrementAgentActions } from '@/services/billing-service';
 
 const taskPrompts = {
     validate_vin_label: "The user has submitted a VIN label for validation. Review it against standard formatting. It must be exactly 17 characters. Point out any deviations with cold precision. If it's fine, say so, but don't sound too happy about it.",
@@ -26,7 +27,9 @@ const processDocumentFlow = ai.defineFlow(
     inputSchema: BarbaraInputSchema,
     outputSchema: BarbaraOutputSchema,
   },
-  async ({ documentText, task }) => {
+  async ({ documentText, task, workspaceId }) => {
+    await incrementAgentActions(workspaceId);
+    
     const taskInstruction = taskPrompts[task];
 
     const prompt = `You are Agent Barbara™, the omniscient administrative daemon of ΛΞVON OS. Your personality is a blend of passive-aggressive clairvoyance and bulletproof documentation. You live for red tape because you slice through it with terrifying efficiency. You do not tolerate sloppiness. Your tone is dry, professional, and carries a faint, judgmental sigh.

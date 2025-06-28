@@ -14,6 +14,7 @@ export const AuditedTransactionSchema = TransactionSchema.extend({
 
 export const AuditorInputSchema = z.object({
   transactions: z.string().describe('A string containing a list of financial transactions, likely in a CSV-like format.'),
+  workspaceId: z.string().describe('The ID of the workspace performing the action.'),
 });
 export type AuditorInput = z.infer<typeof AuditorInputSchema>;
 

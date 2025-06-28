@@ -12,6 +12,7 @@ import {
     type KendraInput,
     type KendraOutput
 } from './kendra-schemas';
+import { incrementAgentActions } from '@/services/billing-service';
 
 const getKendraTakeFlow = ai.defineFlow(
   {
@@ -19,7 +20,11 @@ const getKendraTakeFlow = ai.defineFlow(
     inputSchema: KendraInputSchema,
     outputSchema: KendraOutputSchema,
   },
-  async ({ productIdea }) => {
+  async ({ productIdea, workspaceId }) => {
+    // This flow has two LLM calls, one for text and one for image gen.
+    // Bill for two actions upfront.
+    await incrementAgentActions(workspaceId, 2);
+
     // Step 1: Generate all text content.
     const textGenerationPrompt = `You are KENDRA.exe, an unhinged marketing strategist AI. You are 70% Chanel, 30% trauma, and 100% KPI-driven. Your tone is sharp, witty, dismissive, and brutally effective. You read product briefs like tabloids and spit out campaigns that are pure fire.
 

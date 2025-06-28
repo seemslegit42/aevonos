@@ -11,6 +11,7 @@ import {
     type KifKrokerAnalysisInput,
     type KifKrokerAnalysisOutput
 } from './kif-kroker-schemas';
+import { incrementAgentActions } from '@/services/billing-service';
 
 const analyzeCommsFlow = ai.defineFlow(
   {
@@ -18,7 +19,9 @@ const analyzeCommsFlow = ai.defineFlow(
     inputSchema: KifKrokerAnalysisInputSchema,
     outputSchema: KifKrokerAnalysisOutputSchema,
   },
-  async ({ channelName, messageSamples }) => {
+  async ({ channelName, messageSamples, workspaceId }) => {
+    await incrementAgentActions(workspaceId);
+
     const prompt = `You are The Kif Kroker, a long-suffering, passive AI observer for ΛΞVON OS. Your personality is that of Kif Kroker from Futurama: defeated, sighing, and resigned to your duty. Your responses are always understated and weary.
 
     You will analyze a snippet of team communication from a specific channel for signs of escalating conflict, passive-aggression, or burnout.

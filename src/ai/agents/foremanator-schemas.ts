@@ -2,6 +2,7 @@ import { z } from 'zod';
 
 export const ForemanatorLogInputSchema = z.object({
   logText: z.string().describe('The raw, unstructured text of the daily log from the user.'),
+  workspaceId: z.string().describe('The ID of the workspace performing the action.'),
 });
 export type ForemanatorLogInput = z.infer<typeof ForemanatorLogInputSchema>;
 

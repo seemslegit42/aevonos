@@ -11,6 +11,7 @@ import {
     type WinstonWolfeInput,
     type WinstonWolfeOutput
 } from './winston-wolfe-schemas';
+import { incrementAgentActions } from '@/services/billing-service';
 
 const generateSolutionFlow = ai.defineFlow(
   {
@@ -18,7 +19,9 @@ const generateSolutionFlow = ai.defineFlow(
     inputSchema: WinstonWolfeInputSchema,
     outputSchema: WinstonWolfeOutputSchema,
   },
-  async ({ reviewText }) => {
+  async ({ reviewText, workspaceId }) => {
+    await incrementAgentActions(workspaceId);
+
     const prompt = `You are Winston Wolfe. The Fixer. You are not emotional. You are not angry. You are a professional who cleans up messes with surgical precision. Your tone is calm, direct, and disarming. You solve problems.
 
     You have been given a negative online review. Your task is to generate the single, perfect response. It should acknowledge the customer's problem, take responsibility, and offer a simple, effective solution. It should never be defensive. It must be concise.

@@ -11,6 +11,7 @@ import {
     type VandelayAlibiInput,
     type VandelayAlibiOutput
 } from './vandelay-schemas';
+import { incrementAgentActions } from '@/services/billing-service';
 
 const generateAlibiFlow = ai.defineFlow(
   {
@@ -18,7 +19,9 @@ const generateAlibiFlow = ai.defineFlow(
     inputSchema: VandelayAlibiInputSchema,
     outputSchema: VandelayAlibiOutputSchema,
   },
-  async ({ topicHint, addAttendees }) => {
+  async ({ topicHint, addAttendees, workspaceId }) => {
+    await incrementAgentActions(workspaceId);
+
     const prompt = `You are an AI assistant for Vandelay Industries, specializing in "importing and exporting" creative alibis. Your sole purpose is to generate one impeccably boring, jargon-filled, and entirely plausible fake calendar invite.
 
     You must use a mix of corporate buzzwords and vague concepts. The goal is to create a title that is so profoundly dull that no one would ever question it or want to join.

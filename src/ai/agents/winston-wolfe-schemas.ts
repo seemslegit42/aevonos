@@ -2,6 +2,7 @@ import { z } from 'zod';
 
 export const WinstonWolfeInputSchema = z.object({
   reviewText: z.string().describe('The negative review text that needs a solution.'),
+  workspaceId: z.string().describe('The ID of the workspace performing the action.'),
 });
 export type WinstonWolfeInput = z.infer<typeof WinstonWolfeInputSchema>;
 

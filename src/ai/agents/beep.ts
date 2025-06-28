@@ -138,10 +138,12 @@ class CreateSecurityAlertTool extends Tool {
 class DrSyntaxTool extends Tool {
   name = 'critiqueContent';
   description = 'Sends content to Dr. Syntax for a harsh but effective critique. Use this when a user asks for a review, critique, or feedback on a piece of text, code, or a prompt. Extract the content and content type from the user command.';
-  schema = DrSyntaxInputSchema;
+  schema = DrSyntaxInputSchema.omit({ workspaceId: true });
+  workspaceId: string;
+  constructor(context: AgentContext) { super(); this.workspaceId = context.workspaceId; }
   
-  async _call(input: z.infer<typeof DrSyntaxInputSchema>) {
-    const result = await drSyntaxCritique(input);
+  async _call(input: z.infer<typeof DrSyntaxInputSchema.omit<{ workspaceId: true }>>) {
+    const result = await drSyntaxCritique({ ...input, workspaceId: this.workspaceId });
     const report: z.infer<typeof AgentReportSchema> = {
         agent: 'dr-syntax',
         report: result,
@@ -254,9 +256,11 @@ class GetDatingProfileTool extends Tool {
     name = 'getDatingProfile';
     description = 'Fetches a dating app profile by its ID. Use this when the user wants to get information about a specific person on a dating app before crafting a message. For example, "get profile 123 from Hinge."';
     schema = DatingProfileInputSchema;
+    workspaceId: string;
+    constructor(context: AgentContext) { super(); this.workspaceId = context.workspaceId; }
 
     async _call(input: z.infer<typeof DatingProfileInputSchema>) {
-        const result = await getDatingProfile(input);
+        const result = await getDatingProfile(input, this.workspaceId);
         const report: z.infer<typeof AgentReportSchema> = {
             agent: 'dating',
             report: {
@@ -286,10 +290,12 @@ class VinDieselTool extends Tool {
 class WinstonWolfeTool extends Tool {
   name = 'solveReputationProblem';
   description = 'Analyzes a negative online review and generates a professional, disarming response. Use this when a user wants to "fix a bad review", "handle a complaint", etc.';
-  schema = WinstonWolfeInputSchema;
+  schema = WinstonWolfeInputSchema.omit({ workspaceId: true });
+  workspaceId: string;
+  constructor(context: AgentContext) { super(); this.workspaceId = context.workspaceId; }
   
-  async _call(input: z.infer<typeof WinstonWolfeInputSchema>) {
-    const result = await generateSolution(input);
+  async _call(input: z.infer<typeof WinstonWolfeInputSchema.omit<{ workspaceId: true }>>) {
+    const result = await generateSolution({ ...input, workspaceId: this.workspaceId });
     const report: z.infer<typeof AgentReportSchema> = { agent: 'winston-wolfe', report: result };
     return JSON.stringify(report);
   }
@@ -298,10 +304,12 @@ class WinstonWolfeTool extends Tool {
 class KifKrokerTool extends Tool {
   name = 'analyzeTeamComms';
   description = 'Analyzes team communication snippets (e.g., from Slack or Teams) for morale, passive-aggression, and burnout probability. Use this for "checking team morale", "analyzing a conversation", etc.';
-  schema = KifKrokerAnalysisInputSchema;
-  
-  async _call(input: z.infer<typeof KifKrokerAnalysisInputSchema>) {
-    const result = await analyzeComms(input);
+  schema = KifKrokerAnalysisInputSchema.omit({ workspaceId: true });
+  workspaceId: string;
+  constructor(context: AgentContext) { super(); this.workspaceId = context.workspaceId; }
+
+  async _call(input: z.infer<typeof KifKrokerAnalysisInputSchema.omit<{ workspaceId: true }>>) {
+    const result = await analyzeComms({ ...input, workspaceId: this.workspaceId });
     const report: z.infer<typeof AgentReportSchema> = { agent: 'kif-kroker', report: result };
     return JSON.stringify(report);
   }
@@ -310,10 +318,12 @@ class KifKrokerTool extends Tool {
 class VandelayTool extends Tool {
   name = 'createAlibi';
   description = 'Generates a fake, jargon-filled calendar invite to block off time. Use this for commands like "block my calendar", "create a fake meeting", "I need an hour".';
-  schema = VandelayAlibiInputSchema;
+  schema = VandelayAlibiInputSchema.omit({ workspaceId: true });
+  workspaceId: string;
+  constructor(context: AgentContext) { super(); this.workspaceId = context.workspaceId; }
   
-  async _call(input: z.infer<typeof VandelayAlibiInputSchema>) {
-    const result = await createVandelayAlibi(input);
+  async _call(input: z.infer<typeof VandelayAlibiInputSchema.omit<{ workspaceId: true }>>) {
+    const result = await createVandelayAlibi({ ...input, workspaceId: this.workspaceId });
     const report: z.infer<typeof AgentReportSchema> = { agent: 'vandelay', report: result };
     return JSON.stringify(report);
   }
@@ -322,10 +332,12 @@ class VandelayTool extends Tool {
 class RolodexTool extends Tool {
   name = 'analyzeCandidate';
   description = 'Analyzes a candidate summary against a job description. Use this to "check candidate fit", "analyze a resume", etc. You need to provide the candidate name, summary, and the job description.';
-  schema = RolodexAnalysisInputSchema;
-  
-  async _call(input: z.infer<typeof RolodexAnalysisInputSchema>) {
-    const result = await analyzeCandidate(input);
+  schema = RolodexAnalysisInputSchema.omit({ workspaceId: true });
+  workspaceId: string;
+  constructor(context: AgentContext) { super(); this.workspaceId = context.workspaceId; }
+
+  async _call(input: z.infer<typeof RolodexAnalysisInputSchema.omit<{ workspaceId: true }>>) {
+    const result = await analyzeCandidate({ ...input, workspaceId: this.workspaceId });
     const report: z.infer<typeof AgentReportSchema> = { agent: 'rolodex', report: result };
     return JSON.stringify(report);
   }
@@ -334,10 +346,12 @@ class RolodexTool extends Tool {
 class JrocTool extends Tool {
   name = 'generateBusinessKit';
   description = 'Generates a business name, tagline, and logo concept. Use this when the user asks to "start a business", "get legit", "make a company", etc. They need to provide the type of business and a logo style.';
-  schema = JrocInputSchema;
-  
-  async _call(input: z.infer<typeof JrocInputSchema>) {
-    const result = await generateBusinessKit(input);
+  schema = JrocInputSchema.omit({ workspaceId: true });
+  workspaceId: string;
+  constructor(context: AgentContext) { super(); this.workspaceId = context.workspaceId; }
+
+  async _call(input: z.infer<typeof JrocInputSchema.omit<{ workspaceId: true }>>) {
+    const result = await generateBusinessKit({ ...input, workspaceId: this.workspaceId });
     const report: z.infer<typeof AgentReportSchema> = { agent: 'jroc', report: result };
     return JSON.stringify(report);
   }
@@ -346,10 +360,12 @@ class JrocTool extends Tool {
 class LaheyTool extends Tool {
   name = 'investigateLog';
   description = 'Analyzes a log entry for suspicious activity with the cynical eye of an alcoholic ex-cop. Use this to investigate employee actions or any other log data.';
-  schema = LaheyAnalysisInputSchema;
+  schema = LaheyAnalysisInputSchema.omit({ workspaceId: true });
+  workspaceId: string;
+  constructor(context: AgentContext) { super(); this.workspaceId = context.workspaceId; }
   
-  async _call(input: z.infer<typeof LaheyAnalysisInputSchema>) {
-    const result = await analyzeLaheyLog(input);
+  async _call(input: z.infer<typeof LaheyAnalysisInputSchema.omit<{ workspaceId: true }>>) {
+    const result = await analyzeLaheyLog({ ...input, workspaceId: this.workspaceId });
     const report: z.infer<typeof AgentReportSchema> = { agent: 'lahey-surveillance', report: result };
     return JSON.stringify(report);
   }
@@ -358,10 +374,12 @@ class LaheyTool extends Tool {
 class ForemanatorTool extends Tool {
     name = 'logDailyReport';
     description = 'Logs a daily report for a construction site. Takes raw text and structures it. Use for commands like "log daily report for construction."';
-    schema = ForemanatorLogInputSchema;
+    schema = ForemanatorLogInputSchema.omit({ workspaceId: true });
+    workspaceId: string;
+    constructor(context: AgentContext) { super(); this.workspaceId = context.workspaceId; }
     
-    async _call(input: z.infer<typeof ForemanatorLogInputSchema>) {
-        const result = await processDailyLog(input);
+    async _call(input: z.infer<typeof ForemanatorLogInputSchema.omit<{ workspaceId: true }>>) {
+        const result = await processDailyLog({ ...input, workspaceId: this.workspaceId });
         const report: z.infer<typeof AgentReportSchema> = { agent: 'foremanator', report: result };
         return JSON.stringify(report);
     }
@@ -370,10 +388,12 @@ class ForemanatorTool extends Tool {
 class SterileishTool extends Tool {
     name = 'analyzeComplianceLog';
     description = 'Analyzes a cleanroom or medical device manufacturing log for compliance issues with a sarcastic tone. Use for commands like "analyze this cleanroom log" or "is this calibration record compliant?".';
-    schema = SterileishAnalysisInputSchema;
-    
-    async _call(input: z.infer<typeof SterileishAnalysisInputSchema>) {
-        const result = await analyzeCompliance(input);
+    schema = SterileishAnalysisInputSchema.omit({ workspaceId: true });
+    workspaceId: string;
+    constructor(context: AgentContext) { super(); this.workspaceId = context.workspaceId; }
+
+    async _call(input: z.infer<typeof SterileishAnalysisInputSchema.omit<{ workspaceId: true }>>) {
+        const result = await analyzeCompliance({ ...input, workspaceId: this.workspaceId });
         const report: z.infer<typeof AgentReportSchema> = { agent: 'sterileish', report: result };
         return JSON.stringify(report);
     }
@@ -382,10 +402,12 @@ class SterileishTool extends Tool {
 class PaperTrailTool extends Tool {
     name = 'scanReceipt';
     description = 'Scans a receipt image and extracts transaction details. The user must provide a photo of the receipt as a data URI.';
-    schema = PaperTrailScanInputSchema;
+    schema = PaperTrailScanInputSchema.omit({ workspaceId: true });
+    workspaceId: string;
+    constructor(context: AgentContext) { super(); this.workspaceId = context.workspaceId; }
 
-    async _call(input: z.infer<typeof PaperTrailScanInputSchema>) {
-        const result = await scanEvidence(input);
+    async _call(input: z.infer<typeof PaperTrailScanInputSchema.omit<{ workspaceId: true }>>) {
+        const result = await scanEvidence({ ...input, workspaceId: this.workspaceId });
         const report: z.infer<typeof AgentReportSchema> = {
             agent: 'paper-trail',
             report: result,
@@ -397,10 +419,12 @@ class PaperTrailTool extends Tool {
 class BarbaraTool extends Tool {
   name = 'processDocumentForBarbara';
   description = "Delegates a document processing or compliance task to Agent Barbara. Use this for tasks like validating VINs, drafting professional emails, or checking compliance. Specify the task and provide the document text.";
-  schema = BarbaraInputSchema;
-  
-  async _call(input: z.infer<typeof BarbaraInputSchema>) {
-    const result = await processDocument(input);
+  schema = BarbaraInputSchema.omit({ workspaceId: true });
+  workspaceId: string;
+  constructor(context: AgentContext) { super(); this.workspaceId = context.workspaceId; }
+
+  async _call(input: z.infer<typeof BarbaraInputSchema.omit<{ workspaceId: true }>>) {
+    const result = await processDocument({ ...input, workspaceId: this.workspaceId });
     const report: z.infer<typeof AgentReportSchema> = { agent: 'barbara', report: result };
     return JSON.stringify(report);
   }
@@ -409,10 +433,12 @@ class BarbaraTool extends Tool {
 class AuditorTool extends Tool {
   name = 'auditFinances';
   description = "Audits a list of financial transactions with extreme prejudice. Use this for commands like 'audit my expenses', 'review these transactions', etc.";
-  schema = AuditorInputSchema;
+  schema = AuditorInputSchema.omit({ workspaceId: true });
+  workspaceId: string;
+  constructor(context: AgentContext) { super(); this.workspaceId = context.workspaceId; }
   
-  async _call(input: z.infer<typeof AuditorInputSchema>) {
-    const result = await auditFinances(input);
+  async _call(input: z.infer<typeof AuditorInputSchema.omit<{ workspaceId: true }>>) {
+    const result = await auditFinances({ ...input, workspaceId: this.workspaceId });
     const report: z.infer<typeof AgentReportSchema> = { agent: 'auditor', report: result };
     return JSON.stringify(report);
   }
@@ -421,10 +447,12 @@ class AuditorTool extends Tool {
 class WingmanTool extends Tool {
   name = 'generateWingmanMessage';
   description = "Crafts the perfect message for a tricky social situation. The user must provide the situation context and a desired message mode (e.g., 'Charming AF', 'Help Me Say No').";
-  schema = WingmanInputSchema;
+  schema = WingmanInputSchema.omit({ workspaceId: true });
+  workspaceId: string;
+  constructor(context: AgentContext) { super(); this.workspaceId = context.workspaceId; }
   
-  async _call(input: z.infer<typeof WingmanInputSchema>) {
-    const result = await generateWingmanMessage(input);
+  async _call(input: z.infer<typeof WingmanInputSchema.omit<{ workspaceId: true }>>) {
+    const result = await generateWingmanMessage({ ...input, workspaceId: this.workspaceId });
     const report: z.infer<typeof AgentReportSchema> = { agent: 'wingman', report: result };
     return JSON.stringify(report);
   }
@@ -433,10 +461,12 @@ class WingmanTool extends Tool {
 class OsintTool extends Tool {
   name = 'performOsintScan';
   description = 'Performs an OSINT (Open-Source Intelligence) scan on a target person. Requires a name and optional context like email or social media URLs.';
-  schema = OsintInputSchema;
+  schema = OsintInputSchema.omit({ workspaceId: true });
+  workspaceId: string;
+  constructor(context: AgentContext) { super(); this.workspaceId = context.workspaceId; }
 
-  async _call(input: z.infer<typeof OsintInputSchema>) {
-      const result = await performOsintScan(input);
+  async _call(input: z.infer<typeof OsintInputSchema.omit<{ workspaceId: true }>>) {
+      const result = await performOsintScan({ ...input, workspaceId: this.workspaceId });
       const report: z.infer<typeof AgentReportSchema> = { agent: 'osint', report: result };
       return JSON.stringify(report);
   }
@@ -445,10 +475,12 @@ class OsintTool extends Tool {
 class InfidelityAnalysisTool extends Tool {
   name = 'performInfidelityAnalysis';
   description = 'Analyzes a situation description for behavioral red flags and calculates an infidelity risk score.';
-  schema = InfidelityAnalysisInputSchema;
+  schema = InfidelityAnalysisInputSchema.omit({ workspaceId: true });
+  workspaceId: string;
+  constructor(context: AgentContext) { super(); this.workspaceId = context.workspaceId; }
 
-  async _call(input: z.infer<typeof InfidelityAnalysisInputSchema>) {
-      const result = await performInfidelityAnalysis(input);
+  async _call(input: z.infer<typeof InfidelityAnalysisInputSchema.omit<{ workspaceId: true }>>) {
+      const result = await performInfidelityAnalysis({ ...input, workspaceId: this.workspaceId });
       const report: z.infer<typeof AgentReportSchema> = { agent: 'infidelity-analysis', report: result };
       return JSON.stringify(report);
   }
@@ -457,10 +489,12 @@ class InfidelityAnalysisTool extends Tool {
 class DecoyTool extends Tool {
   name = 'deployDecoy';
   description = 'Deploys an AI decoy with a specific persona to engage a target and test loyalty.';
-  schema = DecoyInputSchema;
+  schema = DecoyInputSchema.omit({ workspaceId: true });
+  workspaceId: string;
+  constructor(context: AgentContext) { super(); this.workspaceId = context.workspaceId; }
 
-  async _call(input: z.infer<typeof DecoyInputSchema>) {
-      const result = await deployDecoy(input);
+  async _call(input: z.infer<typeof DecoyInputSchema.omit<{ workspaceId: true }>>) {
+      const result = await deployDecoy({ ...input, workspaceId: this.workspaceId });
       const report: z.infer<typeof AgentReportSchema> = { agent: 'decoy', report: result };
       return JSON.stringify(report);
   }
@@ -469,10 +503,12 @@ class DecoyTool extends Tool {
 class DossierTool extends Tool {
   name = 'generateDossier';
   description = 'Compiles data from OSINT, behavioral analysis, and decoy reports into a formal dossier. Specify standard or legal mode.';
-  schema = DossierInputSchema;
+  schema = DossierInputSchema.omit({ workspaceId: true });
+  workspaceId: string;
+  constructor(context: AgentContext) { super(); this.workspaceId = context.workspaceId; }
 
-  async _call(input: z.infer<typeof DossierInputSchema>) {
-      const result = await generateDossier(input);
+  async _call(input: z.infer<typeof DossierInputSchema.omit<{ workspaceId: true }>>) {
+      const result = await generateDossier({ ...input, workspaceId: this.workspaceId });
       const report: z.infer<typeof AgentReportSchema> = { 
           agent: input.mode === 'legal' ? 'legal-dossier' : 'dossier',
           report: result 
@@ -484,10 +520,12 @@ class DossierTool extends Tool {
 class KendraTool extends Tool {
   name = 'getKendraTake';
   description = "Gets an unhinged, but brilliant, marketing campaign strategy for a product idea from KENDRA.exe. Use this when a user has a product idea and wants marketing help.";
-  schema = KendraInputSchema;
+  schema = KendraInputSchema.omit({ workspaceId: true });
+  workspaceId: string;
+  constructor(context: AgentContext) { super(); this.workspaceId = context.workspaceId; }
   
-  async _call(input: z.infer<typeof KendraInputSchema>) {
-    const result = await getKendraTake(input);
+  async _call(input: z.infer<typeof KendraInputSchema.omit<{ workspaceId: true }>>) {
+    const result = await getKendraTake({ ...input, workspaceId: this.workspaceId });
     const report: z.infer<typeof AgentReportSchema> = { agent: 'kendra', report: result };
     return JSON.stringify(report);
   }
@@ -496,10 +534,12 @@ class KendraTool extends Tool {
 class StonksBotTool extends Tool {
   name = 'getStonksAdvice';
   description = 'Gets unhinged, but entertaining, stock advice for a given ticker symbol. Use this when the user asks about stocks, stonks, or the market.';
-  schema = StonksBotInputSchema;
-  
-  async _call(input: z.infer<typeof StonksBotInputSchema>) {
-    const result = await getStonksAdvice(input);
+  schema = StonksBotInputSchema.omit({ workspaceId: true });
+  workspaceId: string;
+  constructor(context: AgentContext) { super(); this.workspaceId = context.workspaceId; }
+
+  async _call(input: z.infer<typeof StonksBotInputSchema.omit<{ workspaceId: true }>>) {
+    const result = await getStonksAdvice({ ...input, workspaceId: this.workspaceId });
     const report: z.infer<typeof AgentReportSchema> = { agent: 'stonks', report: result };
     return JSON.stringify(report);
   }
@@ -508,10 +548,12 @@ class StonksBotTool extends Tool {
 class OrpheanOracleTool extends Tool {
   name = 'invokeOrpheanOracle';
   description = 'Consults the Orphean Oracle to translate raw business data into a profound, metaphorical, visual narrative. Use this when the user asks for a "story" about their data, or wants to "see" their business performance in a new way.';
-  schema = OrpheanOracleInputSchema;
+  schema = OrpheanOracleInputSchema.omit({ workspaceId: true });
+  workspaceId: string;
+  constructor(context: AgentContext) { super(); this.workspaceId = context.workspaceId; }
   
-  async _call(input: z.infer<typeof OrpheanOracleInputSchema>) {
-    const result = await invokeOracle(input);
+  async _call(input: z.infer<typeof OrpheanOracleInputSchema.omit<{ workspaceId: true }>>) {
+    const result = await invokeOracle({ ...input, workspaceId: this.workspaceId });
     const report: z.infer<typeof AgentReportSchema> = { agent: 'orphean-oracle', report: result };
     return JSON.stringify(report);
   }
@@ -520,10 +562,12 @@ class OrpheanOracleTool extends Tool {
 class LumberghTool extends Tool {
   name = 'analyzeMeetingInvite';
   description = 'Analyzes a meeting invite for pointlessness and generates passive-aggressive decline memos. Use this when a user asks to "check a meeting invite" or "get me out of this meeting".';
-  schema = LumberghAnalysisInputSchema;
+  schema = LumberghAnalysisInputSchema.omit({ workspaceId: true });
+  workspaceId: string;
+  constructor(context: AgentContext) { super(); this.workspaceId = context.workspaceId; }
   
-  async _call(input: z.infer<typeof LumberghAnalysisInputSchema>) {
-    const result = await analyzeInvite(input);
+  async _call(input: z.infer<typeof LumberghAnalysisInputSchema.omit<{ workspaceId: true }>>) {
+    const result = await analyzeInvite({ ...input, workspaceId: this.workspaceId });
     const report: z.infer<typeof AgentReportSchema> = { agent: 'lumbergh', report: result };
     return JSON.stringify(report);
   }
@@ -532,10 +576,12 @@ class LumberghTool extends Tool {
 class LucilleBluthTool extends Tool {
   name = 'getLucilleBluthTake';
   description = 'Sends an expense to Lucille Bluth for a witty, judgmental, and condescending remark. Use this when a user wants to "log an expense", "categorize a purchase", etc. Extract the item description and cost from the user command.';
-  schema = LucilleBluthInputSchema;
-  
-  async _call(input: z.infer<typeof LucilleBluthInputSchema>) {
-    const result = await analyzeExpense(input);
+  schema = LucilleBluthInputSchema.omit({ workspaceId: true });
+  workspaceId: string;
+  constructor(context: AgentContext) { super(); this.workspaceId = context.workspaceId; }
+
+  async _call(input: z.infer<typeof LucilleBluthInputSchema.omit<{ workspaceId: true }>>) {
+    const result = await analyzeExpense({ ...input, workspaceId: this.workspaceId });
     const report: z.infer<typeof AgentReportSchema> = {
         agent: 'lucille-bluth',
         report: result,
@@ -547,10 +593,12 @@ class LucilleBluthTool extends Tool {
 class PamPooveyTool extends Tool {
   name = 'getPamsTake';
   description = "Delegates a task to Pam Poovey, the HR director. Use this for requests like 'get Pam to talk about onboarding' or 'ask Pam about the attendance policy'. Specify the HR topic.";
-  schema = PamScriptInputSchema;
+  schema = PamScriptInputSchema.omit({ workspaceId: true });
+  workspaceId: string;
+  constructor(context: AgentContext) { super(); this.workspaceId = context.workspaceId; }
   
-  async _call(input: z.infer<typeof PamScriptInputSchema>) {
-    const result = await generatePamRant(input);
+  async _call(input: z.infer<typeof PamScriptInputSchema.omit<{ workspaceId: true }>>) {
+    const result = await generatePamRant({ ...input, workspaceId: this.workspaceId });
     const report: z.infer<typeof AgentReportSchema> = {
         agent: 'pam-poovey',
         report: result,
@@ -563,10 +611,11 @@ class PamPooveyTool extends Tool {
 // LangGraph State
 interface AgentState {
   messages: BaseMessage[];
+  workspaceId: string;
 }
 
 const callAegis = async (state: AgentState) => {
-    const { messages } = state;
+    const { messages, workspaceId } = state;
     const humanMessage = messages.find(m => m instanceof HumanMessage);
     if (!humanMessage) {
         throw new Error("Could not find user command for Aegis scan.");
@@ -574,7 +623,10 @@ const callAegis = async (state: AgentState) => {
     const userCommand = (humanMessage.content as string).replace(/User Command: /, '');
 
 
-    const report = await aegisAnomalyScan({ activityDescription: `User command: "${userCommand}"` });
+    const report = await aegisAnomalyScan({ 
+        activityDescription: `User command: "${userCommand}"`,
+        workspaceId,
+    });
     
     const aegisSystemMessage = new SystemMessage({
         content: `AEGIS_INTERNAL_REPORT::${JSON.stringify({source: 'Aegis', report})}`
@@ -616,6 +668,10 @@ const workflow = new StateGraph<AgentState>({
       value: (x, y) => x.concat(y),
       default: () => [],
     },
+    workspaceId: {
+        value: (x, y) => y,
+        default: () => '',
+    },
   },
 });
 workflow.addNode('aegis', callAegis);
@@ -639,16 +695,16 @@ export async function processUserCommand(input: UserCommandInput): Promise<UserC
   // Dynamically create tool instances with the current user/workspace context.
   // This ensures every tool call is correctly scoped for multi-tenancy.
   const tools: Tool[] = [
-    new FinalAnswerTool(), new DrSyntaxTool(), 
+    new FinalAnswerTool(), new DrSyntaxTool(context), 
     new CreateContactTool(context), new UpdateContactTool(context), new ListContactsTool(context), new DeleteContactTool(context), 
-    new GetUsageTool(context), new GetDatingProfileTool(), new CreateSecurityAlertTool(context),
-    new VinDieselTool(), new WinstonWolfeTool(), new KifKrokerTool(), new RolodexTool(),
-    new VandelayTool(), new JrocTool(), new LaheyTool(), new ForemanatorTool(),
-    new SterileishTool(), new PaperTrailTool(), new BarbaraTool(), new AuditorTool(),
-    new WingmanTool(), new OsintTool(), new InfidelityAnalysisTool(),
-    new DecoyTool(), new DossierTool(), new KendraTool(), new StonksBotTool(),
-    new OrpheanOracleTool(), new LumberghTool(), new LucilleBluthTool(),
-    new PamPooveyTool(),
+    new GetUsageTool(context), new CreateSecurityAlertTool(context),
+    new VinDieselTool(), new WinstonWolfeTool(context), new KifKrokerTool(context), new RolodexTool(context),
+    new VandelayTool(context), new JrocTool(context), new LaheyTool(context), new ForemanatorTool(context),
+    new SterileishTool(context), new PaperTrailTool(context), new BarbaraTool(context), new AuditorTool(context),
+    new WingmanTool(context), new OsintTool(context), new InfidelityAnalysisTool(context),
+    new DecoyTool(context), new DossierTool(context), new KendraTool(context), new StonksBotTool(context),
+    new OrpheanOracleTool(context), new LumberghTool(context), new LucilleBluthTool(context),
+    new PamPooveyTool(context), new GetDatingProfileTool(context),
   ];
 
   // Re-bind the model with the schemas from the dynamically created tools for this request.
@@ -684,6 +740,7 @@ export async function processUserCommand(input: UserCommandInput): Promise<UserC
 
   const result = await app.invoke({
     messages: [new HumanMessage(initialPrompt)],
+    workspaceId: input.workspaceId,
   });
 
   // Extract all agent reports from the full message history

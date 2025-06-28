@@ -4,6 +4,7 @@ export const LucilleBluthInputSchema = z.object({
   expenseDescription: z.string().describe('The description of the expense, e.g., "Latte" or "Taco Tuesday".'),
   expenseAmount: z.number().describe('The amount of the expense.'),
   category: z.string().describe('The spending category, e.g., "Coffee", "Takeout".'),
+  workspaceId: z.string().describe('The ID of the workspace performing the action.'),
 });
 export type LucilleBluthInput = z.infer<typeof LucilleBluthInputSchema>;
 

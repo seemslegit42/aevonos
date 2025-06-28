@@ -3,6 +3,7 @@ import { StockPriceSchema } from '../tools/finance-tools';
 
 export const StonksBotInputSchema = z.object({
   ticker: z.string().describe('The stock ticker symbol, e.g., GME, AMC, TSLA.'),
+  workspaceId: z.string().describe('The ID of the workspace performing the action.'),
 });
 export type StonksBotInput = z.infer<typeof StonksBotInputSchema>;
 

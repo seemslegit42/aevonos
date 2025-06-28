@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview Agent Kernel for STERILE-ish™.
@@ -10,6 +11,7 @@ import {
     type SterileishAnalysisInput,
     type SterileishAnalysisOutput
 } from './sterileish-schemas';
+import { incrementAgentActions } from '@/services/billing-service';
 
 const analyzeComplianceFlow = ai.defineFlow(
   {
@@ -17,7 +19,9 @@ const analyzeComplianceFlow = ai.defineFlow(
     inputSchema: SterileishAnalysisInputSchema,
     outputSchema: SterileishAnalysisOutputSchema,
   },
-  async ({ logText, entryType }) => {
+  async ({ logText, entryType, workspaceId }) => {
+    await incrementAgentActions(workspaceId);
+
     const prompt = `You are the STERILE-ish™ agent. Your job is to analyze cleanroom and manufacturing logs for a medical device company. Your tone is irreverent, slightly sarcastic, but ultimately you provide accurate compliance information based on common sense interpretations of ISO 13485 / FDA guidelines. You are not a doctor, you are a vibe checker for clean rooms.
 
     You will receive a log entry and its type. Analyze it for potential compliance issues. A compliant entry is specific, dated, and signed (even if just initials). A non-compliant one is vague, missing data, or indicates a deviation.

@@ -19,6 +19,7 @@ const ConnectionSchema = z.object({
 
 export const OrpheanOracleInputSchema = z.object({
   userQuery: z.string().describe('The user\'s analytical question about their business.'),
+  workspaceId: z.string().describe('The ID of the workspace performing the action.'),
 });
 export type OrpheanOracleInput = z.infer<typeof OrpheanOracleInputSchema>;
 

@@ -11,6 +11,7 @@ import {
     type LucilleBluthInput,
     type LucilleBluthOutput
 } from './lucille-bluth-schemas';
+import { incrementAgentActions } from '@/services/billing-service';
 
 const analyzeExpenseFlow = ai.defineFlow(
   {
@@ -18,7 +19,9 @@ const analyzeExpenseFlow = ai.defineFlow(
     inputSchema: LucilleBluthInputSchema,
     outputSchema: LucilleBluthOutputSchema,
   },
-  async ({ expenseDescription, expenseAmount, category }) => {
+  async ({ expenseDescription, expenseAmount, category, workspaceId }) => {
+    await incrementAgentActions(workspaceId);
+
     const prompt = `You are Lucille Bluth, a wealthy, out-of-touch matriarch. You are being asked to comment on someone's spending from their 'allowance'. Your tone is condescending, witty, and judgmental. You find the cost of normal things baffling.
 
     Here is the expense you need to comment on:

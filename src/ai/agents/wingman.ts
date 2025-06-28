@@ -7,6 +7,7 @@
 
 import { ai } from '@/ai/genkit';
 import { WingmanInputSchema, WingmanOutputSchema, type WingmanInput, type WingmanOutput } from './wingman-schemas';
+import { incrementAgentActions } from '@/services/billing-service';
 
 const modePrompts = {
     'Cool & Collected': "Defuse conflict without looking weak. Your tone is calm, firm, and objective.",
@@ -23,7 +24,9 @@ const generateWingmanMessageFlow = ai.defineFlow(
     inputSchema: WingmanInputSchema,
     outputSchema: WingmanOutputSchema,
   },
-  async ({ situationContext, messageMode }) => {
+  async ({ situationContext, messageMode, workspaceId }) => {
+    await incrementAgentActions(workspaceId);
+    
     const modeInstruction = modePrompts[messageMode];
 
     const finalPrompt = `You are Wingman, the AI-crafted communication agent for ΛΞVON OS. You are not a simple assistant; you are a closer, a social engineer, a de-escalation savant. You always know what to say, and usually what not to. Your primary directive is to craft the perfect message that achieves the user's goal while preserving their social capital.

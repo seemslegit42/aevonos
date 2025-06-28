@@ -16,6 +16,7 @@ import {
   type PamScriptInput,
   type PamAudioOutput,
 } from './pam-poovey-schemas';
+import { incrementAgentActions } from '@/services/billing-service';
 
 
 // Text Generation
@@ -38,6 +39,9 @@ const generatePamScriptFlow = ai.defineFlow(
     outputSchema: PamScriptOutputSchema,
   },
   async (input) => {
+    // This part of the flow does not increment actions,
+    // as it's an internal step of the main generatePamRant flow.
+    // The main flow will handle the billing.
     const { output } = await scriptPrompt(input);
     return output!;
   }
@@ -78,6 +82,7 @@ const generatePamAudioFlow = ai.defineFlow(
     outputSchema: z.object({ audioDataUri: z.string() }),
   },
   async ({ script }) => {
+    // This part of the flow also does not increment actions.
     const { media } = await ai.generate({
       model: googleAI.model('gemini-2.5-flash-preview-tts'),
       config: {
@@ -109,6 +114,10 @@ const generatePamAudioFlow = ai.defineFlow(
 
 // Combined Flow for UI
 export async function generatePamRant(input: PamScriptInput): Promise<PamAudioOutput> {
+    // This is the main entry point. It has two LLM calls (script + TTS),
+    // so we bill for two actions.
+    await incrementAgentActions(input.workspaceId, 2);
+    
     const { script } = await generatePamScriptFlow(input);
     const { audioDataUri } = await generatePamAudioFlow({ script });
     return { script, audioDataUri };

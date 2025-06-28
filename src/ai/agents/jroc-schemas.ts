@@ -3,6 +3,7 @@ import { z } from 'zod';
 export const JrocInputSchema = z.object({
   businessType: z.string().describe('The type of hustle, e.g., "mobile audio", "lawn care", "vape juice distribution".'),
   logoStyle: z.enum(['bling', 'chrome', 'dank minimal']).describe('The desired style for the logo.'),
+  workspaceId: z.string().describe('The ID of the workspace performing the action.'),
 });
 export type JrocInput = z.infer<typeof JrocInputSchema>;
 

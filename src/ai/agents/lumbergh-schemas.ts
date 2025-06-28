@@ -3,6 +3,7 @@ import { z } from 'zod';
 
 export const LumberghAnalysisInputSchema = z.object({
   inviteText: z.string().describe('The full text or description of the meeting invite, including title, attendees, and agenda (or lack thereof).'),
+  workspaceId: z.string().describe('The ID of the workspace performing the action.'),
 });
 export type LumberghAnalysisInput = z.infer<typeof LumberghAnalysisInputSchema>;
 

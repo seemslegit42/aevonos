@@ -1,3 +1,4 @@
+
 'use server';
 import { z } from 'zod';
 
@@ -11,6 +12,7 @@ export const BarbaraTaskSchema = z.enum([
 export const BarbaraInputSchema = z.object({
   documentText: z.string().describe('The raw, messy, or incomplete text of a document requiring review or processing.'),
   task: BarbaraTaskSchema,
+  workspaceId: z.string().describe('The ID of the workspace performing the action.'),
 });
 export type BarbaraInput = z.infer<typeof BarbaraInputSchema>;
 

@@ -14,6 +14,7 @@ import {
     searchIntelX,
 } from '../tools/osint-tools';
 import { runFirecrawlerScan } from '../tools/firecrawler-tools';
+import { incrementAgentActions } from '@/services/billing-service';
 
 // Helper function to extract potential data points from context
 const extractContextData = (context: string) => {
@@ -39,7 +40,10 @@ const performOsintScanFlow = ai.defineFlow(
     inputSchema: OsintInputSchema,
     outputSchema: OsintOutputSchema,
   },
-  async ({ targetName, context }) => {
+  async ({ targetName, context, workspaceId }) => {
+    // This flow uses external tools and an LLM for synthesis. It counts as one complex action.
+    await incrementAgentActions(workspaceId);
+
     const contextData = extractContextData(context || '');
     let toolResults: any = {};
     

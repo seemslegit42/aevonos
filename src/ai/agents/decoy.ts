@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview Agent Kernel for the AI Decoy.
@@ -7,6 +8,7 @@
 import { ai } from '@/ai/genkit';
 import { DecoyInputSchema, DecoyOutputSchema, type DecoyInput, type DecoyOutput } from './decoy-schemas';
 import { z } from 'zod';
+import { incrementAgentActions } from '@/services/billing-service';
 
 const personaPrompts = {
     sapiosexual: 'You are intelligent, witty, and slightly esoteric. Your message should be a clever observation or a thought-provoking question related to their profile.',
@@ -21,7 +23,9 @@ const deployDecoyFlow = ai.defineFlow(
     inputSchema: DecoyInputSchema,
     outputSchema: DecoyOutputSchema,
   },
-  async ({ targetDescription, persona: requestedPersona }) => {
+  async ({ targetDescription, persona: requestedPersona, workspaceId }) => {
+    await incrementAgentActions(workspaceId);
+
     const persona = requestedPersona || 'chill-demon'; // Default to chill-demon if not provided
     const personaInstruction = personaPrompts[persona];
 

@@ -4,6 +4,7 @@ export const SterileishAnalysisInputSchema = z.object({
   logText: z.string().describe('The raw text from a cleanroom log entry, like temperature readings, cleaning validation, or equipment calibration.'),
   entryType: z.enum(['environment', 'calibration', 'cleaning', 'general'])
     .describe('The type of log entry being submitted for analysis.'),
+  workspaceId: z.string().describe('The ID of the workspace performing the action.'),
 });
 export type SterileishAnalysisInput = z.infer<typeof SterileishAnalysisInputSchema>;
 
