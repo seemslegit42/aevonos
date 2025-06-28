@@ -69,6 +69,8 @@ import { getKendraTake } from '@/ai/agents/kendra';
 import { KendraInputSchema } from './kendra-schemas';
 import { getStonksAdvice } from '@/ai/agents/stonks-bot';
 import { StonksBotInputSchema } from './stonks-bot-schemas';
+import { invokeOracle } from '@/ai/agents/orphean-oracle-flow';
+import { OrpheanOracleInputSchema } from './orphean-oracle-schemas';
 import {
     type UserCommandInput,
     UserCommandOutputSchema,
@@ -457,6 +459,18 @@ class StonksBotTool extends Tool {
   }
 }
 
+class OrpheanOracleTool extends Tool {
+  name = 'invokeOrpheanOracle';
+  description = 'Consults the Orphean Oracle to translate raw business data into a profound, metaphorical, visual narrative. Use this when the user asks for a "story" about their data, or wants to "see" their business performance in a new way.';
+  schema = OrpheanOracleInputSchema;
+  
+  async _call(input: z.infer<typeof OrpheanOracleInputSchema>) {
+    const result = await invokeOracle(input);
+    const report: z.infer<typeof AgentReportSchema> = { agent: 'orphean-oracle', report: result };
+    return JSON.stringify(report);
+  }
+}
+
 
 // LangGraph State
 interface AgentState {
@@ -545,6 +559,7 @@ export async function processUserCommand(input: UserCommandInput): Promise<UserC
     new SterileishTool(), new PaperTrailTool(), new BarbaraTool(), new AuditorTool(),
     new WingmanTool(), new OsintTool(), new InfidelityAnalysisTool(),
     new DecoyTool(), new DossierTool(), new KendraTool(), new StonksBotTool(),
+    new OrpheanOracleTool(),
   ];
 
   // Re-bind the model with the schemas from the dynamically created tools for this request.

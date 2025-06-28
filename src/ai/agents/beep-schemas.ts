@@ -23,6 +23,7 @@ import { DecoyOutputSchema } from './decoy-schemas';
 import { DossierOutputSchema } from './dossier-schemas';
 import { KendraOutputSchema } from './kendra-schemas';
 import { StonksBotOutputSchema } from './stonks-bot-schemas';
+import { OrpheanOracleOutputSchema } from './orphean-oracle-schemas';
 
 
 // Schemas from the original BEEP agent, preserved for the public contract.
@@ -205,6 +206,10 @@ export const AgentReportSchema = z.discriminatedUnion('agent', [
   z.object({
     agent: z.literal('stonks'),
     report: StonksBotOutputSchema.describe('The full report from the Stonks Bot agent.'),
+  }),
+  z.object({
+    agent: z.literal('orphean-oracle'),
+    report: OrpheanOracleOutputSchema.describe('The full report from the Orphean Oracle agent.'),
   }),
 ]);
 

@@ -33,3 +33,4 @@ import '@/ai/tools/osint-tools.ts';
 import '@/ai/tools/firecrawler-tools.ts';
 import '@/ai/agents/kendra.ts';
 import '@/ai/agents/stonks-bot.ts';
+import '@/ai/agents/orphean-oracle-flow.ts';

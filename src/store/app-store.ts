@@ -28,6 +28,7 @@ import type { AuditorOutput } from '@/ai/agents/auditor-generalissimo-schemas';
 import type { WingmanOutput } from '@/ai/agents/wingman-schemas';
 import type { KendraOutput } from '@/ai/agents/kendra-schemas';
 import type { StonksBotOutput } from '@/ai/agents/stonks-bot-schemas';
+import { type OrpheanOracleOutput } from '@/ai/agents/orphean-oracle-schemas';
 import { generateSpeech } from '@/ai/flows/tts-flow';
 
 // Define the types of MicroApps available in the OS
@@ -95,7 +96,7 @@ const defaultAppDetails: Record<MicroAppType, Omit<MicroApp, 'id' | 'position' |
   'winston-wolfe': { type: 'winston-wolfe', title: 'The Winston Wolfe', description: "Bad review? Thirty minutes away. I'll be there in ten." },
   'kif-kroker': { type: 'kif-kroker', title: 'The Kif Kroker', description: "Sigh. The team's conflict metrics are escalating again." },
   'vandelay': { type: 'vandelay', title: 'Vandelay Industries', description: 'Importing, exporting, and ghosting.' },
-  'orphean-oracle': { type: 'orphean-oracle', title: 'The Orphean Oracle', description: 'Data analysis as a metaphorical journey.' },
+  'orphean-oracle': { type: 'orphean-oracle', title: 'The Orphean Oracle', description: 'The story hidden in your data.' },
   'paper-trail': { type: 'paper-trail', title: 'Paper Trail P.I.', description: 'The receipts don\'t lie.' },
   'jroc-business-kit': { type: 'jroc-business-kit', title: "J-ROC'S BIZ KIT™", description: 'Get dat cheddar legit, my dawg.' },
   'lahey-surveillance': { type: 'lahey-surveillance', title: 'Lahey Surveillance', description: 'I am the liquor. And I am watching.' },
@@ -353,6 +354,14 @@ export const useAppStore = create<AppState>((set, get) => {
         
         case 'stonks':
             launchApp('stonks-bot', { title: `Stonks: ${report.report.ticker}`, description: 'Your "financial" advice.', contentProps: report.report as StonksBotOutput });
+            break;
+
+        case 'orphean-oracle':
+            launchApp('orphean-oracle', {
+                title: 'Oracle\'s Vision',
+                description: 'A data constellation.',
+                contentProps: report.report as OrpheanOracleOutput
+            });
             break;
       }
     }
