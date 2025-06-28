@@ -10,7 +10,7 @@ import prisma from '@/lib/prisma';
 
 const PLAN_LIMITS = {
   'Apprentice': 100,
-  'Artisan': 10000,
+  'Artisan': 2000,
   'Priesthood': 100000,
 } as const;
 
