@@ -75,6 +75,11 @@ export default {
         'faded-cream': 'hsl(var(--faded-cream))',
         'gilded-accent': 'hsl(var(--gilded-accent))',
         'pale-green': 'hsl(var(--pale-green))',
+        'stonks-green': 'hsl(var(--stonks-green))',
+        'kendra-fuchsia': 'hsl(var(--kendra-fuchsia))',
+        'y2k-blueviolet': 'hsl(var(--y2k-blueviolet))',
+        'noir-sepia': 'hsl(var(--noir-sepia))',
+        'noir-ink': 'hsl(var(--noir-ink))',
       },
       borderRadius: {
         lg: 'var(--radius)',

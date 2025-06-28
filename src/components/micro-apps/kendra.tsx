@@ -4,7 +4,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Loader2, Wand2, XOctagon } from 'lucide-react';
 import type { KendraOutput } from '@/ai/agents/kendra-schemas';
@@ -15,11 +15,11 @@ import { ScrollArea } from '../ui/scroll-area';
 
 function ResultDisplay({ result }: { result: KendraOutput }) {
     return (
-        <ScrollArea className="h-[400px] pr-2">
+        <ScrollArea className="h-full pr-2">
             <div className="space-y-4">
-                <Card className="bg-background/80 border-primary/50">
-                    <CardContent className="p-3">
-                         <div className="relative aspect-video w-full overflow-hidden rounded-md border-2 border-dashed border-primary/30 bg-background/50 flex items-center justify-center">
+                <Card className="bg-background/80 border-kendra-fuchsia/50 overflow-hidden">
+                    <CardHeader className="p-0">
+                         <div className="relative aspect-video w-full overflow-hidden flex items-center justify-center">
                             {result.imageDataUri ? (
                                 <Image src={result.imageDataUri} alt={result.imageDescription} fill className="object-cover" data-ai-hint="advertisement marketing fashion" />
                             ) : (
@@ -29,12 +29,15 @@ function ResultDisplay({ result }: { result: KendraOutput }) {
                                 </div>
                             )}
                         </div>
+                    </CardHeader>
+                    <CardContent className="p-3">
+                         <h3 className="font-headline text-lg text-kendra-fuchsia">{result.campaignTitle}</h3>
                     </CardContent>
                 </Card>
 
-                 <Alert>
-                    <Wand2 className="h-4 w-4" />
-                    <AlertTitle>Viral Hooks</AlertTitle>
+                 <Alert className="border-y2k-blueviolet/50">
+                    <Wand2 className="h-4 w-4 text-y2k-blueviolet" />
+                    <AlertTitle className="text-y2k-blueviolet">Viral Hooks</AlertTitle>
                     <AlertDescription>
                         <ul className="list-disc pl-4 space-y-1">
                             {result.viralHooks.map((hook, i) => <li key={i}>{hook}</li>)}
@@ -42,10 +45,8 @@ function ResultDisplay({ result }: { result: KendraOutput }) {
                     </AlertDescription>
                 </Alert>
 
-                <Separator />
-                
                 <div>
-                    <h4 className="text-sm font-semibold mb-2 ml-1">Ad Copy</h4>
+                    <h4 className="text-sm font-semibold mb-2 ml-1 text-kendra-fuchsia/80">Ad Copy</h4>
                     <div className="space-y-2">
                         {result.adCopy.map((ad, i) => (
                            <Alert key={i}>
@@ -56,12 +57,10 @@ function ResultDisplay({ result }: { result: KendraOutput }) {
                     </div>
                 </div>
 
-                <Separator />
-                
                 <Alert>
                     <AlertTitle>Hashtags</AlertTitle>
                     <AlertDescription className="flex flex-wrap gap-2 pt-2">
-                        {result.hashtags.map((tag, i) => <span key={i} className="font-mono text-xs">#{tag}</span>)}
+                        {result.hashtags.map((tag, i) => <span key={i} className="font-mono text-xs text-kendra-fuchsia">#{tag}</span>)}
                     </AlertDescription>
                 </Alert>
                 
@@ -75,9 +74,7 @@ function ResultDisplay({ result }: { result: KendraOutput }) {
                     </AlertDescription>
                 </Alert>
 
-                <Separator />
-
-                <blockquote className="mt-6 border-l-2 pl-6 italic">
+                <blockquote className="mt-6 border-l-2 border-kendra-fuchsia pl-6 italic">
                   "{result.kendraCommentary}"
                 </blockquote>
 
@@ -105,8 +102,8 @@ export default function Kendra(props: KendraOutput | {}) {
     };
 
     return (
-        <div className="p-2 space-y-3 h-full flex flex-col">
-            <Card className="bg-transparent border-0 shadow-none p-0">
+        <div className="p-2 h-full flex flex-col gap-3">
+            <Card className="bg-transparent border-0 shadow-none p-0 flex-shrink-0">
                 <CardContent className="p-0 space-y-2">
                     <Textarea 
                         placeholder="Drop your product idea. Don't be boring."
@@ -114,14 +111,17 @@ export default function Kendra(props: KendraOutput | {}) {
                         onChange={(e) => setProductIdea(e.target.value)}
                         disabled={isLoading}
                         rows={4}
+                        className="focus-visible:ring-kendra-fuchsia"
                     />
-                     <Button className="w-full" onClick={handleGenerate} disabled={isLoading || !productIdea}>
+                     <Button className="w-full bg-kendra-fuchsia hover:bg-kendra-fuchsia/90 text-background" onClick={handleGenerate} disabled={isLoading || !productIdea}>
                         {isLoading ? <Loader2 className="animate-spin" /> : <>Get KENDRA's Take</>}
                     </Button>
                 </CardContent>
             </Card>
 
-            {result && <ResultDisplay result={result} />}
+            <div className="flex-grow min-h-0">
+                 {result && <ResultDisplay result={result} />}
+            </div>
         </div>
     );
 }

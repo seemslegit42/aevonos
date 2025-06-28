@@ -61,20 +61,20 @@ export default function StonksBot(props: StonksBotOutput | {}) {
             </Card>
 
             {result && (
-                <Card className="bg-gradient-to-br from-green-500/10 to-green-500/20 border-green-400/50 flex-grow text-foreground">
+                <Card className="bg-stonks-green/10 border-stonks-green/50 flex-grow text-foreground">
                      <CardHeader className="p-3">
-                        <CardTitle className="text-2xl font-mono text-green-300">{result.ticker}</CardTitle>
-                        <CardDescription className="font-bold text-lg text-green-400">{result.rating}</CardDescription>
+                        <CardTitle className="text-2xl font-mono text-stonks-green">{result.ticker}</CardTitle>
+                        <CardDescription className="font-bold text-lg text-stonks-green/80">{result.rating}</CardDescription>
                     </CardHeader>
                     <CardContent className="p-3 pt-0">
-                         <Alert className="border-green-400/50 bg-background/80">
-                            <Rocket className="h-4 w-4 text-green-400" />
-                            <AlertTitle>The Play</AlertTitle>
+                         <Alert className="border-stonks-green/50 bg-background/80">
+                            <Rocket className="h-4 w-4 text-stonks-green" />
+                            <AlertTitle className="text-stonks-green/90">The Play</AlertTitle>
                             <AlertDescription className="italic">
                                 {result.advice}
                             </AlertDescription>
                         </Alert>
-                        <div className="mt-2 text-center text-green-300">
+                        <div className="mt-2 text-center text-stonks-green">
                             {React.createElement(confidenceIcons[result.confidence] || Rocket, { className: "h-6 w-6 mx-auto mb-1" })}
                             <p className="text-xs font-bold">{result.confidence}</p>
                         </div>
