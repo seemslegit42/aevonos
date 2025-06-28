@@ -1,4 +1,3 @@
-
 'use client';
 
 import React from 'react';
@@ -32,6 +31,11 @@ export const FlowerOfLifeIcon = (props: React.SVGProps<SVGSVGElement>) => {
       {...props}
     >
       <defs>
+        <linearGradient id="aurora" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style={{ stopColor: 'hsl(var(--iridescent-one))' }} />
+            <stop offset="50%" style={{ stopColor: 'hsl(var(--iridescent-two))' }} />
+            <stop offset="100%" style={{ stopColor: 'hsl(var(--iridescent-three))' }} />
+        </linearGradient>
         <filter id="subtle-glow" x="-50%" y="-50%" width="200%" height="200%">
           <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="blur" />
           <feMerge>
@@ -40,7 +44,7 @@ export const FlowerOfLifeIcon = (props: React.SVGProps<SVGSVGElement>) => {
           </feMerge>
         </filter>
       </defs>
-      <g opacity="0.2" stroke="hsl(var(--primary))" strokeWidth="1" filter="url(#subtle-glow)" className="animate-subtle-pulse">
+      <g opacity="0.3" stroke="url(#aurora)" strokeWidth="1.5" filter="url(#subtle-glow)" className="animate-subtle-pulse">
         {positions.map(([cx, cy], i) => (
           <circle key={i} cx={cx} cy={cy} r={r} />
         ))}
