@@ -1,5 +1,4 @@
 
-
 import { create } from 'zustand';
 import type { DragEndEvent } from '@dnd-kit/core';
 import React from 'react';
@@ -29,6 +28,7 @@ import type { AuditorOutput } from '@/ai/agents/auditor-generalissimo-schemas';
 import type { WingmanOutput } from '@/ai/agents/wingman-schemas';
 import type { KendraOutput } from '@/ai/agents/kendra-schemas';
 import type { StonksBotOutput } from '@/ai/agents/stonks-bot-schemas';
+import { generateSpeech } from '@/ai/flows/tts-flow';
 
 // Define the types of MicroApps available in the OS
 export type MicroAppType = 
@@ -75,6 +75,9 @@ export interface MicroApp {
 let appInstanceId = 0;
 const generateId = () => `app-instance-${appInstanceId++}-${Date.now()}`;
 
+export interface BeepState extends UserCommandOutput {
+  responseAudioUri?: string;
+}
 
 const defaultAppDetails: Record<MicroAppType, Omit<MicroApp, 'id' | 'position' | 'zIndex' | 'size' | 'contentProps'>> = {
   'file-explorer': { type: 'file-explorer', title: 'File Explorer', description: 'Access and manage your files.' },
@@ -137,7 +140,7 @@ const defaultAppSizes: Record<MicroAppType, { width: number; height: number }> =
 export interface AppState {
   apps: MicroApp[];
   isLoading: boolean;
-  beepOutput: UserCommandOutput | null;
+  beepOutput: BeepState | null;
   handleDragEnd: (event: DragEndEvent) => void;
   handleResize: (appId: string, size: { width: number; height: number }) => void;
   handleCommandSubmit: (command: string) => void;
@@ -402,9 +405,22 @@ export const useAppStore = create<AppState>((set, get) => {
 
       try {
         const result = await handleCommand(command);
-        set({ beepOutput: result });
-        const { toast } = useToast.getState();
         
+        // Set text-only result first for immediate UI feedback.
+        set({ beepOutput: result });
+
+        // Asynchronously generate and add audio URI to the state.
+        if (result.responseText) {
+          generateSpeech({ text: result.responseText }).then(({ audioDataUri }) => {
+            if (audioDataUri) {
+              set(state => ({
+                beepOutput: state.beepOutput ? { ...state.beepOutput, responseAudioUri: audioDataUri } : null,
+              }));
+            }
+          });
+        }
+        
+        const { toast } = useToast.getState();
         if (result.responseText) {
             toast({ title: 'BEEP', description: result.responseText });
         }
