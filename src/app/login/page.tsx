@@ -43,10 +43,10 @@ const passwordPlaceholders = [
 
 // A single component for the crystal sphere and its corresponding ring
 function Crystal({ config }: { config: any }) {
-    const ref = useRef<THREE.Group>(null!);
+    const sphereRef = useRef<THREE.Group>(null!);
 
     useFrame((state, delta) => {
-        const group = ref.current;
+        const group = sphereRef.current;
         if (group) {
             // Add a subtle, independent rotation to each crystal to make it feel more alive.
             group.rotation.x += delta * 0.1;
@@ -55,23 +55,25 @@ function Crystal({ config }: { config: any }) {
     });
 
     return (
-        <group ref={ref} position={config.position}>
-            {/* The crystal sphere at the center of the circle */}
-            <Icosahedron
-                args={[config.sphereRadius, 4]} // Use a dynamic radius for the sphere
-            >
-                <meshStandardMaterial
-                    color="hsl(var(--primary))"
-                    emissive="hsl(var(--accent))"
-                    emissiveIntensity={0.3}
-                    roughness={0.05}
-                    metalness={0.1}
-                    transmission={0.95}
-                    thickness={1.5}
-                    ior={1.7}
-                />
-                <Edges scale={1.001} color="white" />
-            </Icosahedron>
+        <group position={config.position}>
+             {/* The crystal sphere at the center of the circle, in its own rotating group */}
+            <group ref={sphereRef}>
+                <Icosahedron
+                    args={[config.sphereRadius, 4]} // Use a dynamic radius for the sphere
+                >
+                    <meshStandardMaterial
+                        color="hsl(var(--primary))"
+                        emissive="hsl(var(--accent))"
+                        emissiveIntensity={0.3}
+                        roughness={0.05}
+                        metalness={0.1}
+                        transmission={0.95}
+                        thickness={1.5}
+                        ior={1.7}
+                    />
+                    <Edges scale={1.001} color="white" />
+                </Icosahedron>
+            </group>
             {/* The ring representing the circle itself */}
             <Torus args={[config.ringRadius, 0.02, 16, 100]}>
                  <meshStandardMaterial
