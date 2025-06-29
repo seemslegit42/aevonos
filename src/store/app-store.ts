@@ -250,7 +250,6 @@ export const useAppStore = create<AppState>((set, get) => {
 
   const processCrmReport = (crmReport: Extract<AgentReportSchema, { agent: 'crm' }>['report']) => {
     const { toast } = useToast.getState();
-    const crmAppId = 'contact-list-main';
 
     switch (crmReport.action) {
       case 'create':
@@ -263,32 +262,19 @@ export const useAppStore = create<AppState>((set, get) => {
         const updatedContact = crmReport.report;
         toast({ title: 'CRM Agent', description: `Contact "${updatedContact.firstName} ${updatedContact.lastName}" was updated.` });
         get().closeApp(`contact-editor-${updatedContact.id}`);
-        set(state => ({
-          apps: state.apps.map(app => 
-            (app.id === crmAppId && app.contentProps?.contacts)
-              ? { ...app, contentProps: { ...app.contentProps, contacts: app.contentProps.contacts.map((c: Contact) => c.id === updatedContact.id ? updatedContact : c) } }
-              : app
-          )
-        }));
-        bringToFront(crmAppId);
+        get().handleCommandSubmit('list all contacts');
         break;
 
       case 'list':
         const contacts = crmReport.report;
-        upsertApp('contact-list', { id: crmAppId, contentProps: { contacts } });
+        upsertApp('contact-list', { id: 'contact-list-main', contentProps: { contacts } });
         break;
 
       case 'delete':
-        const { id: deletedId, success } = crmReport.report;
+        const { success } = crmReport.report;
         if (success) {
           toast({ title: 'CRM Agent', description: 'Contact deleted successfully.' });
-          set(state => ({
-            apps: state.apps.map(app =>
-              (app.id === crmAppId && app.contentProps?.contacts)
-                ? { ...app, contentProps: { ...app.contentProps, contacts: app.contentProps.contacts.filter((c: Contact) => c.id !== deletedId) } }
-                : app
-            )
-          }));
+          get().handleCommandSubmit('list all contacts');
         } else {
           toast({ variant: 'destructive', title: 'CRM Agent Error', description: 'Failed to delete contact.' });
         }
