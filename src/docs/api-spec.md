@@ -499,9 +499,10 @@ This document provides the formal OpenAPI 3.0 specification for the ΛΞVON OS P
       "StonksBotRequest": {
         "type": "object",
         "properties": {
-          "ticker": { "type": "string", "example": "GME", "description": "The stock ticker symbol." }
+          "ticker": { "type": "string", "example": "GME", "description": "The stock ticker symbol." },
+          "mode": { "type": "string", "enum": ["Meme-Lord", "MBAcore", "Oracle Mode"], "description": "The personality mode for the bot's response." }
         },
-        "required": ["ticker"]
+        "required": ["ticker", "mode"]
       },
       "StonksBotResponse": {
         "type": "object",
@@ -509,8 +510,8 @@ This document provides the formal OpenAPI 3.0 specification for the ΛΞVON OS P
           "ticker": { "type": "string" },
           "priceInfo": { "$ref": "#/components/schemas/StockPrice" },
           "advice": { "type": "string", "description": "The unhinged, extremely bullish, and financially irresponsible advice from the Stonks Bot." },
-          "confidence": { "type": "string", "enum": ["To the moon!", "Diamond hands!", "Ape strong together!"] },
-          "rating": { "type": "string", "enum": ["HODL", "BUY THE DIP", "ALL IN"] }
+          "confidence": { "type": "string", "enum": ["To the moon!", "Diamond hands!", "Ape strong together!", "The prophecy is clear.", "Metrics align.", "Vibes are immaculate."] },
+          "rating": { "type": "string", "enum": ["HODL", "BUY THE DIP", "ALL IN", "Consider a diversified position", "The runes are unclear", "Sell to the fools"] }
         }
       },
       "StockPrice": {

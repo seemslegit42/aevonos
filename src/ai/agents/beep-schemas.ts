@@ -61,7 +61,7 @@ const LaunchableAppTypeSchema = z.enum([
   'auditor-generalissimo',
   'contact-list',
   'barbara',
-  'oracle',
+  'oracle-of-delphi-valley',
   'armory',
   'stonks-bot',
   'user-profile-settings',

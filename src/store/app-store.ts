@@ -31,7 +31,7 @@ import type { KendraOutput } from '@/ai/agents/kendra-schemas';
 import { type OrpheanOracleOutput } from '@/ai/agents/orphean-oracle-schemas';
 import type { DossierOutput } from '@/ai/agents/dossier-schemas';
 import { generateSpeech } from '@/ai/flows/tts-flow';
-import { StonksBotOutputSchema } from '@/ai/agents/stonks-bot-schemas';
+import { StonksBotOutput } from '@/ai/agents/stonks-bot-schemas';
 
 // Define the types of MicroApps available in the OS
 export type MicroAppType = 
