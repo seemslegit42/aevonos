@@ -47,27 +47,32 @@ const stepVariants = {
 
 
 const PhaseOne = ({ nextPhase, methods }: { nextPhase: () => void, methods: any }) => {
-    const [showReply, setShowReply] = useState(false);
+    const [step, setStep] = useState<'ask' | 'burn' | 'reply'>('ask');
     const { register, watch } = methods;
     const whatMustEnd = watch('whatMustEnd');
 
     const handleContinue = () => {
         if (!whatMustEnd) return;
-        setShowReply(true);
-        setTimeout(nextPhase, 1500);
+        setStep('burn');
+        setTimeout(() => {
+            setStep('reply');
+        }, 1200); // Duration of burn animation
+        setTimeout(() => {
+            nextPhase();
+        }, 2700); // Total time before moving to next phase
     }
     
     return (
-        <div className="text-center w-full max-w-lg mx-auto space-y-8">
+        <div className="text-center w-full max-w-lg mx-auto space-y-8 min-h-[250px] flex items-center justify-center">
             <AnimatePresence mode="wait">
-                {!showReply ? (
+                {step === 'ask' && (
                      <motion.div
                         key="question"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         transition={{ duration: 1.5 }}
-                        className="space-y-6"
+                        className="space-y-6 w-full"
                     >
                         <h2 className="text-3xl md:text-4xl font-headline tracking-wider text-primary">
                             🜂 “What must end so you can begin?”
@@ -77,9 +82,21 @@ const PhaseOne = ({ nextPhase, methods }: { nextPhase: () => void, methods: any 
                             className="bg-transparent border-foreground/30 text-center text-lg h-24 focus-visible:ring-primary"
                             placeholder="Type your burden here..."
                         />
-                         <Button onClick={handleContinue} disabled={!whatMustEnd} variant="ghost" className="text-muted-foreground hover:text-primary transition-colors">Continue</Button>
+                         <Button onClick={handleContinue} disabled={!whatMustEnd} className="bg-destructive/80 hover:bg-destructive text-destructive-foreground">Sacrifice it to the Fire</Button>
                      </motion.div>
-                ) : (
+                )}
+                {step === 'burn' && (
+                     <motion.p
+                        key="burning-text"
+                        initial={{ opacity: 1, filter: 'blur(0px)' }}
+                        animate={{ opacity: 0, filter: 'blur(10px)', scale: 1.2 }}
+                        transition={{ duration: 1, ease: "easeOut" }}
+                        className="text-2xl italic text-foreground"
+                    >
+                        {whatMustEnd}
+                    </motion.p>
+                )}
+                {step === 'reply' && (
                     <motion.h2
                         key="reply"
                         initial={{ opacity: 0 }}
