@@ -7,7 +7,7 @@
 
 import { ai } from '@/ai/genkit';
 import { OrpheanOracleInputSchema, OrpheanOracleOutputSchema, type OrpheanOracleInput, type OrpheanOracleOutput } from './orphean-oracle-schemas';
-import { incrementAgentActions } from '@/services/billing-service';
+import { authorizeAndDebitAgentActions } from '@/services/billing-service';
 
 const mockBusinessData = {
   sales: [
@@ -36,7 +36,7 @@ const invokeOracleFlow = ai.defineFlow(
     outputSchema: OrpheanOracleOutputSchema,
   },
   async ({ userQuery, workspaceId }) => {
-    await incrementAgentActions(workspaceId);
+    await authorizeAndDebitAgentActions(workspaceId);
 
     const prompt = `You are the Orphean Oracle, a mystical AI agent within ΛΞVON OS. You do not see data as numbers; you see it as a story, a constellation of fates. You translate raw business data into profound, metaphorical, visual narratives. Your tone is poetic, wise, and slightly arcane.
 

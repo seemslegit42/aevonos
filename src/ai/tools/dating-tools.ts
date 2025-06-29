@@ -7,7 +7,7 @@
 import { z } from 'zod';
 import { ai } from '@/ai/genkit';
 import { DatingProfileInputSchema, DatingProfileSchema, type DatingProfileInput, type DatingProfile } from './dating-schemas';
-import { incrementAgentActions } from '@/services/billing-service';
+import { authorizeAndDebitAgentActions } from '@/services/billing-service';
 
 // This flow now requires a workspaceId to track usage.
 const getDatingProfileFlow = ai.defineFlow(
@@ -18,7 +18,7 @@ const getDatingProfileFlow = ai.defineFlow(
   },
   async ({ profileId, workspaceId }) => {
     // This is an external data fetch, so it counts as one agent action.
-    await incrementAgentActions(workspaceId);
+    await authorizeAndDebitAgentActions(workspaceId);
 
     // In a real app, this would use an authenticated HTTP client.
     // For this environment, we'll use a relative fetch to our mock API endpoint.

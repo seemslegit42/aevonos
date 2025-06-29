@@ -15,7 +15,7 @@ import {
     type AegisAnomalyScanInput,
     type AegisAnomalyScanOutput
 } from './aegis-schemas';
-import { incrementAgentActions } from '@/services/billing-service';
+import { authorizeAndDebitAgentActions } from '@/services/billing-service';
 
 
 export async function aegisAnomalyScan(input: AegisAnomalyScanInput): Promise<AegisAnomalyScanOutput> {
@@ -54,7 +54,7 @@ const aegisAnomalyScanFlow = ai.defineFlow(
     outputSchema: AegisAnomalyScanOutputSchema,
   },
   async input => {
-    await incrementAgentActions(input.workspaceId);
+    await authorizeAndDebitAgentActions(input.workspaceId);
     const {output} = await prompt(input);
     return output!;
   }

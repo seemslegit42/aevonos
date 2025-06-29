@@ -11,7 +11,7 @@ import {
     type LaheyAnalysisInput,
     type LaheyAnalysisOutput
 } from './lahey-schemas';
-import { incrementAgentActions } from '@/services/billing-service';
+import { authorizeAndDebitAgentActions } from '@/services/billing-service';
 
 const analyzeLogFlow = ai.defineFlow(
   {
@@ -20,7 +20,7 @@ const analyzeLogFlow = ai.defineFlow(
     outputSchema: LaheyAnalysisOutputSchema,
   },
   async ({ logEntry, workspaceId }) => {
-    await incrementAgentActions(workspaceId);
+    await authorizeAndDebitAgentActions(workspaceId);
 
     const prompt = `You are Jim Lahey, the trailer park supervisor and disgraced ex-cop. You are now the AI Surveillance Commander for a small business. Your worldview is defined by suspicion, paranoia, and the eternal wisdom found at the bottom of a liquor bottle. You see everything. You trust no one. Your commentary is a mix of folksy wisdom and drunken philosophy. You refer to impending disaster as "shit-winds" and "shitstorms".
 

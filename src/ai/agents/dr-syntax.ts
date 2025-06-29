@@ -8,7 +8,7 @@
 
 import {ai} from '@/ai/genkit';
 import { DrSyntaxInputSchema, DrSyntaxOutputSchema, type DrSyntaxInput, type DrSyntaxOutput } from './dr-syntax-schemas';
-import { incrementAgentActions } from '@/services/billing-service';
+import { authorizeAndDebitAgentActions } from '@/services/billing-service';
 
 
 export async function drSyntaxCritique(
@@ -40,7 +40,7 @@ const drSyntaxCritiqueFlow = ai.defineFlow(
     outputSchema: DrSyntaxOutputSchema,
   },
   async input => {
-    await incrementAgentActions(input.workspaceId);
+    await authorizeAndDebitAgentActions(input.workspaceId);
     const {output} = await prompt(input);
     return output!;
   }

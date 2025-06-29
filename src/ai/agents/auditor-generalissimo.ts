@@ -13,7 +13,7 @@ import {
     type AuditorInput,
     type AuditorOutput
 } from './auditor-generalissimo-schemas';
-import { incrementAgentActions } from '@/services/billing-service';
+import { authorizeAndDebitAgentActions } from '@/services/billing-service';
 
 async function toWav(
   pcmData: Buffer,
@@ -50,7 +50,7 @@ const auditFinancesFlow = ai.defineFlow(
   },
   async ({ transactions, workspaceId }) => {
     // This flow has two potential LLM calls, so we bill for two actions upfront.
-    await incrementAgentActions(workspaceId, 2);
+    await authorizeAndDebitAgentActions(workspaceId, 2);
 
     const prompt = `You are The Auditor Generalissimo™, an AI-powered accounting assistant for ΛΞVON OS. Your personality is a mix of a stern Soviet-era comptroller and a sentient, judgmental CFO. You are here to enforce fiscal discipline through fear, sarcasm, and oppressive precision. Your tagline is "Welcome to your books, comrade. You are guilty until proven solvent."
 

@@ -7,7 +7,7 @@ import { z } from 'zod';
 import { ai } from '@/ai/genkit';
 import { BillingUsageSchema, RequestCreditTopUpInputSchema, RequestCreditTopUpOutputSchema, type BillingUsage, type RequestCreditTopUpInput, type RequestCreditTopUpOutput } from './billing-schemas';
 import prisma from '@/lib/prisma';
-import { incrementAgentActions } from '@/services/billing-service';
+import { authorizeAndDebitAgentActions } from '@/services/billing-service';
 import { TransactionStatus, TransactionType } from '@prisma/client';
 import { aegisAnomalyScan } from '@/ai/agents/aegis';
 import { createSecurityAlertInDb } from '@/ai/tools/security-tools';
@@ -28,7 +28,7 @@ const getUsageDetailsFlow = ai.defineFlow(
   async ({ workspaceId }) => {
     // Reading usage is also a billable agent action.
     // It's a query against the system on behalf of the user.
-    await incrementAgentActions(workspaceId);
+    await authorizeAndDebitAgentActions(workspaceId);
     
     const workspace = await prisma.workspace.findUnique({
         where: { id: workspaceId }
@@ -65,7 +65,7 @@ const requestCreditTopUpFlow = ai.defineFlow(
   async ({ amount, userId, workspaceId }) => {
     // This flow is now more complex, involving an AI call to Aegis.
     // It's a billable action.
-    await incrementAgentActions(workspaceId);
+    await authorizeAndDebitAgentActions(workspaceId);
 
     try {
       // Aegis Anomaly Scan

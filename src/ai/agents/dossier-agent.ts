@@ -5,7 +5,7 @@ import { ai } from '@/ai/genkit';
 import { DossierInputSchema, DossierOutputSchema, type DossierInput, type DossierOutput } from './dossier-schemas';
 import { format } from 'date-fns';
 import { createHash } from 'crypto';
-import { incrementAgentActions } from '@/services/billing-service';
+import { authorizeAndDebitAgentActions } from '@/services/billing-service';
 
 const generateDossierFlow = ai.defineFlow(
   {
@@ -14,7 +14,7 @@ const generateDossierFlow = ai.defineFlow(
     outputSchema: DossierOutputSchema,
   },
   async (input) => {
-    await incrementAgentActions(input.workspaceId);
+    await authorizeAndDebitAgentActions(input.workspaceId);
 
     const today = format(new Date(), 'yyyy-MM-dd');
     const caseFileName = (input.targetName || 'UNKNOWN_SUBJECT').toLowerCase().replace(/\s/g, '-');

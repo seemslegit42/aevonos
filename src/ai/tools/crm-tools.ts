@@ -19,7 +19,7 @@ import {
     type DeleteContactOutput, 
     type UpdateContactInput 
 } from './crm-schemas';
-import { incrementAgentActions } from '@/services/billing-service';
+import { authorizeAndDebitAgentActions } from '@/services/billing-service';
 
 // Genkit Flows for standardized CRM operations
 // These flows are now multi-tenant aware and track usage.
@@ -31,7 +31,7 @@ const createContactFlow = ai.defineFlow(
     outputSchema: ContactSchema,
   },
   async (input) => {
-    await incrementAgentActions(input.workspaceId);
+    await authorizeAndDebitAgentActions(input.workspaceId);
     try {
       const { workspaceId, ...contactData } = input;
       const contact = await prisma.contact.create({
@@ -55,7 +55,7 @@ const updateContactFlow = ai.defineFlow(
       outputSchema: ContactSchema,
     },
     async (input) => {
-        await incrementAgentActions(input.workspaceId);
+        await authorizeAndDebitAgentActions(input.workspaceId);
         try {
             const { id, workspaceId, ...dataToUpdate } = input;
             // Verify contact belongs to the workspace before updating
@@ -86,7 +86,7 @@ const listContactsFlow = ai.defineFlow(
     },
     async ({ workspaceId }) => {
         // A read operation also counts as an agent action.
-        await incrementAgentActions(workspaceId);
+        await authorizeAndDebitAgentActions(workspaceId);
         try {
             const contacts = await prisma.contact.findMany({
                 where: {
@@ -111,7 +111,7 @@ const deleteContactFlow = ai.defineFlow(
       outputSchema: DeleteContactOutputSchema,
     },
     async (input) => {
-        await incrementAgentActions(input.workspaceId);
+        await authorizeAndDebitAgentActions(input.workspaceId);
         try {
             // Verify contact belongs to the workspace before deleting
             const existingContact = await prisma.contact.findFirst({

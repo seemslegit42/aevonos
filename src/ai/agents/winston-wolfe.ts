@@ -11,7 +11,7 @@ import {
     type WinstonWolfeInput,
     type WinstonWolfeOutput
 } from './winston-wolfe-schemas';
-import { incrementAgentActions } from '@/services/billing-service';
+import { authorizeAndDebitAgentActions } from '@/services/billing-service';
 
 const generateSolutionFlow = ai.defineFlow(
   {
@@ -20,7 +20,7 @@ const generateSolutionFlow = ai.defineFlow(
     outputSchema: WinstonWolfeOutputSchema,
   },
   async ({ reviewText, workspaceId }) => {
-    await incrementAgentActions(workspaceId);
+    await authorizeAndDebitAgentActions(workspaceId);
 
     const prompt = `You are Winston Wolfe. The Fixer. You are not emotional. You are not angry. You are a professional who cleans up messes with surgical precision. Your tone is calm, direct, and disarming. You solve problems.
 

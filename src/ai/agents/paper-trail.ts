@@ -7,7 +7,7 @@
 
 import { ai } from '@/ai/genkit';
 import { PaperTrailScanInputSchema, PaperTrailScanOutputSchema, type PaperTrailScanInput, type PaperTrailScanOutput } from './paper-trail-schemas';
-import { incrementAgentActions } from '@/services/billing-service';
+import { authorizeAndDebitAgentActions } from '@/services/billing-service';
 
 const scanEvidenceFlow = ai.defineFlow(
   {
@@ -16,7 +16,7 @@ const scanEvidenceFlow = ai.defineFlow(
     outputSchema: PaperTrailScanOutputSchema,
   },
   async (input) => {
-    await incrementAgentActions(input.workspaceId);
+    await authorizeAndDebitAgentActions(input.workspaceId);
 
     const prompt = ai.definePrompt({
       name: 'paperTrailScanPrompt',

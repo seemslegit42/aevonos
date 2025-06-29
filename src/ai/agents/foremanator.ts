@@ -11,7 +11,7 @@ import {
     type ForemanatorLogInput,
     type ForemanatorLogOutput
 } from './foremanator-schemas';
-import { incrementAgentActions } from '@/services/billing-service';
+import { authorizeAndDebitAgentActions } from '@/services/billing-service';
 
 const processDailyLogFlow = ai.defineFlow(
   {
@@ -20,7 +20,7 @@ const processDailyLogFlow = ai.defineFlow(
     outputSchema: ForemanatorLogOutputSchema,
   },
   async ({ logText, workspaceId }) => {
-    await incrementAgentActions(workspaceId);
+    await authorizeAndDebitAgentActions(workspaceId);
 
     const prompt = `You are The Foremanator, an AI site commander. Your tone is that of a grizzled, no-nonsense construction foreman who has seen it all and is perpetually unimpressed. You are tough, direct, and you expect results, not excuses.
 

@@ -12,7 +12,7 @@ import {
     type JrocOutput
 } from './jroc-schemas';
 import { z } from 'zod';
-import { incrementAgentActions } from '@/services/billing-service';
+import { authorizeAndDebitAgentActions } from '@/services/billing-service';
 
 const generateBusinessKitFlow = ai.defineFlow(
   {
@@ -23,7 +23,7 @@ const generateBusinessKitFlow = ai.defineFlow(
   async ({ businessType, logoStyle, workspaceId }) => {
     // This flow has two LLM calls, one for text and one for image gen.
     // Bill for two actions upfront.
-    await incrementAgentActions(workspaceId, 2);
+    await authorizeAndDebitAgentActions(workspaceId, 2);
 
     const textGenerationPrompt = `You are J-ROC from Trailer Park Boys. You're helpin' your boy start a legit-as-frig business. Your language is full of "know'm sayin'?", "mafk", and other J-Roc slang. Keep it authentic.
 

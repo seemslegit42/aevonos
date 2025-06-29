@@ -12,7 +12,7 @@ import {
     type CreateSecurityAlertInput, 
     type SecurityAlert, 
 } from './security-schemas';
-import { incrementAgentActions } from '@/services/billing-service';
+import { authorizeAndDebitAgentActions } from '@/services/billing-service';
 
 const createSecurityAlertFlow = ai.defineFlow(
   {
@@ -22,7 +22,7 @@ const createSecurityAlertFlow = ai.defineFlow(
   },
   async (input) => {
     // Creating a security alert is a significant action.
-    await incrementAgentActions(input.workspaceId);
+    await authorizeAndDebitAgentActions(input.workspaceId);
     try {
       const { workspaceId, ...alertData } = input;
       const alert = await prisma.securityAlert.create({

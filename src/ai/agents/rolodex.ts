@@ -12,7 +12,7 @@ import {
     type RolodexAnalysisInput,
     type RolodexAnalysisOutput
 } from './rolodex-schemas';
-import { incrementAgentActions } from '@/services/billing-service';
+import { authorizeAndDebitAgentActions } from '@/services/billing-service';
 
 const rolodexAnalysisFlow = ai.defineFlow(
   {
@@ -21,7 +21,7 @@ const rolodexAnalysisFlow = ai.defineFlow(
     outputSchema: RolodexAnalysisOutputSchema,
   },
   async ({ candidateName, candidateSummary, jobDescription, workspaceId }) => {
-    await incrementAgentActions(workspaceId);
+    await authorizeAndDebitAgentActions(workspaceId);
 
     const prompt = `You are an AI assistant for a recruiter. Your tone is deadpan, efficient, and professional. You are analyzing a candidate for a role.
 

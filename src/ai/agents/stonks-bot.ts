@@ -13,7 +13,7 @@ import {
 } from './stonks-bot-schemas';
 import { getStockPrice, type StockPrice } from '../tools/finance-tools';
 import { z } from 'zod';
-import { incrementAgentActions } from '@/services/billing-service';
+import { authorizeAndDebitAgentActions } from '@/services/billing-service';
 
 const getStonksAdviceFlow = ai.defineFlow(
   {
@@ -23,7 +23,7 @@ const getStonksAdviceFlow = ai.defineFlow(
   },
   async ({ ticker, workspaceId }) => {
     // This flow uses an external tool and an LLM. It counts as one complex action.
-    await incrementAgentActions(workspaceId);
+    await authorizeAndDebitAgentActions(workspaceId);
 
     let priceInfo: StockPrice;
     let errorMessage: string | null = null;

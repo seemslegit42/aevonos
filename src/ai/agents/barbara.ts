@@ -12,7 +12,7 @@ import {
     type BarbaraInput,
     type BarbaraOutput
 } from './barbara-schemas';
-import { incrementAgentActions } from '@/services/billing-service';
+import { authorizeAndDebitAgentActions } from '@/services/billing-service';
 
 const taskPrompts = {
     validate_vin_label: "The user has submitted a VIN label for validation. Review it against standard formatting. It must be exactly 17 characters. Point out any deviations with cold precision. If it's fine, say so, but don't sound too happy about it.",
@@ -28,7 +28,7 @@ const processDocumentFlow = ai.defineFlow(
     outputSchema: BarbaraOutputSchema,
   },
   async ({ documentText, task, workspaceId }) => {
-    await incrementAgentActions(workspaceId);
+    await authorizeAndDebitAgentActions(workspaceId);
     
     const taskInstruction = taskPrompts[task];
 

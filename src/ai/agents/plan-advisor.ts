@@ -4,7 +4,7 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
 import { PlanAdvisorInputSchema, PlanAdvisorOutputSchema, type PlanAdvisorInput, type PlanAdvisorOutput } from './plan-advisor-schemas';
-import { incrementAgentActions } from '@/services/billing-service';
+import { authorizeAndDebitAgentActions } from '@/services/billing-service';
 
 
 const planAdvisorFlow = ai.defineFlow(
@@ -17,7 +17,7 @@ const planAdvisorFlow = ai.defineFlow(
     // This is a billable agent action, even for prospective customers.
     // If they aren't authenticated, it won't do anything, which is fine.
     if (workspaceId) {
-        await incrementAgentActions(workspaceId);
+        await authorizeAndDebitAgentActions(workspaceId);
     }
     
     const prompt = `You are a helpful and knowledgeable sales assistant for ΛΞVON OS. Your goal is to answer user questions about the pricing plans and help them choose the right one for their needs. Be friendly, clear, and concise. Do not make up features or pricing.

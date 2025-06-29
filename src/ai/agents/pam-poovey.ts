@@ -16,7 +16,7 @@ import {
   type PamScriptInput,
   type PamAudioOutput,
 } from './pam-poovey-schemas';
-import { incrementAgentActions } from '@/services/billing-service';
+import { authorizeAndDebitAgentActions } from '@/services/billing-service';
 
 
 // Text Generation
@@ -116,7 +116,7 @@ const generatePamAudioFlow = ai.defineFlow(
 export async function generatePamRant(input: PamScriptInput): Promise<PamAudioOutput> {
     // This is the main entry point. It has two LLM calls (script + TTS),
     // so we bill for two actions.
-    await incrementAgentActions(input.workspaceId, 2);
+    await authorizeAndDebitAgentActions(input.workspaceId, 2);
     
     const { script } = await generatePamScriptFlow(input);
     const { audioDataUri } = await generatePamAudioFlow({ script });

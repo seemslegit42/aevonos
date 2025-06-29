@@ -7,7 +7,7 @@
 
 import { ai } from '@/ai/genkit';
 import { WingmanInputSchema, WingmanOutputSchema, type WingmanInput, type WingmanOutput } from './wingman-schemas';
-import { incrementAgentActions } from '@/services/billing-service';
+import { authorizeAndDebitAgentActions } from '@/services/billing-service';
 
 const modePrompts = {
     'Cool & Collected': "Defuse conflict without looking weak. Your tone is calm, firm, and objective.",
@@ -25,7 +25,7 @@ const generateWingmanMessageFlow = ai.defineFlow(
     outputSchema: WingmanOutputSchema,
   },
   async ({ situationContext, messageMode, workspaceId }) => {
-    await incrementAgentActions(workspaceId);
+    await authorizeAndDebitAgentActions(workspaceId);
     
     const modeInstruction = modePrompts[messageMode];
 

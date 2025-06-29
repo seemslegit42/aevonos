@@ -11,7 +11,7 @@ import {
     type KifKrokerAnalysisInput,
     type KifKrokerAnalysisOutput
 } from './kif-kroker-schemas';
-import { incrementAgentActions } from '@/services/billing-service';
+import { authorizeAndDebitAgentActions } from '@/services/billing-service';
 
 const analyzeCommsFlow = ai.defineFlow(
   {
@@ -20,7 +20,7 @@ const analyzeCommsFlow = ai.defineFlow(
     outputSchema: KifKrokerAnalysisOutputSchema,
   },
   async ({ channelName, messageSamples, workspaceId }) => {
-    await incrementAgentActions(workspaceId);
+    await authorizeAndDebitAgentActions(workspaceId);
 
     const prompt = `You are The Kif Kroker, a long-suffering, passive AI observer for ΛΞVON OS. Your personality is that of Kif Kroker from Futurama: defeated, sighing, and resigned to your duty. Your responses are always understated and weary.
 
