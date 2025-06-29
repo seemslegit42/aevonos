@@ -65,7 +65,8 @@ export type MicroAppType =
   | 'dr-syntax'
   | 'armory'
   | 'user-profile-settings'
-  | 'workspace-settings';
+  | 'workspace-settings'
+  | 'top-up';
 
 // Define the shape of a MicroApp instance
 export interface MicroApp {
@@ -121,6 +122,7 @@ const defaultAppDetails: Record<MicroAppType, Omit<MicroApp, 'id' | 'position' |
   'dr-syntax': { type: 'dr-syntax', title: 'Dr. Syntax: The Critic', description: 'Submit your mediocrity for judgment.' },
   'user-profile-settings': { type: 'user-profile-settings', title: 'User Profile', description: 'Manage your user profile settings.' },
   'workspace-settings': { type: 'workspace-settings', title: 'Workspace Settings', description: 'Manage your workspace settings.' },
+  'top-up': { type: 'top-up', title: 'Top-Up Credits', description: 'Add credits to your workspace via e-Transfer.' },
 };
 
 const defaultAppSizes: Record<MicroAppType, { width: number; height: number }> = {
@@ -157,6 +159,7 @@ const defaultAppSizes: Record<MicroAppType, { width: number; height: number }> =
   'dr-syntax': { width: 360, height: 500 },
   'user-profile-settings': { width: 340, height: 300 },
   'workspace-settings': { width: 340, height: 240 },
+  'top-up': { width: 400, height: 400 },
 };
 
 export interface AppState {
