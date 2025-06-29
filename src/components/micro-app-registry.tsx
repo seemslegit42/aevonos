@@ -215,5 +215,3 @@ export const getAppIcon = (type: MicroAppType) => {
 export const getAppContent = (type: MicroAppType) => {
     return microAppRegistry[type]?.content;
 }
-
-    

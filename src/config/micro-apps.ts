@@ -524,5 +524,3 @@ export const microAppManifests: MicroAppManifest[] = [
     isFeatured: true,
   }
 ];
-
-    
