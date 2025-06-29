@@ -30,6 +30,7 @@ import { OrpheanOracleOutputSchema } from './orphean-oracle-schemas';
 import { LumberghAnalysisOutputSchema } from './lumbergh-schemas';
 import { LucilleBluthOutputSchema } from './lucille-bluth-schemas';
 import { PamAudioOutputSchema } from './pam-poovey-schemas';
+import { TransactionSchema } from '@/ai/tools/ledger-schemas';
 
 
 // Schemas from the original BEEP agent, preserved for the public contract.
@@ -126,6 +127,11 @@ const SecurityAgentReportSchema = z.object({
     }).describe('Details of the created security alert.'),
 });
 
+const LedgerAgentReportSchema = z.object({
+    action: z.literal('create_manual_transaction'),
+    report: TransactionSchema.describe('The details of the manually created transaction.'),
+});
+
 
 export const AgentReportSchema = z.discriminatedUnion('agent', [
   z.object({
@@ -155,6 +161,10 @@ export const AgentReportSchema = z.discriminatedUnion('agent', [
   z.object({
     agent: z.literal('security'),
     report: SecurityAgentReportSchema,
+  }),
+  z.object({
+    agent: z.literal('ledger'),
+    report: LedgerAgentReportSchema,
   }),
   z.object({
     agent: z.literal('vin-diesel'),

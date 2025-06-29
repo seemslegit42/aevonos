@@ -35,3 +35,4 @@ import '@/ai/agents/kendra.ts';
 import '@/ai/agents/stonks-bot.ts';
 import '@/ai/agents/orphean-oracle-flow.ts';
 import '@/ai/agents/plan-advisor.ts';
+import '@/ai/tools/ledger-tools.ts';
