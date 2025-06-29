@@ -16,6 +16,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import { FlowerOfLifeIcon } from '@/components/icons/FlowerOfLifeIcon';
+import { CrystalIcon } from '@/components/icons/CrystalIcon';
 
 const formSchema = z.object({
   email: z.string().email(),
@@ -53,15 +54,15 @@ export default function LoginPage() {
       }
 
       toast({
-        title: 'Identity Verified.',
-        description: 'Welcome back, Architect. The canvas awaits.',
+        title: 'Vow Accepted. Identity Confirmed.',
+        description: 'The canvas materializes before you.',
       });
       router.push('/');
       router.refresh();
     } catch (error) {
       toast({
         variant: 'destructive',
-        title: 'Access Denied.',
+        title: 'Vow Rejected.',
         description: (error as Error).message,
       });
     }
@@ -80,11 +81,16 @@ export default function LoginPage() {
                 className="w-full max-w-sm"
             >
                 <Card className="bg-background/80 backdrop-blur-md">
-                    <CardHeader className="text-center">
-                        <CardTitle className="text-3xl font-headline tracking-widest">
-                        Identity Verification
-                        </CardTitle>
-                        <CardDescription>The system requires a handshake.</CardDescription>
+                    <CardHeader className="text-center space-y-4 pt-8">
+                        <div className="flex justify-center">
+                           <CrystalIcon className="w-16 h-16 text-primary crystal-pulse" />
+                        </div>
+                        <div>
+                            <CardTitle className="text-3xl font-headline tracking-widest">
+                                Rite of Invocation
+                            </CardTitle>
+                            <CardDescription>The canvas must be summoned. State your claim.</CardDescription>
+                        </div>
                     </CardHeader>
                     <CardContent>
                         <Form {...form}>
@@ -94,7 +100,7 @@ export default function LoginPage() {
                                     name="email"
                                     render={({ field }) => (
                                         <FormItem>
-                                        <FormLabel>System Handle</FormLabel>
+                                        <FormLabel>Your Sigil (Email)</FormLabel>
                                         <FormControl>
                                             <Input placeholder="architect@aevonos.com" {...field} disabled={isSubmitting} />
                                         </FormControl>
@@ -107,7 +113,7 @@ export default function LoginPage() {
                                     name="password"
                                     render={({ field }) => (
                                         <FormItem>
-                                        <FormLabel>Encryption Key</FormLabel>
+                                        <FormLabel>Your Vow (Password)</FormLabel>
                                         <FormControl>
                                             <Input type="password" placeholder="••••••••••••••••" {...field} disabled={isSubmitting}/>
                                         </FormControl>
@@ -116,14 +122,14 @@ export default function LoginPage() {
                                     )}
                                 />
                                 <Button type="submit" className="w-full" disabled={isSubmitting}>
-                                     {isSubmitting ? <Loader2 className="animate-spin" /> : 'Authenticate & Enter'}
+                                     {isSubmitting ? <Loader2 className="animate-spin" /> : 'Invoke The Canvas'}
                                 </Button>
                             </form>
                         </Form>
                         <div className="mt-4 text-center text-sm text-muted-foreground">
                         Need system access?{' '}
                         <Link href="/register" className="font-bold text-primary hover:text-primary/80 transition-colors">
-                            Request a build.
+                            Request a Build.
                         </Link>
                         </div>
                     </CardContent>
