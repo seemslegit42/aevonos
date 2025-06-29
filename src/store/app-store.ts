@@ -497,7 +497,21 @@ export const useAppStore = create<AppState>((set, get) => {
 
         // Asynchronously generate and add audio URI to the state.
         if (result.responseText) {
-          generateSpeech({ text: result.responseText }).then(({ audioDataUri }) => {
+          let mood: 'neutral' | 'alert' | 'confirmation' = 'neutral';
+          const lowerCaseResponse = result.responseText.toLowerCase();
+
+          if (result.agentReports?.some(r => r.agent === 'aegis' && r.report.isAnomalous)) {
+            mood = 'alert';
+          } else if (
+            lowerCaseResponse.includes('success') || 
+            lowerCaseResponse.includes('confirmed') || 
+            lowerCaseResponse.includes('created') || 
+            lowerCaseResponse.includes('unlocked')
+          ) {
+            mood = 'confirmation';
+          }
+          
+          generateSpeech({ text: result.responseText, mood }).then(({ audioDataUri }) => {
             if (audioDataUri) {
               set(state => ({
                 beepOutput: state.beepOutput ? { ...state.beepOutput, responseAudioUri: audioDataUri } : null,

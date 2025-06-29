@@ -6,6 +6,8 @@ import { z } from 'zod';
 
 export const GenerateSpeechInputSchema = z.object({
   text: z.string().describe('The text to convert to speech.'),
+  mood: z.enum(['neutral', 'alert', 'confirmation']).optional().default('neutral')
+    .describe('The emotional context of the speech, to select an appropriate voice.'),
 });
 export type GenerateSpeechInput = z.infer<typeof GenerateSpeechInputSchema>;
 

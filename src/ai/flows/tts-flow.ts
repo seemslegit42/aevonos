@@ -44,26 +44,33 @@ async function toWav(
   });
 }
 
+const voiceMap: Record<NonNullable<GenerateSpeechInput['mood']>, string> = {
+    neutral: 'Cetus', // Professional, clear
+    alert: 'Pherkad', // Deep, serious
+    confirmation: 'Polymnia', // Friendly, lighter
+};
+
 const generateSpeechFlow = ai.defineFlow(
   {
     name: 'generateSpeechFlow',
     inputSchema: GenerateSpeechInputSchema,
     outputSchema: GenerateSpeechOutputSchema,
   },
-  async ({ text }) => {
+  async ({ text, mood }) => {
     // If the text is short or just a confirmation, don't generate speech.
     if (!text || text.length < 10 || text.toLowerCase().includes('command received')) {
         return { audioDataUri: '' };
     }
       
+    const voiceName = voiceMap[mood || 'neutral'];
+
     const { media } = await ai.generate({
       model: googleAI.model('gemini-2.5-flash-preview-tts'),
       config: {
         responseModalities: ['AUDIO'],
         speechConfig: {
           voiceConfig: {
-            // A professional, clear voice suitable for an OS assistant.
-            prebuiltVoiceConfig: { voiceName: 'Cetus' },
+            prebuiltVoiceConfig: { voiceName },
           },
         },
       },
