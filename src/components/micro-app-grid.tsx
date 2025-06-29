@@ -17,8 +17,8 @@ export default function MicroAppGrid({ apps }: MicroAppGridProps) {
       {apps.length === 0 && (
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
               <div className="text-center text-muted-foreground animate-in fade-in-50 duration-1000">
-                  <h2 className="text-2xl font-headline text-foreground">The Canvas is Listening.</h2>
-                  <p className="mt-1">Use the command bar above to begin.</p>
+                  <h2 className="text-2xl font-headline text-foreground">The Canvas Awaits Your Command.</h2>
+                  <p className="mt-1 italic">"Speak, and the system will answer."</p>
               </div>
           </div>
       )}
