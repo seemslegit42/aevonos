@@ -6,6 +6,7 @@ export const AegisAnomalyScanInputSchema = z.object({
     .string()
     .describe('Description of user activity, including commands and data access.'),
   workspaceId: z.string().describe('The ID of the workspace performing the action.'),
+  userId: z.string().describe('The ID of the user performing the action.'),
 });
 export type AegisAnomalyScanInput = z.infer<typeof AegisAnomalyScanInputSchema>;
 

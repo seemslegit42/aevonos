@@ -18,31 +18,40 @@ import { Prisma } from '@prisma/client';
  * Checks if a workspace can afford an action, then atomically decrements
  * the credit balance, increments the usage counter, and creates a DEBIT transaction.
  * This now respects the monthly plan limits before charging for overage.
+ * It also respects the user-specific Reclamation Grace Period.
  * @param workspaceId The ID of the workspace to charge.
  * @param amount The number of agent actions to authorize. Defaults to 1.
+ * @param userId The ID of the user performing the action, to check for grace periods.
  */
-export async function authorizeAndDebitAgentActions(workspaceId: string, amount: number = 1): Promise<void> {
+export async function authorizeAndDebitAgentActions(workspaceId: string, amount: number = 1, userId?: string): Promise<void> {
     if (!workspaceId) {
         console.warn("[Billing Service] Attempted to authorize agent actions without a workspaceId. Skipping.");
         return;
     }
 
     try {
+        // If a userId is provided, first check for the reclamation grace period.
+        if (userId) {
+            const user = await prisma.user.findUnique({
+                where: { id: userId },
+                select: { reclamationGraceUntil: true },
+            });
+            // If user is in grace period, skip the entire transaction.
+            if (user?.reclamationGraceUntil && new Date() < user.reclamationGraceUntil) {
+                console.log(`[Billing Service] User ${userId} is in reclamation grace period. Skipping debit.`);
+                return;
+            }
+        }
+        
         await prisma.$transaction(async (tx) => {
             // 1. Get workspace and its plan details.
             const workspace = await tx.workspace.findUnique({
                 where: { id: workspaceId },
-                select: { credits: true, agentActionsUsed: true, planTier: true, reclamationGraceUntil: true },
+                select: { credits: true, agentActionsUsed: true, planTier: true },
             });
 
             if (!workspace) {
                 throw new Error(`Workspace with ID ${workspaceId} not found.`);
-            }
-
-            // Check for reclamation grace period
-            if (workspace.reclamationGraceUntil && new Date() < workspace.reclamationGraceUntil) {
-                console.log(`[Billing Service] Workspace ${workspaceId} is in reclamation grace period. Skipping debit.`);
-                return; // User is in grace period, no charge.
             }
 
             const planTier = workspace.planTier as keyof typeof PLAN_LIMITS;
@@ -94,6 +103,7 @@ export async function authorizeAndDebitAgentActions(workspaceId: string, amount:
             await tx.transaction.create({
                 data: {
                     workspaceId,
+                    userId, // Log which user triggered the debit
                     type: TransactionType.DEBIT,
                     amount: new Prisma.Decimal(amount),
                     description: `Agent Action Overage Cost (${amount}x)`,
@@ -120,7 +130,8 @@ const getUsageDetailsFlow = ai.defineFlow(
   },
   async ({ workspaceId }) => {
     // This is an agent action and should be billed.
-    await authorizeAndDebitAgentActions(workspaceId);
+    // The userId is not strictly needed here as we are just reading data, not checking grace period for a debit.
+    await authorizeAndDebitAgentActions(workspaceId, 1);
     
     const workspace = await prisma.workspace.findUnique({
         where: { id: workspaceId }
@@ -161,6 +172,7 @@ const requestCreditTopUpFlow = ai.defineFlow(
       const anomalyReport = await aegisAnomalyScan({
         activityDescription: `User initiated a credit top-up request of ${amount.toLocaleString()} ΞCredits.`,
         workspaceId,
+        userId, // Pass userId for context
       });
 
       if (anomalyReport.isAnomalous) {

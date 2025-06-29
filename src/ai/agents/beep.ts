@@ -44,11 +44,12 @@ import {
 interface AgentState {
   messages: BaseMessage[];
   workspaceId: string;
+  userId: string;
   aegisReport: AegisAnomalyScanOutput | null;
 }
 
 const callAegis = async (state: AgentState) => {
-    const { messages, workspaceId } = state;
+    const { messages, workspaceId, userId } = state;
     const humanMessage = messages.find(m => m instanceof HumanMessage);
     if (!humanMessage) {
         throw new Error("Could not find user command for Aegis scan.");
@@ -59,6 +60,7 @@ const callAegis = async (state: AgentState) => {
     const report = await aegisAnomalyScan({ 
         activityDescription: `User command: "${userCommand}"`,
         workspaceId,
+        userId,
     });
     
     const aegisSystemMessage = new SystemMessage({
@@ -167,6 +169,10 @@ const workflow = new StateGraph<AgentState>({
         value: (x, y) => y,
         default: () => '',
     },
+    userId: {
+        value: (x, y) => y,
+        default: () => '',
+    },
     aegisReport: {
         value: (x, y) => y,
         default: () => null,
@@ -253,6 +259,7 @@ export async function processUserCommand(input: UserCommandInput): Promise<UserC
   const result = await app.invoke({
     messages: [...history, new HumanMessage(initialPrompt)],
     workspaceId: input.workspaceId,
+    userId: input.userId,
   });
 
   // Save the full conversation history for the next turn.

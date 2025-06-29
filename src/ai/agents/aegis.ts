@@ -57,7 +57,8 @@ const aegisAnomalyScanFlow = ai.defineFlow(
     outputSchema: AegisAnomalyScanOutputSchema,
   },
   async input => {
-    await authorizeAndDebitAgentActions(input.workspaceId);
+    // Pass the userId to the billing service
+    await authorizeAndDebitAgentActions(input.workspaceId, 1, input.userId);
     const {output} = await prompt(input);
     return output!;
   }
