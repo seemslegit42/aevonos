@@ -193,6 +193,20 @@ export const microAppManifests: MicroAppManifest[] = [
     contextAwareCapabilities: ['data_stream_analysis'],
     isFeatured: false,
   },
+  {
+    id: 'top-up',
+    name: 'Top-Up Credits',
+    author: 'ΛΞVON OS',
+    description: 'Add ΞCredits to your workspace balance via out-of-band payment.',
+    creditCost: 0,
+    priceModel: 'included',
+    imageUrl: 'https://placehold.co/600x400.png',
+    imageHint: 'coin plus payment',
+    defaultSize: { width: 320, height: 400 },
+    permissionsRequired: ['write:billing'],
+    routingPath: '/top-up',
+    contextAwareCapabilities: [],
+  },
   
   // --- Acquirable Apps (One-Time Cost) ---
   {

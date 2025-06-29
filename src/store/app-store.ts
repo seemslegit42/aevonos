@@ -66,7 +66,8 @@ export type MicroAppType =
   | 'dr-syntax'
   | 'armory'
   | 'user-profile-settings'
-  | 'workspace-settings';
+  | 'workspace-settings'
+  | 'top-up';
 
 // Define the shape of a MicroApp instance
 export interface MicroApp {

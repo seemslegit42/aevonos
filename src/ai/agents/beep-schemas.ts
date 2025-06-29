@@ -67,7 +67,6 @@ const LaunchableAppTypeSchema = z.enum([
   'user-profile-settings',
   'workspace-settings',
   'top-up',
-  'contact-editor',
 ]);
 
 export const AppToLaunchSchema = z.object({
