@@ -14,7 +14,7 @@ import { useToast } from '@/hooks/use-toast';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import type { User, UserRole } from '@prisma/client';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Sheet, SheetContent } from '@/components/ui/sheet';
 import type { Node, Edge, Workflow, NodeType } from '@/components/loom/types';
 
 const BLANK_WORKFLOW: Workflow = {
@@ -145,10 +145,8 @@ export default function LoomPage() {
         if (!activeWorkflow?.id) return;
         setIsRunning(true);
         
-        // This is where you would define a trigger payload. For now, we'll use a sample.
         const triggerPayload = {
             message: "This is a test trigger from Loom Studio.",
-            // Example data for a 'create contact' node if one exists
             firstName: "Loom",
             lastName: "User",
             email: "loom.user@aevonos.com"
@@ -161,7 +159,7 @@ export default function LoomPage() {
                 body: JSON.stringify(triggerPayload)
             });
 
-            if (response.status !== 202) { // 202 Accepted is the expected success status
+            if (response.status !== 202) {
                 const errorData = await response.json();
                 throw new Error(errorData.error || 'Failed to trigger workflow.');
             }
@@ -171,7 +169,6 @@ export default function LoomPage() {
                 title: "Workflow Triggered",
                 description: `Run ID: ${runData.runId}. Check history for status updates.`
             });
-            // Refresh the run history list
             setListRefreshTrigger(val => val + 1);
 
         } catch (e) {
@@ -193,7 +190,7 @@ export default function LoomPage() {
             }
             
             toast({ title: 'Success', description: 'Workflow deleted.' });
-            handleSelectWorkflow(null); // Reset to new workflow
+            handleSelectWorkflow(null);
             setListRefreshTrigger(val => val + 1);
         } catch (e) {
              toast({ variant: 'destructive', title: 'Error', description: (e as Error).message });
@@ -216,7 +213,6 @@ export default function LoomPage() {
             const type = active.data.current.type as NodeType;
             const label = active.data.current.label as string;
             
-            // Close the nodes sheet on mobile after dropping a node
             if (isMobile) {
                 setIsNodesSheetOpen(false);
             }
@@ -304,12 +300,12 @@ export default function LoomPage() {
             connectionSourceId={connection?.sourceId}
         />
         <Sheet open={isNodesSheetOpen} onOpenChange={setIsNodesSheetOpen}>
-            <SheetContent side="left" className="p-0">
+            <SheetContent side="left" className="p-0 w-72">
                  <NodesSidebar />
             </SheetContent>
         </Sheet>
         <Sheet open={isInspectorSheetOpen} onOpenChange={(open) => { if (!open) setSelectedNode(null); }}>
-            <SheetContent side="right" className="p-0">
+            <SheetContent side="right" className="p-0 w-80">
                 <PropertyInspector node={selectedNode} onUpdate={updateNodeData} />
             </SheetContent>
         </Sheet>
@@ -330,8 +326,8 @@ export default function LoomPage() {
             isLoadingUser={isLoadingUser}
             onAddNodeClick={() => setIsNodesSheetOpen(true)}
         />
-        <div className="flex-grow flex flex-col md:flex-row min-h-0">
-             <div className="w-full md:w-64 flex-shrink-0 flex flex-col min-h-0 border-r border-foreground/20">
+        <div className="flex-grow flex flex-row min-h-0">
+            <div className="w-64 flex-shrink-0 flex-col min-h-0 border-r border-foreground/20 hidden md:flex">
               <div className="h-[60%] min-h-0 border-b border-foreground/20">
                   <WorkflowList onSelectWorkflow={handleSelectWorkflow} activeWorkflowId={activeWorkflowId} triggerRefresh={listRefreshTrigger}/>
               </div>

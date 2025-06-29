@@ -19,6 +19,7 @@ import { LaheyIcon } from '../icons/LaheyIcon';
 import { ForemanatorIcon } from '../icons/ForemanatorIcon';
 import { SterileishIcon } from '../icons/SterileishIcon';
 import { PaperTrailIcon } from '../icons/PaperTrailIcon';
+import { BarbaraIcon } from '../icons/BarbaraIcon';
 
 const nodeIcons: Record<string, React.ComponentType<any>> = {
     trigger: PlayCircle,
@@ -36,6 +37,7 @@ const nodeIcons: Record<string, React.ComponentType<any>> = {
     'tool-lahey': LaheyIcon,
     'tool-foremanator': ForemanatorIcon,
     'tool-sterileish': SterileishIcon,
+    'tool-barbara': BarbaraIcon,
 };
 
 function WorkflowNodeItem({ node, onClick, isSelected, onConnectStart, onConnectEnd }: { 

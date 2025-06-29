@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface PropertyInspectorProps {
     node: Node | null;
@@ -253,7 +254,10 @@ const GenericProperties = ({ node, onUpdate }: { node: Node, onUpdate: (data: an
 
 
 export default function PropertyInspector({ node, onUpdate }: PropertyInspectorProps) {
+  const isMobile = useIsMobile();
+  
   if (!node) {
+    // On desktop, show a placeholder. On mobile, this component won't be rendered if there's no node.
     return (
       <div className="w-80 flex-shrink-0 bg-foreground/10 backdrop-blur-xl border border-foreground/20 rounded-lg p-4 items-center justify-center hidden lg:flex">
         <p className="text-sm text-muted-foreground">Select a node to inspect its properties.</p>
@@ -294,18 +298,20 @@ export default function PropertyInspector({ node, onUpdate }: PropertyInspectorP
       }
   }
 
+  const InspectorContainer = isMobile ? React.Fragment : Card;
+
   return (
-    <div className="w-80 flex-shrink-0 bg-foreground/10 backdrop-blur-xl border border-foreground/20 rounded-lg p-4 flex-col gap-4 hidden lg:flex">
+    <div className="w-full lg:w-80 flex-shrink-0 bg-foreground/10 lg:backdrop-blur-xl lg:border lg:border-foreground/20 lg:rounded-lg p-4 flex-col gap-4 flex h-full">
       <h2 className="font-headline text-lg text-foreground">Inspector</h2>
       <ScrollArea className="flex-grow -mr-4 pr-4">
-        <Card className="bg-transparent border-none shadow-none">
+        <InspectorContainer className="bg-transparent border-none shadow-none">
             <CardHeader className="p-0">
                 <CardTitle className="text-base">Properties: {node.data.label}</CardTitle>
             </CardHeader>
             <CardContent className="flex flex-col gap-4 p-0 pt-4">
                 {renderContent()}
             </CardContent>
-        </Card>
+        </InspectorContainer>
       </ScrollArea>
     </div>
   );

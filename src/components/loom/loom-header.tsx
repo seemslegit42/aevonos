@@ -62,18 +62,18 @@ export default function LoomHeader({
         )}
         {activeWorkflow?.id && (
             <>
-                <Button variant="outline" onClick={onDelete} disabled={isActionDisabled || !canEdit}>
-                    <Trash2 />
+                <Button variant="outline" size="sm" onClick={onDelete} disabled={isActionDisabled || !canEdit}>
+                    <Trash2 className="h-4 w-4 md:mr-2" />
                     <span className="hidden md:inline">Delete</span>
                 </Button>
-                <Button variant="outline" onClick={onRun} disabled={isActionDisabled || !canRun}>
-                    {isRunning ? <Loader2 className="animate-spin" /> : <Play />}
+                <Button variant="outline" size="sm" onClick={onRun} disabled={isActionDisabled || !canRun}>
+                    {isRunning ? <Loader2 className="animate-spin h-4 w-4 md:mr-2" /> : <Play className="h-4 w-4 md:mr-2" />}
                     <span className="hidden md:inline">Run</span>
                 </Button>
             </>
         )}
-        <Button onClick={onSave} disabled={isActionDisabled || !canEdit}>
-          {isSaving ? <Loader2 className="animate-spin" /> : <Save />}
+        <Button onClick={onSave} size="sm" disabled={isActionDisabled || !canEdit}>
+          {isSaving ? <Loader2 className="animate-spin h-4 w-4 md:mr-2" /> : <Save className="h-4 w-4 md:mr-2" />}
           <span className="hidden md:inline">Save</span>
         </Button>
       </div>

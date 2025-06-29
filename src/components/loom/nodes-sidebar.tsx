@@ -19,6 +19,7 @@ import { SterileishIcon } from '../icons/SterileishIcon';
 import { PaperTrailIcon } from '../icons/PaperTrailIcon';
 import { BarbaraIcon } from '../icons/BarbaraIcon';
 import type { NodeType } from './types';
+import { ScrollArea } from '../ui/scroll-area';
 
 
 interface NodeInfo {
@@ -72,12 +73,14 @@ function DraggableNode({ info }: { info: NodeInfo }) {
 
 export default function NodesSidebar() {
   return (
-    <div className="w-72 flex-shrink-0 bg-foreground/10 backdrop-blur-xl border border-foreground/20 rounded-lg p-4 flex-col gap-4 hidden md:flex">
+    <div className="w-full h-full bg-foreground/10 backdrop-blur-xl p-4 flex flex-col gap-4">
       <h2 className="font-headline text-lg text-foreground">Nodes</h2>
       <p className="text-xs text-muted-foreground -mt-3">Drag nodes onto the canvas to build.</p>
-      <div className="flex flex-col gap-3 mt-2 overflow-y-auto">
-        {nodeTypes.map(info => <DraggableNode key={info.type} info={info} />)}
-      </div>
+      <ScrollArea className="flex-grow -mr-4 pr-4">
+        <div className="flex flex-col gap-3 mt-2">
+            {nodeTypes.map(info => <DraggableNode key={info.type} info={info} />)}
+        </div>
+      </ScrollArea>
     </div>
   );
 }
