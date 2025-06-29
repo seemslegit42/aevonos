@@ -17,6 +17,7 @@ export const CreateTransactionInputSchema = z.object({
   description: z.string(),
   userId: z.string().optional(),
   agentId: z.string().optional(),
+  instrumentId: z.string().optional(),
 });
 export type CreateTransactionInput = z.infer<typeof CreateTransactionInputSchema>;
 
@@ -27,7 +28,7 @@ export type CreateTransactionInput = z.infer<typeof CreateTransactionInputSchema
  * @returns The newly created transaction record.
  */
 export async function createTransaction(input: CreateTransactionInput) {
-    const { workspaceId, type, amount, description, userId, agentId } = CreateTransactionInputSchema.parse(input);
+    const { workspaceId, type, amount, description, userId, agentId, instrumentId } = CreateTransactionInputSchema.parse(input);
 
     try {
         const result = await prisma.$transaction(async (tx) => {
@@ -56,6 +57,7 @@ export async function createTransaction(input: CreateTransactionInput) {
                     description,
                     userId,
                     agentId,
+                    instrumentId,
                     status: TransactionStatus.COMPLETED, // Direct transactions are always completed.
                 },
             });

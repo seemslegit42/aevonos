@@ -13,6 +13,7 @@ import { requestCreditTopUpInDb } from '@/ai/tools/billing-tools';
 import { microAppManifests } from '@/config/micro-apps';
 import { chaosCardManifest } from '@/config/chaos-cards';
 import prisma from '@/lib/prisma';
+import { differenceInMinutes } from 'date-fns';
 
 
 export async function handleCommand(command: string): Promise<UserCommandOutput> {
@@ -190,6 +191,7 @@ export async function purchaseMicroApp(appId: string) {
         type: TransactionType.DEBIT,
         amount: creditCost,
         description: `Micro-App Unlock: ${name}`,
+        instrumentId: appId,
       });
 
       // 2. Add the app to the unlocked list
@@ -201,6 +203,22 @@ export async function purchaseMicroApp(appId: string) {
           },
         },
       });
+
+      // 3. Update the discovery record
+      const discovery = await tx.instrumentDiscovery.findFirst({
+          where: { userId: session.userId, instrumentId: appId, converted: false }
+      });
+      
+      if (discovery) {
+          const dtt = differenceInMinutes(new Date(), discovery.firstViewedAt);
+          await tx.instrumentDiscovery.update({
+              where: { id: discovery.id },
+              data: {
+                  converted: true,
+                  dtt: dtt > 0 ? dtt : 1, // Ensure dtt is at least 1 minute if conversion is immediate
+              }
+          });
+      }
     });
 
     revalidatePath('/'); // Revalidate to reflect changes across the app
@@ -265,6 +283,7 @@ export async function purchaseChaosCard(cardKey: string) {
         type: TransactionType.DEBIT,
         amount: cost,
         description: `Chaos Card Acquired: ${name}`,
+        instrumentId: cardKey,
       });
 
       // 2. Add the card to the user's collection
@@ -276,6 +295,22 @@ export async function purchaseChaosCard(cardKey: string) {
           },
         },
       });
+
+      // 3. Update the discovery record
+      const discovery = await tx.instrumentDiscovery.findFirst({
+          where: { userId: session.userId, instrumentId: cardKey, converted: false }
+      });
+      
+      if (discovery) {
+          const dtt = differenceInMinutes(new Date(), discovery.firstViewedAt);
+          await tx.instrumentDiscovery.update({
+              where: { id: discovery.id },
+              data: {
+                  converted: true,
+                  dtt: dtt > 0 ? dtt : 1, // Ensure dtt is at least 1 minute if conversion is immediate
+              }
+          });
+      }
     });
 
     revalidatePath('/'); // Revalidate to reflect changes
@@ -285,5 +320,36 @@ export async function purchaseChaosCard(cardKey: string) {
     console.error(`[Action: purchaseChaosCard] for card ${cardKey}:`, error);
     const errorMessage = error instanceof Error ? error.message : 'Failed to complete purchase.';
     return { success: false, error: errorMessage };
+  }
+}
+
+export async function logInstrumentDiscovery(instrumentId: string) {
+  const session = await getServerActionSession();
+  if (!session?.userId || !session?.workspaceId) {
+    // Fail silently, not critical if discovery logging fails
+    return;
+  }
+
+  try {
+    // Use findFirst + create to avoid race conditions and ensure idempotency
+    const existingDiscovery = await prisma.instrumentDiscovery.findFirst({
+      where: {
+        userId: session.userId,
+        instrumentId,
+      },
+    });
+
+    if (!existingDiscovery) {
+      await prisma.instrumentDiscovery.create({
+        data: {
+          userId: session.userId,
+          workspaceId: session.workspaceId,
+          instrumentId,
+        },
+      });
+    }
+  } catch (error) {
+    // Also fail silently. This isn't a user-facing critical action.
+    console.error(`[Action: logInstrumentDiscovery] for instrument ${instrumentId}:`, error);
   }
 }

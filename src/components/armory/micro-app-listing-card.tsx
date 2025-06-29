@@ -1,13 +1,14 @@
+
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ShoppingCart, Check, Loader2 } from 'lucide-react';
 import type { MicroAppManifest } from '@/config/micro-apps';
 import { useToast } from '@/hooks/use-toast';
-import { purchaseMicroApp } from '@/app/actions';
+import { purchaseMicroApp, logInstrumentDiscovery } from '@/app/actions';
 
 interface MicroAppListingCardProps {
   app: MicroAppManifest;
@@ -20,6 +21,29 @@ export function MicroAppListingCard({ app, unlockedAppIds, onAcquire }: MicroApp
   const [isAcquiring, setIsAcquiring] = useState(false);
   const isIncluded = app.priceModel === 'included';
   const isUnlocked = isIncluded || unlockedAppIds.includes(app.id);
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          // Fire and forget the discovery log
+          logInstrumentDiscovery(app.id);
+          // Disconnect after first view to prevent re-triggering
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.1 } // Trigger when 10% of the card is visible
+    );
+
+    if (cardRef.current) {
+      observer.observe(cardRef.current);
+    }
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [app.id]);
 
   const handleAcquire = async () => {
     if (isUnlocked || isAcquiring) return;
@@ -41,7 +65,7 @@ export function MicroAppListingCard({ app, unlockedAppIds, onAcquire }: MicroApp
   }
 
   return (
-    <Card className="bg-foreground/10 backdrop-blur-xl border border-foreground/30 shadow-[0_8px_32px_0_rgba(28,25,52,0.1)] hover:border-primary transition-all duration-300 flex flex-col group overflow-hidden">
+    <Card ref={cardRef} className="bg-foreground/10 backdrop-blur-xl border border-foreground/30 shadow-[0_8px_32px_0_rgba(28,25,52,0.1)] hover:border-primary transition-all duration-300 flex flex-col group overflow-hidden">
       <CardHeader className="p-0">
         <div className="relative aspect-video w-full overflow-hidden">
             <Image 

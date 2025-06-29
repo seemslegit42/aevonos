@@ -1,14 +1,14 @@
 
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ShoppingCart, Check, Loader2 } from 'lucide-react';
 import type { ChaosCardManifest } from '@/config/chaos-cards';
 import { useToast } from '@/hooks/use-toast';
-import { purchaseChaosCard } from '@/app/actions';
+import { purchaseChaosCard, logInstrumentDiscovery } from '@/app/actions';
 import { Badge } from '../ui/badge';
 import { cn } from '@/lib/utils';
 
@@ -30,6 +30,27 @@ export function ChaosCardListingCard({ card, ownedCardKeys, onAcquire }: ChaosCa
   const { toast } = useToast();
   const [isAcquiring, setIsAcquiring] = useState(false);
   const isOwned = ownedCardKeys.includes(card.key);
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          logInstrumentDiscovery(card.key);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (cardRef.current) {
+      observer.observe(cardRef.current);
+    }
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [card.key]);
 
   const handleAcquire = async () => {
     if (isOwned || isAcquiring) return;
@@ -53,7 +74,7 @@ export function ChaosCardListingCard({ card, ownedCardKeys, onAcquire }: ChaosCa
   const cardClass = classStyles[card.cardClass] || classStyles.AESTHETIC;
 
   return (
-    <Card className="bg-foreground/10 backdrop-blur-xl border border-foreground/30 hover:border-primary transition-all duration-300 flex flex-col group overflow-hidden">
+    <Card ref={cardRef} className="bg-foreground/10 backdrop-blur-xl border border-foreground/30 hover:border-primary transition-all duration-300 flex flex-col group overflow-hidden">
       <CardHeader className="p-0">
         <div className="relative aspect-[4/5.6] w-full overflow-hidden">
             <Image 
