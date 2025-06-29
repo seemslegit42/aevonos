@@ -1,4 +1,3 @@
-
 /**
  * @fileOverview This file defines the central tool registry for the BEEP agent.
  * It uses a factory pattern to create context-aware tool instances.
@@ -107,279 +106,258 @@ class FinalAnswerTool extends Tool {
  */
 export function getTools(context: AgentContext): Tool[] {
     const { userId, workspaceId } = context;
+
+    const createAgentTool = ({
+        name,
+        description,
+        schema,
+        agentName,
+        agentFunc,
+        reportAction,
+    }: {
+        name: string;
+        description: string;
+        schema: z.ZodSchema<any>;
+        agentName: z.infer<typeof AgentReportSchema>['agent'];
+        agentFunc: (toolInput: any) => Promise<any>;
+        reportAction?: string;
+    }) => {
+        return new DynamicTool({
+            name,
+            description,
+            schema,
+            func: async (toolInput) => {
+                const result = await agentFunc(toolInput);
+                let reportData: any = result;
+                if (reportAction) {
+                    reportData = { action: reportAction, report: result };
+                }
+                const report: z.infer<typeof AgentReportSchema> = { agent: agentName, report: reportData };
+                return JSON.stringify(report);
+            },
+        });
+    };
     
     return [
         new FinalAnswerTool(),
-        new DynamicTool({
+
+        createAgentTool({
             name: 'critiqueContent',
             description: 'Sends content to Dr. Syntax for a harsh but effective critique. Use this when a user asks for a review, critique, or feedback on a piece of text, code, or a prompt. Extract the content and content type from the user command.',
             schema: DrSyntaxInputSchema.omit({ workspaceId: true }),
-            func: async (toolInput) => {
-                const result = await drSyntaxCritique({ ...toolInput, workspaceId });
-                const report: z.infer<typeof AgentReportSchema> = { agent: 'dr-syntax', report: result };
-                return JSON.stringify(report);
-            },
+            agentName: 'dr-syntax',
+            agentFunc: (toolInput) => drSyntaxCritique({ ...toolInput, workspaceId }),
         }),
-        new DynamicTool({
+        
+        createAgentTool({
             name: 'createContact',
             description: 'Creates a new contact in the system. Use this when the user asks to "add a contact", "new contact", etc. Extract their details like name, email, and phone from the user command.',
             schema: CreateContactInputSchema,
-            func: async (toolInput) => {
-                const result = await createContactInDb(toolInput, workspaceId);
-                const report: z.infer<typeof AgentReportSchema> = { agent: 'crm', report: { action: 'create', report: result } };
-                return JSON.stringify(report);
-            },
+            agentName: 'crm',
+            reportAction: 'create',
+            agentFunc: (toolInput) => createContactInDb(toolInput, workspaceId),
         }),
-        new DynamicTool({
+        
+        createAgentTool({
             name: 'updateContact',
             description: 'Updates an existing contact in the system. Use this when the user asks to "change a contact", "update details for", etc. You must provide the contact ID. If the user provides a name, use the listContacts tool first to find the correct ID.',
             schema: UpdateContactInputSchema,
-            func: async (toolInput) => {
-                const result = await updateContactInDb(toolInput, workspaceId);
-                const report: z.infer<typeof AgentReportSchema> = { agent: 'crm', report: { action: 'update', report: result } };
-                return JSON.stringify(report);
-            },
+            agentName: 'crm',
+            reportAction: 'update',
+            agentFunc: (toolInput) => updateContactInDb(toolInput, workspaceId),
         }),
-        new DynamicTool({
+        
+        createAgentTool({
             name: 'listContacts',
             description: 'Lists all contacts in the system. Use this when the user asks to "show contacts", "list all contacts", "see my contacts", etc.',
             schema: z.object({}),
-            func: async () => {
-                const result = await listContactsFromDb(workspaceId);
-                const report: z.infer<typeof AgentReportSchema> = { agent: 'crm', report: { action: 'list', report: result } };
-                return JSON.stringify(report);
-            },
+            agentName: 'crm',
+            reportAction: 'list',
+            agentFunc: () => listContactsFromDb(workspaceId),
         }),
-        new DynamicTool({
+        
+        createAgentTool({
             name: 'deleteContact',
             description: 'Deletes a contact from the system by their ID. The user must provide the ID of the contact to delete. You should obtain this ID from a contact list if the user does not provide it.',
             schema: DeleteContactInputSchema,
-            func: async (toolInput) => {
-                const result = await deleteContactInDb(toolInput, workspaceId);
-                const report: z.infer<typeof AgentReportSchema> = { agent: 'crm', report: { action: 'delete', report: result } };
-                return JSON.stringify(report);
-            },
+            agentName: 'crm',
+            reportAction: 'delete',
+            agentFunc: (toolInput) => deleteContactInDb(toolInput, workspaceId),
         }),
-        new DynamicTool({
+
+        createAgentTool({
             name: 'getUsageDetails',
             description: 'Gets the current billing and agent action usage details. Use this when the user asks about their usage, limits, plan, or billing.',
             schema: z.object({}),
-            func: async () => {
-                const result = await getUsageDetails(workspaceId);
-                const report: z.infer<typeof AgentReportSchema> = { agent: 'billing', report: { action: 'get_usage', report: result } };
-                return JSON.stringify(report);
-            },
+            agentName: 'billing',
+            reportAction: 'get_usage',
+            agentFunc: () => getUsageDetails(workspaceId),
         }),
-        new DynamicTool({
+        
+        createAgentTool({
             name: 'requestCreditTopUp',
             description: 'Logs a user\'s request to top up their credit balance via an out-of-band payment method like an e-Transfer. Use this when the user says "add credits", "buy credits", "top up my account", etc. Extract the amount from their command.',
             schema: RequestCreditTopUpInputSchema,
-            func: async (toolInput) => {
-                const result = await requestCreditTopUpInDb(toolInput, userId, workspaceId);
-                const report: z.infer<typeof AgentReportSchema> = { agent: 'billing', report: { action: 'request_top_up', report: result } };
-                return JSON.stringify(report);
-            },
+            agentName: 'billing',
+            reportAction: 'request_top_up',
+            agentFunc: (toolInput) => requestCreditTopUpInDb(toolInput, userId, workspaceId),
         }),
-        new DynamicTool({
+        
+        createAgentTool({
             name: 'createManualTransaction',
             description: 'Creates a manual credit or debit transaction on the user\'s workspace account. Use this for explicit user requests like "charge me 10 credits for this" or "process a refund of 5 credits".',
             schema: CreateManualTransactionInputSchema,
-            func: async (toolInput) => {
-                const result = await createManualTransaction(toolInput, workspaceId, userId);
-                const report: z.infer<typeof AgentReportSchema> = { agent: 'ledger', report: { action: 'create_manual_transaction', report: result } };
-                return JSON.stringify(report);
-            },
+            agentName: 'ledger',
+            reportAction: 'create_manual_transaction',
+            agentFunc: (toolInput) => createManualTransaction(toolInput, workspaceId, userId),
         }),
-        new DynamicTool({
+        
+        createAgentTool({
             name: 'getDatingProfile',
             description: 'Fetches a dating app profile by its ID. Use this when the user wants to get information about a specific person on a dating app before crafting a message. For example, "get profile 123 from Hinge."',
             schema: DatingProfileInputSchema,
-            func: async (toolInput) => {
-                const result = await getDatingProfile(toolInput, workspaceId);
-                const report: z.infer<typeof AgentReportSchema> = { agent: 'dating', report: { action: 'get_profile', report: result } };
-                return JSON.stringify(report);
-            },
+            agentName: 'dating',
+            reportAction: 'get_profile',
+            agentFunc: (toolInput) => getDatingProfile(toolInput, workspaceId),
         }),
-        new DynamicTool({
+
+        createAgentTool({
             name: 'createSecurityAlert',
             description: 'Creates a security alert in the Aegis system. Use this when the Aegis anomaly scan returns a positive result for a threat. You must provide the type, explanation, and risk level of the alert based on the Aegis report.',
             schema: CreateSecurityAlertInputSchema,
-            func: async (toolInput) => {
-                const result = await createSecurityAlertInDb(toolInput, workspaceId);
-                const report: z.infer<typeof AgentReportSchema> = {
-                    agent: 'security',
-                    report: {
-                        action: 'create_alert',
-                        report: {
-                            alertId: result.id,
-                            type: result.type,
-                            riskLevel: result.riskLevel
-                        }
-                    }
-                };
-                return JSON.stringify(report);
-            },
+            agentName: 'security',
+            reportAction: 'create_alert',
+            agentFunc: (toolInput) => createSecurityAlertInDb(toolInput, workspaceId),
         }),
-        new DynamicTool({
+        
+        createAgentTool({
             name: 'validateVin',
             description: 'Validates a Vehicle Identification Number (VIN) for compliance and decoding. Use this when the user asks to "validate a VIN", "check a VIN", or similar.',
             schema: VinDieselInputSchema,
-            func: async (toolInput) => {
-                const result = await validateVin(toolInput);
-                const report: z.infer<typeof AgentReportSchema> = { agent: 'vin-diesel', report: result };
-                return JSON.stringify(report);
-            },
+            agentName: 'vin-diesel',
+            agentFunc: (toolInput) => validateVin(toolInput),
         }),
-        new DynamicTool({
+        
+        createAgentTool({
             name: 'solveReputationProblem',
             description: 'Analyzes a negative online review and generates a professional, disarming response. Use this when a user wants to "fix a bad review", "handle a complaint", etc.',
             schema: WinstonWolfeInputSchema.omit({ workspaceId: true }),
-            func: async (toolInput) => {
-                const result = await generateSolution({ ...toolInput, workspaceId });
-                const report: z.infer<typeof AgentReportSchema> = { agent: 'winston-wolfe', report: result };
-                return JSON.stringify(report);
-            },
+            agentName: 'winston-wolfe',
+            agentFunc: (toolInput) => generateSolution({ ...toolInput, workspaceId }),
         }),
-        new DynamicTool({
+        
+        createAgentTool({
             name: 'analyzeTeamComms',
             description: 'Analyzes team communication snippets (e.g., from Slack or Teams) for morale, passive-aggression, and burnout probability. Use this for "checking team morale", "analyzing a conversation", etc.',
             schema: KifKrokerAnalysisInputSchema.omit({ workspaceId: true }),
-            func: async (toolInput) => {
-                const result = await analyzeComms({ ...toolInput, workspaceId });
-                const report: z.infer<typeof AgentReportSchema> = { agent: 'kif-kroker', report: result };
-                return JSON.stringify(report);
-            },
+            agentName: 'kif-kroker',
+            agentFunc: (toolInput) => analyzeComms({ ...toolInput, workspaceId }),
         }),
-        new DynamicTool({
+        
+        createAgentTool({
             name: 'createAlibi',
             description: 'Generates a fake, jargon-filled calendar invite to block off time. Use this for commands like "block my calendar", "create a fake meeting", "I need an hour".',
             schema: VandelayAlibiInputSchema.omit({ workspaceId: true }),
-            func: async (toolInput) => {
-                const result = await createVandelayAlibi({ ...toolInput, workspaceId });
-                const report: z.infer<typeof AgentReportSchema> = { agent: 'vandelay', report: result };
-                return JSON.stringify(report);
-            },
+            agentName: 'vandelay',
+            agentFunc: (toolInput) => createVandelayAlibi({ ...toolInput, workspaceId }),
         }),
-        new DynamicTool({
+        
+        createAgentTool({
             name: 'analyzeCandidate',
             description: 'Analyzes a candidate summary against a job description. Use this to "check candidate fit", "analyze a resume", etc. You need to provide the candidate name, summary, and the job description.',
             schema: RolodexAnalysisInputSchema.omit({ workspaceId: true }),
-            func: async (toolInput) => {
-                const result = await analyzeCandidate({ ...toolInput, workspaceId });
-                const report: z.infer<typeof AgentReportSchema> = { agent: 'rolodex', report: result };
-                return JSON.stringify(report);
-            },
+            agentName: 'rolodex',
+            agentFunc: (toolInput) => analyzeCandidate({ ...toolInput, workspaceId }),
         }),
-        new DynamicTool({
+
+        createAgentTool({
             name: 'generateBusinessKit',
             description: 'Generates a business name, tagline, and logo concept. Use this when the user asks to "start a business", "get legit", "make a company", etc. They need to provide the type of business and a logo style.',
             schema: JrocInputSchema.omit({ workspaceId: true }),
-            func: async (toolInput) => {
-                const result = await generateBusinessKit({ ...toolInput, workspaceId });
-                const report: z.infer<typeof AgentReportSchema> = { agent: 'jroc', report: result };
-                return JSON.stringify(report);
-            },
+            agentName: 'jroc',
+            agentFunc: (toolInput) => generateBusinessKit({ ...toolInput, workspaceId }),
         }),
-        new DynamicTool({
+
+        createAgentTool({
             name: 'investigateLog',
             description: 'Analyzes a log entry for suspicious activity with the cynical eye of an alcoholic ex-cop. Use this to investigate employee actions or any other log data.',
             schema: LaheyAnalysisInputSchema.omit({ workspaceId: true }),
-            func: async (toolInput) => {
-                const result = await analyzeLaheyLog({ ...toolInput, workspaceId });
-                const report: z.infer<typeof AgentReportSchema> = { agent: 'lahey-surveillance', report: result };
-                return JSON.stringify(report);
-            },
+            agentName: 'lahey-surveillance',
+            agentFunc: (toolInput) => analyzeLaheyLog({ ...toolInput, workspaceId }),
         }),
-        new DynamicTool({
+
+        createAgentTool({
             name: 'logDailyReport',
             description: 'Logs a daily report for a construction site. Takes raw text and structures it. Use for commands like "log daily report for construction."',
             schema: ForemanatorLogInputSchema.omit({ workspaceId: true }),
-            func: async (toolInput) => {
-                const result = await processDailyLog({ ...toolInput, workspaceId });
-                const report: z.infer<typeof AgentReportSchema> = { agent: 'foremanator', report: result };
-                return JSON.stringify(report);
-            },
+            agentName: 'foremanator',
+            agentFunc: (toolInput) => processDailyLog({ ...toolInput, workspaceId }),
         }),
-        new DynamicTool({
+
+        createAgentTool({
             name: 'analyzeComplianceLog',
             description: 'Analyzes a cleanroom or medical device manufacturing log for compliance issues with a sarcastic tone. Use for commands like "analyze this cleanroom log" or "is this calibration record compliant?".',
             schema: SterileishAnalysisInputSchema.omit({ workspaceId: true }),
-            func: async (toolInput) => {
-                const result = await analyzeCompliance({ ...toolInput, workspaceId });
-                const report: z.infer<typeof AgentReportSchema> = { agent: 'sterileish', report: result };
-                return JSON.stringify(report);
-            },
+            agentName: 'sterileish',
+            agentFunc: (toolInput) => analyzeCompliance({ ...toolInput, workspaceId }),
         }),
-        new DynamicTool({
+
+        createAgentTool({
             name: 'scanReceipt',
             description: 'Scans a receipt image and extracts transaction details. The user must provide a photo of the receipt as a data URI.',
             schema: PaperTrailScanInputSchema.omit({ workspaceId: true }),
-            func: async (toolInput) => {
-                const result = await scanEvidence({ ...toolInput, workspaceId });
-                const report: z.infer<typeof AgentReportSchema> = { agent: 'paper-trail', report: result };
-                return JSON.stringify(report);
-            },
+            agentName: 'paper-trail',
+            agentFunc: (toolInput) => scanEvidence({ ...toolInput, workspaceId }),
         }),
-        new DynamicTool({
+
+        createAgentTool({
             name: 'processDocumentForBarbara',
             description: 'Delegates a document processing or compliance task to Agent Barbara. Use this for tasks like validating VINs, drafting professional emails, or checking compliance. Specify the task and provide the document text.',
             schema: BarbaraInputSchema.omit({ workspaceId: true }),
-            func: async (toolInput) => {
-                const result = await processDocument({ ...toolInput, workspaceId });
-                const report: z.infer<typeof AgentReportSchema> = { agent: 'barbara', report: result };
-                return JSON.stringify(report);
-            },
+            agentName: 'barbara',
+            agentFunc: (toolInput) => processDocument({ ...toolInput, workspaceId }),
         }),
-        new DynamicTool({
+
+        createAgentTool({
             name: 'auditFinances',
             description: 'Audits a list of financial transactions with extreme prejudice. Use this for commands like \'audit my expenses\', \'review these transactions\', etc.',
             schema: AuditorInputSchema.omit({ workspaceId: true }),
-            func: async (toolInput) => {
-                const result = await auditFinances({ ...toolInput, workspaceId });
-                const report: z.infer<typeof AgentReportSchema> = { agent: 'auditor', report: result };
-                return JSON.stringify(report);
-            },
+            agentName: 'auditor',
+            agentFunc: (toolInput) => auditFinances({ ...toolInput, workspaceId }),
         }),
-        new DynamicTool({
+
+        createAgentTool({
             name: 'generateWingmanMessage',
             description: 'Crafts the perfect message for a tricky social situation. The user must provide the situation context and a desired message mode (e.g., \'Charming AF\', \'Help Me Say No\').',
             schema: WingmanInputSchema.omit({ workspaceId: true }),
-            func: async (toolInput) => {
-                const result = await generateWingmanMessage({ ...toolInput, workspaceId });
-                const report: z.infer<typeof AgentReportSchema> = { agent: 'wingman', report: result };
-                return JSON.stringify(report);
-            },
+            agentName: 'wingman',
+            agentFunc: (toolInput) => generateWingmanMessage({ ...toolInput, workspaceId }),
         }),
-        new DynamicTool({
+
+        createAgentTool({
             name: 'performOsintScan',
             description: 'Performs an OSINT (Open-Source Intelligence) scan on a target person. Requires a name and optional context like email or social media URLs.',
             schema: OsintInputSchema.omit({ workspaceId: true }),
-            func: async (toolInput) => {
-                const result = await performOsintScan({ ...toolInput, workspaceId });
-                const report: z.infer<typeof AgentReportSchema> = { agent: 'osint', report: result };
-                return JSON.stringify(report);
-            },
+            agentName: 'osint',
+            agentFunc: (toolInput) => performOsintScan({ ...toolInput, workspaceId }),
         }),
-        new DynamicTool({
+        
+        createAgentTool({
             name: 'performInfidelityAnalysis',
             description: 'Analyzes a situation description for behavioral red flags and calculates an infidelity risk score.',
             schema: InfidelityAnalysisInputSchema.omit({ workspaceId: true }),
-            func: async (toolInput) => {
-                const result = await performInfidelityAnalysis({ ...toolInput, workspaceId });
-                const report: z.infer<typeof AgentReportSchema> = { agent: 'infidelity-analysis', report: result };
-                return JSON.stringify(report);
-            },
+            agentName: 'infidelity-analysis',
+            agentFunc: (toolInput) => performInfidelityAnalysis({ ...toolInput, workspaceId }),
         }),
-        new DynamicTool({
+        
+        createAgentTool({
             name: 'deployDecoy',
             description: 'Deploys an AI decoy with a specific persona to engage a target and test loyalty.',
             schema: DecoyInputSchema.omit({ workspaceId: true }),
-            func: async (toolInput) => {
-                const result = await deployDecoy({ ...toolInput, workspaceId });
-                const report: z.infer<typeof AgentReportSchema> = { agent: 'decoy', report: result };
-                return JSON.stringify(report);
-            },
+            agentName: 'decoy',
+            agentFunc: (toolInput) => deployDecoy({ ...toolInput, workspaceId }),
         }),
+        
         new DynamicTool({
             name: 'generateDossier',
             description: 'Compiles data from OSINT, behavioral analysis, and decoy reports into a formal dossier. Specify standard or legal mode.',
@@ -390,65 +368,53 @@ export function getTools(context: AgentContext): Tool[] {
                 return JSON.stringify(report);
             },
         }),
-        new DynamicTool({
+        
+        createAgentTool({
             name: 'getKendraTake',
             description: 'Gets an unhinged, but brilliant, marketing campaign strategy for a product idea from KENDRA.exe. Use this when a user has a product idea and wants marketing help.',
             schema: KendraInputSchema.omit({ workspaceId: true }),
-            func: async (toolInput) => {
-                const result = await getKendraTake({ ...toolInput, workspaceId });
-                const report: z.infer<typeof AgentReportSchema> = { agent: 'kendra', report: result };
-                return JSON.stringify(report);
-            },
+            agentName: 'kendra',
+            agentFunc: (toolInput) => getKendraTake({ ...toolInput, workspaceId }),
         }),
-        new DynamicTool({
+
+        createAgentTool({
             name: 'invokeOrpheanOracle',
             description: 'Consults the Orphean Oracle to translate raw business data into a profound, metaphorical, visual narrative. Use this when the user asks for a "story" about their data, or wants to "see" their business performance in a new way.',
             schema: OrpheanOracleInputSchema.omit({ workspaceId: true }),
-            func: async (toolInput) => {
-                const result = await invokeOracle({ ...toolInput, workspaceId });
-                const report: z.infer<typeof AgentReportSchema> = { agent: 'orphean-oracle', report: result };
-                return JSON.stringify(report);
-            },
+            agentName: 'orphean-oracle',
+            agentFunc: (toolInput) => invokeOracle({ ...toolInput, workspaceId }),
         }),
-        new DynamicTool({
+        
+        createAgentTool({
             name: 'analyzeMeetingInvite',
             description: 'Analyzes a meeting invite for pointlessness and generates passive-aggressive decline memos. Use this when a user asks to "check a meeting invite" or "get me out of this meeting".',
             schema: LumberghAnalysisInputSchema.omit({ workspaceId: true }),
-            func: async (toolInput) => {
-                const result = await analyzeInvite({ ...toolInput, workspaceId });
-                const report: z.infer<typeof AgentReportSchema> = { agent: 'lumbergh', report: result };
-                return JSON.stringify(report);
-            },
+            agentName: 'lumbergh',
+            agentFunc: (toolInput) => analyzeInvite({ ...toolInput, workspaceId }),
         }),
-        new DynamicTool({
+        
+        createAgentTool({
             name: 'getLucilleBluthTake',
             description: 'Sends an expense to Lucille Bluth for a witty, judgmental, and condescending remark. Use this when a user wants to "log an expense", "categorize a purchase", etc. Extract the item description and cost from the user command.',
             schema: LucilleBluthInputSchema.omit({ workspaceId: true }),
-            func: async (toolInput) => {
-                const result = await analyzeExpense({ ...toolInput, workspaceId });
-                const report: z.infer<typeof AgentReportSchema> = { agent: 'lucille-bluth', report: result };
-                return JSON.stringify(report);
-            },
+            agentName: 'lucille-bluth',
+            agentFunc: (toolInput) => analyzeExpense({ ...toolInput, workspaceId }),
         }),
-        new DynamicTool({
+
+        createAgentTool({
             name: 'getPamsTake',
             description: 'Delegates a task to Pam Poovey, the HR director. Use this for requests like \'get Pam to talk about onboarding\' or \'ask Pam about the attendance policy\'. Specify the HR topic.',
             schema: PamScriptInputSchema.omit({ workspaceId: true }),
-            func: async (toolInput) => {
-                const result = await generatePamRant({ ...toolInput, workspaceId });
-                const report: z.infer<typeof AgentReportSchema> = { agent: 'pam-poovey', report: result };
-                return JSON.stringify(report);
-            },
+            agentName: 'pam-poovey',
+            agentFunc: (toolInput) => generatePamRant({ ...toolInput, workspaceId }),
         }),
-        new DynamicTool({
+
+        createAgentTool({
             name: 'getStonksAdvice',
             description: 'Gets unhinged, bullish, and financially irresponsible advice for a stock ticker. This is not financial advice.',
             schema: StonksBotInputSchema.omit({ workspaceId: true }),
-            func: async (toolInput) => {
-                const result = await getStonksAdvice({ ...toolInput, workspaceId });
-                const report: z.infer<typeof AgentReportSchema> = { agent: 'stonks', report: result };
-                return JSON.stringify(report);
-            },
+            agentName: 'stonks',
+            agentFunc: (toolInput) => getStonksAdvice({ ...toolInput, workspaceId }),
         }),
     ];
 }
