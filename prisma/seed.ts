@@ -30,8 +30,11 @@ async function main() {
       password: hashedPassword,
       firstName: 'The',
       lastName: 'Architect',
+      agentAlias: 'BEEP',
       role: UserRole.ADMIN,
       psyche: UserPsyche.ZEN_ARCHITECT,
+      foundingVow: "The tyranny of dashboards and endless SaaS tabs.",
+      foundingGoal: "An agentic operating system that anticipates, acts, and disappears.",
     },
   });
   console.log(`Created ADMIN user with id: ${adminUser.id}`)
@@ -42,8 +45,11 @@ async function main() {
       password: hashedPassword,
       firstName: 'Project',
       lastName: 'Manager',
+      agentAlias: 'Overseer',
       role: UserRole.MANAGER,
       psyche: UserPsyche.SYNDICATE_ENFORCER,
+      foundingVow: "Manual follow-ups and chasing status updates.",
+      foundingGoal: "A self-driving project management machine.",
     },
   });
   console.log(`Created MANAGER user with id: ${managerUser.id}`)
@@ -54,8 +60,11 @@ async function main() {
       password: hashedPassword,
       firstName: 'Field',
       lastName: 'Operator',
+      agentAlias: 'Field',
       role: UserRole.OPERATOR,
       psyche: UserPsyche.RISK_AVERSE_ARTISAN,
+      foundingVow: "The fear of making a mistake in a complex system.",
+      foundingGoal: "A reliable toolkit that I can trust.",
     },
   });
   console.log(`Created OPERATOR user with id: ${operatorUser.id}`)
@@ -66,8 +75,11 @@ async function main() {
       password: hashedPassword,
       firstName: 'Compliance',
       lastName: 'Auditor',
+      agentAlias: 'Auditron',
       role: UserRole.AUDITOR,
       psyche: UserPsyche.ZEN_ARCHITECT,
+      foundingVow: "Ambiguity in audit trails.",
+      foundingGoal: "An immutable, self-documenting ledger of all actions.",
     },
   });
   console.log(`Created AUDITOR user with id: ${auditorUser.id}`)
@@ -96,21 +108,19 @@ async function main() {
     data: {
         workspaceId: newWorkspace.id,
         type: TransactionType.CREDIT,
-        amount: 100.0,
+        amount: 1000.0,
         description: "Initial workspace credit grant.",
         userId: adminUser.id,
-        status: 'COMPLETED',
-        // Also update the workspace balance since this is a seed script bypassing the service
-        workspace: {
-          update: {
-            data: {
-              credits: 1000 // Give them a good starting balance to buy cards
-            }
-          }
-        }
+        status: 'COMPLETED'
     }
   });
-  console.log('Seeded genesis credit transaction.');
+
+  // Since transactions don't auto-update balances in seeds, do it manually.
+  await prisma.workspace.update({
+      where: { id: newWorkspace.id },
+      data: { credits: 1000 }
+  });
+  console.log('Seeded genesis credit transaction and updated workspace balance.');
 
 
   const statuses: AgentStatus[] = [AgentStatus.active, AgentStatus.idle, AgentStatus.processing, AgentStatus.paused, AgentStatus.error];
