@@ -83,71 +83,74 @@ export default function SubscribePage({ params }: { params: { plan: string } }) 
     }
 
     return (
-        <div className="w-full min-h-screen bg-background flex items-center justify-center p-4">
-            <div className="w-full max-w-4xl mx-auto">
-                <Button variant="ghost" asChild className="mb-4">
+        <div className="w-full min-h-screen p-4 sm:p-8 flex flex-col justify-center">
+            <div className="w-full max-w-5xl mx-auto">
+                 <Button variant="ghost" asChild className="mb-4 text-muted-foreground hover:text-foreground">
                     <Link href="/pricing">
                         <ArrowLeft className="mr-2 h-4 w-4" />
                         Back to Plans
                     </Link>
                 </Button>
-                <Card className="bg-background/80 backdrop-blur-md">
-                    <div className="grid md:grid-cols-2">
-                        <div className="p-6">
-                            <CardHeader className="p-0">
-                                <CardTitle className="text-2xl font-headline">Order Summary</CardTitle>
-                                <CardDescription>You are subscribing to the {plan.name} plan.</CardDescription>
-                            </CardHeader>
-                            <Separator className="my-4"/>
-                            <div className="space-y-4">
-                                <ul className="space-y-2 text-sm text-muted-foreground">
-                                    {plan.features.map((feature: string, i: number) => (
-                                        <li key={i} className="flex items-center gap-2">
-                                            <Check className="h-4 w-4 text-accent" />
-                                            <span>{feature}</span>
-                                        </li>
-                                    ))}
-                                </ul>
-                                <Separator className="my-4"/>
-                                <div className="flex justify-between font-semibold">
-                                    <span>Total Due Today</span>
-                                    <span>${plan.price.toFixed(2)}</span>
-                                </div>
+                <div className="grid md:grid-cols-2 gap-8">
+                    {/* Order Summary Card */}
+                    <Card className="flex flex-col">
+                         <CardHeader>
+                            <CardTitle className="text-3xl font-headline text-primary">Confirm Your Pact</CardTitle>
+                            <CardDescription>You are choosing the path of the <span className="font-bold text-primary">{plan.name}</span>.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="flex-1 space-y-4">
+                            <Separator />
+                            <ul className="space-y-3 text-sm">
+                                {plan.features.map((feature: string, i: number) => (
+                                    <li key={i} className="flex items-center gap-3">
+                                        <Check className="h-4 w-4 text-accent" />
+                                        <span>{feature}</span>
+                                    </li>
+                                ))}
+                            </ul>
+                            <Separator />
+                        </CardContent>
+                        <CardFooter>
+                            <div className="flex justify-between items-baseline font-semibold w-full">
+                                <span className="text-lg">Total Due Today</span>
+                                <span className="text-2xl font-mono">${plan.price.toFixed(2)}</span>
                             </div>
-                        </div>
-
-                        <div className="p-6 bg-muted/30 rounded-r-lg">
-                             <CardHeader className="p-0 mb-4">
-                                <CardTitle className="text-xl font-headline">Payment Information</CardTitle>
-                                <CardDescription>This is a mock payment form.</CardDescription>
-                            </CardHeader>
-                            <div className="space-y-4">
+                        </CardFooter>
+                    </Card>
+                    
+                    {/* Payment Info Card */}
+                    <Card>
+                         <CardHeader>
+                            <CardTitle className="text-2xl font-headline">Offer Your Tribute</CardTitle>
+                            <CardDescription>This is a mock payment form for demonstration.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="card-number">Card Number</Label>
+                                <Input id="card-number" placeholder="•••• •••• •••• 4242" disabled={isLoading} />
+                            </div>
+                            <div className="grid grid-cols-3 gap-4">
+                                <div className="space-y-2 col-span-2">
+                                    <Label htmlFor="expiry">Expiration</Label>
+                                    <Input id="expiry" placeholder="MM / YY" disabled={isLoading} />
+                                </div>
                                 <div className="space-y-2">
-                                    <Label htmlFor="card-number">Card Number</Label>
-                                    <Input id="card-number" placeholder="•••• •••• •••• 4242" disabled={isLoading} />
+                                    <Label htmlFor="cvc">CVC</Label>
+                                    <Input id="cvc" placeholder="•••" disabled={isLoading} />
                                 </div>
-                                <div className="grid grid-cols-3 gap-4">
-                                    <div className="space-y-2 col-span-2">
-                                        <Label htmlFor="expiry">Expiration</Label>
-                                        <Input id="expiry" placeholder="MM / YY" disabled={isLoading} />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="cvc">CVC</Label>
-                                        <Input id="cvc" placeholder="•••" disabled={isLoading} />
-                                    </div>
-                                </div>
-                                 <div className="space-y-2">
-                                    <Label htmlFor="name">Name on Card</Label>
-                                    <Input id="name" placeholder="Art Vandelay" disabled={isLoading} />
-                                </div>
-                                <Button className="w-full" size="lg" onClick={handleSubscribe} disabled={isLoading}>
-                                    {isLoading ? <Loader2 className="animate-spin" /> : `Subscribe to ${plan.name} Plan`}
-                                </Button>
                             </div>
-                        </div>
-                    </div>
-                </Card>
+                             <div className="space-y-2">
+                                <Label htmlFor="name">Name on Card</Label>
+                                <Input id="name" placeholder="Art Vandelay" disabled={isLoading} />
+                            </div>
+                            <Button className="w-full" size="lg" onClick={handleSubscribe} disabled={isLoading}>
+                                {isLoading ? <Loader2 className="animate-spin" /> : `Subscribe to ${plan.name} Plan`}
+                            </Button>
+                        </CardContent>
+                    </Card>
+                </div>
             </div>
         </div>
     );
 }
+
