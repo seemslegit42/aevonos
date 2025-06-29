@@ -55,6 +55,10 @@ export default function TopBar({ user, workspace }: TopBarProps) {
         });
     }
   };
+  
+  const handleBillingClick = () => {
+      upsertApp('usage-monitor', { id: 'singleton-usage-monitor' });
+  }
 
   const displayName = user ? (user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : user.email) : "Operator";
   const roleText = user?.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1).toLowerCase() : 'Operator';
@@ -94,9 +98,11 @@ export default function TopBar({ user, workspace }: TopBarProps) {
             <span>{displayName} | {roleText}</span>
           </Button>
            <div className="h-6 w-px bg-[rgba(245,255,250,0.25)]" />
-          <span>
-            Ξ <span className="text-gilded-accent font-bold">{workspace?.credits?.toFixed(2) ?? '0.00'}</span>
-          </span>
+          <Button variant="ghost" className="p-0 h-auto hover:bg-transparent text-foreground" onClick={handleBillingClick}>
+            <span>
+              Ξ <span className="text-gilded-accent font-bold">{workspace?.credits?.toFixed(2) ?? '0.00'}</span>
+            </span>
+          </Button>
         </div>
       </div>
     </header>
