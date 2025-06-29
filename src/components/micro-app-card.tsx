@@ -99,7 +99,7 @@ export default function MicroAppCard({ app }: MicroAppCardProps) {
                 {ContentComponent && (
                     <CardContent className="flex-grow p-0 overflow-hidden min-h-0">
                         <div className="w-full h-full overflow-y-auto">
-                            <ContentComponent {...app.contentProps} />
+                            <ContentComponent id={app.id} {...app.contentProps} />
                         </div>
                     </CardContent>
                 )}
@@ -108,5 +108,3 @@ export default function MicroAppCard({ app }: MicroAppCardProps) {
     </div>
   );
 }
-
-    

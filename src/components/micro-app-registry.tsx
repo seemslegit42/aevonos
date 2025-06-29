@@ -14,7 +14,7 @@ import { RolodexIcon } from '@/components/icons/RolodexIcon';
 import { WinstonWolfeIcon } from '@/components/icons/WinstonWolfeIcon';
 import { KifKrokerIcon } from '@/components/icons/KifKrokerIcon';
 import { VandelayIcon } from '@/components/icons/VandelayIcon';
-import { EyeOff } from 'lucide-react';
+import { EyeOff, UserPlus } from 'lucide-react';
 import { OrpheanOracleIcon } from './icons/OrpheanOracleIcon';
 import { PaperTrailIcon } from './icons/PaperTrailIcon';
 import { JrocIcon } from './icons/JrocIcon';
@@ -58,6 +58,7 @@ import AegisThreatScope from './micro-apps/aegis-threatscope';
 import AegisCommand from './micro-apps/aegis-command';
 import UsageMonitor from './micro-apps/usage-monitor';
 import Armory from './micro-apps/armory';
+import ContactEditor from './micro-apps/contact-editor';
 
 type ComponentRegistry = {
     icon: React.ComponentType<any>;
@@ -84,6 +85,10 @@ export const microAppRegistry: Record<MicroAppType, ComponentRegistry> = {
   'contact-list': {
     icon: AddressBookIcon,
     content: ContactList,
+  },
+  'contact-editor': {
+    icon: UserPlus,
+    content: ContactEditor,
   },
   'pam-poovey-onboarding': {
     icon: PamPooveyIcon,

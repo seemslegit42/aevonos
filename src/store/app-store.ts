@@ -40,6 +40,7 @@ export type MicroAppType =
   | 'echo-recall'
   | 'aegis-control'
   | 'contact-list'
+  | 'contact-editor'
   | 'pam-poovey-onboarding'
   | 'infidelity-radar'
   | 'vin-diesel'
@@ -92,6 +93,7 @@ const defaultAppDetails: Record<MicroAppType, Omit<MicroApp, 'id' | 'position' |
   'echo-recall': { type: 'echo-recall', title: 'Echo: Session Recall', description: "A summary of the last session's activity." },
   'aegis-control': { type: 'aegis-control', title: 'Aegis Security Report', description: "Analysis of the last command's security profile." },
   'contact-list': { type: 'contact-list', title: 'Contact List', description: 'A list of your contacts.' },
+  'contact-editor': { type: 'contact-editor', title: 'Contact Editor', description: 'Create or update a contact.' },
   'pam-poovey-onboarding': { type: 'pam-poovey-onboarding', title: 'Pam Poovey: Un-HR', description: 'Onboarding, complaints, and questionable life advice.' },
   'infidelity-radar': { type: 'infidelity-radar', title: 'Infidelity Radar', description: 'Because intuition deserves evidence.' },
   'vin-diesel': { type: 'vin-diesel', title: 'VIN Diesel', description: 'Turbocharged compliance. For family.' },
@@ -125,6 +127,7 @@ const defaultAppSizes: Record<MicroAppType, { width: number; height: number }> =
   'echo-recall': { width: 320, height: 250 },
   'aegis-control': { width: 320, height: 220 },
   'contact-list': { width: 680, height: 450 },
+  'contact-editor': { width: 320, height: 380 },
   'pam-poovey-onboarding': { width: 320, height: 350 },
   'infidelity-radar': { width: 360, height: 500 },
   'vin-diesel': { width: 320, height: 400 },
@@ -161,6 +164,7 @@ export interface AppState {
   triggerAppAction: (appId: string) => void;
   bringToFront: (appId: string) => void;
   upsertApp: (type: MicroAppType, props: Partial<Omit<MicroApp, 'type'>>) => MicroApp | undefined;
+  closeApp: (appId: string) => void;
 }
 
 // A registry for app actions, decoupling them from the component.
@@ -230,6 +234,11 @@ export const useAppStore = create<AppState>((set, get) => {
       }
   }
 
+  const closeApp = (appId: string) => {
+    set(state => ({
+        apps: state.apps.filter(app => app.id !== appId)
+    }));
+  };
 
   const processCrmReport = (crmReport: Extract<AgentReportSchema, { agent: 'crm' }>['report']) => {
     const { toast } = useToast.getState();
@@ -238,12 +247,14 @@ export const useAppStore = create<AppState>((set, get) => {
     switch (crmReport.action) {
       case 'create':
         toast({ title: 'CRM Agent', description: `Contact "${crmReport.report.firstName} ${crmReport.report.lastName}" created successfully.` });
+        get().closeApp('contact-editor-new');
         get().handleCommandSubmit('list all contacts');
         break;
       
       case 'update':
         const updatedContact = crmReport.report;
         toast({ title: 'CRM Agent', description: `Contact "${updatedContact.firstName} ${updatedContact.lastName}" was updated.` });
+        get().closeApp(`contact-editor-${updatedContact.id}`);
         set(state => ({
           apps: state.apps.map(app => 
             (app.id === crmAppId && app.contentProps?.contacts)
@@ -433,6 +444,7 @@ export const useAppStore = create<AppState>((set, get) => {
     beepOutput: null,
     bringToFront,
     upsertApp,
+    closeApp,
 
     handleResize: (appId: string, size: { width: number; height: number }) => {
         set(state => ({
