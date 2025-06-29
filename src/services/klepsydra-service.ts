@@ -15,6 +15,7 @@ import { pulseEngineConfig } from '@/config/pulse-engine-config';
 import { chaosCardManifest } from '@/config/chaos-cards';
 import prisma from '@/lib/prisma';
 import { InsufficientCreditsError } from '@/lib/errors';
+import { UserPsyche } from '@prisma/client';
 
 // A simple map for instrument base odds and multipliers.
 // In a real system, this would be more sophisticated.
@@ -42,15 +43,26 @@ export async function calculateOutcome(
   instrumentId: string,
   tributeAmount: number
 ) {
-  // 1. Authorize tribute (check if user can afford it)
-  const workspace = await prisma.workspace.findUnique({
-    where: { id: workspaceId },
-    select: { credits: true },
-  });
+  // 1. Authorize tribute and get user psyche
+  const [user, workspace] = await Promise.all([
+    prisma.user.findUnique({
+      where: { id: userId },
+      select: { psyche: true },
+    }),
+    prisma.workspace.findUnique({
+      where: { id: workspaceId },
+      select: { credits: true },
+    }),
+  ]);
+
+  if (!user) {
+    throw new Error('User not found.');
+  }
 
   if (!workspace || (workspace.credits as unknown as number) < tributeAmount) {
     throw new InsufficientCreditsError('Cannot make tribute. Insufficient credits.');
   }
+
 
   // 2. Fetch profile & calculate luck
   const luckWeight = await getCurrentPulseValue(userId);
@@ -82,6 +94,7 @@ export async function calculateOutcome(
     luckWeight,
     outcome,
     boonAmount,
+    userPsyche: user.psyche,
   };
 
   // 4. Log the tribute transaction atomically

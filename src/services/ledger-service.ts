@@ -7,7 +7,7 @@
 
 import prisma from '@/lib/prisma';
 import { z } from 'zod';
-import { Prisma, Transaction, TransactionStatus, TransactionType } from '@prisma/client';
+import { Prisma, Transaction, TransactionStatus, TransactionType, UserPsyche } from '@prisma/client';
 import { InsufficientCreditsError } from '@/lib/errors';
 
 export const CreateTransactionInputSchema = z.object({
@@ -83,6 +83,7 @@ export const LogTributeEventInputSchema = z.object({
     luckWeight: z.number(),
     outcome: z.string(),
     boonAmount: z.number(),
+    userPsyche: z.nativeEnum(UserPsyche),
 });
 export type LogTributeEventInput = z.infer<typeof LogTributeEventInputSchema>;
 
@@ -92,7 +93,7 @@ export type LogTributeEventInput = z.infer<typeof LogTributeEventInputSchema>;
  * @returns The newly created transaction log.
  */
 export async function logTributeEvent(input: LogTributeEventInput) {
-    const { workspaceId, userId, instrumentId, tributeAmount, luckWeight, outcome, boonAmount } = LogTributeEventInputSchema.parse(input);
+    const { workspaceId, userId, instrumentId, tributeAmount, luckWeight, outcome, boonAmount, userPsyche } = LogTributeEventInputSchema.parse(input);
 
     const netAmount = boonAmount - tributeAmount;
 
@@ -124,6 +125,7 @@ export async function logTributeEvent(input: LogTributeEventInput) {
                     luckWeight,
                     outcome,
                     boonAmount: new Prisma.Decimal(boonAmount),
+                    userPsyche,
                     status: TransactionStatus.COMPLETED,
                 },
             });
