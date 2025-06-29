@@ -294,6 +294,30 @@ This document provides the formal OpenAPI 3.0 specification for the ΛΞVON OS P
           "400": { "description": "Bad request (e.g., missing password for encryption)." }
         }
       }
+    },
+    "/agents/stonks/advice": {
+      "post": {
+        "tags": ["Agents"],
+        "summary": "Get unhinged financial advice from the Stonks Bot.",
+        "operationId": "getStonksBotAdvice",
+        "description": "Submits a stock ticker to the Stonks Bot agent and returns its 'analysis'. This is not financial advice.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/StonksBotRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The Stonks Bot's advice.",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/StonksBotResponse" } } }
+          },
+          "400": { "description": "Invalid ticker symbol." },
+          "402": { "description": "Insufficient credits for agent action." }
+        }
+      }
     }
   },
   "components": {
@@ -313,12 +337,14 @@ This document provides the formal OpenAPI 3.0 specification for the ΛΞVON OS P
         "type": "object",
         "properties": {
           "email": { "type": "string", "format": "email" },
-          "password": { "type": "string", "format": "password" },
-          "firstName": { "type": "string" },
-          "lastName": { "type": "string" },
-          "workspaceName": { "type": "string" }
+          "password": { "type": "string", "minLength": 8 },
+          "workspaceName": { "type": "string", "description": "The name for the primary workspace or 'Canvas'." },
+          "agentAlias": { "type": "string", "description": "A personalized name for the core BEEP agent.", "nullable": true },
+          "psyche": { "$ref": "#/components/schemas/UserPsyche" },
+          "whatMustEnd": { "type": "string", "description": "The user's declared 'sacrifice' during the Rite of Invocation.", "nullable": true },
+          "goal": { "type": "string", "description": "The user's declared 'vow' or goal during the Rite of Invocation.", "nullable": true }
         },
-        "required": ["email", "password", "workspaceName"]
+        "required": ["email", "password", "workspaceName", "psyche"]
       },
       "AuthResponse": {
         "type": "object",
@@ -339,6 +365,11 @@ This document provides the formal OpenAPI 3.0 specification for the ΛΞVON OS P
           "role": { "type": "string", "enum": ["ADMIN", "MANAGER", "OPERATOR", "AUDITOR"] },
           "lastLoginAt": { "type": "string", "format": "date-time", "nullable": true }
         }
+      },
+       "UserPsyche": {
+        "type": "string",
+        "enum": ["ZEN_ARCHITECT", "SYNDICATE_ENFORCER", "RISK_AVERSE_ARTISAN"],
+        "description": "The psychological archetype chosen by the user during the Rite of Invocation."
       },
       "UserUpdateRequest": {
         "type": "object",
@@ -379,10 +410,15 @@ This document provides the formal OpenAPI 3.0 specification for the ΛΞVON OS P
           "workspaceId": { "type": "string" },
           "userId": { "type": "string", "nullable": true },
           "type": { "type": "string", "enum": ["CREDIT", "DEBIT", "TRIBUTE"] },
-          "amount": { "type": "number", "format": "decimal" },
+          "amount": { "type": "number", "format": "decimal", "description": "The net amount of the transaction. For tributes, this is boonAmount - tributeAmount." },
           "description": { "type": "string" },
           "status": { "type": "string", "enum": ["PENDING", "COMPLETED", "FAILED"] },
-          "createdAt": { "type": "string", "format": "date-time" }
+          "createdAt": { "type": "string", "format": "date-time" },
+          "instrumentId": { "type": "string", "nullable": true, "description": "The ID of the instrument used in a TRIBUTE transaction (e.g., a Chaos Card key)." },
+          "luckWeight": { "type": "number", "format": "float", "nullable": true, "description": "The user's luck value at the time of a TRIBUTE transaction." },
+          "outcome": { "type": "string", "nullable": true, "description": "The outcome of a TRIBUTE transaction (e.g., 'win', 'loss')." },
+          "boonAmount": { "type": "number", "format": "decimal", "nullable": true, "description": "The amount of credits awarded as a boon in a TRIBUTE transaction." },
+          "userPsyche": { "$ref": "#/components/schemas/UserPsyche", "nullable": true }
         }
       },
       "WorkflowDefinition": {
@@ -459,6 +495,32 @@ This document provides the formal OpenAPI 3.0 specification for the ΛΞVON OS P
             "decoyResult": { "type": "object", "nullable": true }
         },
         "required": ["targetName"]
+      },
+      "StonksBotRequest": {
+        "type": "object",
+        "properties": {
+          "ticker": { "type": "string", "example": "GME", "description": "The stock ticker symbol." }
+        },
+        "required": ["ticker"]
+      },
+      "StonksBotResponse": {
+        "type": "object",
+        "properties": {
+          "ticker": { "type": "string" },
+          "priceInfo": { "$ref": "#/components/schemas/StockPrice" },
+          "advice": { "type": "string", "description": "The unhinged, extremely bullish, and financially irresponsible advice from the Stonks Bot." },
+          "confidence": { "type": "string", "enum": ["To the moon!", "Diamond hands!", "Ape strong together!"] },
+          "rating": { "type": "string", "enum": ["HODL", "BUY THE DIP", "ALL IN"] }
+        }
+      },
+      "StockPrice": {
+        "type": "object",
+        "properties": {
+          "symbol": { "type": "string" },
+          "price": { "type": "string" },
+          "change": { "type": "string" },
+          "changePercent": { "type": "string" }
+        }
       }
     }
   }

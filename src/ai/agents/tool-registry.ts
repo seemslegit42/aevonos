@@ -92,9 +92,9 @@ interface AgentContext {
 class FinalAnswerTool extends Tool {
   name = 'final_answer';
   description = 'Call this tool when you have gathered all necessary information and are ready to provide the final response to the user. The output should conform to the UserCommandOutputSchema.';
-  schema = UserCommandOutputSchema;
+  schema = UserCommandOutputSchema.omit({ agentReports: true }); // Agent reports are aggregated by the graph.
   
-  async _call(input: z.infer<typeof UserCommandOutputSchema>) {
+  async _call(input: z.infer<typeof this.schema>) {
     // This tool doesn't "do" anything except structure the output.
     // The return value is not used in the main graph loop.
     return JSON.stringify(input);
@@ -235,9 +235,9 @@ export function getTools(context: AgentContext): Tool[] {
         createAgentTool({
             name: 'validateVin',
             description: 'Validates a Vehicle Identification Number (VIN) for compliance and decoding. Use this when the user asks to "validate a VIN", "check a VIN", or similar.',
-            schema: VinDieselInputSchema,
+            schema: VinDieselInputSchema.omit({ workspaceId: true }),
             agentName: 'vin-diesel',
-            agentFunc: (toolInput) => validateVin(toolInput),
+            agentFunc: (toolInput) => validateVin({ ...toolInput, workspaceId }),
         }),
         
         createAgentTool({

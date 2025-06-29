@@ -64,6 +64,10 @@ const LaunchableAppTypeSchema = z.enum([
   'oracle',
   'armory',
   'stonks-bot',
+  'user-profile-settings',
+  'workspace-settings',
+  'top-up',
+  'contact-editor',
 ]);
 
 export const AppToLaunchSchema = z.object({

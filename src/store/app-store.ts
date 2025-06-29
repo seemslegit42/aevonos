@@ -33,6 +33,8 @@ import { type OrpheanOracleOutput } from '@/ai/agents/orphean-oracle-schemas';
 import type { DossierOutput } from '@/ai/agents/dossier-schemas';
 import { generateSpeech } from '@/ai/flows/tts-flow';
 import { StonksBotOutput } from '@/ai/agents/stonks-bot-schemas';
+import { VinDieselOutput } from '@/ai/agents/vin-diesel-schemas';
+import { ForemanatorLogOutput } from '@/ai/agents/foremanator-schemas';
 
 // Define the types of MicroApps available in the OS
 export type MicroAppType = 
@@ -261,7 +263,7 @@ export const useAppStore = create<AppState>((set, get) => {
             break;
         
         case 'vin-diesel':
-            launchApp('vin-diesel', { title: `VIN: ...${report.report.vin.slice(-6)}`, description: 'Validation Result', contentProps: report.report });
+            launchApp('vin-diesel', { title: `VIN: ...${report.report.vin.slice(-6)}`, description: 'Validation Result', contentProps: report.report as VinDieselOutput });
             break;
         
         case 'winston-wolfe':
@@ -281,11 +283,11 @@ export const useAppStore = create<AppState>((set, get) => {
             break;
         
         case 'lahey-surveillance':
-             launchApp('lahey-surveillance', { title: `Lahey Report`, description: 'Shit-storm report.', contentProps: report.report });
+             launchApp('lahey-surveillance', { title: `Lahey Report`, description: 'Shit-storm report.', contentProps: report.report as LaheyAnalysisOutput });
              break;
         
         case 'foremanator':
-            launchApp('foremanator', { title: 'Foremanator Site Log', description: 'Daily report processed.', contentProps: report.report });
+            launchApp('foremanator', { title: 'Foremanator Site Log', description: 'Daily report processed.', contentProps: report.report as ForemanatorLogOutput });
             break;
 
         case 'sterileish':
@@ -460,7 +462,7 @@ export const useAppStore = create<AppState>((set, get) => {
         result.appsToLaunch.forEach(appInfo => {
           const defaults = manifestMap.get(appInfo.type);
           upsertApp(appInfo.type, {
-            id: `agent-app-${appInfo.type}`, // Use a consistent ID to make agent apps singletons
+            id: `singleton-${appInfo.type}`, // Use a consistent ID to make agent apps singletons
             title: appInfo.title || defaults?.name,
             description: appInfo.description || defaults?.description,
           });

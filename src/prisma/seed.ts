@@ -108,21 +108,19 @@ async function main() {
     data: {
         workspaceId: newWorkspace.id,
         type: TransactionType.CREDIT,
-        amount: 100.0,
+        amount: 1000.0,
         description: "Initial workspace credit grant.",
         userId: adminUser.id,
-        status: 'COMPLETED',
-        // Also update the workspace balance since this is a seed script bypassing the service
-        workspace: {
-          update: {
-            data: {
-              credits: 1000 // Give them a good starting balance to buy cards
-            }
-          }
-        }
+        status: 'COMPLETED'
     }
   });
-  console.log('Seeded genesis credit transaction.');
+
+  // Since transactions don't auto-update balances in seeds, do it manually.
+  await prisma.workspace.update({
+      where: { id: newWorkspace.id },
+      data: { credits: 1000 }
+  });
+  console.log('Seeded genesis credit transaction and updated workspace balance.');
 
 
   const statuses: AgentStatus[] = [AgentStatus.active, AgentStatus.idle, AgentStatus.processing, AgentStatus.paused, AgentStatus.error];
