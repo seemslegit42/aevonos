@@ -3,268 +3,342 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { useForm } from 'react-hook-form';
+import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { motion, AnimatePresence } from 'framer-motion';
-
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
+import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, ArrowRight, ArrowLeft } from 'lucide-react';
-import { CrystalIcon } from '@/components/icons/CrystalIcon';
-import { FlowerOfLifeIcon } from '@/components/icons/FlowerOfLifeIcon';
+import { Loader2 } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { UserPsyche } from '@prisma/client';
 
 const formSchema = z.object({
-  workspaceName: z.string().trim().min(1, { message: "Every masterpiece needs a title." }),
-  firstName: z.string().optional(),
-  lastName: z.string().optional(),
-  email: z.string().email({ message: "A valid email is required to establish a connection." }),
-  password: z.string().min(8, { message: "Key must be at least 8 characters. For your own good." }),
+  workspaceName: z.string().trim().min(1),
+  agentAlias: z.string().optional(),
+  psyche: z.nativeEnum(UserPsyche),
+  email: z.string().email(),
+  password: z.string().min(8),
+  // Ephemeral fields for the ceremony
+  whatMustEnd: z.string().optional(),
+  goal: z.string().optional(),
 });
 
 type FormData = z.infer<typeof formSchema>;
 
-export default function RegisterPage() {
-  const router = useRouter();
-  const { toast } = useToast();
-  const [step, setStep] = useState(1);
-  const [direction, setDirection] = useState(1);
-  
-  const form = useForm<FormData>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      firstName: "",
-      lastName: "",
-      workspaceName: "",
-      email: "",
-      password: "",
-    },
-    mode: 'onChange',
-  });
-  
-  const { isSubmitting, trigger } = form.formState;
+const stepVariants = {
+  hidden: (direction: number) => ({
+    opacity: 0,
+    y: direction > 0 ? 50 : -50,
+  }),
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { type: 'tween', duration: 0.5, ease: 'easeInOut' }
+  },
+  exit: (direction: number) => ({
+    opacity: 0,
+    y: direction < 0 ? 50 : -50,
+    transition: { type: 'tween', duration: 0.5, ease: 'easeInOut' }
+  })
+};
 
-  const updateStep = async (newStep: number) => {
-    setDirection(newStep > step ? 1 : -1);
+
+const PhaseOne = ({ nextPhase, methods }: { nextPhase: () => void, methods: any }) => {
+    const [showReply, setShowReply] = useState(false);
+    const { register, watch } = methods;
+    const whatMustEnd = watch('whatMustEnd');
+
+    const handleContinue = () => {
+        if (!whatMustEnd) return;
+        setShowReply(true);
+        setTimeout(nextPhase, 1500);
+    }
     
-    if (newStep > step) {
-        let fieldsToValidate: (keyof FormData)[] = [];
-        if (step === 1) fieldsToValidate = ['workspaceName'];
-        if (step === 2) fieldsToValidate = ['firstName', 'lastName'];
-        const isValid = await trigger(fieldsToValidate);
-        if (isValid) setStep(newStep);
-    } else {
-        setStep(newStep);
-    }
-  };
-
-
-  async function onSubmit(values: FormData) {
-    try {
-      const response = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(values),
-      });
-      
-      const responseData = await response.json();
-
-      if (!response.ok) {
-        const errorMsg = responseData.issues ? responseData.issues.map((i: any) => i.message).join(', ') : responseData.error;
-        throw new Error(errorMsg || 'Workspace creation failed.');
-      }
-      
-      toast({
-        title: 'Build Request Received.',
-        description: 'Your canvas is being prepared. Welcome to ΛΞVON OS.',
-      });
-
-      router.push('/');
-      router.refresh();
-
-    } catch (error) {
-      toast({
-        variant: 'destructive',
-        title: 'Build Failed.',
-        description: (error as Error).message,
-      });
-    }
-  }
-
-  const stepVariants = {
-    hidden: (direction: number) => ({
-      x: direction > 0 ? '100%' : '-100%',
-      opacity: 0
-    }),
-    visible: {
-      x: 0,
-      opacity: 1,
-      transition: { type: 'tween', duration: 0.3, ease: "easeInOut" }
-    },
-    exit: (direction: number) => ({
-      x: direction < 0 ? '100%' : '-100%',
-      opacity: 0,
-      transition: { type: 'tween', duration: 0.3, ease: "easeInOut" }
-    })
-  };
-  
-  return (
-    <div className="w-full h-screen relative">
-       <div className="absolute inset-0 z-0 flex items-center justify-center">
-            <FlowerOfLifeIcon className="w-full max-w-3xl h-full max-h-3xl" />
+    return (
+        <div className="text-center w-full max-w-lg mx-auto space-y-8">
+            <AnimatePresence mode="wait">
+                {!showReply ? (
+                     <motion.div
+                        key="question"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 1.5 }}
+                        className="space-y-6"
+                    >
+                        <h2 className="text-3xl md:text-4xl font-headline tracking-wider text-primary">
+                            🜂 “What must end so you can begin?”
+                        </h2>
+                        <Textarea 
+                            {...register('whatMustEnd')}
+                            className="bg-transparent border-foreground/30 text-center text-lg h-24 focus-visible:ring-primary"
+                            placeholder="Type your burden here..."
+                        />
+                         <Button onClick={handleContinue} disabled={!whatMustEnd} variant="ghost" className="text-muted-foreground hover:text-primary transition-colors">Continue</Button>
+                     </motion.div>
+                ) : (
+                    <motion.h2
+                        key="reply"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ duration: 1.0 }}
+                        className="text-3xl font-headline text-foreground"
+                    >
+                        “Then let it burn.”
+                    </motion.h2>
+                )}
+            </AnimatePresence>
         </div>
-      <div className="w-full h-screen flex items-center justify-center p-4 relative z-10">
-        <Card className="w-full max-w-sm bg-background/80 backdrop-blur-md">
-          <CardHeader className="text-center space-y-4 pt-8">
-              <div className="flex justify-center">
-                   <CrystalIcon className="w-16 h-16 text-primary crystal-pulse" />
-              </div>
-              <div>
-                <CardTitle className="text-3xl font-headline tracking-widest text-foreground">
-                  Request a Build
-                </CardTitle>
-                <CardDescription className="text-muted-foreground h-5">
-                   <AnimatePresence mode="wait">
-                      <motion.span
-                          key={step}
-                          initial={{ opacity: 0, y: -10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: 10 }}
-                          transition={{ duration: 0.2 }}
-                          className="block"
-                      >
-                          {step === 1 && "First, every masterpiece needs a title."}
-                          {step === 2 && "Excellent. Now, who is the architect?"}
-                          {step === 3 && "Finally, secure your creation."}
-                      </motion.span>
-                  </AnimatePresence>
-                </CardDescription>
-              </div>
-          </CardHeader>
-          <CardContent>
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)}>
-                <div className="relative min-h-[12rem]">
-                  <AnimatePresence mode="wait" initial={false} custom={direction}>
-                      <motion.div
-                          key={step}
-                          custom={direction}
-                          variants={stepVariants}
-                          initial="hidden"
-                          animate="visible"
-                          exit="exit"
-                          className="space-y-3 absolute w-full"
-                      >
-                      {step === 1 && (
-                          <FormField
-                          control={form.control}
-                          name="workspaceName"
-                          render={({ field }) => (
-                              <FormItem>
-                              <FormLabel>Canvas Title</FormLabel>
-                              <FormControl>
-                                  <Input placeholder="Vandelay Industries" {...field} disabled={isSubmitting} />
-                              </FormControl>
-                              <FormMessage />
-                              </FormItem>
-                          )}
-                          />
-                      )}
-                      {step === 2 && (
-                          <div className="grid grid-cols-2 gap-4">
-                              <FormField
-                              control={form.control}
-                              name="firstName"
-                              render={({ field }) => (
-                                  <FormItem>
-                                  <FormLabel>First Name</FormLabel>
-                                  <FormControl>
-                                      <Input placeholder="Art" {...field} disabled={isSubmitting} />
-                                  </FormControl>
-                                  <FormMessage />
-                                  </FormItem>
-                              )}
-                              />
-                              <FormField
-                              control={form.control}
-                              name="lastName"
-                              render={({ field }) => (
-                                  <FormItem>
-                                  <FormLabel>Last Name</FormLabel>
-                                  <FormControl>
-                                      <Input placeholder="Vandelay" {...field} disabled={isSubmitting} />
-                                  </FormControl>
-                                  <FormMessage />
-                                  </FormItem>
-                              )}
-                              />
-                          </div>
-                      )}
-                      {step === 3 && (
-                          <div className="space-y-3">
-                              <FormField
-                              control={form.control}
-                              name="email"
-                              render={({ field }) => (
-                                  <FormItem>
-                                  <FormLabel>System Handle</FormLabel>
-                                  <FormControl>
-                                      <Input type="email" placeholder="agent@aevonos.com" {...field} disabled={isSubmitting} />
-                                  </FormControl>
-                                  <FormMessage />
-                                  </FormItem>
-                              )}
-                              />
-                              <FormField
-                              control={form.control}
-                              name="password"
-                              render={({ field }) => (
-                                  <FormItem>
-                                  <FormLabel>Encryption Key</FormLabel>
-                                  <FormControl>
-                                      <Input type="password" placeholder="Min. 8 characters" {...field} disabled={isSubmitting} />
-                                  </FormControl>
-                                  <FormMessage />
-                                  </FormItem>
-                              )}
-                              />
-                          </div>
-                      )}
-                      </motion.div>
-                  </AnimatePresence>
-                </div>
+    )
+}
 
-                <div className="flex gap-4 pt-2">
-                  {step > 1 && (
-                      <Button type="button" variant="outline" onClick={() => updateStep(step-1)} className="w-full" disabled={isSubmitting}>
-                          <ArrowLeft /> Back
-                      </Button>
-                  )}
-                  {step < 3 ? (
-                      <Button type="button" onClick={() => updateStep(step+1)} className="w-full" disabled={isSubmitting}>
-                          Next <ArrowRight />
-                      </Button>
-                  ) : (
-                       <Button type="submit" className="w-full" disabled={isSubmitting}>
-                          {isSubmitting ? <Loader2 className="animate-spin" /> : 'Forge Canvas'}
-                      </Button>
-                  )}
+const PhaseTwo = ({ nextPhase, methods }: { nextPhase: () => void, methods: any }) => {
+    const { register, watch } = methods;
+    const goal = watch('goal');
+    
+    return (
+        <div className="text-center w-full max-w-lg mx-auto space-y-8">
+            <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 1.0, delay: 0.5 }}
+                className="space-y-6"
+            >
+                <h2 className="text-3xl md:text-4xl font-headline tracking-wider text-primary">
+                    “Tell me what you're building. Be vague. Be bold.”
+                </h2>
+                <Textarea 
+                    {...register('goal')}
+                    className="bg-transparent border-foreground/30 text-center text-lg h-24 focus-visible:ring-primary"
+                    placeholder="An empire of..."
+                />
+                 <Button onClick={nextPhase} disabled={!goal} variant="ghost" className="text-muted-foreground hover:text-primary transition-colors">Continue</Button>
+            </motion.div>
+        </div>
+    )
+}
+
+const PhaseThree = ({ nextPhase, methods }: { nextPhase: () => void, methods: any }) => {
+    const { register, watch, formState: { errors } } = methods;
+    const workspaceName = watch('workspaceName');
+    
+    return (
+        <div className="text-center w-full max-w-lg mx-auto space-y-8">
+            <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 1.0, delay: 0.5 }}
+                className="space-y-6"
+            >
+                <h2 className="text-2xl md:text-3xl font-headline tracking-wider text-primary">
+                    “ΛΞVON is listening. But to act, it must be named.”
+                </h2>
+                <div className="space-y-4">
+                    <Input 
+                        {...register('workspaceName')}
+                        className="bg-transparent border-foreground/30 text-center text-lg h-14 focus-visible:ring-primary"
+                        placeholder="Name Your Canvas..."
+                    />
+                     {errors.workspaceName && <p className="text-destructive text-sm">{errors.workspaceName.message as string}</p>}
+                    <Input 
+                        {...register('agentAlias')}
+                        className="bg-transparent border-foreground/30 text-center text-lg h-14 focus-visible:ring-primary"
+                        placeholder="Name Your Voice (Optional, default: BEEP)"
+                    />
                 </div>
-              </form>
-            </Form>
-            <div className="mt-4 text-center text-sm text-muted-foreground">
-              Already have a build?{' '}
-              <Link href="/login" className="font-bold text-primary hover:text-primary/80 transition-colors">
-                Verify Identity
-              </Link>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    </div>
-  );
+                 <Button onClick={nextPhase} disabled={!workspaceName} variant="ghost" className="text-muted-foreground hover:text-primary transition-colors">Continue</Button>
+            </motion.div>
+        </div>
+    )
+}
+
+const VowButton = ({ vow, Icon, onClick, isSelected }: { vow: string, Icon: string, onClick: () => void, isSelected: boolean }) => (
+    <motion.button
+        type="button"
+        onClick={onClick}
+        className={cn(
+            "border p-6 rounded-lg text-center w-full transition-all duration-300",
+            isSelected ? 'border-primary bg-primary/20 text-primary ring-2 ring-primary' : 'border-foreground/30 hover:border-primary hover:bg-primary/10'
+        )}
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+    >
+        <div className="text-4xl mb-2">{Icon}</div>
+        <div className="font-headline text-lg">{vow}</div>
+    </motion.button>
+);
+
+const PhaseFour = ({ nextPhase, methods }: { nextPhase: () => void, methods: any }) => {
+    const { setValue, watch } = methods;
+    const selectedPsyche = watch('psyche');
+    
+    const selectVow = (psyche: UserPsyche) => {
+        setValue('psyche', psyche, { shouldValidate: true });
+        setTimeout(nextPhase, 500);
+    }
+    
+    return (
+        <div className="w-full max-w-2xl mx-auto">
+             <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 1.0, delay: 0.5 }}
+                className="space-y-6"
+            >
+                <h2 className="text-center text-2xl md:text-3xl font-headline tracking-wider text-primary">
+                    “Make your vow.”
+                </h2>
+                <div className="grid md:grid-cols-3 gap-4">
+                    <VowButton vow="I will build faster than chaos." Icon="🜁" onClick={() => selectVow(UserPsyche.SYNDICATE_ENFORCER)} isSelected={selectedPsyche === UserPsyche.SYNDICATE_ENFORCER} />
+                    <VowButton vow="I will automate what others worship." Icon="🜃" onClick={() => selectVow(UserPsyche.RISK_AVERSE_ARTISAN)} isSelected={selectedPsyche === UserPsyche.RISK_AVERSE_ARTISAN} />
+                    <VowButton vow="I will create the silence of true automation." Icon="🜄" onClick={() => selectVow(UserPsyche.ZEN_ARCHITECT)} isSelected={selectedPsyche === UserPsyche.ZEN_ARCHITECT} />
+                </div>
+            </motion.div>
+        </div>
+    )
+}
+
+const PhaseFive = ({ methods }: { methods: any }) => {
+    const { register, formState: { errors, isSubmitting } } = methods;
+    
+    return (
+        <div className="text-center w-full max-w-lg mx-auto space-y-8">
+            <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 1.0, delay: 0.5 }}
+                className="space-y-6"
+            >
+                 <h2 className="text-2xl md:text-3xl font-headline tracking-wider text-primary">
+                    “Forge the final key.”
+                </h2>
+                <div className="space-y-4">
+                     <Input 
+                        {...register('email')}
+                        type="email"
+                        className="bg-transparent border-foreground/30 text-center text-lg h-14 focus-visible:ring-primary"
+                        placeholder="Your Sigil (Email)"
+                    />
+                     {errors.email && <p className="text-destructive text-sm">{errors.email.message as string}</p>}
+                    <Input 
+                        {...register('password')}
+                        type="password"
+                        className="bg-transparent border-foreground/30 text-center text-lg h-14 focus-visible:ring-primary"
+                        placeholder="Your Vow (Password)"
+                    />
+                     {errors.password && <p className="text-destructive text-sm">{errors.password.message as string}</p>}
+                </div>
+                 <Button type="submit" size="lg" className="w-full" disabled={isSubmitting}>
+                    {isSubmitting ? <Loader2 className="animate-spin" /> : 'AWAKEN ΛΞVON'}
+                </Button>
+             </motion.div>
+        </div>
+    )
+}
+
+export default function RegisterPage() {
+    const router = useRouter();
+    const { toast } = useToast();
+    const [phase, setPhase] = useState(1);
+    const [direction, setDirection] = useState(1);
+
+    const methods = useForm<FormData>({
+        resolver: zodResolver(formSchema),
+        defaultValues: {
+            workspaceName: '',
+            agentAlias: '',
+            psyche: undefined,
+            email: '',
+            password: '',
+        }
+    });
+
+    const nextPhase = async () => {
+        let fieldsToValidate: (keyof FormData)[] = [];
+        if (phase === 1) fieldsToValidate = ['whatMustEnd'];
+        if (phase === 2) fieldsToValidate = ['goal'];
+        if (phase === 3) fieldsToValidate = ['workspaceName'];
+        if (phase === 4) fieldsToValidate = ['psyche'];
+        
+        const isValid = await methods.trigger(fieldsToValidate);
+
+        if (isValid || fieldsToValidate.length === 0) {
+            setDirection(1);
+            setPhase(p => p + 1);
+        }
+    };
+    
+    async function onSubmit(values: FormData) {
+        try {
+            const { whatMustEnd, goal, ...apiValues } = values;
+            const response = await fetch('/api/auth/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(apiValues),
+            });
+            const responseData = await response.json();
+            if (!response.ok) {
+                const errorMsg = responseData.issues ? responseData.issues.map((i: any) => i.message).join(', ') : responseData.error;
+                throw new Error(errorMsg || 'Invocation failed. The connection is unstable.');
+            }
+            setPhase(6); // Final success message phase
+            setTimeout(() => {
+                router.push('/');
+                router.refresh();
+            }, 3000);
+        } catch (error) {
+            toast({
+                variant: 'destructive',
+                title: 'Invocation Failed.',
+                description: (error as Error).message,
+            });
+        }
+    }
+
+    const renderPhase = () => {
+        switch (phase) {
+            case 1: return <PhaseOne nextPhase={nextPhase} methods={methods} />;
+            case 2: return <PhaseTwo nextPhase={nextPhase} methods={methods} />;
+            case 3: return <PhaseThree nextPhase={nextPhase} methods={methods} />;
+            case 4: return <PhaseFour nextPhase={nextPhase} methods={methods} />;
+            case 5: return <PhaseFive methods={methods} />;
+            case 6: return (
+                <motion.div
+                    key="final"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 1.5 }}
+                >
+                    <h2 className="text-2xl md:text-3xl font-headline tracking-wider text-primary text-center">
+                        “You are now in command of ΛΞVON. Your time belongs to you again.”
+                    </h2>
+                </motion.div>
+            )
+            default: return null;
+        }
+    }
+
+    return (
+        <div className="w-full h-screen bg-background flex items-center justify-center p-4">
+             <FormProvider {...methods}>
+                <form onSubmit={methods.handleSubmit(onSubmit)} className="w-full">
+                    <AnimatePresence mode="wait" initial={false} custom={direction}>
+                        <motion.div
+                            key={phase}
+                            custom={direction}
+                            variants={stepVariants}
+                            initial="hidden"
+                            animate="visible"
+                            exit="exit"
+                        >
+                            {renderPhase()}
+                        </motion.div>
+                    </AnimatePresence>
+                </form>
+             </FormProvider>
+        </div>
+    );
 }

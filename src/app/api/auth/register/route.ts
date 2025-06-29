@@ -4,14 +4,15 @@ import { z } from 'zod';
 import { encrypt } from '@/lib/auth';
 import prisma from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
+import { UserPsyche } from '@prisma/client';
 
-// Schema from api-spec.md
+// Updated schema to reflect the new Rite of Invocation flow
 const RegisterRequestSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8, "Password must be at least 8 characters long"),
-  firstName: z.string().optional(),
-  lastName: z.string().optional(),
   workspaceName: z.string().trim().min(1, { message: "Workspace name cannot be empty." }),
+  agentAlias: z.string().optional(),
+  psyche: z.nativeEnum(UserPsyche).optional(),
 });
 
 // Corresponds to operationId `registerUser`
@@ -24,7 +25,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid registration request.', issues: validation.error.issues }, { status: 400 });
     }
     
-    const { email, password, firstName, lastName, workspaceName } = validation.data;
+    const { email, password, workspaceName, agentAlias, psyche } = validation.data;
     
     const existingUser = await prisma.user.findUnique({
         where: { email },
@@ -42,8 +43,8 @@ export async function POST(request: Request) {
             data: {
                 email,
                 password: hashedPassword,
-                firstName,
-                lastName,
+                agentAlias: agentAlias || 'BEEP', // Default to BEEP if not provided
+                psyche: psyche || UserPsyche.ZEN_ARCHITECT, // Default to ZEN_ARCHITECT
             }
         });
         
