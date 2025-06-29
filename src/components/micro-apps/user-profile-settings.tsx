@@ -20,6 +20,8 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import type { User } from '@prisma/client';
 import { useAppStore } from '@/store/app-store';
+import { logout } from '@/app/auth/actions';
+import { Separator } from '../ui/separator';
 
 const profileFormSchema = z.object({
   firstName: z.string().optional(),
@@ -80,10 +82,10 @@ export default function UserProfileSettings({ id, user }: UserProfileSettingsPro
   };
 
   return (
-    <div className="p-4 h-full">
-        <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 h-full flex flex-col">
-                <div className="flex-grow space-y-4">
+    <div className="p-4 h-full flex flex-col justify-between">
+        <div>
+            <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                     <FormField
                         control={form.control}
                         name="firstName"
@@ -110,17 +112,25 @@ export default function UserProfileSettings({ id, user }: UserProfileSettingsPro
                             </FormItem>
                         )}
                     />
-                </div>
-                <div className="flex-shrink-0 flex gap-2">
-                     <Button variant="outline" type="button" className="w-full" onClick={() => closeApp(id)}>
-                        Cancel
-                    </Button>
-                    <Button type="submit" disabled={isSubmitting} className="w-full">
-                        {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'Save Changes'}
-                    </Button>
-                </div>
-            </form>
-        </Form>
+                    <div className="flex gap-2 pt-2">
+                        <Button variant="outline" type="button" className="w-full" onClick={() => closeApp(id)}>
+                            Cancel
+                        </Button>
+                        <Button type="submit" disabled={isSubmitting} className="w-full">
+                            {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'Save Changes'}
+                        </Button>
+                    </div>
+                </form>
+            </Form>
+        </div>
+        <div>
+            <Separator className="my-4" />
+            <Button variant="destructive" onClick={() => logout()} className="w-full">
+                Logout
+            </Button>
+        </div>
     </div>
   );
 }
+
+    

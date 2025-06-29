@@ -114,7 +114,7 @@ export const microAppManifests: MicroAppManifest[] = [
     priceModel: 'included',
     imageUrl: 'https://placehold.co/600x400.png',
     imageHint: 'user settings profile',
-    defaultSize: { width: 340, height: 300 },
+    defaultSize: { width: 340, height: 420 },
     permissionsRequired: [],
     routingPath: '/user-profile-settings',
     contextAwareCapabilities: [],
@@ -524,3 +524,5 @@ export const microAppManifests: MicroAppManifest[] = [
     isFeatured: true,
   }
 ];
+
+    
