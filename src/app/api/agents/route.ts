@@ -4,6 +4,7 @@ import { z } from 'zod';
 import prisma from '@/lib/prisma';
 import { getSession } from '@/lib/auth';
 import { AgentStatus, UserRole } from '@prisma/client';
+import { grantAccolade } from '@/services/gamification-service';
 
 const AgentDeploymentRequestSchema = z.object({
   name: z.string(),
@@ -63,6 +64,9 @@ export async function POST(request: NextRequest) {
             workspaceId: session.workspaceId,
         }
     });
+    
+    // Grant accolade for deploying an agent
+    await grantAccolade(session.userId, 'AGENT_DEPLOYED');
 
     return NextResponse.json(newAgent, { status: 201 });
 

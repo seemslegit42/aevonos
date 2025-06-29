@@ -3,9 +3,9 @@
 import React from 'react';
 import { usePathname } from 'next/navigation';
 import TopBar from '@/components/layout/top-bar';
-import type { User, Workspace, UserRole } from '@prisma/client';
+import type { User, Workspace, UserRole, UserRank } from '@prisma/client';
 
-type UserProp = Pick<User, 'id' | 'email' | 'firstName' | 'lastName' | 'role'> | null;
+type UserProp = Pick<User, 'id' | 'email' | 'firstName' | 'lastName' | 'role' | 'rank' | 'xp'> | null;
 
 export function MainLayout({ children, user, workspace }: { children: React.ReactNode; user: UserProp; workspace: Workspace | null }) {
   const pathname = usePathname();

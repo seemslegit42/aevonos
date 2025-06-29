@@ -18,10 +18,10 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Sparkles, ShieldCheck, LogOut, Settings, User as UserIcon, Database } from 'lucide-react';
+import { Sparkles, ShieldCheck, LogOut, Settings, User as UserIcon, Database, Gem } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { logout } from '@/app/auth/actions';
-import type { User, Workspace, UserRole } from '@prisma/client';
+import type { User, Workspace, UserRole, UserRank } from '@prisma/client';
 import { useAppStore } from '@/store/app-store';
 import UserProfileDialog from '@/components/user-profile-dialog';
 import WorkspaceSettingsDialog from '@/components/workspace-settings-dialog';
@@ -29,11 +29,18 @@ import { Badge } from '@/components/ui/badge';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import BillingPopoverContent from '@/components/billing-popover';
 
-type UserProp = Pick<User, 'id' | 'email' | 'firstName' | 'lastName' | 'role'> | null;
+type UserProp = Pick<User, 'id' | 'email' | 'firstName' | 'lastName' | 'role' | 'rank' | 'xp'> | null;
 
 interface TopBarProps {
   user: UserProp;
   workspace: Workspace | null;
+}
+
+const rankStyles: Record<UserRank, string> = {
+  NEOPHYTE: 'bg-muted/80 text-muted-foreground',
+  ARCHITECT: 'bg-primary/20 text-primary border-primary/50',
+  FORGE_PRIEST: 'bg-accent/20 text-accent border-accent/50',
+  DEMIURGE: 'bg-gradient-to-r from-primary to-accent text-primary-foreground border-accent',
 }
 
 export default function TopBar({ user, workspace }: TopBarProps) {
@@ -63,6 +70,8 @@ export default function TopBar({ user, workspace }: TopBarProps) {
   };
 
   const placeholderText = isMobile ? "BEEP Command..." : "BEEP: Tell me what you want to achieve...";
+  const rank = user?.rank || 'NEOPHYTE';
+  const rankLabel = rank.replace('_', ' ').toLowerCase();
 
   return (
     <header className="flex items-center justify-between w-full px-2 sm:px-4 py-2 bg-foreground/10 backdrop-blur-xl rounded-lg border border-foreground/30 shadow-[0_8px_32px_0_rgba(28,25,52,0.1)] gap-2 sm:gap-4">
@@ -117,16 +126,21 @@ export default function TopBar({ user, workspace }: TopBarProps) {
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-56" align="end" forceMount>
                 <DropdownMenuLabel className="font-normal">
-                    <div className="flex justify-between items-center">
-                        <div className="flex flex-col space-y-1">
-                            <p className="text-sm font-medium leading-none">{user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() : 'The Architect'}</p>
-                            <p className="text-xs leading-none text-muted-foreground">
-                                {user?.email || 'architect@aevonos.com'}
-                            </p>
-                        </div>
-                         {user?.role && <Badge variant="outline" className="capitalize text-xs">{user.role.toLowerCase()}</Badge>}
+                    <div className="flex flex-col space-y-1">
+                        <p className="text-sm font-medium leading-none">{user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() : 'The Architect'}</p>
+                        <p className="text-xs leading-none text-muted-foreground">
+                            {user?.email || 'architect@aevonos.com'}
+                        </p>
                     </div>
                 </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <div className="px-2 py-1.5 flex items-center justify-between">
+                     <Badge variant="outline" className={`capitalize text-xs ${rankStyles[rank]}`}>
+                        <Gem className="mr-1 h-3 w-3" />
+                        {rankLabel}
+                    </Badge>
+                     {user?.role && <Badge variant="secondary" className="capitalize text-xs">{user.role.toLowerCase()}</Badge>}
+                </div>
                 <DropdownMenuSeparator />
                 <UserProfileDialog user={user}>
                     <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="cursor-pointer">

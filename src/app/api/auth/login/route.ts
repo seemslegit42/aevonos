@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { encrypt } from '@/lib/auth';
 import prisma from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
+import { grantAccolade } from '@/services/gamification-service';
 
 // Schema from api-spec.md
 const LoginRequestSchema = z.object({
@@ -44,6 +45,12 @@ export async function POST(request: Request) {
     if (!workspace) {
         return NextResponse.json({ error: 'User is not a member of any workspace.' }, { status: 403 });
     }
+    
+    // Grant accolade for first login
+    if (!user.lastLoginAt) {
+        await grantAccolade(user.id, 'FIRST_LOGIN');
+    }
+
 
     // Atomically update last login time and get the fresh user data.
     const updatedUser = await prisma.user.update({

@@ -1,0 +1,216 @@
+
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  password      String
+  firstName     String?
+  lastName      String?
+  role          UserRole  @default(OPERATOR)
+  rank          UserRank  @default(NEOPHYTE)
+  xp            Int       @default(0)
+  lastLoginAt   DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  owned_workspaces Workspace[] @relation("WorkspaceOwner")
+  workspaces    Workspace[] @relation("WorkspaceMembers")
+  transactions  Transaction[]
+  accolades     Accolade[]  @relation("UserAccolades")
+}
+
+model Workspace {
+  id             String        @id @default(cuid())
+  name           String
+  ownerId        String
+  owner          User          @relation("WorkspaceOwner", fields: [ownerId], references: [id])
+  members        User[]        @relation("WorkspaceMembers")
+  planTier       PlanTier      @default(Apprentice)
+  credits        Decimal       @default(0.0) @db.Decimal(10, 2)
+  agentActionsUsed Int         @default(0)
+  overageEnabled Boolean       @default(true)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  agents         Agent[]
+  securityAlerts SecurityAlert[]
+  contacts       Contact[]
+  threatFeeds    ThreatFeed[]
+  workflows      Workflow[]
+  workflowRuns   WorkflowRun[]
+  transactions   Transaction[]
+  integrations   Integration[]
+  unlockedAppIds String[]      @default([])
+}
+
+model Agent {
+  id          String      @id @default(cuid())
+  name        String
+  type        String
+  description String?
+  status      AgentStatus
+  workspaceId String
+  workspace   Workspace   @relation(fields: [workspaceId], references: [id])
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
+
+model SecurityAlert {
+  id                String            @id @default(cuid())
+  type              String
+  explanation       String
+  riskLevel         SecurityRiskLevel
+  timestamp         DateTime          @default(now())
+  actionableOptions String[]
+  workspaceId       String
+  workspace         Workspace         @relation(fields: [workspaceId], references: [id])
+}
+
+model Contact {
+  id          String    @id @default(cuid())
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id])
+  email       String?
+  firstName   String?
+  lastName    String?
+  phone       String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@unique([workspaceId, email])
+}
+
+model ThreatFeed {
+  id          String    @id @default(cuid())
+  url         String
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id])
+  createdAt   DateTime  @default(now())
+}
+
+model Workflow {
+  id           String          @id @default(cuid())
+  workspaceId  String
+  workspace    Workspace       @relation(fields: [workspaceId], references: [id])
+  name         String
+  isActive     Boolean         @default(true)
+  triggerType  String          @default("api")
+  definition   Json
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+  workflowRuns WorkflowRun[]
+}
+
+model WorkflowRun {
+  id             String            @id @default(cuid())
+  workspaceId    String
+  workspace      Workspace         @relation(fields: [workspaceId], references: [id])
+  workflowId     String
+  workflow       Workflow          @relation(fields: [workflowId], references: [id])
+  status         WorkflowRunStatus
+  triggerPayload Json?
+  output         Json?
+  log            Json?
+  startedAt      DateTime          @default(now())
+  finishedAt     DateTime?
+}
+
+model Transaction {
+  id          String            @id @default(cuid())
+  workspaceId String
+  workspace   Workspace         @relation(fields: [workspaceId], references: [id])
+  type        TransactionType
+  amount      Decimal           @db.Decimal(10, 2)
+  description String
+  status      TransactionStatus @default(COMPLETED)
+  userId      String?
+  user        User?             @relation(fields: [userId], references: [id])
+  agentId     String?
+  createdAt   DateTime          @default(now())
+}
+
+model Integration {
+  id                   String   @id @default(cuid())
+  workspaceId          String
+  workspace            Workspace @relation(fields: [workspaceId], references: [id])
+  integrationManifestId String // Corresponds to the ID in integration-manifests.ts
+  name                 String
+  status               String
+  configDetails        Json
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+}
+
+model Accolade {
+  id          String   @id @default(cuid())
+  key         String   @unique // e.g., "FIRST_AGENT_DEPLOYED"
+  name        String
+  description String
+  xpValue     Int
+  users       User[]   @relation("UserAccolades")
+  createdAt   DateTime @default(now())
+}
+
+enum PlanTier {
+  Apprentice
+  Artisan
+  Priesthood
+}
+
+enum AgentStatus {
+  active
+  idle
+  processing
+  paused
+  error
+}
+
+enum SecurityRiskLevel {
+  low
+  medium
+  high
+  critical
+  none
+}
+
+enum WorkflowRunStatus {
+  pending
+  running
+  completed
+  failed
+  paused
+}
+
+enum TransactionType {
+  CREDIT
+  DEBIT
+}
+
+enum TransactionStatus {
+  PENDING
+  COMPLETED
+  FAILED
+}
+
+enum UserRole {
+  ADMIN
+  MANAGER
+  OPERATOR
+  AUDITOR
+}
+
+enum UserRank {
+  NEOPHYTE
+  ARCHITECT
+  FORGE_PRIEST
+  DEMIURGE
+}

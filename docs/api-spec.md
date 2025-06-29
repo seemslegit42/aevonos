@@ -1183,6 +1183,15 @@ This document provides the formal OpenAPI 3.0 specification for the ΛΞVON OS P
             ],
             "description": "The user's role in the workspace."
           },
+          "rank": {
+            "type": "string",
+            "enum": ["NEOPHYTE", "ARCHITECT", "FORGE_PRIEST", "DEMIURGE"],
+            "description": "The user's gamified rank within the system."
+          },
+          "xp": {
+            "type": "integer",
+            "description": "The user's experience points."
+          },
           "lastLoginAt": {
             "type": "string",
             "format": "date-time",
