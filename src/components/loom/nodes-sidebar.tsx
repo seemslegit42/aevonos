@@ -17,6 +17,7 @@ import { LaheyIcon } from '../icons/LaheyIcon';
 import { ForemanatorIcon } from '../icons/ForemanatorIcon';
 import { SterileishIcon } from '../icons/SterileishIcon';
 import { PaperTrailIcon } from '../icons/PaperTrailIcon';
+import { BarbaraIcon } from '../icons/BarbaraIcon';
 import type { NodeType } from './types';
 
 
@@ -40,6 +41,7 @@ const nodeTypes: NodeInfo[] = [
     { type: 'tool-lahey', label: 'Lahey', description: 'Investigates logs', icon: LaheyIcon },
     { type: 'tool-foremanator', label: 'Foremanator', description: 'Processes site logs', icon: ForemanatorIcon },
     { type: 'tool-sterileish', label: 'STERILE-ish', description: 'Analyzes compliance logs', icon: SterileishIcon },
+    { type: 'tool-barbara', label: 'Agent Barbara', description: 'Processes documents', icon: BarbaraIcon },
     { type: 'tool-crm', label: 'CRM Tool', description: 'Manages contacts', icon: AddressBookIcon },
     { type: 'tool-paper-trail', label: 'Paper Trail', description: 'Scans evidence', icon: PaperTrailIcon },
     { type: 'tool-final-answer', label: 'Final Answer', description: 'Outputs final response', icon: CrystalIcon },

@@ -14,6 +14,7 @@ export type NodeType =
     | 'tool-lahey'
     | 'tool-foremanator'
     | 'tool-sterileish'
+    | 'tool-barbara'
     | 'tool-final-answer';
 
 

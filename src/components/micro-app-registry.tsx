@@ -1,5 +1,4 @@
 
-
 import React from 'react';
 import { FileExplorerIcon } from '@/components/icons/FileExplorerIcon';
 import { TerminalIcon } from '@/components/icons/TerminalIcon';
