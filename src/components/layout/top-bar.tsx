@@ -48,9 +48,28 @@ export default function TopBar({ user, workspace }: TopBarProps) {
   const [isListening, setIsListening] = useState(false);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
 
+  const [pulseNarrative, setPulseNarrative] = useState<string | null>(null);
+  const [isNarrativeLoading, setIsNarrativeLoading] = useState(false);
+
   useEffect(() => {
     setIsMounted(true);
   }, []);
+
+  const fetchPulseNarrative = async () => {
+    if (isNarrativeLoading) return;
+    setIsNarrativeLoading(true);
+    try {
+      const response = await fetch('/api/user/pulse');
+      if (!response.ok) return;
+      const data = await response.json();
+      setPulseNarrative(data.narrative);
+    } catch (e) {
+      console.error("Failed to fetch pulse narrative", e);
+      setPulseNarrative("The threads are silent.");
+    } finally {
+      setIsNarrativeLoading(false);
+    }
+  }
 
   useEffect(() => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
@@ -170,7 +189,10 @@ export default function TopBar({ user, workspace }: TopBarProps) {
             <BillingPopoverContent workspace={workspace} />
           </PopoverContent>
         </Popover>
-        <DropdownMenu>
+        <DropdownMenu onOpenChange={(open) => {
+            if (open) fetchPulseNarrative();
+            else setPulseNarrative(null); // Reset on close
+          }}>
             <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                     <Avatar className="h-8 w-8">
@@ -190,6 +212,10 @@ export default function TopBar({ user, workspace }: TopBarProps) {
                 <DropdownMenuSeparator />
                 <div className="px-2 py-1.5 flex items-center justify-end">
                      {user?.role && <Badge variant="secondary" className="capitalize text-xs">{user.role.toLowerCase()}</Badge>}
+                </div>
+                <DropdownMenuSeparator />
+                <div className="px-2 py-1.5 text-xs text-muted-foreground italic text-center min-h-[1.5rem] flex items-center justify-center">
+                    {isNarrativeLoading ? <Loader2 className="h-3 w-3 animate-spin"/> : pulseNarrative}
                 </div>
                 <DropdownMenuSeparator />
                 <UserProfileDialog user={user}>
