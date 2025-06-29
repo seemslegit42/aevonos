@@ -56,7 +56,7 @@ const StepOne = ({ nextStep }: { nextStep: () => void }) => (
         </div>
         <h1 className="text-3xl font-headline tracking-widest text-primary">Rite of Invocation</h1>
         <p className="text-muted-foreground">The canvas must be summoned. State your claim.</p>
-        <Button onClick={nextStep} className="w-full max-w-xs mx-auto">Cross the Threshold</Button>
+        <Button onClick={nextStep} className="w-full max-w-xs mx-auto !text-primary-foreground">Cross the Threshold</Button>
     </motion.div>
 );
 
