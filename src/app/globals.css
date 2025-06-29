@@ -28,38 +28,30 @@
   }
  
   .dark {
-    --background: 240 5% 8%; /* Deep Charcoal */
-    --foreground: 210 40% 98%; /* Almost White */
-
-    --card: 240 5% 12%; /* Slightly lighter Charcoal for cards */
-    --card-foreground: 210 40% 98%; /* Almost White */
-
-    --popover: 240 5% 8%; /* Deep Charcoal */
-    --popover-foreground: 210 40% 98%; /* Almost White */
-
-    --primary: 45 90% 55%; /* Vibrant Gold */
-    --primary-foreground: 45 20% 10%; /* Dark, warm brown for contrast */
-
-    --secondary: 30 5% 15%; /* Dark Warm Gray */
-    --secondary-foreground: 210 40% 98%; /* Almost White */
-
-    --muted: 30 5% 15%; /* Dark Warm Gray */
-    --muted-foreground: 215 20% 65.1%; /* Slate Gray */
-
-    --accent: 320 85% 60%; /* Electric Pink */
-    --accent-foreground: 210 40% 98%; /* Almost White for contrast on accent */
-
+    --background: 240 5% 6%;
+    --foreground: 210 20% 90%;
+    --card: 240 5% 10%;
+    --card-foreground: 210 20% 90%;
+    --popover: 240 5% 6%;
+    --popover-foreground: 210 20% 90%;
+    --primary: 45 80% 50%;
+    --primary-foreground: 45 30% 10%;
+    --secondary: 30 5% 13%;
+    --secondary-foreground: 210 20% 90%;
+    --muted: 30 5% 13%;
+    --muted-foreground: 215 20% 55%;
+    --accent: 290 70% 60%;
+    --accent-foreground: 210 20% 90%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
-
-    --border: 30 5% 20%; /* Warm Gray Border */
-    --input: 30 5% 20%; /* Warm Gray Input */
-    --ring: 45 90% 55%; /* Vibrant Gold for rings */
+    --border: 240 5% 15%;
+    --input: 240 5% 15%;
+    --ring: 45 80% 50%;
     
     /* For Iridescent Aurora background */
-    --iridescent-one: 45 90% 55%;   /* Gold */
+    --iridescent-one: 45 80% 50%;   /* Regal Gold */
     --iridescent-two: 25 95% 60%;   /* Orange */
-    --iridescent-three: 320 85% 65%; /* Pink */
+    --iridescent-three: 290 70% 65%; /* Deep Magenta */
     
     /* Themed app colors */
     --military-green: 82 20% 30%;
