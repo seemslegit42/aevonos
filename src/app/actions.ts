@@ -353,3 +353,52 @@ export async function logInstrumentDiscovery(instrumentId: string) {
     console.error(`[Action: logInstrumentDiscovery] for instrument ${instrumentId}:`, error);
   }
 }
+
+export async function getNudges() {
+  const session = await getServerActionSession();
+  if (!session?.userId) {
+    return [];
+  }
+
+  // Nudge if viewed more than 12 minutes ago and not yet converted or nudged.
+  const twelveMinutesAgo = new Date(Date.now() - 12 * 60 * 1000);
+
+  const ripeDiscoveries = await prisma.instrumentDiscovery.findMany({
+    where: {
+      userId: session.userId,
+      converted: false,
+      firstViewedAt: {
+        lt: twelveMinutesAgo,
+      },
+      nudgeSentAt: null,
+    },
+  });
+  
+  if (ripeDiscoveries.length === 0) {
+      return [];
+  }
+
+  const allInstruments = [...microAppManifests, ...chaosCardManifest];
+  const instrumentMap = new Map(allInstruments.map(i => [i.id || i.key, i.name]));
+  
+  const nudges = ripeDiscoveries.map(discovery => {
+      const instrumentName = instrumentMap.get(discovery.instrumentId) || 'a forgotten artifact';
+      return {
+          message: `A strange energy coalesces around the ${instrumentName}. It warrants investigation.`
+      }
+  });
+
+  // Mark these as nudged to avoid spamming the user.
+  await prisma.instrumentDiscovery.updateMany({
+      where: {
+          id: {
+              in: ripeDiscoveries.map(d => d.id)
+          }
+      },
+      data: {
+          nudgeSentAt: new Date()
+      }
+  });
+
+  return nudges;
+}

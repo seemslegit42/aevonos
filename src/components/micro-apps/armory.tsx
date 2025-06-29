@@ -10,6 +10,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '../ui/skeleton';
 import { Workspace, ChaosCard as PrismaChaosCard } from '@prisma/client';
 import type { User } from '@prisma/client';
+import { useToast } from '@/hooks/use-toast';
+import { getNudges } from '@/app/actions';
 
 interface FullUser extends User {
     ownedChaosCards: PrismaChaosCard[];
@@ -21,6 +23,7 @@ export default function Armory() {
   const [workspace, setWorkspace] = useState<Workspace | null>(null);
   const [user, setUser] = useState<FullUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
 
   const fetchArmoryData = useCallback(async () => {
       setIsLoading(true);
@@ -54,6 +57,24 @@ export default function Armory() {
   useEffect(() => {
     fetchArmoryData();
   }, [fetchArmoryData]);
+
+  useEffect(() => {
+      const showNudges = async () => {
+          const nudges = await getNudges();
+          if (nudges && nudges.length > 0) {
+              nudges.forEach((nudge, index) => {
+                  setTimeout(() => {
+                      toast({
+                          title: "BEEP whispers...",
+                          description: nudge.message,
+                          duration: 6000,
+                      });
+                  }, index * 2000); // Stagger the toasts
+              });
+          }
+      };
+      showNudges();
+  }, [toast]);
 
   const unlockedAppIds = workspace?.unlockedAppIds || [];
   const ownedCardKeys = user?.ownedChaosCards.map(c => c.key) || [];
