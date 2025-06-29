@@ -9,6 +9,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import type { User, Workspace } from '@prisma/client';
 import { useAppStore } from '@/store/app-store';
 import { cn } from '@/lib/utils';
+import { Button } from '../ui/button';
 
 type UserProp = Pick<User, 'id' | 'email' | 'firstName' | 'lastName' | 'role' | 'agentAlias'> | null;
 
@@ -35,7 +36,7 @@ const CurrentTime = () => {
 export default function TopBar({ user, workspace }: TopBarProps) {
   const formRef = useRef<HTMLFormElement>(null);
   const isMobile = useIsMobile();
-  const { handleCommandSubmit, isLoading } = useAppStore();
+  const { handleCommandSubmit, isLoading, upsertApp } = useAppStore();
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -45,8 +46,18 @@ export default function TopBar({ user, workspace }: TopBarProps) {
     formRef.current?.reset();
   };
   
+  const handleProfileClick = () => {
+    if (user) {
+        upsertApp('user-profile-settings', {
+            id: 'singleton-user-profile',
+            title: `Profile: ${user.firstName || user.email}`,
+            contentProps: { user }
+        });
+    }
+  };
+
+  const displayName = user ? (user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : user.email) : "Operator";
   const roleText = user?.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1).toLowerCase() : 'Operator';
-  const sessionText = `${roleText} | Session: `;
   
   const agentName = user?.agentAlias || 'BEEP';
   const placeholderText = isMobile ? `${agentName} Command...` : `Ask ${agentName} to...`;
@@ -75,9 +86,12 @@ export default function TopBar({ user, workspace }: TopBarProps) {
         <div className="hidden md:flex items-center gap-4 text-sm font-lexend">
           <CurrentTime />
           <div className="h-6 w-px bg-[rgba(245,255,250,0.25)]" />
+          <Button variant="ghost" className="p-0 h-auto hover:bg-transparent text-foreground" onClick={handleProfileClick}>
+            <span>{displayName} | {roleText}</span>
+          </Button>
+           <div className="h-6 w-px bg-[rgba(245,255,250,0.25)]" />
           <span>
-            {sessionText}
-            <span className="text-gilded-accent font-bold">Active</span>
+            Session: <span className="text-gilded-accent font-bold">Active</span>
           </span>
         </div>
       </div>
