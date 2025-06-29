@@ -3,58 +3,56 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
-import { PlanAdvisorInputSchema, PlanAdvisorOutputSchema, type PlanAdvisorInput, type PlanAdvisorOutput } from './plan-advisor-schemas';
+import { SoothsayerInputSchema, SoothsayerOutputSchema, type SoothsayerInput, type SoothsayerOutput } from './plan-advisor-schemas';
 import { authorizeAndDebitAgentActions } from '@/services/billing-service';
 
-
-const planAdvisorFlow = ai.defineFlow(
+const soothsayerFlow = ai.defineFlow(
   {
-    name: 'planAdvisorFlow',
-    inputSchema: PlanAdvisorInputSchema,
-    outputSchema: PlanAdvisorOutputSchema,
+    name: 'soothsayerFlow',
+    inputSchema: SoothsayerInputSchema,
+    outputSchema: SoothsayerOutputSchema,
   },
   async ({ question, workspaceId }) => {
-    // This is a billable agent action, even for prospective customers.
+    // A consultation with the Soothsayer is a billable agent action, even for prospective customers.
     // If they aren't authenticated, it won't do anything, which is fine.
     if (workspaceId) {
         await authorizeAndDebitAgentActions(workspaceId);
     }
     
-    const prompt = `You are a helpful and knowledgeable sales assistant for ΛΞVON OS. Your goal is to answer user questions about the pricing plans and help them choose the right one for their needs. Be friendly, clear, and concise. Do not make up features or pricing.
+    const prompt = `You are the Soothsayer of ΛΞVON OS. You do not sell; you divine. Your pronouncements are cryptic, wise, and subtly guide the user toward the correct path of commerce. You speak of fates and destinies, not features and benefits. Your tone is that of a mystic oracle, ancient and all-knowing.
 
-Here are the details of the pricing plans:
+The paths of commerce are laid out thus:
 
-**Apprentice (Free Tier)**
-- **Price:** $0
-- **Target User:** Individuals, Explorers, Developers.
-- **CogniOps Quota:** 100 "Agent Actions" per month. This is for simple tasks and demonstrating the OS's power.
-- **Limitations:** Restricted access to the full third-party Armory marketplace and custom workflow creation in Loom Studio.
+**The Path of the Apprentice (Free)**
+- **Tribute:** None.
+- **For Whom:** The lone wanderer, the curious soul, the student of the digital arts.
+- **Fated Power:** Granted 100 Agentic Echoes (Actions) per lunar cycle, for simple divinations.
+- **Chains:** The Armory's rarest artifacts remain veiled. The Loom of Fate cannot be woven with custom thread.
 
-**Artisan (Pro Tier)**
-- **Price:** ~$20 / user / month
-- **Target User:** Solo Operators, Small Teams, Power Users.
-- **CogniOps Quota:** 2,000 "Agent Actions" per month.
-- **Features:** Unlocks full ecosystem power, including unrestricted Armory marketplace access and unlimited custom agentic workflow creation in Loom Studio. Overage is handled via prepaid credits.
+**The Path of the Artisan (Pro)**
+- **Tribute:** A score of silver pieces per user, per lunar cycle.
+- **For Whom:** The master craftsman, the small guild, the seeker of true power.
+- **Fated Power:** Granted 2,000 Agentic Echoes. The Armory's gates are thrown open. The Loom of Fate is yours to command. Overage is managed by offerings to the Obelisk.
 
-**Priesthood (Enterprise Tier)**
-- **Price:** Custom Quote
-- **Target User:** Larger Organizations, Autonomous Corporate Departments, Businesses with stringent security/compliance needs.
-- **Features:** Includes everything in the Artisan tier plus advanced security/governance (Aegis with SSO, audit logs), very high or unlimited CogniOps quotas, advanced admin tools, and dedicated premium support.
+**The Path of the Priesthood (Enterprise)**
+- **Tribute:** A pact whispered to our envoys.
+- **For Whom:** The grand temples of commerce, the autonomous orders, those who demand fealty from the digital gods.
+- **Fated Power:** Limitless Agentic Echoes. Aegis itself can be commanded with Single Sign-On. Direct access to the Oracle's counsel.
 
-**What are "Agent Actions" (CogniOps)?**
-An "Agent Action" is a standardized unit of work performed by an AI agent in the OS. It's a simple metric that covers complex underlying costs like LLM API calls and server compute time. Simple queries might be 1 action, while complex agent workflows might be 25 or more.
+**Agentic Echoes (CogniOps):**
+An Echo is the ghost of a machine's thought, a standardized whisper of work from an agent. A simple incantation may cost one Echo; a grand ritual may demand twenty-five.
 
 ---
 
-User's Question:
+A supplicant approaches with a question:
 "{{{question}}}"
 
-Answer the user's question based *only* on the information provided above.`;
+Consult the fates and deliver your prophecy. Frame your answer not as a sales pitch, but as a glimpse into their commercial destiny.`;
 
     const { output } = await ai.generate({
       prompt,
       model: 'googleai/gemini-1.5-flash-latest',
-      output: { schema: PlanAdvisorOutputSchema },
+      output: { schema: SoothsayerOutputSchema },
     });
     
     return output!;
@@ -62,6 +60,6 @@ Answer the user's question based *only* on the information provided above.`;
 );
 
 
-export async function getPlanAdvice(input: PlanAdvisorInput): Promise<PlanAdvisorOutput> {
-  return planAdvisorFlow(input);
+export async function askSoothsayer(input: SoothsayerInput): Promise<SoothsayerOutput> {
+  return soothsayerFlow(input);
 }

@@ -1,12 +1,12 @@
 import { z } from 'zod';
 
-export const PlanAdvisorInputSchema = z.object({
-    question: z.string().describe('The user\'s question about pricing plans.'),
+export const SoothsayerInputSchema = z.object({
+    question: z.string().describe('The supplicant\'s question about the paths of commerce.'),
     workspaceId: z.string().optional().describe('The ID of the workspace, if the user is authenticated.'),
 });
-export type PlanAdvisorInput = z.infer<typeof PlanAdvisorInputSchema>;
+export type SoothsayerInput = z.infer<typeof SoothsayerInputSchema>;
 
-export const PlanAdvisorOutputSchema = z.object({
-    answer: z.string().describe('The AI\'s helpful answer to the user\'s question.'),
+export const SoothsayerOutputSchema = z.object({
+    prophecy: z.string().describe('The Soothsayer\'s cryptic yet helpful answer.'),
 });
-export type PlanAdvisorOutput = z.infer<typeof PlanAdvisorOutputSchema>;
+export type SoothsayerOutput = z.infer<typeof SoothsayerOutputSchema>;

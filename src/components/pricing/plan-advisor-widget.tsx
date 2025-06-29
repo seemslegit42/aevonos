@@ -7,10 +7,11 @@ import { Button } from '@/components/ui/button';
 import { Bot, Loader2, Send, User } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { getPlanAdvice } from '@/ai/agents/plan-advisor';
+import { askSoothsayer } from '@/ai/agents/plan-advisor';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
+import { OracleIcon } from '../icons/OracleIcon';
 
 interface Message {
     role: 'user' | 'ai';
@@ -34,7 +35,7 @@ export default function PlanAdvisorWidget() {
     useEffect(() => {
         if(isOpen && messages.length === 0) {
             setTimeout(() => {
-                 setMessages([{ role: 'ai', content: "Hello! I can answer any questions you have about our pricing plans. How can I help?" }]);
+                 setMessages([{ role: 'ai', content: "The threads of fate shimmer before me. Ask, and I shall reveal the path that awaits you." }]);
             }, 500);
         }
     }, [isOpen, messages]);
@@ -49,16 +50,16 @@ export default function PlanAdvisorWidget() {
         setIsLoading(true);
 
         try {
-            const response = await getPlanAdvice({ question: input });
-            const aiMessage: Message = { role: 'ai', content: response.answer };
+            const response = await askSoothsayer({ question: input });
+            const aiMessage: Message = { role: 'ai', content: response.prophecy };
             setMessages(prev => [...prev, aiMessage]);
         } catch (error) {
             toast({
                 variant: 'destructive',
-                title: 'AI Advisor Error',
-                description: 'The advisor is currently unavailable. Please try again later.',
+                title: 'A Disturbance in the Aether',
+                description: 'The Soothsayer is currently unavailable. The threads are tangled.',
             });
-            const errorMessage: Message = { role: 'ai', content: "I'm sorry, I'm having trouble connecting right now. Please try again in a moment." };
+            const errorMessage: Message = { role: 'ai', content: "The aether churns... I cannot see clearly. Ask again when the currents have calmed." };
             setMessages(prev => [...prev, errorMessage]);
         } finally {
             setIsLoading(false);
@@ -72,14 +73,14 @@ export default function PlanAdvisorWidget() {
                     variant="default"
                     className="fixed bottom-6 right-6 rounded-full w-16 h-16 shadow-lg z-50 text-primary-foreground bg-primary hover:bg-primary/90"
                 >
-                    <Bot className="h-8 w-8" />
-                    <span className="sr-only">Open Plan Advisor</span>
+                    <OracleIcon className="h-8 w-8" />
+                    <span className="sr-only">Consult the Soothsayer</span>
                 </Button>
             </PopoverTrigger>
             <PopoverContent side="top" align="end" className="w-80 p-0 border-0 shadow-2xl mr-2 mb-2">
                 <div className="flex flex-col h-[28rem] bg-background rounded-lg border">
                     <header className="p-4 border-b">
-                        <h3 className="font-semibold text-center">ΛΞVON Plan Advisor</h3>
+                        <h3 className="font-semibold text-center font-headline text-primary">The Soothsayer</h3>
                     </header>
                     <ScrollArea className="flex-1 p-4">
                         <div className="space-y-4" ref={scrollAreaRef}>
@@ -102,7 +103,7 @@ export default function PlanAdvisorWidget() {
                                         "p-3 rounded-lg max-w-xs",
                                         message.role === 'user' ? 'bg-muted' : 'bg-primary/10'
                                     )}>
-                                        <p>{message.content}</p>
+                                        <p className={message.role === 'ai' ? 'italic' : ''}>{message.content}</p>
                                     </div>
                                     {message.role === 'user' && <User className="h-5 w-5 text-muted-foreground flex-shrink-0 mt-1" />}
                                 </motion.div>
@@ -123,7 +124,7 @@ export default function PlanAdvisorWidget() {
                             <Input
                                 value={input}
                                 onChange={(e) => setInput(e.target.value)}
-                                placeholder="Ask about features..."
+                                placeholder="Whisper your query..."
                                 disabled={isLoading}
                             />
                             <Button type="submit" disabled={isLoading || !input.trim()}>
