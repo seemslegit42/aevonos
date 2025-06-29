@@ -9,8 +9,9 @@ import prisma from '@/lib/prisma';
 import { z } from 'zod';
 import { Prisma, Transaction, TransactionStatus, TransactionType, UserPsyche } from '@prisma/client';
 import { InsufficientCreditsError } from '@/lib/errors';
+import { CreateManualTransactionInputSchema } from '@/ai/tools/ledger-schemas';
 
-export const CreateTransactionInputSchema = z.object({
+const CreateTransactionInputSchema = z.object({
   workspaceId: z.string(),
   type: z.nativeEnum(TransactionType),
   amount: z.number().positive('Transaction amount must be positive.'),
@@ -19,21 +20,33 @@ export const CreateTransactionInputSchema = z.object({
   agentId: z.string().optional(),
   instrumentId: z.string().optional(),
 });
-export type CreateTransactionInput = z.infer<typeof CreateTransactionInputSchema>;
+type CreateTransactionInput = z.infer<typeof CreateTransactionInputSchema>;
+
 
 /**
  * Atomically creates a transaction and updates the workspace's credit balance.
  * This is the single source of truth for all credit modifications.
+ * This is an internal function not meant to be called directly by agents.
  * @param input The transaction details.
  * @returns The newly created transaction record.
  */
-export async function createTransaction(input: CreateTransactionInput) {
+async function createTransaction(input: CreateTransactionInput) {
     const { workspaceId, type, amount, description, userId, agentId, instrumentId } = CreateTransactionInputSchema.parse(input);
 
     try {
         const result = await prisma.$transaction(async (tx) => {
+            if (type === TransactionType.DEBIT) {
+                const workspace = await tx.workspace.findUnique({
+                    where: { id: workspaceId },
+                    select: { credits: true },
+                });
+                if (!workspace || (workspace.credits as unknown as number) < amount) {
+                    throw new InsufficientCreditsError('Insufficient credits for this transaction.');
+                }
+            }
+
             // 1. Update the workspace's credit balance.
-            const workspace = await tx.workspace.update({
+            await tx.workspace.update({
                 where: { id: workspaceId },
                 data: {
                     credits: {
@@ -41,10 +54,6 @@ export async function createTransaction(input: CreateTransactionInput) {
                     },
                 },
             });
-
-            if ((workspace.credits as unknown as number) < 0) {
-                console.warn(`[Ledger Service] Workspace ${workspaceId} has a negative credit balance: ${workspace.credits}`);
-            }
 
             // 2. Create the transaction log entry.
             const transaction = await tx.transaction.create({
@@ -66,9 +75,30 @@ export async function createTransaction(input: CreateTransactionInput) {
         return result;
 
     } catch (error) {
+        if (error instanceof InsufficientCreditsError) {
+            throw error;
+        }
         console.error(`[Ledger Service] Failed to create transaction for workspace ${workspaceId}:`, error);
         throw new Error('Transaction failed. The ledger remains unchanged.');
     }
+}
+
+/**
+ * Creates a manual transaction as requested by a user through an agent.
+ * This is an agent tool function.
+ */
+export async function createManualTransaction(
+  input: z.infer<typeof CreateManualTransactionInputSchema>,
+  workspaceId: string,
+  userId: string
+): Promise<Transaction> {
+  // A manual transaction initiated by a user command shouldn't cost an extra agent action.
+  // The "cost" is the transaction itself.
+  return createTransaction({
+    ...input,
+    workspaceId,
+    userId
+  });
 }
 
 

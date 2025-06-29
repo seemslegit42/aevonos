@@ -5,7 +5,7 @@ import { processUserCommand } from '@/ai/agents/beep';
 import type { UserCommandOutput } from '@/ai/agents/beep-schemas';
 import { revalidatePath } from 'next/cache';
 import { scanEvidence as scanEvidenceFlow, type PaperTrailScanInput, type PaperTrailScanOutput } from '@/ai/agents/paper-trail';
-import { getServerActionSession, logout } from '@/lib/auth';
+import { getServerActionSession } from '@/lib/auth';
 import { confirmPendingTransaction } from '@/services/ledger-service';
 import { TransactionType } from '@prisma/client';
 import { z } from 'zod';
@@ -16,6 +16,7 @@ import prisma from '@/lib/prisma';
 import { differenceInMinutes } from 'date-fns';
 import { calculateOutcome } from '@/services/klepsydra-service';
 import { InsufficientCreditsError } from '@/lib/errors';
+import { logout, deleteAccount, acceptReclamationGift } from '@/app/auth/actions';
 
 
 export async function handleCommand(command: string): Promise<UserCommandOutput> {
@@ -433,42 +434,6 @@ export async function makeFollyTribute(instrumentId: string, tributeAmount: numb
     }
     const errorMessage = error instanceof Error ? error.message : 'Tribute failed.';
     return { success: false, error: errorMessage };
-  }
-}
-
-export async function deleteAccount() {
-  const session = await getServerActionSession();
-  if (!session?.workspaceId) {
-    throw new Error('Unauthorized');
-  }
-  // In a real app, this would be a "soft delete" or a more complex process.
-  // For now, we will just log the user out as a placeholder for this destructive action.
-  console.log(`[Action: deleteAccount] Mock deletion for workspace ${session.workspaceId}`);
-  await logout();
-  return { success: true };
-}
-
-export async function acceptReclamationGift() {
-  const session = await getServerActionSession();
-  if (!session?.workspaceId) {
-    throw new Error('Unauthorized');
-  }
-
-  try {
-    const expires = new Date();
-    expires.setDate(expires.getDate() + 33);
-
-    await prisma.workspace.update({
-      where: { id: session.workspaceId },
-      data: {
-        reclamationGraceUntil: expires,
-      },
-    });
-
-    return { success: true, message: 'Your vow is renewed. The throne is yours once more.' };
-  } catch (error) {
-    console.error('[Action: acceptReclamationGift]', error);
-    return { success: false, error: 'Failed to accept the gift.' };
   }
 }
     
