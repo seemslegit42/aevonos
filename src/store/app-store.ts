@@ -306,6 +306,10 @@ export const useAppStore = create<AppState>((set, get) => {
           launchApp('aegis-control', { contentProps: { ...report.report }});
           if (report.report.isAnomalous) {
             toast({ title: 'Aegis Alert', description: report.report.anomalyExplanation, variant: 'destructive' });
+            // Haptic feedback for mobile devices to signal a critical alert
+            if (typeof window !== 'undefined' && 'vibrate' in navigator) {
+              navigator.vibrate([200, 100, 200]);
+            }
           }
           break;
 
