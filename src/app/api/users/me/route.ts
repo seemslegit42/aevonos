@@ -28,7 +28,6 @@ export async function GET(request: NextRequest) {
       lastName: true,
       role: true,
       lastLoginAt: true,
-      ownedChaosCards: true,
     },
   });
 
