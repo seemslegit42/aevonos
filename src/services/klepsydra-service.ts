@@ -28,6 +28,13 @@ const INSTRUMENT_CONFIG: Record<string, { baseOdds: number; winMultiplier: numbe
     return acc;
   }, {} as Record<string, { baseOdds: number; winMultiplier: number }>);
 
+// Define modifiers for each psyche. This is the core of the Psyche-Cohort Targeting Engine.
+const PSYCHE_MODIFIERS: Record<UserPsyche, { oddsFactor: number; boonFactor: number }> = {
+    [UserPsyche.ZEN_ARCHITECT]: { oddsFactor: 1.0, boonFactor: 1.0 }, // The baseline experience
+    [UserPsyche.SYNDICATE_ENFORCER]: { oddsFactor: 0.85, boonFactor: 1.25 }, // Higher risk, higher reward
+    [UserPsyche.RISK_AVERSE_ARTISAN]: { oddsFactor: 1.15, boonFactor: 0.8 }, // Lower risk, lower reward
+};
+
 
 /**
  * Calculates the outcome of a Folly Instrument tribute, logs it, and updates the user's pulse.
@@ -63,11 +70,18 @@ export async function calculateOutcome(
     throw new InsufficientCreditsError('Cannot make tribute. Insufficient credits.');
   }
 
+  // Fetch base instrument configuration
+  const instrument = INSTRUMENT_CONFIG[instrumentId] || { baseOdds: 0.5, winMultiplier: 2 };
+
+  // Phase IV: Psyche-Cohort Targeting
+  // Modulate the instrument's core properties based on the user's psychological profile.
+  const modifiers = PSYCHE_MODIFIERS[user.psyche] || PSYCHE_MODIFIERS.ZEN_ARCHITECT;
+  const modifiedBaseOdds = instrument.baseOdds * modifiers.oddsFactor;
+  const modifiedWinMultiplier = instrument.winMultiplier * modifiers.boonFactor;
 
   // 2. Fetch profile & calculate luck
   const luckWeight = await getCurrentPulseValue(userId);
-  const instrument = INSTRUMENT_CONFIG[instrumentId] || { baseOdds: 0.5, winMultiplier: 2 };
-  const finalOdds = Math.max(0, Math.min(1, instrument.baseOdds * luckWeight));
+  const finalOdds = Math.max(0, Math.min(1, modifiedBaseOdds * luckWeight));
   
   // 3. Determine outcome
   let outcome = 'loss';
@@ -80,7 +94,7 @@ export async function calculateOutcome(
     await recordWin(userId); // A pity boon counts as a "win" to reset the loss streak
   } else if (Math.random() < finalOdds) {
     outcome = 'win';
-    boonAmount = tributeAmount * instrument.winMultiplier;
+    boonAmount = tributeAmount * modifiedWinMultiplier; // Use the psyche-modified multiplier
     await recordWin(userId);
   } else {
     await recordLoss(userId);
