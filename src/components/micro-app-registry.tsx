@@ -31,8 +31,6 @@ import { ArmoryIcon } from './icons/ArmoryIcon';
 import { DrSyntaxIcon } from './icons/DrSyntaxIcon';
 import { UserSettingsIcon } from './icons/UserSettingsIcon';
 import { WorkspaceSettingsIcon } from './icons/WorkspaceSettingsIcon';
-import { TopUpIcon } from './icons/TopUpIcon';
-import { StonksIcon } from './icons/StonksIcon';
 
 import { type MicroAppType } from '@/store/app-store';
 import ContactList from './micro-apps/contact-list';
@@ -64,8 +62,6 @@ import ContactEditor from './micro-apps/contact-editor';
 import DrSyntax from './micro-apps/dr-syntax';
 import UserProfileSettings from './micro-apps/user-profile-settings';
 import WorkspaceSettings from './micro-apps/workspace-settings';
-import TopUp from './micro-apps/top-up';
-import StonksBot from './micro-apps/stonks-bot';
 
 type ComponentRegistry = {
     icon: React.ComponentType<any>;
@@ -197,14 +193,6 @@ export const microAppRegistry: Record<MicroAppType, ComponentRegistry> = {
   'workspace-settings': {
       icon: WorkspaceSettingsIcon,
       content: WorkspaceSettings,
-  },
-  'top-up': {
-      icon: TopUpIcon,
-      content: TopUp,
-  },
-  'stonks-bot': {
-    icon: StonksIcon,
-    content: StonksBot,
   }
 };
 
