@@ -1,9 +1,9 @@
 
 'use server';
 /**
- * @fileOverview The Profit Pulse Engine (Codename: KLEPSYDRA).
- * This service implements the Sine-Rhythm Engine (SRE) to modulate
- * user "luck" over time, creating a more engaging and profitable economic loop.
+ * @fileOverview The Profit Pulse Engine (Codename: KLEPSYDRA) Configuration.
+ * These values represent the "Profit Dials" that can be tuned by admins
+ * to modulate the system's economic behavior.
  */
 
 import prisma from '@/lib/prisma';

@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview Service for the Obelisk Pay Credit Ledger.
@@ -7,6 +8,7 @@
 import prisma from '@/lib/prisma';
 import { z } from 'zod';
 import { Prisma, Transaction, TransactionStatus, TransactionType } from '@prisma/client';
+import { InsufficientCreditsError } from '@/lib/errors';
 
 export const CreateTransactionInputSchema = z.object({
   workspaceId: z.string(),
@@ -40,7 +42,7 @@ export async function createTransaction(input: CreateTransactionInput) {
             });
 
             // Optional: Check if the balance has gone negative and handle accordingly.
-            if (workspace.credits < 0) {
+            if ((workspace.credits as unknown as number) < 0) {
                 // For now, we'll just log it. In the future, this could trigger alerts or disable services.
                 console.warn(`[Ledger Service] Workspace ${workspaceId} has a negative credit balance: ${workspace.credits}`);
             }
@@ -69,6 +71,72 @@ export async function createTransaction(input: CreateTransactionInput) {
         throw new Error('Transaction failed. The ledger remains unchanged.');
     }
 }
+
+
+export const LogTributeEventInputSchema = z.object({
+    workspaceId: z.string(),
+    userId: z.string(),
+    instrumentId: z.string(),
+    tributeAmount: z.number(),
+    luckWeight: z.number(),
+    outcome: z.string(),
+    boonAmount: z.number(),
+});
+export type LogTributeEventInput = z.infer<typeof LogTributeEventInputSchema>;
+
+/**
+ * Atomically logs a tribute event, updating the workspace balance and creating a single, immutable transaction record.
+ * @param input The details of the tribute event.
+ * @returns The newly created transaction log.
+ */
+export async function logTributeEvent(input: LogTributeEventInput) {
+    const { workspaceId, userId, instrumentId, tributeAmount, luckWeight, outcome, boonAmount } = LogTributeEventInputSchema.parse(input);
+
+    const netAmount = boonAmount - tributeAmount;
+
+    try {
+        const tributeLog = await prisma.$transaction(async (tx) => {
+            // 1. Atomically update the workspace's credit balance with the net result.
+            const workspace = await tx.workspace.update({
+                where: { id: workspaceId },
+                data: {
+                    credits: {
+                        increment: new Prisma.Decimal(netAmount),
+                    },
+                },
+            });
+
+            if ((workspace.credits as unknown as number) < 0) {
+                console.warn(`[Ledger Service] Workspace ${workspaceId} has gone into negative balance following a tribute.`);
+            }
+
+            // 2. Create the single, immutable TributeLog entry.
+            return await tx.transaction.create({
+                data: {
+                    workspaceId,
+                    userId,
+                    type: TransactionType.TRIBUTE,
+                    amount: new Prisma.Decimal(netAmount), // Net change in credits
+                    description: `Folly: ${instrumentId} - ${outcome}`,
+                    instrumentId,
+                    luckWeight,
+                    outcome,
+                    boonAmount: new Prisma.Decimal(boonAmount),
+                    status: TransactionStatus.COMPLETED,
+                },
+            });
+        });
+
+        return tributeLog;
+    } catch (error) {
+        if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
+            throw new InsufficientCreditsError('Could not process tribute. Insufficient credits.');
+        }
+        console.error(`[Ledger Service] Failed to log tribute for workspace ${workspaceId}:`, error);
+        throw new Error('Tribute event failed. The ledger remains unchanged.');
+    }
+}
+
 
 /**
  * Retrieves the most recent transactions for a given workspace.
