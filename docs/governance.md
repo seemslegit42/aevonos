@@ -1,49 +1,44 @@
-ΛΞVON OS: Governance - Security Practices
-1. Core Philosophy: Security-by-Design
-Security in ΛΞVON OS is a foundational, pervasive layer woven into the very fabric of the operating system [cite: 140 (nexOS Tech Arch), 8 (Futuristic SMB OS Design)]. It is designed to make ΛΞVON OS the "MOST SECURE" platform by ensuring that security is inherent and autonomous, reducing the burden on SMBs [cite: previous prompt discussion, previous user input].
-2. Architectural Principles & Implementation
-2.1. Zero-Trust Architecture
-Principle: No user, device, or system is inherently trusted, even when operating within the network perimeter. All access requests are continuously verified [cite: 3 (Futuristic SMB OS Design)].
-Implementation: Enforced at the API Gateway, within microservices, and by client-side authentication mechanisms.
-2.2. Micro-segmentation & Isolated Environments
-Principle: Applications and services run in isolated environments, limiting the "blast radius" of any potential breach [cite: 8 (Futuristic SMB OS Design)].
-Implementation: Achieved through advanced containerization technologies (e.g., Docker, Google Kubernetes Engine - GKE) for backend microservices [cite: 8 (Futuristic SMB OS Design), 113 (nexOS Tech Arch)]. Micro-Apps, as isolated units, inherently contribute to this principle.
-2.3. Hardware-Based Security Enhancements (Future Vision)
-Principle: Critical operations like encryption and secure boot processes are anchored in secure hardware environments, preventing tampering at the hardware level [cite: 8 (Futuristic SMB OS Design)].
-Implementation: Future integrations with TPMs, secure enclaves, or similar technologies.
-2.4. Data Protection & Isolation
-Multi-Tenancy: Strict data isolation via the "Schema-per-Tenant" model in PostgreSQL. The tenant_id is consistently propagated through all backend service calls and database queries via JWT [cite: 113 (nexOS Tech Arch), 113 (Database Schema Designs)].
-Encryption: All sensitive data is encrypted at rest and in transit. Encrypted cloud storage is a standard, default feature [cite: 3 (Futuristic SMB OS Design)].
-Data Loss Prevention (DLP): Mechanisms are configured and monitored to prevent sensitive information from being inadvertently exposed or transferred outside authorized boundaries.
-2.5. Secure Authentication & Access Control
-Authentication: Utilizes robust services (Clerk, NextAuth.js) supporting Multi-Factor Authentication (MFA) and Single Sign-On (SSO) [cite: 66 (Nexus Tech Arch)]. MFA is enabled by default at the OS level for all accounts [cite: 3 (Futuristic SMB OS Design)].
-Authorization (RBAC/ABAC): Role-Based Access Control or Attribute-Based Access Control is implemented across frontend (Next.js Middleware) and backend (FastAPI/Node.js dependencies) layers, with policy definitions stored in PostgreSQL [cite: 66 (Nexus Tech Arch)].
-Secure Credential Management: LLM API keys and third-party integration credentials are stored securely as encrypted environment variables (future dedicated service for robust management) [cite: 66 (Nexus Tech Arch)].
-3. Aegis in Action: Proactive Monitoring & Response
-Aegis is the vigilant, AI-powered bodyguard, watching everything and protecting with zero manual input [cite: previous user input].
-3.1. Automated Threat Detection
-Phase 1 (MVP - Rules-Based): Consumes structured audit logs from all services, alerting on predefined, high-confidence patterns (e.g., failed logins, permission escalation, impossible travel logins) [cite: 140-146 (nexOS Tech Arch)].
-Phase 2 (Evolution - ML-Powered Anomaly Detection): Leverages machine learning models (e.g., Google Vertex AI) to establish baselines of normal behavior, flagging subtle deviations and novel threats [cite: 140-146 (nexOS Tech Arch)].
-AI-Driven Network Monitoring: Provides continuous vigilance against evolving threats [cite: 3 (Futuristic SMB OS Design)].
-3.2. Human-Readable Alerts & User Interaction (via BEEP)
-Contextual Explanations: BEEP, via Aegis, translates complex security events into clear, plain English explanations for suspicious alerts (e.g., "Login from an unusual location..."), enabling quick risk assessment without technical expertise [cite: previous prompt discussion].
-Actionable Options: Alerts provide actionable options directly (e.g., "Lock Account," "Dismiss Alert," "View Details") for rapid response.
-Proactive Anomaly Alerts: BEEP proactively alerts on system/workflow anomalies (e.g., workflow taking too long) [cite: previous prompt discussion].
-3.3. Self-Healing Systems (Future Vision)
-Principle: The OS will incorporate "Self-Healing Systems" capable of automatically detecting and remediating security vulnerabilities or system errors, minimizing downtime and human intervention [cite: 8 (Futuristic SMB OS Design)].
-Implementation: AI-driven predictive analytics will anticipate equipment failures and schedule maintenance proactively [cite: 6 (Futuristic SMB OS Design)].
-4. Development Directives: Building Securely
+# ΛΞVON OS: Governance - Security Practices
+
+## 1. Core Philosophy: Security-by-Design
+
+Security in ΛΞVON OS is a foundational, pervasive layer woven into the very fabric of the operating system. It is designed to make ΛΞVON OS the "MOST SECURE" platform by ensuring that security is inherent and autonomous, reducing the burden on SMBs.
+
+## 2. Architectural Principles & Implementation
+
+### 2.1. Zero-Trust Architecture
+
+-   **Principle**: No user, device, or system is inherently trusted. All access requests are continuously verified.
+-   **Implementation**:
+    -   **Authentication**: All API routes and protected pages are secured by `middleware.ts`, which validates a JWT `session` cookie. Unauthenticated access is rejected or redirected.
+    -   **Authorization**: API routes check the `UserRole` (e.g., `ADMIN`, `MANAGER`, `OPERATOR`, `AUDITOR`) from the validated session to authorize sensitive actions like creating workflows or deleting agents.
+
+### 2.2. Data Protection & Isolation
+
+-   **Multi-Tenancy**: Strict data isolation is enforced at the database level. The `workspaceId` from the user's JWT session is used in every Prisma query to ensure users can only access data belonging to their workspace.
+-   **Encryption**: All sensitive data, such as passwords, are hashed using `bcryptjs`. The JWT session token itself is encrypted using the `jose` library with a strong secret key.
+-   **Data Loss Prevention (DLP)**: By design, agents and tools are scoped to the authenticated workspace, preventing accidental cross-pollination of data.
+
+### 2.3. Secure Credential Management
+
+-   **Principle**: Never hardcode secrets.
+-   **Implementation**: LLM API keys, database connection strings, and the JWT secret are stored securely as environment variables (e.g., in a `.env` file for local development or as secrets in the deployment environment like Vercel). The application code is designed to fail gracefully or use mock data if these keys are not present.
+
+## 3. Aegis in Action: Proactive Monitoring & Response
+
+Aegis is the vigilant, AI-powered bodyguard, watching everything and protecting with zero manual input.
+
+-   **Agentic Anomaly Detection**: The `aegisAnomalyScan` flow is a core agentic tool. It is called by other critical services (like `billing-tools` during a credit top-up) and by BEEP's central command loop to analyze user commands for suspicious patterns *before* execution.
+-   **Human-Readable Alerts**: When Aegis detects an anomaly, it generates a report with a clear, plain-English explanation, a risk level (`low`, `medium`, `high`, `critical`), and a suggested course of action.
+-   **Automated Alert Creation**: High-risk anomalies detected by Aegis automatically trigger the `createSecurityAlertInDb` tool, creating a persistent record in the database that is visible in the `Aegis-ThreatScope` Micro-App.
+
+## 4. Development Directives: Building Securely
+
 All developers are "forge priests of automation" and MUST adhere to these directives:
-Build Like He's Watching: Every line of code, every component, every interaction must be developed with Aegis's constant vigilance in mind [cite: previous user input]. If your code interacts with data, workflows, or agents — you MUST consider Aegis [cite: previous user input].
-Trigger Security Events: Micro-Apps must be designed to trigger relevant security events when specific actions occur (e.g., sensitive data access, configuration changes).
-Display Human-Readable Alerts: All security-related information presented to users MUST be clear, concise, and in plain English, displayed via Aegis/BEEP.
-Comply with Anomaly Hooks: All Micro-Apps and system components must integrate with and comply with real-time anomaly detection hooks.
-Never Make Assumptions About Trust: Strictly enforce Zero-Trust principles in all code logic and interactions.
-Automated Updates & Patching: All software components and dependencies should be updated and patched automatically or with minimal human intervention, ensuring systems are always current [cite: 3 (Futuristic SMB OS Design)].
-Immutable Audit Logging: Ensure all critical system and user activity is logged immutably, for compliance and accountability.
-Agent Sandboxing & Control: Define and enforce sandboxing environments and granular capability limits for AI agents to mitigate risks of autonomous operations.
-Ethical AI Development: Prioritize fairness, bias mitigation, transparency (how AI operates, data usage), privacy, human safety, and continuous human oversight for AI systems [cite: 40-41 (Futuristic SMB OS Design)].
-5. Governance & Compliance
-Immutable Audit Logging: Implementation of immutable audit logs of all tenant activity (workflow executions, data modifications, security events) to maintain a verifiable record for compliance and accountability.
-Policy Management: Define and manage policies for data access, agent behavior, workflow execution, and overall security, enforcing organizational rules and compliance.
-Distributed Ledger Technology (Blockchain - Future): Potential future integration for tamper-proof audit trails, decentralized architecture, and real-time identity verification, making the OS a verifiable "source of truth" [cite: 10-13 (Futuristic SMB OS Design)].
+
+-   **Build Like He's Watching**: Every new agent, tool, or API endpoint must be developed with Aegis's constant vigilance in mind. If a feature involves sensitive data or execution of powerful actions, it should consider invoking `aegisAnomalyScan`.
+-   **Enforce RBAC**: When creating new API routes for sensitive operations, always check the user's role from the session and enforce the principle of least privilege.
+-   **Validate All Inputs**: Use `Zod` to strictly validate all incoming data for API requests and agent inputs. Never trust user-provided data.
+-   **Scope Database Queries**: Every Prisma query that accesses workspace-specific data MUST include a `where` clause with the `workspaceId` from the session.
+-   **Immutable Audit Logging**: The `Transaction` table serves as an immutable financial ledger, recording every credit and debit to a workspace's balance, including agent actions.
+-   **Agent Sandboxing**: Tools available to the BEEP agent are explicitly defined and scoped. The agent cannot call arbitrary functions or access the filesystem outside of its defined capabilities.
