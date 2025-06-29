@@ -6,7 +6,7 @@ import type { UserCommandOutput } from '@/ai/agents/beep-schemas';
 import { revalidatePath } from 'next/cache';
 import { scanEvidence as scanEvidenceFlow, type PaperTrailScanInput, type PaperTrailScanOutput } from '@/ai/agents/paper-trail';
 import { getServerActionSession } from '@/lib/auth';
-import { createTransaction, confirmPendingTransaction } from '@/services/ledger-service';
+import { confirmPendingTransaction } from '@/services/ledger-service';
 import { TransactionType } from '@prisma/client';
 import { z } from 'zod';
 import { requestCreditTopUpInDb } from '@/services/billing-service';
@@ -88,33 +88,6 @@ export async function scanEvidence(input: Omit<PaperTrailScanInput, 'workspaceId
       lead: "The informant is offline. Couldn't process the evidence.",
       isEvidenceValid: false,
     };
-  }
-}
-
-export async function purchaseCredits(amount: number) {
-  const session = await getServerActionSession();
-  if (!session?.userId || !session?.workspaceId) {
-    return { success: false, error: 'Unauthorized' };
-  }
-
-  if (amount <= 0) {
-    return { success: false, error: 'Invalid credit amount.' };
-  }
-
-  try {
-    await createTransaction({
-      workspaceId: session.workspaceId,
-      userId: session.userId,
-      type: TransactionType.CREDIT,
-      amount,
-      description: `Manual credit purchase of ${amount.toLocaleString()}`,
-    });
-
-    revalidatePath('/');
-    return { success: true, message: `${amount.toLocaleString()} credits added successfully.` };
-  } catch (error) {
-    console.error('[Action: purchaseCredits]', error);
-    return { success: false, error: 'Failed to add credits.' };
   }
 }
 
@@ -204,23 +177,32 @@ export async function purchaseMicroApp(appId: string) {
     }
 
     await prisma.$transaction(async (tx) => {
-      await createTransaction({
-        workspaceId: session.workspaceId,
-        userId: session.userId,
-        type: TransactionType.DEBIT,
-        amount: creditCost,
-        description: `Micro-App Unlock: ${name}`,
-        instrumentId: appId,
-      });
-
-      await tx.workspace.update({
+      // This is now handled by the ledger service, but let's keep a simple debit for now
+      // A more robust implementation would use the ledger-service
+       await tx.workspace.update({
         where: { id: session.workspaceId },
         data: {
+          credits: {
+            decrement: creditCost
+          },
           unlockedAppIds: {
             push: appId,
           },
         },
       });
+
+      await tx.transaction.create({
+        data: {
+          workspaceId: session.workspaceId,
+          userId: session.userId,
+          type: TransactionType.DEBIT,
+          amount: creditCost,
+          description: `Micro-App Unlock: ${name}`,
+          instrumentId: appId,
+          status: 'COMPLETED'
+        }
+      });
+
 
       const discovery = await tx.instrumentDiscovery.findFirst({
           where: { userId: session.userId, instrumentId: appId, converted: false }
@@ -290,8 +272,8 @@ export async function purchaseChaosCard(cardKey: string) {
             if (cardManifest.systemEffect && cardManifest.cardClass === 'AESTHETIC') {
                await tx.activeSystemEffect.deleteMany({
                   where: {
-                    workspaceId: session.workspaceId,
-                    cardKey: { in: ['ACROPOLIS_MARBLE'] }
+                    workspaceId: session.workspaceId!,
+                    cardKey: { in: ['ACROPOLIS_MARBLE'] } // Add other exclusive themes here
                   }
                });
                await tx.activeSystemEffect.create({
