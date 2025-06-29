@@ -1,4 +1,3 @@
-
 'use client';
 
 import React from 'react';
@@ -18,8 +17,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Form, FormControl, FormField, FormItem, FormMessage, FormLabel } from '@/components/ui/form';
 
 const loginSchema = z.object({
-  email: z.string().email({ message: 'A valid sigil is required.' }),
-  password: z.string().min(1, 'A vow must be made.'),
+  email: z.string().email({ message: 'A valid email is required.' }),
+  password: z.string().min(1, 'Password cannot be empty.'),
 });
 
 type LoginFormData = z.infer<typeof loginSchema>;
@@ -48,12 +47,12 @@ export default function LoginPage() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Authentication sequence failed. Check credentials.');
+        throw new Error(errorData.error || 'Authentication failed. Please check your credentials.');
       }
       
       toast({
-        title: 'Vow Accepted.',
-        description: 'The canvas materializes before you.',
+        title: 'Login Successful',
+        description: 'Welcome back.',
       });
 
       router.push('/');
@@ -61,7 +60,7 @@ export default function LoginPage() {
     } catch (error) {
       toast({
         variant: 'destructive',
-        title: 'Vow Rejected.',
+        title: 'Login Failed',
         description: (error as Error).message,
       });
     }
@@ -91,8 +90,8 @@ export default function LoginPage() {
                     <div className="flex justify-center mb-4">
                         <Image src="/logo-neutral.svg" alt="Aevon OS Logo" width={60} height={60} className="h-12 w-auto" />
                     </div>
-                    <CardTitle className="text-2xl font-headline tracking-wider text-primary">Re-enter the Canvas</CardTitle>
-                    <CardDescription>Reaffirm your vow to the system.</CardDescription>
+                    <CardTitle className="text-2xl font-headline tracking-wider text-primary">Login</CardTitle>
+                    <CardDescription>Enter your credentials to access your canvas.</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <Form {...form}>
@@ -130,16 +129,16 @@ export default function LoginPage() {
                                 )}
                             />
                             <Button type="submit" className="w-full" disabled={isSubmitting}>
-                                {isSubmitting ? <Loader2 className="animate-spin" /> : 'Invoke The Canvas'}
+                                {isSubmitting ? <Loader2 className="animate-spin" /> : 'Login'}
                             </Button>
                         </form>
                     </Form>
                 </CardContent>
             </Card>
             <div className="mt-4 text-center text-sm text-muted-foreground">
-                First invocation?{' '}
+                First time?{' '}
                 <Link href="/register" className="font-bold text-primary hover:text-primary/80 transition-colors">
-                    Begin the Rite.
+                    Create an account.
                 </Link>
             </div>
         </motion.div>
