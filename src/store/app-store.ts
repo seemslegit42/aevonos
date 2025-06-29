@@ -32,6 +32,7 @@ import type { KendraOutput } from '@/ai/agents/kendra-schemas';
 import { type OrpheanOracleOutput } from '@/ai/agents/orphean-oracle-schemas';
 import type { DossierOutput } from '@/ai/agents/dossier-schemas';
 import { generateSpeech } from '@/ai/flows/tts-flow';
+import { StonksBotOutputSchema } from '@/ai/agents/stonks-bot-schemas';
 
 // Define the types of MicroApps available in the OS
 export type MicroAppType = 
@@ -65,6 +66,7 @@ export type MicroAppType =
   | 'usage-monitor'
   | 'dr-syntax'
   | 'armory'
+  | 'stonks-bot'
   | 'user-profile-settings'
   | 'workspace-settings'
   | 'top-up';
@@ -355,6 +357,10 @@ export const useAppStore = create<AppState>((set, get) => {
             break;
         case 'legal-dossier':
             infidelityProps.legalDossierReport = report.report as DossierOutput;
+            break;
+        
+        case 'stonks':
+            upsertApp('stonks-bot', { id: 'singleton-stonks-bot', contentProps: report.report });
             break;
       }
     }

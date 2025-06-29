@@ -507,5 +507,20 @@ export const microAppManifests: MicroAppManifest[] = [
     routingPath: '/barbara',
     contextAwareCapabilities: ['document_upload_hook', 'compliance_check_trigger'],
     isFeatured: true,
+  },
+  {
+    id: 'stonks-bot',
+    name: 'Stonks Bot 9000',
+    author: 'WallStreetBets',
+    description: 'For when you need financial advice that feels more like a dare. To the moon!',
+    creditCost: 10,
+    priceModel: 'one-time',
+    imageUrl: 'https://placehold.co/600x400.png',
+    imageHint: 'diamond hands rocket',
+    defaultSize: { width: 340, height: 480 },
+    permissionsRequired: ['read:market_data'],
+    routingPath: '/stonks-bot',
+    contextAwareCapabilities: [],
+    isFeatured: true,
   }
 ];
