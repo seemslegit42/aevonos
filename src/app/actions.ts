@@ -28,6 +28,15 @@ export async function handleCommand(command: string): Promise<UserCommandOutput>
         responseText: 'Your session is invalid. Please log in again.'
     };
   }
+  
+  if (command.toLowerCase().trim() === 'the tendies are coming') {
+    return {
+        appsToLaunch: [{ type: 'stonks-bot', title: 'STONKSBOT 9000 (POSSESSED)' }],
+        agentReports: [],
+        suggestedCommands: [],
+        responseText: 'Brace. The Greed Index is unstable.'
+    };
+  }
 
   const user = await prisma.user.findUnique({
     where: { id: session.userId },

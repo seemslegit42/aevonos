@@ -24,42 +24,45 @@
     --border: 0 0% 89.8%;
     --input: 0 0% 89.8%;
     --ring: 0 0% 3.9%;
-    --radius: 0.5rem;
+    --radius: 0.75rem;
   }
  
   .dark {
-    --background: 247 36% 11%;
-    --foreground: 150 100% 98%;
+    --background: 247 36% 11%; /* Obsidian Black */
+    --foreground: 150 100% 98%; /* Vitreous White */
     --card: 247 36% 14%;
     --card-foreground: 150 100% 98%;
     --popover: 247 36% 11%;
     --popover-foreground: 150 100% 98%;
-    --primary: 178 68% 41%;
-    --primary-foreground: 247 36% 11%;
-    --secondary: 223 11% 20%;
+    --primary: 275 86% 37%; /* Imperial Purple */
+    --primary-foreground: 150 100% 98%;
+    --secondary: 223 11% 60%; /* Conchoidal Gray */
     --secondary-foreground: 150 100% 98%;
     --muted: 223 11% 20%;
     --muted-foreground: 223 11% 60%;
-    --accent: 159 50% 48%;
-    --accent-foreground: 150 100% 98%;
+    --accent: 159 50% 48%; /* Patina Green */
+    --accent-foreground: 247 36% 11%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
-    --border: 223 11% 40%;
-    --input: 223 11% 40%;
-    --ring: 178 68% 41%;
+    --border: 223 11% 60%; /* Conchoidal Gray */
+    --input: 223 11% 60%;
+    --ring: 275 86% 37%; /* Imperial Purple */
     
+    /* Roman Aqua Token */
+    --roman-aqua: 178 68% 41%;
+
     /* For Iridescent Aurora background */
-    --iridescent-one: 275 86% 36%;
-    --iridescent-two: 159 50% 48%;
-    --iridescent-three: 178 68% 41%;
+    --iridescent-one: 275 86% 37%; /* Imperial Purple */
+    --iridescent-two: 159 50% 48%; /* Patina Green */
+    --iridescent-three: 178 68% 41%; /* Roman Aqua */
     
     /* Themed app colors */
+    --gilded-accent: 51 100% 50%;
     --military-green: 82 20% 30%;
     --ledger-cream: 45 33% 95%;
     --steely-lavender: 247 25% 60%;
     --polished-chrome: 240 5% 50%;
     --faded-cream: 39 52% 94%;
-    --gilded-accent: 51 100% 50%;
     --pale-green: 145 58% 82%;
     --stonks-green: 145 58% 57%;
     --stonks-anxiety: 346 98% 58%;
@@ -109,15 +112,18 @@
     position: absolute;
     inset: 0;
     background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 800 800' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
-    opacity: 0.025; /* Very subtle grain */
+    opacity: 0.025;
     pointer-events: none;
-    z-index: 1; /* Place it above the aurora but below content */
+    z-index: 1;
   }
   .crystal-pulse {
     animation: crystal-pulse 5s ease-in-out infinite;
   }
   .animate-subtle-pulse {
     animation: subtle-pulse 8s ease-in-out infinite;
+  }
+  .animate-screen-shake {
+    animation: screen-shake 0.5s;
   }
 }
 
@@ -139,4 +145,18 @@
     50% {
         opacity: 0.35;
     }
+}
+
+@keyframes screen-shake {
+    0% { transform: translate(1px, 1px) rotate(0deg); }
+    10% { transform: translate(-1px, -2px) rotate(-0.5deg); }
+    20% { transform: translate(-3px, 0px) rotate(0.5deg); }
+    30% { transform: translate(3px, 2px) rotate(0deg); }
+    40% { transform: translate(1px, -1px) rotate(0.5deg); }
+    50% { transform: translate(-1px, 2px) rotate(-0.5deg); }
+    60% { transform: translate(-3px, 1px) rotate(0deg); }
+    70% { transform: translate(3px, 1px) rotate(-0.5deg); }
+    80% { transform: translate(-1px, -1px) rotate(0.5deg); }
+    90% { transform: translate(1px, 2px) rotate(0deg); }
+    100% { transform: translate(1px, -2px) rotate(-0.5deg); }
 }

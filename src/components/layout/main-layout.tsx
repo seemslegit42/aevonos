@@ -8,12 +8,15 @@ import type { User, Workspace } from '@prisma/client';
 import BottomNavBar from './bottom-nav-bar';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
+import { useAppStore } from '@/store/app-store';
+import TendyRain from '@/components/effects/TendyRain';
 
 type UserProp = Pick<User, 'id' | 'email' | 'firstName' | 'lastName' | 'role' | 'agentAlias'> | null;
 
 export function MainLayout({ children, user, workspace }: { children: React.ReactNode; user: UserProp; workspace: Workspace | null }) {
   const pathname = usePathname();
   const isMobile = useIsMobile();
+  const { tendyRainActive, screenShakeActive } = useAppStore();
 
   const publicPaths = ['/login', '/register', '/validator', '/pricing', '/subscribe'];
   const isPublicPage = publicPaths.some(p => pathname.startsWith(p));
@@ -25,7 +28,10 @@ export function MainLayout({ children, user, workspace }: { children: React.Reac
 
   // The main application layout for authenticated pages
   return (
-    <div className="flex flex-col h-screen p-2 sm:p-4 gap-2 sm:gap-4">
+    <div className={cn(
+        "flex flex-col h-screen p-2 sm:p-4 gap-2 sm:gap-4",
+        screenShakeActive && 'animate-screen-shake'
+    )}>
       <TopBar user={user} workspace={workspace} />
       <main className={cn(
         "flex-grow flex flex-col min-h-0 overflow-y-auto",
@@ -34,6 +40,7 @@ export function MainLayout({ children, user, workspace }: { children: React.Reac
         {children}
       </main>
       {isMobile && <BottomNavBar />}
+      {tendyRainActive && <TendyRain />}
     </div>
   );
 }
