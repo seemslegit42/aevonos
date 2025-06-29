@@ -28,30 +28,30 @@
   }
  
   .dark {
-    --background: 240 5% 6%;
-    --foreground: 210 20% 90%;
-    --card: 240 5% 10%;
-    --card-foreground: 210 20% 90%;
-    --popover: 240 5% 6%;
-    --popover-foreground: 210 20% 90%;
-    --primary: 45 80% 50%;
-    --primary-foreground: 45 30% 10%;
-    --secondary: 30 5% 13%;
-    --secondary-foreground: 210 20% 90%;
-    --muted: 30 5% 13%;
-    --muted-foreground: 215 20% 55%;
-    --accent: 290 70% 60%;
-    --accent-foreground: 210 20% 90%;
+    --background: 247 36% 11%;
+    --foreground: 150 100% 98%;
+    --card: 247 36% 14%;
+    --card-foreground: 150 100% 98%;
+    --popover: 247 36% 11%;
+    --popover-foreground: 150 100% 98%;
+    --primary: 178 68% 41%;
+    --primary-foreground: 247 36% 11%;
+    --secondary: 223 11% 20%;
+    --secondary-foreground: 150 100% 98%;
+    --muted: 223 11% 20%;
+    --muted-foreground: 223 11% 60%;
+    --accent: 159 50% 48%;
+    --accent-foreground: 150 100% 98%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
-    --border: 240 5% 15%;
-    --input: 240 5% 15%;
-    --ring: 45 80% 50%;
+    --border: 223 11% 40%;
+    --input: 223 11% 40%;
+    --ring: 178 68% 41%;
     
     /* For Iridescent Aurora background */
-    --iridescent-one: 45 80% 50%;   /* Regal Gold */
-    --iridescent-two: 25 95% 60%;   /* Orange */
-    --iridescent-three: 290 70% 65%; /* Deep Magenta */
+    --iridescent-one: 275 86% 36%;
+    --iridescent-two: 159 50% 48%;
+    --iridescent-three: 178 68% 41%;
     
     /* Themed app colors */
     --military-green: 82 20% 30%;
