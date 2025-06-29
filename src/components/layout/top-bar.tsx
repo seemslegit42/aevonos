@@ -18,7 +18,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Sparkles, ShieldCheck, LogOut, Settings, User as UserIcon, Database, Gem } from 'lucide-react';
+import { Sparkles, ShieldCheck, LogOut, Settings, User as UserIcon, Database, Gem, Mic, MicOff } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { logout } from '@/app/auth/actions';
 import type { User, Workspace, UserRole, UserRank } from '@prisma/client';
@@ -28,6 +28,8 @@ import WorkspaceSettingsDialog from '@/components/workspace-settings-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import BillingPopoverContent from '@/components/billing-popover';
+import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
 
 type UserProp = Pick<User, 'id' | 'email' | 'firstName' | 'lastName' | 'role' | 'rank' | 'xp'> | null;
 
@@ -48,10 +50,55 @@ export default function TopBar({ user, workspace }: TopBarProps) {
   const isMobile = useIsMobile();
   const [isMounted, setIsMounted] = useState(false);
   const { handleCommandSubmit, isLoading } = useAppStore();
+  const { toast } = useToast();
+
+  const [isListening, setIsListening] = useState(false);
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
 
   useEffect(() => {
     setIsMounted(true);
   }, []);
+
+  useEffect(() => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      console.warn("Speech recognition not supported by this browser.");
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.continuous = false;
+    recognition.lang = 'en-US';
+    recognition.interimResults = false;
+
+    recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        if (formRef.current) {
+            const inputElement = formRef.current.elements.namedItem('command') as HTMLInputElement;
+            if (inputElement) {
+                inputElement.value = transcript;
+            }
+        }
+        handleCommandSubmit(transcript);
+        setIsListening(false);
+    };
+
+    recognition.onerror = (event) => {
+        console.error('Speech recognition error:', event.error);
+        toast({ variant: 'destructive', title: 'Voice Recognition Error', description: `Could not process audio. Error: ${event.error}` });
+        setIsListening(false);
+    };
+
+    recognition.onend = () => {
+        setIsListening(false);
+    };
+
+    recognitionRef.current = recognition;
+
+    return () => {
+      recognition.stop();
+    }
+  }, [handleCommandSubmit, toast]);
 
   const getInitials = () => {
     if (!user) return 'A';
@@ -60,6 +107,15 @@ export default function TopBar({ user, workspace }: TopBarProps) {
     return `${first}${last}`.toUpperCase() || 'A';
   }
 
+  const handleMicClick = () => {
+      if (isListening) {
+          recognitionRef.current?.stop();
+          setIsListening(false);
+      } else {
+          recognitionRef.current?.start();
+          setIsListening(true);
+      }
+  };
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -69,7 +125,7 @@ export default function TopBar({ user, workspace }: TopBarProps) {
     formRef.current?.reset();
   };
 
-  const placeholderText = isMobile ? "BEEP Command..." : "BEEP: Tell me what you want to achieve...";
+  const placeholderText = isListening ? "Listening..." : isMobile ? "BEEP Command..." : "BEEP: Tell me what you want to achieve...";
   const rank = user?.rank || 'NEOPHYTE';
   const rankLabel = rank.replace('_', ' ').toLowerCase();
 
@@ -88,16 +144,23 @@ export default function TopBar({ user, workspace }: TopBarProps) {
         )}
       </div>
       <div className="flex-1 max-w-xl">
-        <form ref={formRef} onSubmit={handleSubmit} className="relative">
-          <Input
-            name="command"
-            type="text"
-            placeholder={isMounted ? placeholderText : "BEEP: Tell me what you want to achieve..."}
-            className="w-full bg-input/10 border border-foreground/20 focus-visible:ring-1 focus-visible:ring-primary focus-visible:ring-offset-0 pl-10 h-10"
-            disabled={isLoading}
-          />
-          <Sparkles className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-primary/70" />
-        </form>
+        <div className="flex items-center gap-2">
+            <form ref={formRef} onSubmit={handleSubmit} className="relative flex-1">
+              <Input
+                name="command"
+                type="text"
+                placeholder={isMounted ? placeholderText : "BEEP: Tell me what you want to achieve..."}
+                className="w-full bg-input/10 border border-foreground/20 focus-visible:ring-1 focus-visible:ring-primary focus-visible:ring-offset-0 pl-10 h-10"
+                disabled={isLoading}
+              />
+              <Sparkles className={cn("absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-primary/70", isListening && "animate-pulse")}/>
+            </form>
+            {isMobile && isMounted && (
+                <Button type="button" size="icon" variant="ghost" onClick={handleMicClick} className={cn("flex-shrink-0 h-10 w-10", isListening && "bg-destructive/20")}>
+                    {isListening ? <MicOff className="text-destructive animate-pulse" /> : <Mic className="text-primary"/>}
+                </Button>
+            )}
+        </div>
       </div>
       <div className="flex items-center gap-2 text-sm text-muted-foreground">
         <div className="flex items-center gap-2" title="Aegis Status: Online">
