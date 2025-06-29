@@ -27,9 +27,8 @@ export async function GET(request: NextRequest) {
       firstName: true,
       lastName: true,
       role: true,
-      rank: true,
-      xp: true,
       lastLoginAt: true,
+      ownedChaosCards: true,
     },
   });
 

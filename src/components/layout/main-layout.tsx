@@ -1,14 +1,15 @@
+
 'use client';
 
 import React from 'react';
 import { usePathname } from 'next/navigation';
 import TopBar from '@/components/layout/top-bar';
-import type { User, Workspace, UserRole, UserRank } from '@prisma/client';
+import type { User, Workspace } from '@prisma/client';
 import BottomNavBar from './bottom-nav-bar';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 
-type UserProp = Pick<User, 'id' | 'email' | 'firstName' | 'lastName' | 'role' | 'rank' | 'xp'> | null;
+type UserProp = Pick<User, 'id' | 'email' | 'firstName' | 'lastName' | 'role'> | null;
 
 export function MainLayout({ children, user, workspace }: { children: React.ReactNode; user: UserProp; workspace: Workspace | null }) {
   const pathname = usePathname();

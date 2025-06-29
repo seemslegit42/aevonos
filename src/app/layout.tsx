@@ -5,14 +5,14 @@ import { Toaster } from "@/components/ui/toaster"
 import { MainLayout } from '@/components/layout/main-layout';
 import { getServerActionSession } from '@/lib/auth';
 import prisma from '@/lib/prisma';
-import type { User, Workspace, UserRole, UserRank } from '@prisma/client';
+import type { User, Workspace } from '@prisma/client';
 
 export const metadata: Metadata = {
   title: 'ΛΞVON OS',
   description: 'An agentic operating system interface.',
 };
 
-type UserProp = Pick<User, 'id' | 'email' | 'firstName' | 'lastName' | 'role' | 'rank' | 'xp'> | null;
+type UserProp = Pick<User, 'id' | 'email' | 'firstName' | 'lastName' | 'role'> | null;
 
 export default async function RootLayout({
   children,
@@ -35,8 +35,6 @@ export default async function RootLayout({
                   firstName: true,
                   lastName: true,
                   role: true,
-                  rank: true,
-                  xp: true,
                 },
             }),
             prisma.workspace.findUnique({

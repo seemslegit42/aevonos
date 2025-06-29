@@ -1,3 +1,4 @@
+
 'use server';
 
 import { processUserCommand } from '@/ai/agents/beep';
@@ -10,6 +11,7 @@ import { TransactionType } from '@prisma/client';
 import { z } from 'zod';
 import { requestCreditTopUpInDb } from '@/ai/tools/billing-tools';
 import { microAppManifests } from '@/config/micro-apps';
+import { chaosCardManifest } from '@/config/chaos-cards';
 import prisma from '@/lib/prisma';
 
 
@@ -206,6 +208,81 @@ export async function purchaseMicroApp(appId: string) {
 
   } catch (error) {
     console.error(`[Action: purchaseMicroApp] for app ${appId}:`, error);
+    const errorMessage = error instanceof Error ? error.message : 'Failed to complete purchase.';
+    return { success: false, error: errorMessage };
+  }
+}
+
+
+export async function purchaseChaosCard(cardKey: string) {
+  const session = await getServerActionSession();
+  if (!session?.userId || !session?.workspaceId) {
+    return { success: false, error: 'Unauthorized' };
+  }
+
+  const cardManifest = chaosCardManifest.find(card => card.key === cardKey);
+  if (!cardManifest) {
+    return { success: false, error: 'Chaos Card not found in manifest.' };
+  }
+
+  const { cost, name } = cardManifest;
+
+  try {
+    // We need both the user and the workspace in this transaction
+    const [user, workspace] = await Promise.all([
+      prisma.user.findUnique({
+        where: { id: session.userId },
+        include: { ownedChaosCards: { select: { key: true } } }
+      }),
+      prisma.workspace.findUnique({
+        where: { id: session.workspaceId },
+      }),
+    ]);
+    
+    if (!user || !workspace) {
+      return { success: false, error: 'User or Workspace not found.' };
+    }
+
+    if (user.ownedChaosCards.some(card => card.key === cardKey)) {
+      return { success: false, error: 'Card already owned.' };
+    }
+
+    if ((workspace.credits as unknown as number) < cost) {
+      return { success: false, error: 'Insufficient ΞCredits.' };
+    }
+
+    const cardInDb = await prisma.chaosCard.findUnique({ where: { key: cardKey } });
+    if (!cardInDb) {
+      return { success: false, error: 'Card does not exist in the database.' };
+    }
+
+    // Use a transaction to ensure atomicity
+    await prisma.$transaction(async (tx) => {
+      // 1. Debit the credits from the workspace by creating a transaction
+      await createTransaction({
+        workspaceId: session.workspaceId,
+        userId: session.userId,
+        type: TransactionType.DEBIT,
+        amount: cost,
+        description: `Chaos Card Acquired: ${name}`,
+      });
+
+      // 2. Add the card to the user's collection
+      await tx.user.update({
+        where: { id: session.userId },
+        data: {
+          ownedChaosCards: {
+            connect: { id: cardInDb.id },
+          },
+        },
+      });
+    });
+
+    revalidatePath('/'); // Revalidate to reflect changes
+    return { success: true, message: `Successfully acquired ${name}!` };
+
+  } catch (error) {
+    console.error(`[Action: purchaseChaosCard] for card ${cardKey}:`, error);
     const errorMessage = error instanceof Error ? error.message : 'Failed to complete purchase.';
     return { success: false, error: errorMessage };
   }
