@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState } from 'react';
@@ -52,11 +51,11 @@ const StepOne = ({ nextStep }: { nextStep: () => void }) => (
         className="text-center space-y-4"
     >
         <div className="flex justify-center">
-            <Image src="/logo.svg" alt="Aevon OS Logo" width={80} height={80} className="w-20 h-20" />
+            <Image src="/logo-green.png" alt="Aevon OS Logo" width={80} height={80} className="w-20 h-20" />
         </div>
         <h1 className="text-3xl font-headline tracking-widest text-primary">Rite of Invocation</h1>
         <p className="text-muted-foreground">The canvas must be summoned. State your claim.</p>
-        <Button onClick={nextStep} variant="outline" className="w-full max-w-xs mx-auto text-lg h-12 border-2 hover:bg-primary/20 hover:text-primary-foreground">Cross the Threshold</Button>
+        <Button onClick={nextStep} variant="outline" className="w-full max-w-xs mx-auto text-lg h-12 border-2 text-roman-aqua border-roman-aqua hover:bg-primary/20 hover:text-primary-foreground">Cross the Threshold</Button>
     </motion.div>
 );
 
