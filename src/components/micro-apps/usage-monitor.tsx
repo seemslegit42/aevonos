@@ -6,7 +6,7 @@ import type { BillingUsage } from '@/ai/tools/billing-schemas';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { ArrowUpRight, RefreshCw, AlertTriangle, CheckCircle, Clock } from 'lucide-react';
+import { ArrowUpRight, RefreshCw, AlertTriangle, CheckCircle, Clock, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter, CardDescription } from '@/components/ui/card';
@@ -21,36 +21,47 @@ export default function UsageMonitor(props: Partial<BillingUsage>) {
     const [isTxLoading, setIsTxLoading] = useState(true);
     const [workspace, setWorkspace] = useState<Workspace | null>(null);
     const [isTopUpOpen, setIsTopUpOpen] = useState(false);
+    const [confirmingId, setConfirmingId] = useState<string | null>(null);
 
-    const fetchTransactions = async () => {
+    const fetchAllData = async () => {
         setIsTxLoading(true);
         try {
-            const response = await fetch('/api/billing/transactions');
-            if (!response.ok) throw new Error('Failed to fetch transaction history.');
-            const data = await response.json();
-            setTransactions(data);
+            const [txResponse, wsResponse] = await Promise.all([
+                fetch('/api/billing/transactions'),
+                fetch('/api/workspaces/me')
+            ]);
+            if (!txResponse.ok) throw new Error('Failed to fetch transaction history.');
+            if (!wsResponse.ok) throw new Error('Failed to fetch workspace data.');
+            
+            const txData = await txResponse.json();
+            const wsData = await wsResponse.json();
+
+            setTransactions(txData);
+            setWorkspace(wsData);
         } catch (error) {
             toast({ variant: 'destructive', title: 'Error', description: (error as Error).message });
         } finally {
             setIsTxLoading(false);
         }
-    }
+    };
     
-    const fetchWorkspace = async () => {
-        try {
-            const response = await fetch('/api/workspaces/me');
-            if (!response.ok) throw new Error('Failed to fetch workspace data.');
-            const data = await response.json();
-            setWorkspace(data);
-        } catch (error) {
-            console.error("Failed to fetch workspace:", error);
-        }
-    }
-
     useEffect(() => {
-        fetchTransactions();
-        fetchWorkspace();
+        fetchAllData();
     }, []);
+
+    const handleConfirm = async (transactionId: string) => {
+        setConfirmingId(transactionId);
+        const { confirmEtransfer } = await import('@/app/actions'); // Lazy import for client component
+        const result = await confirmEtransfer(transactionId);
+
+        if (result.success) {
+            toast({ title: 'Transaction Confirmed', description: 'The workspace balance has been updated.' });
+            await fetchAllData(); // Re-fetch all data to ensure UI consistency
+        } else {
+            toast({ variant: 'destructive', title: 'Confirmation Failed', description: result.error });
+        }
+        setConfirmingId(null);
+    };
 
     const handleManagePlan = () => {
         toast({
@@ -60,7 +71,14 @@ export default function UsageMonitor(props: Partial<BillingUsage>) {
         window.open('/pricing', '_blank');
     }
     
-    if (!props.planTier) {
+    const displayProps = workspace ? {
+        totalActionsUsed: workspace.agentActionsUsed,
+        planLimit: props.planLimit,
+        planTier: workspace.planTier,
+        overageEnabled: workspace.overageEnabled
+    } : props;
+    
+    if (!displayProps.planTier) {
         return (
              <div className="p-4 text-center text-muted-foreground">
                 <p>No usage data loaded.</p>
@@ -69,7 +87,7 @@ export default function UsageMonitor(props: Partial<BillingUsage>) {
         )
     }
 
-    const { totalActionsUsed = 0, planLimit = 0, planTier, overageEnabled } = props;
+    const { totalActionsUsed = 0, planLimit = 0, planTier, overageEnabled } = displayProps;
     const percentage = planLimit > 0 ? Math.min((totalActionsUsed / planLimit) * 100, 100) : 0;
 
     const getIndicatorColor = (p: number) => {
@@ -115,7 +133,7 @@ export default function UsageMonitor(props: Partial<BillingUsage>) {
                             <CardTitle className="text-base">Transaction History</CardTitle>
                             <CardDescription className="text-xs">Recent credit and debit activity.</CardDescription>
                         </div>
-                        <Button variant="ghost" size="icon" onClick={fetchTransactions} disabled={isTxLoading}><RefreshCw className={cn("h-4 w-4", isTxLoading && "animate-spin")}/></Button>
+                        <Button variant="ghost" size="icon" onClick={fetchAllData} disabled={isTxLoading}><RefreshCw className={cn("h-4 w-4", isTxLoading && "animate-spin")}/></Button>
                      </CardHeader>
                      <CardContent className="p-3 pt-0 flex-grow min-h-0">
                         <ScrollArea className="h-full">
@@ -146,6 +164,14 @@ export default function UsageMonitor(props: Partial<BillingUsage>) {
                                                     <Icon className="h-3 w-3" /> {statusInfo.text}
                                                 </span>
                                             </div>
+                                            {tx.status === TransactionStatus.PENDING && tx.type === TransactionType.CREDIT && (
+                                                <div className="flex justify-end mt-2">
+                                                    <Button size="sm" variant="secondary" onClick={() => handleConfirm(tx.id)} disabled={confirmingId === tx.id}>
+                                                        {confirmingId === tx.id ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle className="mr-2 h-4 w-4" />}
+                                                        Approve Credit
+                                                    </Button>
+                                                </div>
+                                            )}
                                         </div>
                                       )
                                     })}

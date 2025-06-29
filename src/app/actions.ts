@@ -6,7 +6,7 @@ import type { UserCommandOutput } from '@/ai/agents/beep-schemas';
 import { revalidatePath } from 'next/cache';
 import { scanEvidence as scanEvidenceFlow, type PaperTrailScanInput, type PaperTrailScanOutput } from '@/ai/agents/paper-trail';
 import { getServerActionSession } from '@/lib/auth';
-import { createTransaction } from '@/services/ledger-service';
+import { createTransaction, confirmPendingTransaction } from '@/services/ledger-service';
 import { TransactionType } from '@prisma/client';
 import { z } from 'zod';
 import { requestCreditTopUpInDb } from '@/ai/tools/billing-tools';
@@ -123,4 +123,22 @@ export async function requestCreditTopUp(formData: FormData) {
     }
 
     return result;
+}
+
+export async function confirmEtransfer(transactionId: string) {
+  const session = await getServerActionSession();
+  if (!session?.userId || !session?.workspaceId) {
+    return { success: false, error: 'Unauthorized' };
+  }
+
+  // Future: Add admin role check here to ensure only authorized users can confirm.
+
+  try {
+    await confirmPendingTransaction(transactionId, session.workspaceId);
+    revalidatePath('/'); // Revalidates the page to show updated balance and status
+    return { success: true };
+  } catch (error) {
+    console.error('[Action: confirmEtransfer]', error);
+    return { success: false, error: error instanceof Error ? error.message : 'Failed to confirm transaction.' };
+  }
 }
