@@ -1,4 +1,3 @@
-
 'use server';
 /**
  * @fileOverview Service for handling gamification, including accolades and ranks.

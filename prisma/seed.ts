@@ -1,5 +1,5 @@
 
-import { PrismaClient, AgentStatus, SecurityRiskLevel, TransactionType, PlanTier, UserRole } from '@prisma/client'
+import { PrismaClient, AgentStatus, SecurityRiskLevel, TransactionType, PlanTier, UserRole, UserRank } from '@prisma/client'
 import bcrypt from 'bcryptjs'
 
 const prisma = new PrismaClient()
@@ -30,6 +30,8 @@ async function main() {
       firstName: 'The',
       lastName: 'Architect',
       role: UserRole.ADMIN,
+      rank: UserRank.ARCHITECT,
+      xp: 1000,
     },
   });
   console.log(`Created ADMIN user with id: ${adminUser.id}`)
@@ -139,6 +141,16 @@ async function main() {
     ]
   });
   console.log('Seeded contacts.');
+
+  await prisma.accolade.createMany({
+    data: [
+      { key: 'FIRST_LOGIN', name: 'System Online', description: 'Successfully authenticated with the OS for the first time.', xpValue: 10 },
+      { key: 'AGENT_DEPLOYED', name: 'Agent Handler', description: 'Deployed your first AI agent to the canvas.', xpValue: 50 },
+      { key: 'COMMAND_MASTER', name: 'BEEP BEEP', description: 'Issued 50 commands to BEEP.', xpValue: 100 },
+      { key: 'CREDIT_WHERE_DUE', name: 'Patron', description: 'Topped up your workspace credits for the first time.', xpValue: 25 },
+    ]
+  });
+  console.log('Seeded accolades.');
 
   console.log(`Seeding finished.`)
 }
