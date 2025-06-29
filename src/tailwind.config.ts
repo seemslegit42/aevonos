@@ -69,6 +69,7 @@ export default {
         'y2k-blueviolet': 'hsl(var(--y2k-blueviolet))',
         'noir-sepia': 'hsl(var(--noir-sepia))',
         'noir-ink': 'hsl(var(--noir-ink))',
+        'roman-aqua': 'hsl(var(--roman-aqua))',
       },
       keyframes: {
         'accordion-down': {
