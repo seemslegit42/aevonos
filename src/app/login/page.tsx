@@ -59,7 +59,7 @@ export default function LoginPage() {
       setError(err.message);
       toast({
         variant: 'destructive',
-        title: 'Login Failed',
+        title: 'Invocation Failed',
         description: err.message,
       });
     }
@@ -81,8 +81,8 @@ export default function LoginPage() {
               height={40}
               className="mx-auto mb-4 h-10 w-auto"
             />
-            <CardTitle className="font-headline text-2xl">Welcome Back</CardTitle>
-            <CardDescription>Enter the Canvas to resume your work.</CardDescription>
+            <CardTitle className="font-headline text-2xl">Resume the Ritual</CardTitle>
+            <CardDescription>The Canvas awaits its Architect.</CardDescription>
           </CardHeader>
           <CardContent>
             <Form {...form}>
@@ -98,7 +98,7 @@ export default function LoginPage() {
                           <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                           <Input
                             type="email"
-                            placeholder="Email"
+                            placeholder="Sigil (Email)"
                             className="pl-10"
                             disabled={isSubmitting}
                             {...field}
@@ -120,7 +120,7 @@ export default function LoginPage() {
                            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                            <Input
                             type="password"
-                            placeholder="Password"
+                            placeholder="Vow (Password)"
                             className="pl-10"
                             disabled={isSubmitting}
                             {...field}
@@ -135,7 +135,7 @@ export default function LoginPage() {
                   {isSubmitting ? (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   ) : null}
-                  Login
+                  Summon the Canvas
                 </Button>
               </form>
             </Form>
@@ -143,9 +143,9 @@ export default function LoginPage() {
           <CardFooter className="flex-col items-center justify-center text-center">
              {error && <p className="text-destructive text-sm mb-4">{error}</p>}
             <p className="text-xs text-muted-foreground">
-              Don&apos;t have an account?{' '}
+              New Operator?{' '}
               <Link href="/register" className="font-medium text-primary hover:underline">
-                Register
+                Begin the Rite of Invocation.
               </Link>
             </p>
           </CardFooter>
