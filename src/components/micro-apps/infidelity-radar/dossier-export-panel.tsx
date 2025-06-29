@@ -1,15 +1,14 @@
+
 'use client';
 
 import React, { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Separator } from '@/components/ui/separator';
 import { Lock, Unlock, Gavel, FileDown, FileJson, Copy, Loader2 } from 'lucide-react';
 import type { DossierOutput } from '@/ai/agents/dossier-schemas';
 import type { OsintOutput } from '@/ai/agents/osint-schemas';
@@ -56,9 +55,9 @@ export default function DossierExportPanel({
                     password: password,
                     dossierInput: {
                         targetName,
-                        osintReport,
-                        analysisResult,
-                        decoyResult,
+                        osintReport: osintReport || undefined,
+                        analysisResult: analysisResult || undefined,
+                        decoyResult: decoyResult || undefined,
                         redacted: false,
                         mode: isLegal ? 'legal' : 'standard',
                         preparedFor: isLegal ? "Attorney Review // Case #AR-2024-889" : undefined,
@@ -143,16 +142,16 @@ export default function DossierExportPanel({
                 </div>
                  <div className="flex gap-2">
                     <Button variant={isLegal ? "destructive" : "secondary"} className="w-full" disabled={isExporting} onClick={() => handleExport('pdf')}>
-                        {isExporting ? <Loader2 className="animate-spin" /> : <><FileDown className="mr-2" /> {isLegal ? 'Unlock Legal PDF ($49.99)' : 'Unlock PDF ($19.99)'}</>}
+                        {isExporting ? <Loader2 className="animate-spin" /> : <><FileDown className="mr-2" /> {isLegal ? 'Unlock Legal PDF (499 Ξ)' : 'Unlock PDF (199 Ξ)'}</>}
                     </Button>
                      <Button variant="outline" className="w-full" disabled={isExporting} onClick={() => handleExport('json')}>
-                        {isExporting ? <Loader2 className="animate-spin" /> : <><FileJson className="mr-2" /> {isLegal ? '+ Forensic JSON ($29.99)' : '+ JSON ($9.99)'}</>}
+                        {isExporting ? <Loader2 className="animate-spin" /> : <><FileJson className="mr-2" /> {isLegal ? '+ Forensic JSON (299 Ξ)' : '+ JSON (99 Ξ)'}</>}
                     </Button>
                 </div>
             </CardContent>
             {report.reportHash && (
-                 <CardFooter className="p-2">
-                    <div className="flex items-center gap-2 w-full">
+                 <CardContent className="p-2 pt-0">
+                    <div className="flex items-center gap-2 w-full bg-background/50 p-1 rounded">
                         <p className="text-xs text-muted-foreground font-mono w-full truncate" title={report.reportHash}>
                             SHA256: {report.reportHash}
                         </p>
@@ -160,7 +159,7 @@ export default function DossierExportPanel({
                             <Copy className="h-3 w-3" />
                         </Button>
                     </div>
-                </CardFooter>
+                </CardContent>
             )}
         </Card>
     )

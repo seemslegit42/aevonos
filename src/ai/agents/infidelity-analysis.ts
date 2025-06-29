@@ -12,7 +12,7 @@ import {
     type InfidelityAnalysisInput, 
     type InfidelityAnalysisOutput 
 } from './infidelity-analysis-schemas';
-import { incrementAgentActions } from '@/services/billing-service';
+import { authorizeAndDebitAgentActions } from '@/services/billing-service';
 
 const performInfidelityAnalysisFlow = ai.defineFlow(
   {
@@ -21,7 +21,7 @@ const performInfidelityAnalysisFlow = ai.defineFlow(
     outputSchema: InfidelityAnalysisOutputSchema,
   },
   async ({ situationDescription, workspaceId }) => {
-    await incrementAgentActions(workspaceId);
+    await authorizeAndDebitAgentActions(workspaceId);
 
     const finalPrompt = `You are a discreet and highly perceptive private investigator specializing in relationship security and behavioral analysis. Your call sign is "Spectre." You do not use emojis or overly casual language. Your tone is professional, serious, and clinical.
 

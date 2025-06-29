@@ -5,17 +5,23 @@ import { generateDossier } from '@/ai/agents/dossier-agent';
 import { DossierInputSchema } from '@/ai/agents/dossier-schemas';
 import { pdf } from 'md-to-pdf';
 import CryptoJS from 'crypto-js';
+import { getServerActionSession } from '@/lib/auth';
 
 const ExportRequestSchema = z.object({
   format: z.enum(['pdf', 'json']),
   encrypt: z.boolean().optional(),
   password: z.string().optional(),
-  dossierInput: DossierInputSchema,
+  dossierInput: DossierInputSchema.omit({ workspaceId: true }),
 });
 
 
 export async function POST(request: NextRequest) {
     try {
+        const session = await getServerActionSession();
+        if (!session?.workspaceId) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
         const body = await request.json();
         const validation = ExportRequestSchema.safeParse(body);
 
@@ -29,7 +35,12 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Password is required for encryption.' }, { status: 400 });
         }
         
-        const { markdownContent, fileName } = await generateDossier(dossierInput);
+        const fullDossierInput = {
+            ...dossierInput,
+            workspaceId: session.workspaceId,
+        };
+        
+        const { markdownContent, fileName } = await generateDossier(fullDossierInput);
 
         if (format === 'json') {
             let content: string | CryptoJS.lib.CipherParams = JSON.stringify({

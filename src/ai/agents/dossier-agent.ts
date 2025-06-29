@@ -14,7 +14,8 @@ const generateDossierFlow = ai.defineFlow(
     outputSchema: DossierOutputSchema,
   },
   async (input) => {
-    await authorizeAndDebitAgentActions(input.workspaceId);
+    // A dossier is a high-value artifact. This could be a higher cost action.
+    await authorizeAndDebitAgentActions(input.workspaceId, 5);
 
     const today = format(new Date(), 'yyyy-MM-dd');
     const caseFileName = (input.targetName || 'UNKNOWN_SUBJECT').toLowerCase().replace(/\s/g, '-');
@@ -180,7 +181,7 @@ The subject demonstrates a consistent pattern of concealment, behavioral inconsi
     const { output } = await ai.generate({
       prompt: prompt,
       model: 'googleai/gemini-1.5-flash-latest',
-      output: { schema: z.object({ markdownContent: z.string() }) },
+      output: { schema: { markdownContent: z.string() } },
     });
     
     if (!output) {
