@@ -1,43 +1,45 @@
+
 'use client';
 
-import React from 'react';
-import Link from 'next/link';
+import React, { useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { motion } from 'framer-motion';
-
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, KeyRound, Mail } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Form, FormControl, FormField, FormItem, FormMessage, FormLabel } from '@/components/ui/form';
+import { Loader2, Mail, Lock } from 'lucide-react';
+import Link from 'next/link';
+import { motion } from 'framer-motion';
 
 const loginSchema = z.object({
-  email: z.string().email({ message: 'A valid email is required.' }),
-  password: z.string().min(1, 'Password cannot be empty.'),
+  email: z.string().email({ message: 'Please enter a valid email address.' }),
+  password: z.string().min(1, { message: 'Password is required.' }),
 });
 
-type LoginFormData = z.infer<typeof loginSchema>;
+type LoginFormValues = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
-  
-  const form = useForm<LoginFormData>({
+  const [error, setError] = useState<string | null>(null);
+
+  const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      email: 'architect@aevonos.com',
-      password: 'password123',
+      email: '',
+      password: '',
     },
   });
 
-  const { formState: { isSubmitting } } = form;
+  const { isSubmitting } = form.formState;
 
-  async function onSubmit(values: LoginFormData) {
+  const onSubmit = async (values: LoginFormValues) => {
+    setError(null);
     try {
       const response = await fetch('/api/auth/login', {
         method: 'POST',
@@ -45,92 +47,110 @@ export default function LoginPage() {
         body: JSON.stringify(values),
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Authentication failed. Please check your credentials.');
+        throw new Error(data.error || 'An unexpected error occurred.');
       }
-      
-      toast({
-        title: 'Login Successful',
-        description: 'Welcome back.',
-      });
 
       router.push('/');
-      
-    } catch (error) {
+      router.refresh();
+    } catch (err: any) {
+      setError(err.message);
       toast({
         variant: 'destructive',
         title: 'Login Failed',
-        description: (error as Error).message,
+        description: err.message,
       });
     }
-  }
+  };
 
   return (
-    <div className="w-full h-screen flex items-center justify-center p-4">
-        <motion.div 
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.7, ease: "easeOut" }}
-            className="w-full max-w-sm"
-        >
-            <Card>
-                <CardHeader className="text-center">
-                    <div className="flex justify-center mb-4">
-                        <Image src="/logo-neutral.svg" alt="Aevon OS Logo" width={60} height={60} className="h-12 w-auto" />
-                    </div>
-                    <CardTitle className="text-2xl font-headline tracking-wider text-primary">Re-enter the Canvas</CardTitle>
-                    <CardDescription>Reaffirm your vow to the system.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <Form {...form}>
-                        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                            <FormField
-                                control={form.control}
-                                name="email"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel className="sr-only">Email</FormLabel>
-                                        <FormControl>
-                                            <div className="relative">
-                                                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                                <Input placeholder="architect@aevonos.com" {...field} className="pl-10" />
-                                            </div>
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                            <FormField
-                                control={form.control}
-                                name="password"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel className="sr-only">Password</FormLabel>
-                                        <FormControl>
-                                            <div className="relative">
-                                                <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                                <Input type="password" placeholder="••••••••••••••••" {...field} className="pl-10" />
-                                            </div>
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                            <Button type="submit" className="w-full" disabled={isSubmitting}>
-                                {isSubmitting ? <Loader2 className="animate-spin" /> : 'Invoke The Canvas'}
-                            </Button>
-                        </form>
-                    </Form>
-                </CardContent>
-            </Card>
-            <div className="mt-4 text-center text-sm text-muted-foreground">
-                First invocation?{' '}
-                <Link href="/register" className="font-bold text-primary hover:text-primary/80 transition-colors">
-                    Begin the Rite.
-                </Link>
-            </div>
-        </motion.div>
+    <div className="flex min-h-screen items-center justify-center p-4">
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.7, ease: 'easeOut' }}
+      >
+        <Card className="w-full max-w-sm">
+          <CardHeader className="text-center">
+            <Image
+              src="/logo-neutral.svg"
+              alt="Aevon OS Logo"
+              width={120}
+              height={40}
+              className="mx-auto mb-4 h-10 w-auto"
+            />
+            <CardTitle className="font-headline text-2xl">Welcome Back</CardTitle>
+            <CardDescription>Enter the Canvas to resume your work.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="sr-only">Email</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                          <Input
+                            type="email"
+                            placeholder="Email"
+                            className="pl-10"
+                            disabled={isSubmitting}
+                            {...field}
+                          />
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="sr-only">Password</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                           <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                           <Input
+                            type="password"
+                            placeholder="Password"
+                            className="pl-10"
+                            disabled={isSubmitting}
+                            {...field}
+                          />
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <Button type="submit" className="w-full" disabled={isSubmitting}>
+                  {isSubmitting ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : null}
+                  Login
+                </Button>
+              </form>
+            </Form>
+          </CardContent>
+          <CardFooter className="flex-col items-center justify-center text-center">
+             {error && <p className="text-destructive text-sm mb-4">{error}</p>}
+            <p className="text-xs text-muted-foreground">
+              Don&apos;t have an account?{' '}
+              <Link href="/register" className="font-medium text-primary hover:underline">
+                Register
+              </Link>
+            </p>
+          </CardFooter>
+        </Card>
+      </motion.div>
     </div>
   );
 }
