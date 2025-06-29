@@ -48,7 +48,11 @@ export default function LoomPage() {
     const [listRefreshTrigger, setListRefreshTrigger] = useState(0);
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     
+    // Mobile Sheet States
     const [isNodesSheetOpen, setIsNodesSheetOpen] = useState(false);
+    const [isWorkflowsSheetOpen, setIsWorkflowsSheetOpen] = useState(false);
+    const [isHistorySheetOpen, setIsHistorySheetOpen] = useState(false);
+
 
     const { toast } = useToast();
     const [userRole, setUserRole] = useState<UserRole | null>(null);
@@ -94,6 +98,9 @@ export default function LoomPage() {
             }
         } else {
             setActiveWorkflow(BLANK_WORKFLOW);
+        }
+        if (isMobile) {
+            setIsWorkflowsSheetOpen(false);
         }
     };
     
@@ -271,24 +278,34 @@ export default function LoomPage() {
     }, [connection, edges]);
 
   const renderDesktopLayout = () => (
-      <div className="flex-grow flex gap-4 p-4 min-h-0">
-          <NodesSidebar />
-          <WorkflowCanvas 
-              ref={canvasRef}
-              nodes={nodes} 
-              edges={edges} 
-              onNodeClick={setSelectedNode} 
-              selectedNodeId={selectedNode?.id}
-              onConnectStart={onConnectStart}
-              onConnectEnd={onConnectEnd}
-              connectionSourceId={connection?.sourceId}
-          />
-          <PropertyInspector node={selectedNode} onUpdate={updateNodeData} />
-      </div>
+    <div className="flex-grow flex flex-row min-h-0">
+        <div className="w-64 flex-shrink-0 flex-col min-h-0 border-r border-foreground/20 hidden md:flex">
+            <div className="h-[60%] min-h-0 border-b border-foreground/20">
+                <WorkflowList onSelectWorkflow={handleSelectWorkflow} activeWorkflowId={activeWorkflowId} triggerRefresh={listRefreshTrigger}/>
+            </div>
+            <div className="h-[40%] min-h-0">
+                <WorkflowRunHistory activeWorkflowId={activeWorkflowId} triggerRefresh={listRefreshTrigger}/>
+            </div>
+        </div>
+        <div className="flex-grow flex gap-4 p-4 min-h-0">
+            <NodesSidebar />
+            <WorkflowCanvas 
+                ref={canvasRef}
+                nodes={nodes} 
+                edges={edges} 
+                onNodeClick={setSelectedNode} 
+                selectedNodeId={selectedNode?.id}
+                onConnectStart={onConnectStart}
+                onConnectEnd={onConnectEnd}
+                connectionSourceId={connection?.sourceId}
+            />
+            <PropertyInspector node={selectedNode} onUpdate={updateNodeData} />
+        </div>
+    </div>
   );
 
   const renderMobileLayout = () => (
-    <div className="flex-grow flex p-2 md:p-4 min-h-0">
+    <div className="flex-grow flex p-2 min-h-0">
         <WorkflowCanvas 
             ref={canvasRef}
             nodes={nodes} 
@@ -309,53 +326,57 @@ export default function LoomPage() {
                 <PropertyInspector node={selectedNode} onUpdate={updateNodeData} />
             </SheetContent>
         </Sheet>
+        <Sheet open={isWorkflowsSheetOpen} onOpenChange={setIsWorkflowsSheetOpen}>
+             <SheetContent side="left" className="p-0 w-[85%] max-w-sm">
+                <WorkflowList onSelectWorkflow={handleSelectWorkflow} activeWorkflowId={activeWorkflowId} triggerRefresh={listRefreshTrigger}/>
+            </SheetContent>
+        </Sheet>
+        <Sheet open={isHistorySheetOpen} onOpenChange={setIsHistorySheetOpen}>
+             <SheetContent side="left" className="p-0 w-[85%] max-w-sm">
+                <WorkflowRunHistory activeWorkflowId={activeWorkflowId} triggerRefresh={listRefreshTrigger}/>
+            </SheetContent>
+        </Sheet>
     </div>
   );
 
   return (
-    <div className="flex flex-col h-full bg-background">
-        <LoomHeader 
-            activeWorkflow={activeWorkflow}
-            onWorkflowNameChange={handleWorkflowNameChange}
-            onSave={handleSave}
-            onRun={handleRun}
-            onDelete={() => setIsDeleteDialogOpen(true)}
-            isSaving={isSaving}
-            isRunning={isRunning}
-            userRole={userRole}
-            isLoadingUser={isLoadingUser}
-            onAddNodeClick={() => setIsNodesSheetOpen(true)}
-        />
-        <div className="flex-grow flex flex-row min-h-0">
-            <div className="w-64 flex-shrink-0 flex-col min-h-0 border-r border-foreground/20 hidden md:flex">
-              <div className="h-[60%] min-h-0 border-b border-foreground/20">
-                  <WorkflowList onSelectWorkflow={handleSelectWorkflow} activeWorkflowId={activeWorkflowId} triggerRefresh={listRefreshTrigger}/>
-              </div>
-              <div className="h-[40%] min-h-0">
-                 <WorkflowRunHistory activeWorkflowId={activeWorkflowId} triggerRefresh={listRefreshTrigger}/>
-              </div>
-          </div>
-            <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
-                {isMobile ? renderMobileLayout() : renderDesktopLayout()}
-            </DndContext>
+    <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
+        <div className="flex flex-col h-full bg-background">
+            <LoomHeader 
+                activeWorkflow={activeWorkflow}
+                onWorkflowNameChange={handleWorkflowNameChange}
+                onSave={handleSave}
+                onRun={handleRun}
+                onDelete={() => setIsDeleteDialogOpen(true)}
+                isSaving={isSaving}
+                isRunning={isRunning}
+                userRole={userRole}
+                isLoadingUser={isLoadingUser}
+                onAddNodeClick={() => setIsNodesSheetOpen(true)}
+                onWorkflowsClick={() => setIsWorkflowsSheetOpen(true)}
+                onHistoryClick={() => setIsHistorySheetOpen(true)}
+            />
+            
+            {isMobile ? renderMobileLayout() : renderDesktopLayout()}
+
+            <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        This action cannot be undone. This will permanently delete the
+                        workflow "{activeWorkflow?.name}".
+                    </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleDeleteConfirm} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                        Delete
+                    </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
-        <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-            <AlertDialogContent>
-                <AlertDialogHeader>
-                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                <AlertDialogDescription>
-                    This action cannot be undone. This will permanently delete the
-                    workflow "{activeWorkflow?.name}".
-                </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={handleDeleteConfirm} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                    Delete
-                </AlertDialogAction>
-                </AlertDialogFooter>
-            </AlertDialogContent>
-        </AlertDialog>
-    </div>
+    </DndContext>
   );
 }

@@ -5,7 +5,7 @@ import React from 'react';
 import Link from 'next/link';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Save, Play, Trash2, Loader2, ArrowLeft, Plus } from 'lucide-react';
+import { Save, Play, Trash2, Loader2, ArrowLeft, Plus, ListCollapse, History } from 'lucide-react';
 import type { Workflow } from './types';
 import type { UserRole } from '@prisma/client';
 
@@ -20,6 +20,8 @@ interface LoomHeaderProps {
   userRole: UserRole | null;
   isLoadingUser: boolean;
   onAddNodeClick?: () => void;
+  onWorkflowsClick?: () => void;
+  onHistoryClick?: () => void;
 }
 
 export default function LoomHeader({ 
@@ -33,6 +35,8 @@ export default function LoomHeader({
     userRole,
     isLoadingUser,
     onAddNodeClick,
+    onWorkflowsClick,
+    onHistoryClick
 }: LoomHeaderProps) {
   const canEdit = userRole === 'ADMIN' || userRole === 'MANAGER';
   const canRun = userRole !== 'AUDITOR';
@@ -40,7 +44,7 @@ export default function LoomHeader({
 
   return (
     <header className="flex-shrink-0 p-2 border-b border-foreground/20 flex items-center justify-between gap-4 h-16">
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2 md:gap-4">
         <Button variant="ghost" size="icon" asChild>
           <Link href="/">
             <ArrowLeft />
@@ -59,6 +63,16 @@ export default function LoomHeader({
           <Button variant="outline" size="icon" className="md:hidden" onClick={onAddNodeClick}>
             <Plus />
           </Button>
+        )}
+        {onWorkflowsClick && (
+            <Button variant="outline" size="icon" className="md:hidden" onClick={onWorkflowsClick}>
+                <ListCollapse />
+            </Button>
+        )}
+        {onHistoryClick && (
+            <Button variant="outline" size="icon" className="md:hidden" onClick={onHistoryClick}>
+                <History />
+            </Button>
         )}
         {activeWorkflow?.id && (
             <>
