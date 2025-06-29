@@ -1,5 +1,4 @@
 
-
 import { create } from 'zustand';
 import type { DragEndEvent } from '@dnd-kit/core';
 import React from 'react';
@@ -69,7 +68,8 @@ export type MicroAppType =
   | 'stonks-bot'
   | 'user-profile-settings'
   | 'workspace-settings'
-  | 'top-up';
+  | 'top-up'
+  | 'oracle-of-delphi-valley';
 
 // Define the shape of a MicroApp instance
 export interface MicroApp {
@@ -261,7 +261,7 @@ export const useAppStore = create<AppState>((set, get) => {
             break;
         
         case 'vin-diesel':
-            launchApp('vin-diesel', { title: `VIN: ...${report.report.vin.slice(-6)}`, description: 'Validation Result', contentProps: report.report as VinDieselOutput });
+            launchApp('vin-diesel', { title: `VIN: ...${report.report.vin.slice(-6)}`, description: 'Validation Result', contentProps: report.report });
             break;
         
         case 'winston-wolfe':
@@ -285,7 +285,7 @@ export const useAppStore = create<AppState>((set, get) => {
              break;
         
         case 'foremanator':
-            launchApp('foremanator', { title: 'Foremanator Site Log', description: 'Daily report processed.', contentProps: report.report as ForemanatorLogOutput });
+            launchApp('foremanator', { title: 'Foremanator Site Log', description: 'Daily report processed.', contentProps: report.report });
             break;
 
         case 'sterileish':
@@ -451,7 +451,7 @@ export const useAppStore = create<AppState>((set, get) => {
         }
         
         const { toast } = useToast.getState();
-        if (result.responseText) {
+        if (result.responseText && !result.responseText.includes('insufficient credits')) {
             toast({ title: 'BEEP', description: result.responseText });
         }
 
@@ -487,5 +487,3 @@ export const useAppStore = create<AppState>((set, get) => {
     },
   };
 });
-
-    

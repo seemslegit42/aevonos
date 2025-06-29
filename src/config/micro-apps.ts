@@ -1,5 +1,4 @@
 
-
 // This file serves as a non-database source of truth for micro-app manifests.
 // In a larger system, this could be stored in a database and managed via an admin interface.
 
@@ -521,6 +520,21 @@ export const microAppManifests: MicroAppManifest[] = [
     permissionsRequired: ['read:market_data'],
     routingPath: '/stonks-bot',
     contextAwareCapabilities: [],
+    isFeatured: true,
+  },
+  {
+    id: 'oracle-of-delphi-valley',
+    name: 'Oracle of Delphi (Valley)',
+    author: 'Klepsydra Engine',
+    description: 'The Folly of Venture Capital, gamified. Make your tribute to the Oracle.',
+    creditCost: 0,
+    priceModel: 'included',
+    imageUrl: 'https://placehold.co/600x400.png',
+    imageHint: 'temple oracle valley',
+    defaultSize: { width: 360, height: 520 },
+    permissionsRequired: ['write:billing'],
+    routingPath: '/oracle-of-delphi-valley',
+    contextAwareCapabilities: ['tribute_hook'],
     isFeatured: true,
   }
 ];

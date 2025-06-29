@@ -54,11 +54,15 @@ export async function handleCommand(command: string): Promise<UserCommandOutput>
     return result;
   } catch (error) {
     console.error('Error processing command:', error);
+    const errorMessage = error instanceof InsufficientCreditsError 
+        ? error.message 
+        : 'My apologies, I encountered an internal error and could not process your command.';
+    
     return {
         appsToLaunch: [],
         agentReports: [],
         suggestedCommands: ['Error: Could not process command.'],
-        responseText: 'My apologies, I encountered an internal error and could not process your command.'
+        responseText: errorMessage
     };
   }
 }
@@ -415,4 +419,29 @@ export async function getNudges() {
   return nudges;
 }
 
+export async function makeFollyTribute(instrumentId: string, tributeAmount: number) {
+  const session = await getServerActionSession();
+  if (!session?.userId || !session?.workspaceId) {
+    return { success: false, error: 'Unauthorized' };
+  }
+
+  try {
+    const result = await calculateOutcome(
+      session.userId,
+      session.workspaceId,
+      instrumentId,
+      tributeAmount
+    );
+    
+    revalidatePath('/'); // Revalidate to update credit balance everywhere
+    return { success: true, ...result };
+  } catch (error) {
+    console.error(`[Action: makeFollyTribute] for instrument ${instrumentId}:`, error);
+    if (error instanceof InsufficientCreditsError) {
+        return { success: false, error: "Insufficient ΞCredits for tribute." };
+    }
+    const errorMessage = error instanceof Error ? error.message : 'Tribute failed.';
+    return { success: false, error: errorMessage };
+  }
+}
     
