@@ -75,7 +75,7 @@ export default function LoginPage() {
         <Card className="w-full max-w-sm">
           <CardHeader className="text-center">
             <Image
-              src="/logo-neutral.svg"
+              src="/logo-neutral.png"
               alt="Aevon OS Logo"
               width={120}
               height={40}
