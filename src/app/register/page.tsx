@@ -203,29 +203,56 @@ const VowButton = ({ vow, Icon, onClick, isSelected }: { vow: string, Icon: stri
 const PhaseFour = ({ nextPhase, methods }: { nextPhase: () => void, methods: any }) => {
     const { setValue, watch } = methods;
     const selectedPsyche = watch('psyche');
+    const [vowMade, setVowMade] = useState(false);
     
     const selectVow = (psyche: UserPsyche) => {
+        if (vowMade) return; // Prevent re-selection
         setValue('psyche', psyche, { shouldValidate: true });
-        setTimeout(nextPhase, 500);
+        setVowMade(true);
+        setTimeout(nextPhase, 2000); // A longer pause to let the confirmation sink in
     }
     
+    const covenantText = {
+        [UserPsyche.SYNDICATE_ENFORCER]: "The Covenant of Motion accepts your Vow.",
+        [UserPsyche.RISK_AVERSE_ARTISAN]: "The Covenant of Worship accepts your Pledge.",
+        [UserPsyche.ZEN_ARCHITECT]: "The Covenant of Silence acknowledges your Path."
+    };
+    
     return (
-        <div className="w-full max-w-2xl mx-auto">
-             <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 1.0, delay: 0.5 }}
-                className="space-y-6"
-            >
-                <h2 className="text-center text-2xl md:text-3xl font-headline tracking-wider text-primary">
-                    “Make your vow.”
-                </h2>
-                <div className="grid md:grid-cols-3 gap-4">
-                    <VowButton vow="I will build faster than chaos." Icon="🜁" onClick={() => selectVow(UserPsyche.SYNDICATE_ENFORCER)} isSelected={selectedPsyche === UserPsyche.SYNDICATE_ENFORCER} />
-                    <VowButton vow="I will automate what others worship." Icon="🜃" onClick={() => selectVow(UserPsyche.RISK_AVERSE_ARTISAN)} isSelected={selectedPsyche === UserPsyche.RISK_AVERSE_ARTISAN} />
-                    <VowButton vow="I will create the silence of true automation." Icon="🜄" onClick={() => selectVow(UserPsyche.ZEN_ARCHITECT)} isSelected={selectedPsyche === UserPsyche.ZEN_ARCHITECT} />
-                </div>
-            </motion.div>
+        <div className="w-full max-w-2xl mx-auto min-h-[250px] flex items-center justify-center">
+            <AnimatePresence mode="wait">
+            {!vowMade ? (
+                 <motion.div
+                    key="selection"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 1.0, delay: 0.5 }}
+                    exit={{ opacity: 0, transition: { duration: 0.5 } }}
+                    className="space-y-6 w-full"
+                >
+                    <h2 className="text-center text-2xl md:text-3xl font-headline tracking-wider text-primary">
+                        “Make your vow.”
+                    </h2>
+                    <div className="grid md:grid-cols-3 gap-4">
+                        <VowButton vow="I will build faster than chaos." Icon="🜁" onClick={() => selectVow(UserPsyche.SYNDICATE_ENFORCER)} isSelected={false} />
+                        <VowButton vow="I will automate what others worship." Icon="🜃" onClick={() => selectVow(UserPsyche.RISK_AVERSE_ARTISAN)} isSelected={false} />
+                        <VowButton vow="I will create the silence of true automation." Icon="🜄" onClick={() => selectVow(UserPsyche.ZEN_ARCHITECT)} isSelected={false} />
+                    </div>
+                </motion.div>
+            ) : (
+                <motion.div
+                    key="confirmation"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1, transition: { duration: 1.0 } }}
+                    className="text-center"
+                >
+                    <h2 className="text-3xl md:text-4xl font-headline tracking-wider text-primary">
+                        {covenantText[selectedPsyche]}
+                    </h2>
+                    <p className="text-lg text-muted-foreground mt-2">Your path is set.</p>
+                </motion.div>
+            )}
+            </AnimatePresence>
         </div>
     )
 }
