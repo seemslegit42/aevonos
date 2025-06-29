@@ -6,7 +6,7 @@ import type { BillingUsage } from '@/ai/tools/billing-schemas';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { ArrowUpRight, RefreshCw, AlertTriangle, CheckCircle, Clock, Loader2 } from 'lucide-react';
+import { ArrowUpRight, RefreshCw, AlertTriangle, CheckCircle, Clock, Loader2, Flame, Gem } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter, CardDescription } from '@/components/ui/card';
@@ -14,8 +14,12 @@ import { ScrollArea } from '../ui/scroll-area';
 import { Skeleton } from '../ui/skeleton';
 import { Transaction, TransactionStatus, TransactionType, User, UserRole, Workspace } from '@prisma/client';
 import { useAppStore } from '@/store/app-store';
+import { Separator } from '../ui/separator';
+import { chaosCardManifest } from '@/config/chaos-cards';
 
 type UserProp = Pick<User, 'id' | 'email' | 'firstName' | 'lastName' | 'role'> | null;
+
+const chaosCardMap = new Map(chaosCardManifest.map(c => [c.key, c]));
 
 export default function UsageMonitor(props: Partial<BillingUsage>) {
     const { toast } = useToast();
@@ -153,7 +157,7 @@ export default function UsageMonitor(props: Partial<BillingUsage>) {
                         {isLoading ? (
                             <div className="space-y-2">
                                 <Skeleton className="h-10 w-full" />
-                                <Skeleton className="h-10 w-full" />
+                                <Skeleton className="h-24 w-full" />
                                 <Skeleton className="h-10 w-full" />
                             </div>
                         ) : transactions.length === 0 ? (
@@ -163,12 +167,46 @@ export default function UsageMonitor(props: Partial<BillingUsage>) {
                                 {transactions.map(tx => {
                                   const statusInfo = statusConfig[tx.status];
                                   const Icon = statusInfo.icon;
+                                  
+                                  if (tx.type === TransactionType.TRIBUTE) {
+                                      const card = tx.instrumentId ? chaosCardMap.get(tx.instrumentId) : null;
+                                      const boonAmount = Number(tx.boonAmount ?? 0);
+                                      const netAmount = Number(tx.amount);
+                                      const tributeAmount = boonAmount - netAmount;
+
+                                      return (
+                                          <div key={tx.id} className="text-xs p-2 rounded-md border border-purple-500/50 bg-purple-950/20">
+                                                <div className="flex justify-between items-center mb-2">
+                                                    <p className="font-bold text-base text-purple-300">Tribute to {card ? card.name : 'an Unknown Artifact'}</p>
+                                                    <Badge variant="outline" className="border-purple-500/50 text-purple-300 capitalize">{tx.outcome}</Badge>
+                                                </div>
+                                                <div className="grid grid-cols-2 gap-2 text-center font-mono">
+                                                    <div className="flex flex-col items-center p-1 rounded bg-destructive/10">
+                                                        <span className="flex items-center gap-1 text-destructive font-semibold"><Flame className="h-3 w-3" />Tribute</span>
+                                                        <span>-{tributeAmount.toFixed(2)} Ξ</span>
+                                                    </div>
+                                                    <div className="flex flex-col items-center p-1 rounded bg-accent/10">
+                                                        <span className="flex items-center gap-1 text-accent font-semibold"><Gem className="h-3 w-3" />Boon</span>
+                                                        <span>+{boonAmount.toFixed(2)} Ξ</span>
+                                                    </div>
+                                                </div>
+                                                <Separator className="my-2 bg-purple-500/30" />
+                                                <div className="flex justify-between items-center text-muted-foreground mt-1">
+                                                    <span className="font-mono">{new Date(tx.createdAt).toLocaleString()}</span>
+                                                    <span className={cn("font-bold font-mono text-lg whitespace-nowrap", netAmount >= 0 ? "text-accent" : "text-destructive")}>
+                                                        Net: {netAmount >= 0 ? '+' : ''}{netAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                                    </span>
+                                                </div>
+                                           </div>
+                                      )
+                                  }
+
                                   return (
                                     <div key={tx.id} className="text-xs p-2 rounded-md border border-border/50 bg-background/30">
                                         <div className="flex justify-between items-start">
                                             <p className="font-medium pr-2">{tx.description}</p>
-                                            <p className={cn("font-bold font-mono text-lg whitespace-nowrap", tx.type === TransactionType.CREDIT || tx.type === TransactionType.TRIBUTE && (tx.amount as unknown as number) > 0 ? "text-accent" : "text-destructive")}>
-                                                {(tx.type === TransactionType.CREDIT || ((tx.type === TransactionType.TRIBUTE) && (tx.amount as unknown as number) > 0)) ? '+' : ''}{Number(tx.amount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                            <p className={cn("font-bold font-mono text-lg whitespace-nowrap", tx.type === TransactionType.CREDIT ? "text-accent" : "text-destructive")}>
+                                                {tx.type === TransactionType.CREDIT ? '+' : '-'}{Number(tx.amount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                             </p>
                                         </div>
                                         <div className="flex justify-between items-center text-muted-foreground mt-1">
