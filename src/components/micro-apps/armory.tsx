@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -12,13 +13,14 @@ import { Workspace, ChaosCard as PrismaChaosCard } from '@prisma/client';
 import type { User } from '@prisma/client';
 import { useToast } from '@/hooks/use-toast';
 import { getNudges } from '@/app/actions';
+import { MicroAppManifest } from '@/config/micro-apps';
 
 interface FullUser extends User {
     ownedChaosCards: PrismaChaosCard[];
 }
 
 export default function Armory() {
-  const [apps, setApps] = useState<any[]>([]);
+  const [apps, setApps] = useState<MicroAppManifest[]>([]);
   const [cards, setCards] = useState<ChaosCardManifest[]>([]);
   const [workspace, setWorkspace] = useState<Workspace | null>(null);
   const [user, setUser] = useState<FullUser | null>(null);
@@ -42,7 +44,8 @@ export default function Armory() {
         const workspaceData = await workspaceResponse.json();
         const userData = await userResponse.json();
 
-        setApps(appsData);
+        // The Armory is for acquisitions. Filter to only show purchasable apps.
+        setApps(appsData.filter((app: MicroAppManifest) => app.creditCost > 0));
         setCards(chaosCardManifest);
         setWorkspace(workspaceData);
         setUser(userData);

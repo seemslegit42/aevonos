@@ -1,4 +1,5 @@
 
+
 import React from 'react';
 import { FileExplorerIcon } from '@/components/icons/FileExplorerIcon';
 import { TerminalIcon } from '@/components/icons/TerminalIcon';
@@ -146,7 +147,7 @@ export const microAppRegistry: Record<MicroAppType, ComponentRegistry> = {
       icon: LaheyIcon,
       content: LaheyCommander,
   },
-  'the-foremanator': {
+  'foremanator': {
       icon: ForemanatorIcon,
       content: TheForemanator,
   },

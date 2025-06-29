@@ -1,10 +1,13 @@
 
+
 import { create } from 'zustand';
 import type { DragEndEvent } from '@dnd-kit/core';
 import React from 'react';
 
 import { handleCommand } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
+import { microAppManifests } from '@/config/micro-apps';
+
 import type { DrSyntaxOutput } from '@/ai/agents/dr-syntax-schemas';
 import type { Contact } from '@/ai/tools/crm-schemas';
 import type { UserCommandOutput, AgentReportSchema } from '@/ai/agents/beep-schemas';
@@ -52,7 +55,7 @@ export type MicroAppType =
   | 'paper-trail'
   | 'jroc-business-kit'
   | 'lahey-surveillance'
-  | 'the-foremanator'
+  | 'foremanator'
   | 'sterileish'
   | 'barbara'
   | 'auditor-generalissimo'
@@ -88,79 +91,8 @@ export interface BeepState extends UserCommandOutput {
   responseAudioUri?: string;
 }
 
-const defaultAppDetails: Record<MicroAppType, Omit<MicroApp, 'id' | 'position' | 'zIndex' | 'size' | 'contentProps'>> = {
-  'file-explorer': { type: 'file-explorer', title: 'File Explorer', description: 'Access and manage your files.' },
-  'terminal': { type: 'terminal', title: 'Terminal', description: 'Direct command-line access.' },
-  'ai-suggestion': { type: 'ai-suggestion', title: 'AI Suggestion', description: 'Click to execute this command.' },
-  'aegis-control': { type: 'aegis-control', title: 'Aegis Security Report', description: "Analysis of the last command's security profile." },
-  'contact-list': { type: 'contact-list', title: 'Contact List', description: 'A list of your contacts.' },
-  'contact-editor': { type: 'contact-editor', title: 'Contact Editor', description: 'Create or update a contact.' },
-  'pam-poovey-onboarding': { type: 'pam-poovey-onboarding', title: 'Pam Poovey: Un-HR', description: 'Onboarding, complaints, and questionable life advice.' },
-  'infidelity-radar': { type: 'infidelity-radar', title: 'Infidelity Radar', description: 'Because intuition deserves evidence.' },
-  'vin-diesel': { type: 'vin-diesel', title: 'VIN Diesel', description: 'Turbocharged compliance. For family.' },
-  'project-lumbergh': { type: 'project-lumbergh', title: 'Project Lumbergh', description: 'Yeah, about those meetings...' },
-  'lucille-bluth': { type: 'lucille-bluth', title: 'The Lucille Bluth', description: 'Judgmental budgeting for your allowance.' },
-  'rolodex': { type: 'rolodex', title: 'The Rolodex', description: "Let's put a pin in that candidate." },
-  'winston-wolfe': { type: 'winston-wolfe', title: 'The Winston Wolfe', description: "Bad review? Thirty minutes away. I'll be there in ten." },
-  'kif-kroker': { type: 'kif-kroker', title: 'The Kif Kroker', description: "Sigh. The team's conflict metrics are escalating again." },
-  'vandelay': { type: 'vandelay', title: 'Vandelay Industries', description: 'Importing, exporting, and ghosting.' },
-  'orphean-oracle': { type: 'orphean-oracle', title: 'The Orphean Oracle', description: 'The story hidden in your data.' },
-  'paper-trail': { type: 'paper-trail', title: 'Paper Trail P.I.', description: 'The receipts don\'t lie.' },
-  'jroc-business-kit': { type: 'jroc-business-kit', title: "J-ROC'S BIZ KIT™", description: 'Get dat cheddar legit, my dawg.' },
-  'lahey-surveillance': { type: 'lahey-surveillance', title: 'Lahey Surveillance', description: 'I am the liquor. And I am watching.' },
-  'the-foremanator': { type: 'the-foremanator', title: 'The Foremanator', description: 'He doesn’t sleep. He doesn’t eat. He just yells about deadlines.' },
-  'sterileish': { type: 'sterileish', title: 'STERILE-ish™', description: 'We’re basically compliant.' },
-  'barbara': { type: 'barbara', title: 'Agent Barbara™', description: 'The admin daemon you never knew you needed.' },
-  'auditor-generalissimo': { type: 'auditor-generalissimo', title: 'The Auditor Generalissimo™', description: 'You are guilty until proven solvent.' },
-  'beep-wingman': { type: 'beep-wingman', title: 'BEEP Wingman', description: "He's not your assistant. He's your closer." },
-  'kendra': { type: 'kendra', title: 'KENDRA.exe', description: 'This is branding with beef.' },
-  'stonks-bot': { type: 'stonks-bot', title: 'Stonks Bot 9000', description: 'Tendies incoming. Not financial advice.' },
-  'aegis-threatscope': { type: 'aegis-threatscope', title: 'Aegis ThreatScope', description: 'Real-time threat feed from the Aegis subsystem.' },
-  'aegis-command': { type: 'aegis-command', title: 'Aegis Command', description: 'Configure Aegis threat intelligence feeds.' },
-  'usage-monitor': { type: 'usage-monitor', title: 'Usage Monitor', description: 'Track your Agent Action consumption.' },
-  'armory': { type: 'armory', title: 'The Armory', description: 'A catalog of available micro-apps and tools.' },
-  'dr-syntax': { type: 'dr-syntax', title: 'Dr. Syntax: The Critic', description: 'Submit your mediocrity for judgment.' },
-  'user-profile-settings': { type: 'user-profile-settings', title: 'User Profile', description: 'Manage your user profile settings.' },
-  'workspace-settings': { type: 'workspace-settings', title: 'Workspace Settings', description: 'Manage your workspace settings.' },
-  'top-up': { type: 'top-up', title: 'Top-Up Credits', description: 'Add credits to your workspace via e-Transfer.' },
-};
-
-const defaultAppSizes: Record<MicroAppType, { width: number; height: number }> = {
-  'file-explorer': { width: 400, height: 300 },
-  'terminal': { width: 450, height: 300 },
-  'ai-suggestion': { width: 320, height: 120 },
-  'aegis-control': { width: 320, height: 220 },
-  'contact-list': { width: 680, height: 450 },
-  'contact-editor': { width: 320, height: 380 },
-  'pam-poovey-onboarding': { width: 320, height: 350 },
-  'infidelity-radar': { width: 360, height: 500 },
-  'vin-diesel': { width: 320, height: 400 },
-  'project-lumbergh': { width: 320, height: 400 },
-  'lucille-bluth': { width: 320, height: 350 },
-  'rolodex': { width: 320, height: 500 },
-  'winston-wolfe': { width: 320, height: 380 },
-  'kif-kroker': { width: 320, height: 420 },
-  'vandelay': { width: 320, height: 280 },
-  'orphean-oracle': { width: 400, height: 500 },
-  'paper-trail': { width: 340, height: 500 },
-  'jroc-business-kit': { width: 320, height: 500 },
-  'lahey-surveillance': { width: 400, height: 500 },
-  'the-foremanator': { width: 340, height: 500 },
-  'sterileish': { width: 340, height: 500 },
-  'barbara': { width: 360, height: 500 },
-  'auditor-generalissimo': { width: 360, height: 600 },
-  'beep-wingman': { width: 360, height: 620 },
-  'kendra': { width: 360, height: 500 },
-  'stonks-bot': { width: 320, height: 380 },
-  'aegis-threatscope': { width: 380, height: 450 },
-  'aegis-command': { width: 380, height: 350 },
-  'usage-monitor': { width: 400, height: 600 },
-  'armory': { width: 800, height: 600 },
-  'dr-syntax': { width: 360, height: 500 },
-  'user-profile-settings': { width: 340, height: 300 },
-  'workspace-settings': { width: 340, height: 240 },
-  'top-up': { width: 400, height: 400 },
-};
+// Create a lookup map from the single source of truth for efficient access.
+const manifestMap = new Map(microAppManifests.map(m => [m.id, m]));
 
 export interface AppState {
   apps: MicroApp[];
@@ -197,18 +129,22 @@ export const useAppStore = create<AppState>((set, get) => {
   };
 
   const launchApp = (type: MicroAppType, overrides: Partial<Omit<MicroApp, 'type'>> = {}) => {
-    const defaults = defaultAppDetails[type];
-    const defaultSize = defaultAppSizes[type] || { width: 320, height: 400 };
+    const defaults = manifestMap.get(type);
+    if (!defaults) {
+        console.error(`[AppStore] No manifest found for app type: ${type}. Cannot launch.`);
+        return undefined;
+    }
+    
     const existingAppsCount = get().apps.length;
     
     const newApp: MicroApp = {
         id: overrides.id || generateId(),
         type: type,
-        title: overrides.title || defaults.title,
+        title: overrides.title || defaults.name,
         description: overrides.description || defaults.description,
         contentProps: overrides.contentProps || {},
         position: overrides.position || { x: 40 + (existingAppsCount % 8) * 30, y: 40 + (existingAppsCount % 8) * 30 },
-        size: overrides.size || defaultSize,
+        size: overrides.size || defaults.defaultSize,
         zIndex: ++zIndexCounter,
     };
     
@@ -292,6 +228,8 @@ export const useAppStore = create<AppState>((set, get) => {
     let infidelityProps = infidelityApp?.contentProps || {};
 
     for (const report of reports) {
+      const defaults = manifestMap.get(report.agent as MicroAppType);
+
       switch (report.agent) {
         case 'aegis':
           launchApp('aegis-control', { contentProps: { ...report.report }});
@@ -347,7 +285,7 @@ export const useAppStore = create<AppState>((set, get) => {
              break;
         
         case 'foremanator':
-            launchApp('the-foremanator', { title: 'Foremanator Site Log', description: 'Daily report processed.', contentProps: report.report });
+            launchApp('foremanator', { title: 'Foremanator Site Log', description: 'Daily report processed.', contentProps: report.report });
             break;
 
         case 'sterileish':
@@ -520,17 +458,19 @@ export const useAppStore = create<AppState>((set, get) => {
         processAgentReports(result.agentReports);
 
         result.appsToLaunch.forEach(appInfo => {
+          const defaults = manifestMap.get(appInfo.type);
           upsertApp(appInfo.type, {
             id: `agent-app-${appInfo.type}`, // Use a consistent ID to make agent apps singletons
-            title: appInfo.title || defaultAppDetails[appInfo.type].title,
-            description: appInfo.description || defaultAppDetails[appInfo.type].description,
+            title: appInfo.title || defaults?.name,
+            description: appInfo.description || defaults?.description,
           });
         });
 
         result.suggestedCommands.forEach(cmd => {
+            const defaults = manifestMap.get('ai-suggestion');
             launchApp('ai-suggestion', {
                 title: cmd,
-                description: defaultAppDetails['ai-suggestion'].description,
+                description: defaults?.description || 'Click to execute',
             });
         });
 
