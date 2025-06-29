@@ -1,3 +1,4 @@
+
 'use client';
 
 import React from 'react';
@@ -80,7 +81,7 @@ export default function LoginPage() {
                         <Image src="/logo-neutral.svg" alt="Aevon OS Logo" width={60} height={60} className="h-12 w-auto" />
                     </div>
                     <CardTitle className="text-2xl font-headline tracking-wider text-primary">Login</CardTitle>
-                    <CardDescription>Enter your credentials to access your canvas.</CardDescription>
+                    <CardDescription>Enter your credentials to access your account.</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <Form {...form}>
