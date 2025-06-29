@@ -6,7 +6,7 @@ import { z } from 'zod';
 import { encrypt } from '@/lib/auth';
 import prisma from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
-import { UserPsyche } from '@prisma/client';
+import { UserPsyche, PlanTier, TransactionType, TransactionStatus } from '@prisma/client';
 
 // Updated schema to reflect the new Rite of Invocation flow
 const RegisterRequestSchema = z.object({
@@ -41,7 +41,7 @@ export async function POST(request: Request) {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Use a transaction to ensure both user and workspace are created successfully
+    // Use a transaction to ensure all related records are created successfully
     const { user, workspace } = await prisma.$transaction(async (tx) => {
         const newUser = await tx.user.create({
             data: {
@@ -58,12 +58,31 @@ export async function POST(request: Request) {
             data: {
                 name: workspaceName,
                 ownerId: newUser.id,
+                planTier: PlanTier.Apprentice, // All new signups start on the free Apprentice plan
                 members: {
                     connect: { id: newUser.id }
                 }
             }
         });
         
+        // Seed the genesis transaction for the initial credits
+        await tx.transaction.create({
+            data: {
+                workspaceId: newWorkspace.id,
+                type: TransactionType.CREDIT,
+                amount: 100.0, // Apprentice plan starts with 100 credits
+                description: "Initial Apprentice credit grant.",
+                userId: newUser.id,
+                status: TransactionStatus.COMPLETED
+            }
+        });
+
+        // Manually update the workspace credit balance within the same transaction
+        await tx.workspace.update({
+            where: { id: newWorkspace.id },
+            data: { credits: 100.0 }
+        });
+
         return { user: newUser, workspace: newWorkspace };
     });
 
@@ -77,7 +96,6 @@ export async function POST(request: Request) {
     const token = await encrypt(sessionPayload);
     
     // Response must match AuthResponse schema in api-spec.md
-    // Explicitly construct the user object to avoid leaking internal fields.
     const apiResponse = {
         accessToken: token,
         tokenType: 'Bearer',
