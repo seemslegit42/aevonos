@@ -134,7 +134,7 @@ const defaultAppSizes: Record<MicroAppType, { width: number; height: number }> =
   'vin-diesel': { width: 320, height: 400 },
   'project-lumbergh': { width: 320, height: 400 },
   'lucille-bluth': { width: 320, height: 350 },
-  'rolodex': { width: 340, height: 500 },
+  'rolodex': { width: 320, height: 500 },
   'winston-wolfe': { width: 320, height: 380 },
   'kif-kroker': { width: 320, height: 420 },
   'vandelay': { width: 320, height: 280 },
