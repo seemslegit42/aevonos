@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview Service for handling billing and usage tracking.
@@ -16,9 +17,9 @@ import { Prisma } from '@prisma/client';
 /**
  * Checks if a workspace can afford an action, then atomically decrements
  * the credit balance, increments the usage counter, and creates a DEBIT transaction.
- * Throws an InsufficientCreditsError if the balance is too low.
+ * This now respects the monthly plan limits before charging for overage.
  * @param workspaceId The ID of the workspace to charge.
- * @param amount The number of credits the action costs. Defaults to 1.
+ * @param amount The number of agent actions to authorize. Defaults to 1.
  */
 export async function authorizeAndDebitAgentActions(workspaceId: string, amount: number = 1): Promise<void> {
     if (!workspaceId) {
@@ -28,17 +29,50 @@ export async function authorizeAndDebitAgentActions(workspaceId: string, amount:
 
     try {
         await prisma.$transaction(async (tx) => {
-            // 1. Get current credits for the check.
+            // 1. Get workspace and its plan details.
             const workspace = await tx.workspace.findUnique({
                 where: { id: workspaceId },
-                select: { credits: true },
+                select: { credits: true, agentActionsUsed: true, planTier: true },
             });
 
-            if (!workspace || (workspace.credits as unknown as number) < amount) {
-                throw new InsufficientCreditsError(`Insufficient credits. Required: ${amount}, Available: ${workspace?.credits ?? 0}.`);
+            if (!workspace) {
+                throw new Error(`Workspace with ID ${workspaceId} not found.`);
             }
 
-            // 2. If check passes, perform the atomic updates.
+            const planTier = workspace.planTier as keyof typeof PLAN_LIMITS;
+            const planLimit = PLAN_LIMITS[planTier] || 0;
+            
+            // 2. Check if the user is still within their monthly included actions.
+            if (workspace.agentActionsUsed < planLimit) {
+                const remainingFreeActions = planLimit - workspace.agentActionsUsed;
+                const actionsCoveredByPlan = Math.min(amount, remainingFreeActions);
+
+                // Increment usage counter for the actions covered by the plan.
+                if (actionsCoveredByPlan > 0) {
+                    await tx.workspace.update({
+                        where: { id: workspaceId },
+                        data: { agentActionsUsed: { increment: actionsCoveredByPlan } },
+                    });
+                }
+
+                const remainingAmountToDebit = amount - actionsCoveredByPlan;
+
+                if (remainingAmountToDebit <= 0) {
+                    // All actions were covered by the plan, no credit charge needed.
+                    return; 
+                }
+                
+                // If some actions are overage, fall through to debit credits for the remainder.
+                amount = remainingAmountToDebit;
+            }
+
+            // 3. If in overage (or partially in overage), check credit balance and debit.
+            const currentCredits = (await tx.workspace.findUnique({ where: { id: workspaceId }, select: { credits: true } }))?.credits ?? 0;
+            if ((currentCredits as unknown as number) < amount) {
+                throw new InsufficientCreditsError(`Insufficient credits for overage. Required: ${amount}, Available: ${currentCredits ?? 0}.`);
+            }
+
+            // 4. Atomically update credits and usage, and log the transaction.
             await tx.workspace.update({
                 where: { id: workspaceId },
                 data: {
@@ -46,18 +80,17 @@ export async function authorizeAndDebitAgentActions(workspaceId: string, amount:
                         decrement: new Prisma.Decimal(amount),
                     },
                     agentActionsUsed: {
-                        increment: amount,
+                        increment: amount, // Also increment for overage actions
                     },
                 },
             });
 
-            // 3. Create the transaction log entry.
             await tx.transaction.create({
                 data: {
                     workspaceId,
                     type: TransactionType.DEBIT,
                     amount: new Prisma.Decimal(amount),
-                    description: `Agent Action Cost (${amount}x)`,
+                    description: `Agent Action Overage Cost (${amount}x)`,
                     status: TransactionStatus.COMPLETED,
                 },
             });
@@ -80,6 +113,7 @@ const getUsageDetailsFlow = ai.defineFlow(
     outputSchema: BillingUsageSchema,
   },
   async ({ workspaceId }) => {
+    // This is an agent action and should be billed.
     await authorizeAndDebitAgentActions(workspaceId);
     
     const workspace = await prisma.workspace.findUnique({
@@ -115,8 +149,8 @@ const requestCreditTopUpFlow = ai.defineFlow(
     outputSchema: RequestCreditTopUpOutputSchema,
   },
   async ({ amount, userId, workspaceId }) => {
-    await authorizeAndDebitAgentActions(workspaceId);
-
+    // This is a free action for the user, but we can still run a security check.
+    // It is not billed as it facilitates revenue.
     try {
       const anomalyReport = await aegisAnomalyScan({
         activityDescription: `User initiated a credit top-up request of ${amount.toLocaleString()} ΞCredits.`,
