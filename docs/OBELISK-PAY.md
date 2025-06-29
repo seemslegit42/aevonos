@@ -47,6 +47,13 @@ Every transaction is a piece of evidence.
 - **Export-Ready:** The ledger is designed for easy export to CSV for accounting software like QuickBooks, Wave, or Xero.
 - **Visual Auditing:** The `UsageMonitor` micro-app provides a clear, real-time feed of all transactions.
 
+### 2.6. Klepsydra Integration: The Engine of Folly
+Obelisk Pay is not merely for straightforward debits and credits; it is the transactional backbone for the entire **Klepsydra Engine** (the "Profit Pulse" system). Every "tribute" made to a Folly Instrument, and every "boon" granted in return, is an atomic transaction meticulously recorded on the Obelisk ledger.
+
+- **Atomic Tributes:** When a user engages an Instrument of Folly, `klepsydra-service` calculates the outcome, but it is `ledger-service`'s `logTributeEvent` function that executes the financial consequence. The tribute amount is debited, and any boon amount is credited, in a single, inseparable database transaction. This ensures the economy remains perfectly balanced.
+- **Rich Metadata:** Each `TRIBUTE` transaction is enriched with Klepsydra-specific metadata, including the `instrumentId`, the user's `luckWeight` at the moment of the tribute, the `outcome`, and the `boonAmount`. This provides an unparalleled level of data for the Economic Observatory to analyze user behavior and tune the system's pulse.
+- **Seamless Integration:** The user experiences a magical, seamless interaction with a Folly Instrument. Behind the scenes, Obelisk Pay provides the cold, hard, auditable truth of every micro-gamble, making the abstract concept of "luck" a measurable, billable event.
+
 ---
 
 ## 3. Security & Compliance Protocols
