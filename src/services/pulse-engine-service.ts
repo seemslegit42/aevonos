@@ -50,11 +50,11 @@ export async function getCurrentPulseValue(userId: string): Promise<number> {
     frequency,
     phaseOffset,
     baselineLuck,
-    lastWinTimestamp,
+    lastEventTimestamp,
   } = profile;
 
-  // t = time since last win in minutes
-  const t = (new Date().getTime() - new Date(lastWinTimestamp).getTime()) / (1000 * 60);
+  // t = time since last event in minutes
+  const t = (new Date().getTime() - new Date(lastEventTimestamp).getTime()) / (1000 * 60);
 
   // The Sine-Rhythm Engine (SRE) formula
   const luckOscillation = amplitude * Math.sin(2 * Math.PI * frequency * t + phaseOffset);
@@ -96,7 +96,7 @@ export async function recordWin(userId: string): Promise<void> {
     await prisma.pulseProfile.update({
         where: { id: profile.id },
         data: {
-            lastWinTimestamp: new Date(),
+            lastEventTimestamp: new Date(),
             consecutiveLosses: 0,
             lastResolvedPhase: currentPhase,
         },
@@ -115,6 +115,7 @@ export async function recordLoss(userId: string): Promise<void> {
     await prisma.pulseProfile.update({
         where: { id: profile.id },
         data: {
+            lastEventTimestamp: new Date(),
             consecutiveLosses: {
                 increment: 1,
             },
