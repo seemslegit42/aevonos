@@ -35,8 +35,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'User not found.' }, { status: 404 });
   }
 
-  const { password, ...userResponse } = user as any;
-  return NextResponse.json(userResponse);
+  // The 'select' clause ensures we only get public fields, so this is safe.
+  return NextResponse.json(user);
 }
 
 // Corresponds to operationId `updateCurrentUser`
@@ -55,12 +55,20 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid input.', issues: validation.error.issues }, { status: 400 });
     }
 
-    const user = await prisma.user.update({
+    const updatedUser = await prisma.user.update({
         where: { id: session.userId },
         data: validation.data
     });
     
-    const { password, ...userResponse } = user;
+    // Explicitly construct the response to match the public User schema.
+    const userResponse = {
+        id: updatedUser.id,
+        email: updatedUser.email,
+        firstName: updatedUser.firstName,
+        lastName: updatedUser.lastName,
+        role: updatedUser.role,
+        lastLoginAt: updatedUser.lastLoginAt,
+    };
     return NextResponse.json(userResponse);
 
   } catch (error) {

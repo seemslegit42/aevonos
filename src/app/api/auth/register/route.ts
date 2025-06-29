@@ -68,15 +68,21 @@ export async function POST(request: Request) {
     };
 
     const token = await encrypt(sessionPayload);
-
-    const { password: _, ...userResponse } = user;
     
     // Response must match AuthResponse schema in api-spec.md
+    // Explicitly construct the user object to avoid leaking internal fields.
     const apiResponse = {
         accessToken: token,
         tokenType: 'Bearer',
         expiresIn: 3600,
-        user: userResponse
+        user: {
+            id: user.id,
+            email: user.email,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            role: user.role,
+            lastLoginAt: user.lastLoginAt,
+        }
     };
     
     const response = NextResponse.json(apiResponse, { status: 201 });

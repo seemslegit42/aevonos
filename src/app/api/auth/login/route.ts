@@ -61,15 +61,20 @@ export async function POST(request: Request) {
 
     const token = await encrypt(sessionPayload);
     
-    // We don't want to send the password hash back to the client
-    const { password: _, ...userResponse } = updatedUser;
-
     // Response must match AuthResponse schema in api-spec.md
+    // Explicitly construct the user object to avoid leaking internal fields.
     const apiResponse = {
         accessToken: token,
         tokenType: 'Bearer',
         expiresIn: 3600,
-        user: userResponse
+        user: {
+            id: updatedUser.id,
+            email: updatedUser.email,
+            firstName: updatedUser.firstName,
+            lastName: updatedUser.lastName,
+            role: updatedUser.role,
+            lastLoginAt: updatedUser.lastLoginAt,
+        }
     };
     
     const response = NextResponse.json(apiResponse);
