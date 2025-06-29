@@ -1,4 +1,3 @@
-
 // This file serves as a non-database source of truth for micro-app manifests.
 // In a larger system, this could be stored in a database and managed via an admin interface.
 
@@ -218,6 +217,20 @@ export const microAppManifests: MicroAppManifest[] = [
     defaultSize: { width: 320, height: 400 },
     permissionsRequired: ['write:billing'],
     routingPath: '/top-up',
+    contextAwareCapabilities: [],
+  },
+  {
+    id: 'validator',
+    name: 'Uncut Truth Engine',
+    author: 'Aegis Subsystems',
+    description: "Verifies the SHA256 integrity hash of a file. The hash doesn't lie.",
+    creditCost: 0,
+    priceModel: 'included',
+    imageUrl: 'https://placehold.co/600x400.png',
+    imageHint: 'fingerprint document hash',
+    defaultSize: { width: 400, height: 480 },
+    permissionsRequired: [],
+    routingPath: '/validator',
     contextAwareCapabilities: [],
   },
   

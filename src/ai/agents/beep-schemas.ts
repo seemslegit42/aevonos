@@ -68,6 +68,7 @@ const LaunchableAppTypeSchema = z.enum([
   'workspace-settings',
   'top-up',
   'admin-console',
+  'validator',
 ]);
 
 export const AppToLaunchSchema = z.object({

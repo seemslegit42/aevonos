@@ -1,4 +1,3 @@
-
 import { create } from 'zustand';
 import type { DragEndEvent } from '@dnd-kit/core';
 import React from 'react';
@@ -70,7 +69,8 @@ export type MicroAppType =
   | 'workspace-settings'
   | 'top-up'
   | 'oracle-of-delphi-valley'
-  | 'admin-console';
+  | 'admin-console'
+  | 'validator';
 
 // Define the shape of a MicroApp instance
 export interface MicroApp {
