@@ -789,6 +789,107 @@ Here is the updated document: docs/API/PUBLIC-API-SPEC.md.This document provides
         }
       }
     },
+    "/agents/{agentId}": {
+      "get": {
+        "tags": ["Agents"],
+        "summary": "Retrieve a specific AI agent by ID.",
+        "operationId": "getAgentById",
+        "parameters": [
+          {
+            "name": "agentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "CUID of the agent to retrieve."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Agent details.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Agent"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Agent not found."
+          }
+        }
+      },
+      "put": {
+        "tags": ["Agents"],
+        "summary": "Update a specific AI agent by ID.",
+        "operationId": "updateAgent",
+        "parameters": [
+          {
+            "name": "agentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "CUID of the agent to update."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AgentUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Agent updated successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Agent"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid agent data."
+          },
+          "404": {
+            "description": "Agent not found."
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Agents"],
+        "summary": "Delete a specific AI agent by ID.",
+        "operationId": "deleteAgent",
+        "parameters": [
+          {
+            "name": "agentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "CUID of the agent to delete."
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Agent deleted successfully."
+          },
+          "404": {
+            "description": "Agent not found."
+          }
+        }
+      }
+    },
     "/integrations": {
       "get": {
         "tags": ["Integrations"],
@@ -1458,16 +1559,20 @@ Here is the updated document: docs/API/PUBLIC-API-SPEC.md.This document provides
         "properties": {
           "id": {
             "type": "string",
-            "format": "uuid",
-            "description": "Publicly exposed unique identifier for the agent."
+            "description": "Unique identifier for the agent (CUID)."
           },
-          "tenantId": {
-            "type": "integer",
-            "description": "Internal database ID of the associated tenant."
+          "workspaceId": {
+            "type": "string",
+            "description": "ID of the associated workspace."
           },
           "name": {
             "type": "string",
             "example": "Market Research Agent"
+          },
+          "type": {
+            "type": "string",
+            "example": "winston-wolfe",
+            "description": "The agent's type or class."
           },
           "description": {
             "type": "string",
@@ -1475,14 +1580,14 @@ Here is the updated document: docs/API/PUBLIC-API-SPEC.md.This document provides
           },
           "status": {
             "type": "string",
-            "enum": ["active", "idle", "processing", "paused", "error"],
+            "enum": [
+              "active",
+              "idle",
+              "processing",
+              "paused",
+              "error"
+            ],
             "example": "active"
-          },
-          "assignedWorkflowId": {
-            "type": "string",
-            "format": "uuid",
-            "description": "UUID of the workflow this agent is currently assigned to, if any.",
-            "nullable": true
           },
           "lastActivityAt": {
             "type": "string",
@@ -1498,7 +1603,15 @@ Here is the updated document: docs/API/PUBLIC-API-SPEC.md.This document provides
             "format": "date-time"
           }
         },
-        "required": ["id", "tenantId", "name", "status", "createdAt", "updatedAt"]
+        "required": [
+          "id",
+          "workspaceId",
+          "name",
+          "type",
+          "status",
+          "createdAt",
+          "updatedAt"
+        ]
       },
       "AgentDeploymentRequest": {
         "type": "object",
@@ -1507,17 +1620,50 @@ Here is the updated document: docs/API/PUBLIC-API-SPEC.md.This document provides
             "type": "string",
             "example": "Market Research Agent"
           },
+          "type": {
+            "type": "string",
+            "example": "research-bot-v1",
+            "description": "A unique identifier for the agent's class or type."
+          },
           "description": {
             "type": "string",
             "nullable": true
           },
           "configuration": {
             "type": "object",
-            "description": "JSON object containing agent-specific configuration (e.g., goals, tools, LLM model).",
-            "additionalProperties": true
+            "description": "JSON object containing agent-specific configuration. Currently unused, reserved for future functionality.",
+            "additionalProperties": true,
+            "nullable": true
           }
         },
-        "required": ["name", "configuration"]
+        "required": [
+          "name",
+          "type"
+        ]
+      },
+      "AgentUpdateRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Market Research Agent v2"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "idle",
+              "processing",
+              "paused",
+              "error"
+            ],
+            "example": "paused"
+          }
+        }
       },
       "IntegrationManifest": {
         "type": "object",
@@ -1619,3 +1765,5 @@ Here is the updated document: docs/API/PUBLIC-API-SPEC.md.This document provides
   }
 }
 3. Implementation Notes (Fullstack Next.js, Prisma, PostgreSQL, LangGraph)Next.js API Routes (Backend): The API endpoints will primarily be implemented as Edge Functions or Serverless Functions within Next.js's pages/api or app/api directory structure. This allows for serverless deployment on platforms like Vercel.Prisma (ORM for PostgreSQL): Data persistence will be managed using Prisma. Each API route handler will utilize Prisma Client to interact with the PostgreSQL database. Multi-tenancy (tenant_id) will be strictly enforced at the Prisma query level for data isolation.PostgreSQL (Database): The primary database will be PostgreSQL, following the defined schema principles (multi-tenancy via tenant_id, UUIDs for public IDs, JSONB for flexible data like workflow.definition and contact.customProperties). This provides robust, scalable, and transactional data storage.LangGraph (AI Workflow Orchestration):The workflow.definition field within the database will store the serialized representation of LangGraph-based workflows.The /workflows/{workflowId}/run endpoint will trigger these LangGraph workflows. The backend API route will instantiate and execute the LangGraph definition, passing the trigger_payload as input.Loom Studio's visual builder will generate/manipulate these LangGraph definitions.BEEP's agentic orchestration will involve dynamically constructing or selecting LangGraph workflows for execution. LangGraph's multi-actor collaboration and state-based nature are crucial for BEEP's ability to coordinate complex agent teams and persist context.Authentication: JWTs, issued upon successful login, will be validated by the Next.js API routes. The tenant_id embedded within the JWT will be extracted and used for all database queries to ensure strict data isolation in the multi-tenant PostgreSQL schema.Error Handling: Standard HTTP status codes (e.g., 400, 401, 404, 409) will be used, with clear error messages in the response body.
+
+    
