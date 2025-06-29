@@ -1,4 +1,3 @@
-
 'use client';
 
 import React from 'react';
@@ -80,8 +79,8 @@ export default function LoginPage() {
                     <div className="flex justify-center mb-4">
                         <Image src="/logo-neutral.svg" alt="Aevon OS Logo" width={60} height={60} className="h-12 w-auto" />
                     </div>
-                    <CardTitle className="text-2xl font-headline tracking-wider text-primary">Login</CardTitle>
-                    <CardDescription>Enter your credentials to access your account.</CardDescription>
+                    <CardTitle className="text-2xl font-headline tracking-wider text-primary">Re-enter the Canvas</CardTitle>
+                    <CardDescription>Reaffirm your vow to the system.</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <Form {...form}>
@@ -119,16 +118,16 @@ export default function LoginPage() {
                                 )}
                             />
                             <Button type="submit" className="w-full" disabled={isSubmitting}>
-                                {isSubmitting ? <Loader2 className="animate-spin" /> : 'Login'}
+                                {isSubmitting ? <Loader2 className="animate-spin" /> : 'Invoke The Canvas'}
                             </Button>
                         </form>
                     </Form>
                 </CardContent>
             </Card>
             <div className="mt-4 text-center text-sm text-muted-foreground">
-                First time?{' '}
+                First invocation?{' '}
                 <Link href="/register" className="font-bold text-primary hover:text-primary/80 transition-colors">
-                    Create an account.
+                    Begin the Rite.
                 </Link>
             </div>
         </motion.div>
