@@ -22,11 +22,11 @@ const CurrentTime = () => {
   const [time, setTime] = useState('');
 
   useEffect(() => {
-    const update = () => {
-      setTime(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
-    };
-    update();
-    const timerId = setInterval(update, 1000 * 60); // Update every minute
+    // This logic ensures the time is only rendered on the client, avoiding hydration mismatches.
+    setTime(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+    const timerId = setInterval(() => {
+        setTime(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+    }, 1000 * 60); // Update every minute
     return () => clearInterval(timerId);
   }, []);
 
@@ -76,13 +76,17 @@ export default function TopBar({ user, workspace }: TopBarProps) {
             name="command"
             type="text"
             placeholder={placeholderText}
-            className="w-full bg-[rgba(245,255,250,0.2)] text-foreground placeholder:text-muted-foreground border-0 focus-visible:ring-1 focus-visible:ring-primary h-10"
+            className={cn(
+              "w-full bg-[rgba(245,255,250,0.2)] text-foreground placeholder:text-muted-foreground border-0 h-10",
+              "focus-visible:ring-1 focus-visible:ring-roman-aqua",
+              isLoading && "ring-1 ring-inset ring-roman-aqua animate-pulse"
+            )}
             disabled={isLoading}
           />
         </form>
       </div>
 
-      <div className="flex items-center gap-2 sm:gap-4 text-sm font-code text-foreground">
+      <div className="flex items-center gap-2 sm:gap-4 text-sm text-foreground">
         <div className="hidden md:flex items-center gap-4 text-sm font-lexend">
           <CurrentTime />
           <div className="h-6 w-px bg-[rgba(245,255,250,0.25)]" />
