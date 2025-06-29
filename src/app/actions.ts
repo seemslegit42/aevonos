@@ -14,6 +14,8 @@ import { microAppManifests } from '@/config/micro-apps';
 import { chaosCardManifest } from '@/config/chaos-cards';
 import prisma from '@/lib/prisma';
 import { differenceInMinutes } from 'date-fns';
+import { calculateOutcome } from '@/services/klepsydra-service';
+import { InsufficientCreditsError } from '@/lib/errors';
 
 
 export async function handleCommand(command: string): Promise<UserCommandOutput> {
@@ -246,79 +248,73 @@ export async function purchaseChaosCard(cardKey: string) {
   const { cost, name } = cardManifest;
 
   try {
-    // We need both the user and the workspace in this transaction
-    const [user, workspace] = await Promise.all([
-      prisma.user.findUnique({
-        where: { id: session.userId },
-        include: { ownedChaosCards: { select: { key: true } } }
-      }),
-      prisma.workspace.findUnique({
-        where: { id: session.workspaceId },
-      }),
-    ]);
-    
-    if (!user || !workspace) {
-      return { success: false, error: 'User or Workspace not found.' };
+    // Klepsydra now handles the tribute and returns the outcome.
+    const { outcome, boonAmount } = await calculateOutcome(
+        session.userId,
+        session.workspaceId,
+        cardKey,
+        cost
+    );
+
+    // If the outcome is a win or a pity boon, the user gets the card.
+    if (outcome === 'win' || outcome === 'pity_boon') {
+        // The transaction for the tribute is already done.
+        // We just need to grant the item and update discovery.
+        await prisma.$transaction(async (tx) => {
+            const cardInDb = await tx.chaosCard.findUnique({ where: { key: cardKey } });
+            if (!cardInDb) {
+              // This should ideally not happen if seed is correct.
+              throw new Error('Card does not exist in the database.');
+            }
+
+            // Add the card to the user's collection
+            await tx.user.update({
+                where: { id: session.userId },
+                data: {
+                  ownedChaosCards: {
+                    connect: { id: cardInDb.id },
+                  },
+                },
+            });
+
+            // Update the discovery record
+            const discovery = await tx.instrumentDiscovery.findFirst({
+                where: { userId: session.userId, instrumentId: cardKey, converted: false }
+            });
+            
+            if (discovery) {
+                const dtt = differenceInMinutes(new Date(), discovery.firstViewedAt);
+                await tx.instrumentDiscovery.update({
+                    where: { id: discovery.id },
+                    data: {
+                        converted: true,
+                        dtt: dtt > 0 ? dtt : 1,
+                    }
+                });
+            }
+        });
+
+        revalidatePath('/'); // Revalidate to reflect changes
+        return { 
+            success: true, 
+            outcome, 
+            message: `Tribute successful! Acquired ${name}. You were granted a boon of ${boonAmount.toFixed(2)} Ξ.` 
+        };
+    } else { // Outcome is a loss
+        revalidatePath('/'); // Revalidate to reflect credit change
+        return {
+            success: true,
+            outcome,
+            message: `The tribute was not enough. ${name} slips through your fingers.`
+        };
     }
-
-    if (user.ownedChaosCards.some(card => card.key === cardKey)) {
-      return { success: false, error: 'Card already owned.' };
-    }
-
-    if ((workspace.credits as unknown as number) < cost) {
-      return { success: false, error: 'Insufficient ΞCredits.' };
-    }
-
-    const cardInDb = await prisma.chaosCard.findUnique({ where: { key: cardKey } });
-    if (!cardInDb) {
-      return { success: false, error: 'Card does not exist in the database.' };
-    }
-
-    // Use a transaction to ensure atomicity
-    await prisma.$transaction(async (tx) => {
-      // 1. Debit the credits from the workspace by creating a transaction
-      await createTransaction({
-        workspaceId: session.workspaceId,
-        userId: session.userId,
-        type: TransactionType.DEBIT,
-        amount: cost,
-        description: `Chaos Card Acquired: ${name}`,
-        instrumentId: cardKey,
-      });
-
-      // 2. Add the card to the user's collection
-      await tx.user.update({
-        where: { id: session.userId },
-        data: {
-          ownedChaosCards: {
-            connect: { id: cardInDb.id },
-          },
-        },
-      });
-
-      // 3. Update the discovery record
-      const discovery = await tx.instrumentDiscovery.findFirst({
-          where: { userId: session.userId, instrumentId: cardKey, converted: false }
-      });
-      
-      if (discovery) {
-          const dtt = differenceInMinutes(new Date(), discovery.firstViewedAt);
-          await tx.instrumentDiscovery.update({
-              where: { id: discovery.id },
-              data: {
-                  converted: true,
-                  dtt: dtt > 0 ? dtt : 1, // Ensure dtt is at least 1 minute if conversion is immediate
-              }
-          });
-      }
-    });
-
-    revalidatePath('/'); // Revalidate to reflect changes
-    return { success: true, message: `Successfully acquired ${name}!` };
 
   } catch (error) {
     console.error(`[Action: purchaseChaosCard] for card ${cardKey}:`, error);
-    const errorMessage = error instanceof Error ? error.message : 'Failed to complete purchase.';
+    if (error instanceof InsufficientCreditsError) {
+        return { success: false, error: "Insufficient ΞCredits for tribute." };
+    }
+    const errorMessage = error instanceof Error ? error.message : 'Failed to complete tribute.';
     return { success: false, error: errorMessage };
   }
 }
@@ -402,3 +398,5 @@ export async function getNudges() {
 
   return nudges;
 }
+
+    

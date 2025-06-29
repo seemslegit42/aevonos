@@ -56,12 +56,23 @@ export function ChaosCardListingCard({ card, ownedCardKeys, onAcquire }: ChaosCa
     if (isOwned || isAcquiring) return;
     setIsAcquiring(true);
     const result = await purchaseChaosCard(card.key);
+    
     if (result.success) {
-      toast({ title: 'Acquisition Successful', description: result.message });
-      onAcquire();
+      if (result.outcome === 'win' || result.outcome === 'pity_boon') {
+        toast({ title: 'Acquisition Successful', description: result.message });
+        onAcquire(); // Refresh to show ownership
+      } else {
+        toast({
+          variant: 'default',
+          title: 'Tribute Lost',
+          description: result.message,
+        });
+        onAcquire(); // Still refresh to show credit change
+      }
     } else {
-      toast({ variant: 'destructive', title: 'Acquisition Failed', description: result.error });
+      toast({ variant: 'destructive', title: 'Tribute Failed', description: result.error });
     }
+    
     setIsAcquiring(false);
   };
 
@@ -106,3 +117,5 @@ export function ChaosCardListingCard({ card, ownedCardKeys, onAcquire }: ChaosCa
     </Card>
   );
 }
+
+    
