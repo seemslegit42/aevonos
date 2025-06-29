@@ -17,24 +17,7 @@ import { LaheyIcon } from '../icons/LaheyIcon';
 import { ForemanatorIcon } from '../icons/ForemanatorIcon';
 import { SterileishIcon } from '../icons/SterileishIcon';
 import { PaperTrailIcon } from '../icons/PaperTrailIcon';
-
-
-export type NodeType = 
-    | 'trigger' 
-    | 'agent' 
-    | 'logic' 
-    | 'tool-winston-wolfe'
-    | 'tool-kif-kroker'
-    | 'tool-vandelay'
-    | 'tool-rolodex'
-    | 'tool-dr-syntax'
-    | 'tool-crm'
-    | 'tool-paper-trail'
-    | 'tool-jroc'
-    | 'tool-lahey'
-    | 'tool-foremanator'
-    | 'tool-sterileish'
-    | 'tool-final-answer';
+import type { NodeType } from './types';
 
 
 interface NodeInfo {

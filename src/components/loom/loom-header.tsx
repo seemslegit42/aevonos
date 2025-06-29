@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Save, Play, Trash2, Loader2, ArrowLeft, Plus } from 'lucide-react';
-import type { Workflow } from '@/app/loom/page';
+import type { Workflow } from './types';
 import type { UserRole } from '@prisma/client';
 
 interface LoomHeaderProps {

@@ -4,7 +4,7 @@
 
 import React, { useRef, useState, useMemo, forwardRef } from 'react';
 import { useDroppable, useDraggable } from '@dnd-kit/core';
-import type { Node, Edge } from '@/app/loom/page';
+import type { Node, Edge } from './types';
 import { Bot, PlayCircle, GitBranch } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { WinstonWolfeIcon } from '../icons/WinstonWolfeIcon';
