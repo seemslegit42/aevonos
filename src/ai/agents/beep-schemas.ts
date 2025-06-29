@@ -5,7 +5,7 @@ import { SecurityRiskLevel } from '@prisma/client';
 import { DrSyntaxOutputSchema } from './dr-syntax-schemas';
 import { AegisAnomalyScanOutputSchema } from './aegis-schemas';
 import { ContactSchema, DeleteContactOutputSchema } from '@/ai/tools/crm-schemas';
-import { BillingUsageSchema } from '@/ai/tools/billing-schemas';
+import { BillingUsageSchema, RequestCreditTopUpOutputSchema } from '@/ai/tools/billing-schemas';
 import { DatingProfileSchema } from '@/ai/tools/dating-schemas';
 import { VinDieselOutputSchema } from './vin-diesel-schemas';
 import { VandelayAlibiOutputSchema } from './vandelay-schemas';
@@ -99,10 +99,18 @@ const CrmAgentReportSchema = z.discriminatedUnion('action', [
     CrmDeletionReportSchema,
 ]);
 
-const BillingAgentReportSchema = z.object({
-    action: z.literal('get_usage'),
-    report: BillingUsageSchema.describe('The billing usage details.'),
+const BillingTopUpReportSchema = z.object({
+    action: z.literal('request_top_up'),
+    report: RequestCreditTopUpOutputSchema.describe('The result of the credit top-up request.'),
 });
+
+const BillingAgentReportSchema = z.discriminatedUnion('action', [
+    z.object({
+        action: z.literal('get_usage'),
+        report: BillingUsageSchema.describe('The billing usage details.'),
+    }),
+    BillingTopUpReportSchema,
+]);
 
 const DatingAgentReportSchema = z.object({
     action: z.literal('get_profile'),

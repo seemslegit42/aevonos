@@ -5,9 +5,10 @@
  */
 import { z } from 'zod';
 import { ai } from '@/ai/genkit';
-import { BillingUsageSchema, type BillingUsage } from './billing-schemas';
+import { BillingUsageSchema, RequestCreditTopUpInputSchema, RequestCreditTopUpOutputSchema, type BillingUsage, type RequestCreditTopUpInput, type RequestCreditTopUpOutput } from './billing-schemas';
 import prisma from '@/lib/prisma';
 import { incrementAgentActions } from '@/services/billing-service';
+import { TransactionStatus, TransactionType } from '@prisma/client';
 
 const PLAN_LIMITS = {
   'Apprentice': 100,
@@ -50,4 +51,35 @@ const getUsageDetailsFlow = ai.defineFlow(
 
 export async function getUsageDetails(workspaceId: string): Promise<BillingUsage> {
     return getUsageDetailsFlow({ workspaceId });
+}
+
+
+const requestCreditTopUpFlow = ai.defineFlow(
+  {
+    name: 'requestCreditTopUpFlow',
+    inputSchema: RequestCreditTopUpInputSchema.extend({ userId: z.string(), workspaceId: z.string() }),
+    outputSchema: RequestCreditTopUpOutputSchema,
+  },
+  async ({ amount, userId, workspaceId }) => {
+    try {
+      await prisma.transaction.create({
+        data: {
+          workspaceId,
+          userId,
+          type: TransactionType.CREDIT,
+          status: TransactionStatus.PENDING,
+          amount,
+          description: `User-initiated e-Transfer top-up request for ${amount.toLocaleString()} credits.`,
+        },
+      });
+      return { success: true, message: `Your request for ${amount.toLocaleString()} credits has been logged. Credits will be applied upon payment confirmation.` };
+    } catch (e) {
+      console.error('[Tool: requestCreditTopUp]', e);
+      return { success: false, message: 'Failed to log your top-up request.' };
+    }
+  }
+);
+
+export async function requestCreditTopUpInDb(input: RequestCreditTopUpInput, userId: string, workspaceId: string): Promise<RequestCreditTopUpOutput> {
+  return requestCreditTopUpFlow({ ...input, userId, workspaceId });
 }

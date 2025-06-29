@@ -1,3 +1,4 @@
+
 import { z } from 'zod';
 
 export const BillingUsageSchema = z.object({
@@ -8,3 +9,15 @@ export const BillingUsageSchema = z.object({
   overageEnabled: z.boolean().describe("Whether overage is enabled for the plan."),
 });
 export type BillingUsage = z.infer<typeof BillingUsageSchema>;
+
+
+export const RequestCreditTopUpInputSchema = z.object({
+  amount: z.number().positive(),
+});
+export type RequestCreditTopUpInput = z.infer<typeof RequestCreditTopUpInputSchema>;
+
+export const RequestCreditTopUpOutputSchema = z.object({
+  success: z.boolean(),
+  message: z.string(),
+});
+export type RequestCreditTopUpOutput = z.infer<typeof RequestCreditTopUpOutputSchema>;

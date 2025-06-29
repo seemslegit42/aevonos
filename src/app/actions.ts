@@ -7,9 +7,9 @@ import { revalidatePath } from 'next/cache';
 import { scanEvidence as scanEvidenceFlow, type PaperTrailScanInput, type PaperTrailScanOutput } from '@/ai/agents/paper-trail';
 import { getServerActionSession } from '@/lib/auth';
 import { createTransaction } from '@/services/ledger-service';
-import { TransactionType, TransactionStatus } from '@prisma/client';
-import prisma from '@/lib/prisma';
+import { TransactionType } from '@prisma/client';
 import { z } from 'zod';
+import { requestCreditTopUpInDb } from '@/ai/tools/billing-tools';
 
 export async function handleCommand(command: string): Promise<UserCommandOutput> {
   const session = await getServerActionSession();
@@ -115,21 +115,12 @@ export async function requestCreditTopUp(formData: FormData) {
 
     const { amount } = validatedFields.data;
 
-    try {
-        await prisma.transaction.create({
-            data: {
-                workspaceId: session.workspaceId,
-                userId: session.userId,
-                type: TransactionType.CREDIT,
-                status: TransactionStatus.PENDING,
-                amount: amount,
-                description: `User-initiated e-Transfer top-up request for ${amount.toLocaleString()} credits.`,
-            }
-        });
+    // Call the centralized tool logic
+    const result = await requestCreditTopUpInDb({ amount }, session.userId, session.workspaceId);
+    
+    if (result.success) {
         revalidatePath('/');
-        return { success: true, message: `Your request for ${amount.toLocaleString()} credits has been logged. Credits will be applied upon payment confirmation.` };
-    } catch (e) {
-        console.error('[Action: requestCreditTopUp]', e);
-        return { success: false, error: 'Failed to log your top-up request.' };
     }
+
+    return result;
 }

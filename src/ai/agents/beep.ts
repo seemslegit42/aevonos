@@ -30,7 +30,8 @@ import { aegisAnomalyScan } from '@/ai/agents/aegis';
 import { AegisAnomalyScanOutputSchema } from './aegis-schemas';
 import { createContactInDb, listContactsFromDb, deleteContactInDb, updateContactInDb } from '@/ai/tools/crm-tools';
 import { CreateContactInputSchema, DeleteContactInputSchema, UpdateContactInputSchema } from '@/ai/tools/crm-schemas';
-import { getUsageDetails } from '@/ai/tools/billing-tools';
+import { getUsageDetails, requestCreditTopUpInDb } from '@/ai/tools/billing-tools';
+import { RequestCreditTopUpInputSchema } from '@/ai/tools/billing-schemas';
 import { getDatingProfile } from '@/ai/tools/dating-tools';
 import { DatingProfileInputSchema } from '@/ai/tools/dating-schemas';
 import { createSecurityAlertInDb } from '@/ai/tools/security-tools';
@@ -251,6 +252,28 @@ class GetUsageTool extends Tool {
         return JSON.stringify(report);
     }
 }
+
+class RequestCreditTopUpTool extends Tool {
+    name = 'requestCreditTopUp';
+    description = 'Logs a user\'s request to top up their credit balance via an out-of-band payment method like an e-Transfer. Use this when the user says "add credits", "buy credits", "top up my account", etc. Extract the amount from their command.';
+    schema = RequestCreditTopUpInputSchema;
+    userId: string;
+    workspaceId: string;
+    constructor(context: AgentContext) { super(); this.userId = context.userId; this.workspaceId = context.workspaceId; }
+
+    async _call(input: z.infer<typeof RequestCreditTopUpInputSchema>) {
+        const result = await requestCreditTopUpInDb(input, this.userId, this.workspaceId);
+        const report: z.infer<typeof AgentReportSchema> = {
+            agent: 'billing',
+            report: {
+                action: 'request_top_up',
+                report: result
+            }
+        };
+        return JSON.stringify(report);
+    }
+}
+
 
 class GetDatingProfileTool extends Tool {
     name = 'getDatingProfile';
@@ -698,6 +721,7 @@ export async function processUserCommand(input: UserCommandInput): Promise<UserC
     new FinalAnswerTool(), new DrSyntaxTool(context), 
     new CreateContactTool(context), new UpdateContactTool(context), new ListContactsTool(context), new DeleteContactTool(context), 
     new GetUsageTool(context), new CreateSecurityAlertTool(context),
+    new RequestCreditTopUpTool(context),
     new VinDieselTool(), new WinstonWolfeTool(context), new KifKrokerTool(context), new RolodexTool(context),
     new VandelayTool(context), new JrocTool(context), new LaheyTool(context), new ForemanatorTool(context),
     new SterileishTool(context), new PaperTrailTool(context), new BarbaraTool(context), new AuditorTool(context),
@@ -724,7 +748,7 @@ export async function processUserCommand(input: UserCommandInput): Promise<UserC
 
   Your process:
   1.  Analyze the user's command and the mandatory \`AEGIS_INTERNAL_REPORT\` provided in a System Message. If Aegis detects a threat (\`isAnomalous: true\`), your tone MUST become clinical and serious, and you MUST call the \`createSecurityAlert\` tool with the details from the report. This is a critical security function.
-  2.  Based on the user's command and the tool descriptions provided, decide which specialized agents or tools to call. You can call multiple tools in parallel. If a user asks about their billing, usage, credits, or plan, use the 'getUsageDetails' tool.
+  2.  Based on the user's command and the tool descriptions provided, decide which specialized agents or tools to call. You can call multiple tools in parallel. If a user asks about their billing, usage, or plan, use the 'getUsageDetails' tool. If they ask to add or purchase credits, use the 'requestCreditTopUp' tool.
   3.  If the user's command is to launch an app (e.g., "launch the terminal", "open the file explorer"), you MUST use the 'appsToLaunch' array in your final answer. Do NOT use a tool for a simple app launch.
   4.  When you have gathered all necessary information from your delegated agents and are ready to provide the final response, you MUST call the 'final_answer' tool. This is your final action.
   5.  Your 'responseText' should be in character—witty, confident, and direct. It should confirm the actions taken and what the user should expect next.
