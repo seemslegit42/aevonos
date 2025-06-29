@@ -18,7 +18,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Sparkles, ShieldCheck, LogOut, Settings, User as UserIcon, Database, Gem, Mic, MicOff } from 'lucide-react';
+import { Sparkles, ShieldCheck, LogOut, Settings, User as UserIcon, Database, Gem, Mic, MicOff, Loader2 } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { logout } from '@/app/auth/actions';
 import type { User, Workspace } from '@prisma/client';

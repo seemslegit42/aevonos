@@ -79,7 +79,7 @@ export function ChaosCardListingCard({ card, ownedCardKeys, onAcquire }: ChaosCa
   const getActionContent = () => {
       if (isAcquiring) return <Loader2 className="animate-spin" />;
       if (isOwned) return <><Check className="mr-2 h-4 w-4" /> Owned</>;
-      return <><ShoppingCart className="mr-2 h-4 w-4" /> Acquire</>;
+      return <><ShoppingCart className="mr-2 h-4 w-4" /> Make Tribute</>;
   }
 
   const cardClass = classStyles[card.cardClass] || classStyles.AESTHETIC;
