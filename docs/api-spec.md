@@ -1,3 +1,4 @@
+
 # ΛΞVON OS: Public API Specification
 
 This document provides the formal OpenAPI 3.0 specification for the ΛΞVON OS Public API. It details the endpoints, data models, authentication methods, and error handling, serving as the definitive contract for external developers and services interacting with the platform.
@@ -293,6 +294,30 @@ This document provides the formal OpenAPI 3.0 specification for the ΛΞVON OS P
           "400": { "description": "Bad request (e.g., missing password for encryption)." }
         }
       }
+    },
+    "/agents/stonks/advice": {
+      "post": {
+        "tags": ["Agents"],
+        "summary": "Get unhinged financial advice from the Stonks Bot.",
+        "operationId": "getStonksBotAdvice",
+        "description": "Submits a stock ticker to the Stonks Bot agent and returns its 'analysis'. This is not financial advice.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/StonksBotRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The Stonks Bot's advice.",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/StonksBotResponse" } } }
+          },
+          "400": { "description": "Invalid ticker symbol." },
+          "402": { "description": "Insufficient credits for agent action." }
+        }
+      }
     }
   },
   "components": {
@@ -458,6 +483,32 @@ This document provides the formal OpenAPI 3.0 specification for the ΛΞVON OS P
             "decoyResult": { "type": "object", "nullable": true }
         },
         "required": ["targetName"]
+      },
+      "StonksBotRequest": {
+        "type": "object",
+        "properties": {
+          "ticker": { "type": "string", "example": "GME", "description": "The stock ticker symbol." }
+        },
+        "required": ["ticker"]
+      },
+      "StonksBotResponse": {
+        "type": "object",
+        "properties": {
+          "ticker": { "type": "string" },
+          "priceInfo": { "$ref": "#/components/schemas/StockPrice" },
+          "advice": { "type": "string", "description": "The unhinged, extremely bullish, and financially irresponsible advice from the Stonks Bot." },
+          "confidence": { "type": "string", "enum": ["To the moon!", "Diamond hands!", "Ape strong together!"] },
+          "rating": { "type": "string", "enum": ["HODL", "BUY THE DIP", "ALL IN"] }
+        }
+      },
+      "StockPrice": {
+        "type": "object",
+        "properties": {
+          "symbol": { "type": "string" },
+          "price": { "type": "string" },
+          "change": { "type": "string" },
+          "changePercent": { "type": "string" }
+        }
       }
     }
   }
