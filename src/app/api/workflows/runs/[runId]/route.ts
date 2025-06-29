@@ -10,7 +10,6 @@ interface RouteParams {
 }
 
 // GET /api/workflows/runs/{runId}
-// Corresponds to an extension of the `listWorkflowRuns` operationId in api-spec.md
 export async function GET(request: NextRequest, { params }: RouteParams) {
   const session = await getSession(request);
   if (!session?.workspaceId) {

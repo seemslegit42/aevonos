@@ -331,10 +331,9 @@ Here is the updated document: docs/API/PUBLIC-API-SPEC.md.This document provides
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string",
-              "format": "uuid"
+              "type": "string"
             },
-            "description": "UUID of the workflow to execute."
+            "description": "ID of the workflow to execute."
           }
         ],
         "requestBody": {
@@ -389,11 +388,10 @@ Here is the updated document: docs/API/PUBLIC-API-SPEC.md.This document provides
           {
             "name": "workflowId",
             "in": "query",
-            "description": "Filter runs by a specific workflow UUID.",
+            "description": "Filter runs by a specific workflow ID.",
             "required": false,
             "schema": {
-              "type": "string",
-              "format": "uuid"
+              "type": "string"
             }
           }
         ],
@@ -410,6 +408,40 @@ Here is the updated document: docs/API/PUBLIC-API-SPEC.md.This document provides
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/workflows/runs/{runId}": {
+      "get": {
+        "tags": ["Workflows"],
+        "summary": "Retrieve details for a specific workflow run.",
+        "operationId": "getWorkflowRunById",
+        "description": "Fetches the complete details for a single workflow run, including trigger payload, logs, and final output.",
+        "parameters": [
+          {
+            "name": "runId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "ID of the workflow run to retrieve."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Detailed information about the workflow run.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkflowRunInstance"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Workflow run not found."
           }
         }
       }
@@ -481,10 +513,9 @@ Here is the updated document: docs/API/PUBLIC-API-SPEC.md.This document provides
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string",
-              "format": "uuid"
+              "type": "string"
             },
-            "description": "UUID of the contact to retrieve."
+            "description": "ID of the contact to retrieve."
           }
         ],
         "responses": {
@@ -513,10 +544,9 @@ Here is the updated document: docs/API/PUBLIC-API-SPEC.md.This document provides
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string",
-              "format": "uuid"
+              "type": "string"
             },
-            "description": "UUID of the contact to update."
+            "description": "ID of the contact to update."
           }
         ],
         "requestBody": {
@@ -558,10 +588,9 @@ Here is the updated document: docs/API/PUBLIC-API-SPEC.md.This document provides
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string",
-              "format": "uuid"
+              "type": "string"
             },
-            "description": "UUID of the contact to delete."
+            "description": "ID of the contact to delete."
           }
         ],
         "responses": {
@@ -1198,13 +1227,8 @@ Here is the updated document: docs/API/PUBLIC-API-SPEC.md.This document provides
         "type": "object",
         "properties": {
           "id": {
-            "type": "integer",
-            "description": "Internal database ID."
-          },
-          "uuid": {
             "type": "string",
-            "format": "uuid",
-            "description": "Publicly exposed unique identifier for the workspace."
+            "description": "Workspace ID (CUID)."
           },
           "name": {
             "type": "string",
@@ -1224,23 +1248,18 @@ Here is the updated document: docs/API/PUBLIC-API-SPEC.md.This document provides
             "format": "date-time"
           }
         },
-        "required": ["id", "uuid", "name", "planTier", "createdAt", "updatedAt"]
+        "required": ["id", "name", "planTier", "createdAt", "updatedAt"]
       },
       "WorkflowDefinition": {
         "type": "object",
         "properties": {
           "id": {
-            "type": "integer",
-            "description": "Internal database ID."
-          },
-          "uuid": {
             "type": "string",
-            "format": "uuid",
-            "description": "Publicly exposed unique identifier for the workflow."
+            "description": "Workflow ID (CUID)."
           },
-          "tenantId": {
-            "type": "integer",
-            "description": "Internal database ID of the associated tenant."
+          "workspaceId": {
+            "type": "string",
+            "description": "ID of the associated workspace."
           },
           "name": {
             "type": "string",
@@ -1269,7 +1288,7 @@ Here is the updated document: docs/API/PUBLIC-API-SPEC.md.This document provides
             "format": "date-time"
           }
         },
-        "required": ["id", "uuid", "tenantId", "name", "isActive", "triggerType", "definition", "createdAt", "updatedAt"]
+        "required": ["id", "workspaceId", "name", "isActive", "triggerType", "definition", "createdAt", "updatedAt"]
       },
       "WorkflowCreationRequest": {
         "type": "object",
@@ -1300,8 +1319,7 @@ Here is the updated document: docs/API/PUBLIC-API-SPEC.md.This document provides
         "properties": {
           "runId": {
             "type": "string",
-            "format": "uuid",
-            "description": "Publicly exposed unique identifier for the workflow run."
+            "description": "Unique ID for the workflow run."
           },
           "status": {
             "type": "string",
@@ -1319,21 +1337,16 @@ Here is the updated document: docs/API/PUBLIC-API-SPEC.md.This document provides
         "type": "object",
         "properties": {
           "id": {
-            "type": "integer",
-            "description": "Internal database ID."
-          },
-          "uuid": {
             "type": "string",
-            "format": "uuid",
-            "description": "Publicly exposed unique identifier for the workflow run."
+            "description": "Unique ID for the workflow run."
           },
-          "tenantId": {
-            "type": "integer",
-            "description": "Internal database ID of the associated tenant."
+          "workspaceId": {
+            "type": "string",
+            "description": "ID of the associated workspace."
           },
           "workflowId": {
-            "type": "integer",
-            "description": "Internal database ID of the executed workflow."
+            "type": "string",
+            "description": "ID of the executed workflow."
           },
           "status": {
             "type": "string",
@@ -1352,6 +1365,12 @@ Here is the updated document: docs/API/PUBLIC-API-SPEC.md.This document provides
             "nullable": true,
             "additionalProperties": true
           },
+          "log": {
+            "type": "object",
+            "description": "JSONB representation of the workflow execution trace, containing steps, inputs, and outputs.",
+            "nullable": true,
+            "additionalProperties": true
+          },
           "startedAt": {
             "type": "string",
             "format": "date-time",
@@ -1363,23 +1382,18 @@ Here is the updated document: docs/API/PUBLIC-API-SPEC.md.This document provides
             "nullable": true
           }
         },
-        "required": ["id", "uuid", "tenantId", "workflowId", "status"]
+        "required": ["id", "workspaceId", "workflowId", "status"]
       },
       "Contact": {
         "type": "object",
         "properties": {
           "id": {
-            "type": "integer",
-            "description": "Internal database ID."
-          },
-          "uuid": {
             "type": "string",
-            "format": "uuid",
-            "description": "Publicly exposed unique identifier for the contact."
+            "description": "Unique identifier for the contact (CUID)."
           },
-          "tenantId": {
-            "type": "integer",
-            "description": "Internal database ID of the associated tenant."
+          "workspaceId": {
+            "type": "string",
+            "description": "ID of the associated workspace."
           },
           "email": {
             "type": "string",
@@ -1413,7 +1427,7 @@ Here is the updated document: docs/API/PUBLIC-API-SPEC.md.This document provides
             "format": "date-time"
           }
         },
-        "required": ["id", "uuid", "tenantId", "createdAt", "updatedAt"]
+        "required": ["id", "workspaceId", "createdAt", "updatedAt"]
       },
       "ContactCreationRequest": {
         "type": "object",
@@ -1476,12 +1490,11 @@ Here is the updated document: docs/API/PUBLIC-API-SPEC.md.This document provides
         "properties": {
           "id": {
             "type": "string",
-            "format": "uuid",
-            "description": "Publicly exposed unique identifier for the alert."
+            "description": "Unique ID for the alert."
           },
-          "tenantId": {
-            "type": "integer",
-            "description": "Internal database ID of the associated tenant."
+          "workspaceId": {
+            "type": "string",
+            "description": "ID of the associated workspace."
           },
           "type": {
             "type": "string",
@@ -1510,7 +1523,7 @@ Here is the updated document: docs/API/PUBLIC-API-SPEC.md.This document provides
             "description": "Suggested actions for the user (e.g., 'Lock Account', 'Dismiss Alert')."
           }
         },
-        "required": ["id", "tenantId", "type", "explanation", "riskLevel", "timestamp"]
+        "required": ["id", "workspaceId", "type", "explanation", "riskLevel", "timestamp"]
       },
       "MicroAppManifest": {
         "type": "object",

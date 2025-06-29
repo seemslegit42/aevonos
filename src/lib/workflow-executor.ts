@@ -14,6 +14,7 @@ import { generateBusinessKit } from '@/ai/agents/jroc';
 import { analyzeLaheyLog } from '@/ai/agents/lahey';
 import { processDailyLog } from '@/ai/agents/foremanator';
 import { analyzeCompliance } from '@/ai/agents/sterileish';
+import { authorizeAndDebitAgentActions } from './billing-service';
 
 interface ExecutionContext {
     workspaceId: string;
@@ -21,17 +22,25 @@ interface ExecutionContext {
 
 async function executeNode(node: Node, payload: any, context: ExecutionContext): Promise<any> {
     const { type, data } = node;
-    // Combine the dynamic payload from the previous node with static data configured on the current node.
-    const input = { ...payload, ...data };
+    // The input to a node is a combination of the current payload and its own static configuration.
+    const input = { ...payload, ...data, workspaceId: context.workspaceId };
 
     console.log(`Executing node type: ${type} with label: ${data.label}`);
+    
+    // Each node execution is a billable agent action.
+    await authorizeAndDebitAgentActions(context.workspaceId, 1);
 
     switch (type) {
         case 'trigger':
+            // The trigger node doesn't cost anything, so we'll refund the pre-charge.
+            // A bit of a hack, but keeps the loop logic clean. A better way might be to
+            // handle billing inside each case, but this is fine for now.
+             await authorizeAndDebitAgentActions(context.workspaceId, -1);
             return { status: 'triggered', initialPayload: payload };
 
         case 'tool-final-answer':
             console.log(`Reached Final Answer node.`);
+            await authorizeAndDebitAgentActions(context.workspaceId, -1);
             return { finalOutput: payload };
 
         case 'tool-crm':
@@ -85,6 +94,7 @@ async function executeNode(node: Node, payload: any, context: ExecutionContext):
             
         default:
             console.log(`Node type '${type}' is not implemented for execution. Skipping.`);
+            await authorizeAndDebitAgentActions(context.workspaceId, -1); // Don't charge for skipped nodes
             return { status: 'skipped', reason: `Node type '${type}' not implemented` };
     }
 }
