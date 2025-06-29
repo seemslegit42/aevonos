@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import React, { useState, useCallback, useRef, useEffect } from 'react';
@@ -14,6 +13,8 @@ import WorkflowRunHistory from '@/components/loom/workflow-run-history';
 import { useToast } from '@/hooks/use-toast';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import type { User, UserRole } from '@prisma/client';
+import { useIsMobile } from '@/hooks/use-is-mobile';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 
 
 export interface Node {
@@ -68,10 +69,15 @@ export default function LoomPage() {
     const [isRunning, setIsRunning] = useState(false);
     const [listRefreshTrigger, setListRefreshTrigger] = useState(0);
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+    
+    const [isNodesSheetOpen, setIsNodesSheetOpen] = useState(false);
 
     const { toast } = useToast();
     const [userRole, setUserRole] = useState<UserRole | null>(null);
     const [isLoadingUser, setIsLoadingUser] = useState(true);
+    const isMobile = useIsMobile();
+    
+    const isInspectorSheetOpen = isMobile && !!selectedNode;
 
     useEffect(() => {
         const fetchUserRole = async () => {
@@ -232,6 +238,11 @@ export default function LoomPage() {
             const type = active.data.current.type as NodeType;
             const label = active.data.current.label as string;
             
+            // Close the nodes sheet on mobile after dropping a node
+            if (isMobile) {
+                setIsNodesSheetOpen(false);
+            }
+            
             const canvasRect = canvasRef.current?.getBoundingClientRect();
             let position = { x: 100, y: 100 };
 
@@ -261,7 +272,7 @@ export default function LoomPage() {
                 )
             );
         }
-    }, [connection]);
+    }, [connection, isMobile]);
 
     const updateNodeData = (nodeId: string, newData: any) => {
         setNodes(nds => nds.map(n => n.id === nodeId ? { ...n, data: { ...n.data, ...newData } } : n));
@@ -285,6 +296,48 @@ export default function LoomPage() {
         setConnection(null);
     }, [connection, edges]);
 
+  const renderDesktopLayout = () => (
+      <div className="flex-grow flex gap-4 p-4 min-h-0">
+          <NodesSidebar />
+          <WorkflowCanvas 
+              ref={canvasRef}
+              nodes={nodes} 
+              edges={edges} 
+              onNodeClick={setSelectedNode} 
+              selectedNodeId={selectedNode?.id}
+              onConnectStart={onConnectStart}
+              onConnectEnd={onConnectEnd}
+              connectionSourceId={connection?.sourceId}
+          />
+          <PropertyInspector node={selectedNode} onUpdate={updateNodeData} />
+      </div>
+  );
+
+  const renderMobileLayout = () => (
+    <div className="flex-grow flex p-2 md:p-4 min-h-0">
+        <WorkflowCanvas 
+            ref={canvasRef}
+            nodes={nodes} 
+            edges={edges} 
+            onNodeClick={setSelectedNode} 
+            selectedNodeId={selectedNode?.id}
+            onConnectStart={onConnectStart}
+            onConnectEnd={onConnectEnd}
+            connectionSourceId={connection?.sourceId}
+        />
+        <Sheet open={isNodesSheetOpen} onOpenChange={setIsNodesSheetOpen}>
+            <SheetContent side="left" className="p-0">
+                 <NodesSidebar />
+            </SheetContent>
+        </Sheet>
+        <Sheet open={isInspectorSheetOpen} onOpenChange={(open) => { if (!open) setSelectedNode(null); }}>
+            <SheetContent side="right" className="p-0">
+                <PropertyInspector node={selectedNode} onUpdate={updateNodeData} />
+            </SheetContent>
+        </Sheet>
+    </div>
+  );
+
   return (
     <div className="flex flex-col h-full bg-background">
         <LoomHeader 
@@ -297,9 +350,10 @@ export default function LoomPage() {
             isRunning={isRunning}
             userRole={userRole}
             isLoadingUser={isLoadingUser}
+            onAddNodeClick={() => setIsNodesSheetOpen(true)}
         />
-        <div className="flex-grow flex min-h-0">
-             <div className="w-64 flex-shrink-0 flex flex-col min-h-0 border-r border-foreground/20">
+        <div className="flex-grow flex flex-col md:flex-row min-h-0">
+             <div className="w-full md:w-64 flex-shrink-0 flex flex-col min-h-0 border-r border-foreground/20">
               <div className="h-[60%] min-h-0 border-b border-foreground/20">
                   <WorkflowList onSelectWorkflow={handleSelectWorkflow} activeWorkflowId={activeWorkflowId} triggerRefresh={listRefreshTrigger}/>
               </div>
@@ -308,20 +362,7 @@ export default function LoomPage() {
               </div>
           </div>
             <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
-                <div className="flex-grow flex gap-4 p-4 min-h-0">
-                    <NodesSidebar />
-                    <WorkflowCanvas 
-                        ref={canvasRef}
-                        nodes={nodes} 
-                        edges={edges} 
-                        onNodeClick={setSelectedNode} 
-                        selectedNodeId={selectedNode?.id}
-                        onConnectStart={onConnectStart}
-                        onConnectEnd={onConnectEnd}
-                        connectionSourceId={connection?.sourceId}
-                    />
-                    <PropertyInspector node={selectedNode} onUpdate={updateNodeData} />
-                </div>
+                {isMobile ? renderMobileLayout() : renderDesktopLayout()}
             </DndContext>
         </div>
         <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
