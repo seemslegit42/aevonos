@@ -387,7 +387,7 @@ export default function RegisterPage() {
                         transition={{ duration: 2, ease: 'easeOut' }}
                         className="absolute inset-0 -z-10 flex items-center justify-center"
                     >
-                        <FlowerOfLifeIcon className="w-full h-full max-w-3xl max-h-3xl" />
+                        <FlowerOfLifeIcon className="w-full h-full max-w-3xl max-h-[48rem]" />
                     </motion.div>
                 )}
             </AnimatePresence>
@@ -410,5 +410,3 @@ export default function RegisterPage() {
         </div>
     );
 }
-
-    
