@@ -2,7 +2,7 @@
 'use server';
 
 import type { Workflow as PrismaWorkflow } from '@prisma/client';
-import type { Workflow, Node } from '@/app/loom/page';
+import type { Workflow, Node } from '@/components/loom/types';
 import { createContactInDb, listContactsFromDb, updateContactInDb, deleteContactInDb } from '@/ai/tools/crm-tools';
 import { drSyntaxCritique } from '@/ai/agents/dr-syntax';
 import { generateSolution } from '@/ai/agents/winston-wolfe';
@@ -14,7 +14,6 @@ import { generateBusinessKit } from '@/ai/agents/jroc';
 import { analyzeLaheyLog } from '@/ai/agents/lahey';
 import { processDailyLog } from '@/ai/agents/foremanator';
 import { analyzeCompliance } from '@/ai/agents/sterileish';
-import { authorizeAndDebitAgentActions } from './billing-service';
 
 interface ExecutionContext {
     workspaceId: string;
@@ -26,21 +25,15 @@ async function executeNode(node: Node, payload: any, context: ExecutionContext):
     const input = { ...payload, ...data, workspaceId: context.workspaceId };
 
     console.log(`Executing node type: ${type} with label: ${data.label}`);
-    
-    // Each node execution is a billable agent action.
-    await authorizeAndDebitAgentActions(context.workspaceId, 1);
+
+    // Billing is now handled by the individual tools/agents being called, not the executor.
 
     switch (type) {
         case 'trigger':
-            // The trigger node doesn't cost anything, so we'll refund the pre-charge.
-            // A bit of a hack, but keeps the loop logic clean. A better way might be to
-            // handle billing inside each case, but this is fine for now.
-             await authorizeAndDebitAgentActions(context.workspaceId, -1);
             return { status: 'triggered', initialPayload: payload };
 
         case 'tool-final-answer':
             console.log(`Reached Final Answer node.`);
-            await authorizeAndDebitAgentActions(context.workspaceId, -1);
             return { finalOutput: payload };
 
         case 'tool-crm':
@@ -48,7 +41,8 @@ async function executeNode(node: Node, payload: any, context: ExecutionContext):
             console.log(`Executing CRM action: ${action} with input:`, crmData);
             switch (action) {
                 case 'list':
-                    return { contacts: await listContactsFromDb(context.workspaceId) };
+                    // Note: listContactsFromDb will handle its own billing
+                    return { contacts: await listContactsFromDb(context.workspaceId) }; 
                 case 'create':
                     return { newContact: await createContactInDb(crmData, context.workspaceId) };
                 case 'update':
@@ -94,7 +88,6 @@ async function executeNode(node: Node, payload: any, context: ExecutionContext):
             
         default:
             console.log(`Node type '${type}' is not implemented for execution. Skipping.`);
-            await authorizeAndDebitAgentActions(context.workspaceId, -1); // Don't charge for skipped nodes
             return { status: 'skipped', reason: `Node type '${type}' not implemented` };
     }
 }
