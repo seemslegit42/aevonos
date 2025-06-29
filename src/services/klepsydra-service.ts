@@ -6,12 +6,11 @@
  */
 import {
   getCurrentPulseValue,
-  getPulseProfile,
   recordWin,
   recordLoss,
   shouldTriggerPityBoon,
 } from './pulse-engine-service';
-import { logTributeEvent } from './ledger-service';
+import { logTributeEvent, LogTributeEventInput } from './ledger-service';
 import { pulseEngineConfig } from '@/config/pulse-engine-config';
 import { chaosCardManifest } from '@/config/chaos-cards';
 import prisma from '@/lib/prisma';
@@ -75,8 +74,7 @@ export async function calculateOutcome(
     await recordLoss(userId);
   }
 
-  // 4. Log the tribute transaction atomically
-  await logTributeEvent({
+  const tributeData: LogTributeEventInput = {
     userId,
     workspaceId,
     instrumentId,
@@ -84,7 +82,10 @@ export async function calculateOutcome(
     luckWeight,
     outcome,
     boonAmount,
-  });
+  };
+
+  // 4. Log the tribute transaction atomically
+  await logTributeEvent(tributeData);
 
   // 5. Return result
   return {
