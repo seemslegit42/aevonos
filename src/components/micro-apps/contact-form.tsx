@@ -1,4 +1,3 @@
-
 // This component has been deprecated.
 // Its functionality has been migrated to the ContactEditor Micro-App
 // in src/components/micro-apps/contact-editor.tsx to adhere to
