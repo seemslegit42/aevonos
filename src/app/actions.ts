@@ -96,15 +96,13 @@ const TopUpRequestSchema = z.object({
   amount: z.coerce.number().positive({ message: "Amount must be greater than zero." }),
 });
 
-export async function requestCreditTopUp(formData: FormData) {
+export async function requestCreditTopUp(amount: number) {
     const session = await getServerActionSession();
     if (!session?.userId || !session?.workspaceId) {
       return { success: false, error: 'Unauthorized' };
     }
     
-    const validatedFields = TopUpRequestSchema.safeParse({
-        amount: formData.get('amount'),
-    });
+    const validatedFields = TopUpRequestSchema.safeParse({ amount });
 
     if (!validatedFields.success) {
         return {
@@ -113,10 +111,10 @@ export async function requestCreditTopUp(formData: FormData) {
         };
     }
 
-    const { amount } = validatedFields.data;
+    const { amount: validatedAmount } = validatedFields.data;
 
     // Call the centralized tool logic
-    const result = await requestCreditTopUpInDb({ amount }, session.userId, session.workspaceId);
+    const result = await requestCreditTopUpInDb({ amount: validatedAmount }, session.userId, session.workspaceId);
     
     if (result.success) {
         revalidatePath('/');
