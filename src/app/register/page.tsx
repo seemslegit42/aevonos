@@ -86,7 +86,7 @@ const PhaseOne = ({ nextPhase, methods }: { nextPhase: () => void, methods: any 
                         transition={{ duration: 1.5 }}
                         className="space-y-6 w-full"
                     >
-                        <h2 className="text-3xl md:text-4xl font-headline tracking-wider text-primary">
+                        <h2 className="text-3xl md:text-4xl font-headline tracking-wider text-foreground">
                             🜂 “What must end so you can begin?”
                         </h2>
                         <Textarea 
@@ -136,7 +136,7 @@ const PhaseTwo = ({ nextPhase, methods }: { nextPhase: () => void, methods: any 
                 transition={{ duration: 1.0, delay: 0.5 }}
                 className="space-y-6"
             >
-                <h2 className="text-3xl md:text-4xl font-headline tracking-wider text-primary">
+                <h2 className="text-3xl md:text-4xl font-headline tracking-wider text-foreground">
                     “Tell me what you're building. Be vague. Be bold.”
                 </h2>
                 <Textarea 
@@ -162,7 +162,7 @@ const PhaseThree = ({ nextPhase, methods }: { nextPhase: () => void, methods: an
                 transition={{ duration: 1.0, delay: 0.5 }}
                 className="space-y-6"
             >
-                <h2 className="text-2xl md:text-3xl font-headline tracking-wider text-primary">
+                <h2 className="text-2xl md:text-3xl font-headline tracking-wider text-foreground">
                     “ΛΞVON is listening. But to act, it must be named.”
                 </h2>
                 <div className="space-y-4">
@@ -230,7 +230,7 @@ const PhaseFour = ({ nextPhase, methods }: { nextPhase: () => void, methods: any
                     exit={{ opacity: 0, transition: { duration: 0.5 } }}
                     className="space-y-6 w-full"
                 >
-                    <h2 className="text-center text-2xl md:text-3xl font-headline tracking-wider text-primary">
+                    <h2 className="text-center text-2xl md:text-3xl font-headline tracking-wider text-foreground">
                         “Make your vow.”
                     </h2>
                     <div className="grid md:grid-cols-3 gap-4">
@@ -246,7 +246,7 @@ const PhaseFour = ({ nextPhase, methods }: { nextPhase: () => void, methods: any
                     animate={{ opacity: 1, transition: { duration: 1.0 } }}
                     className="text-center"
                 >
-                    <h2 className="text-3xl md:text-4xl font-headline tracking-wider text-primary">
+                    <h2 className="text-3xl md:text-4xl font-headline tracking-wider text-foreground">
                         {covenantText[selectedPsyche]}
                     </h2>
                     <p className="text-lg text-muted-foreground mt-2">Your path is set.</p>
@@ -268,7 +268,7 @@ const PhaseFive = ({ methods }: { methods: any }) => {
                 transition={{ duration: 1.0, delay: 0.5 }}
                 className="space-y-6"
             >
-                 <h2 className="text-2xl md:text-3xl font-headline tracking-wider text-primary">
+                 <h2 className="text-2xl md:text-3xl font-headline tracking-wider text-foreground">
                     “Forge the final key.”
                 </h2>
                 <div className="space-y-4">
@@ -367,7 +367,7 @@ export default function RegisterPage() {
                     animate={{ opacity: 1 }}
                     transition={{ duration: 1.5 }}
                 >
-                    <h2 className="text-2xl md:text-3xl font-headline tracking-wider text-primary text-center">
+                    <h2 className="text-2xl md:text-3xl font-headline tracking-wider text-foreground text-center">
                         “You are now in command of ΛΞVON. Your time belongs to you again.”
                     </h2>
                 </motion.div>
