@@ -196,7 +196,7 @@ export default function UserManagementTab() {
               </AlertDialogHeader>
               <AlertDialogFooter>
                   <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction onClick={handleRemoveUser} className="bg-destructive" disabled={isPending}>
+                  <AlertDialogAction onClick={handleRemoveUser} className="bg-destructive hover:bg-destructive/90" disabled={isPending}>
                     {isPending ? <Loader2 className="animate-spin" /> : 'Remove User'}
                   </AlertDialogAction>
               </AlertDialogFooter>
