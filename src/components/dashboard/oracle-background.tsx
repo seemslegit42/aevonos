@@ -177,7 +177,7 @@ function BeepCore({ state }: { state: BeepCoreState }) {
 
 
 function AgentConnection({ agent, position }: { agent: AgentData, position: THREE.Vector3 }) {
-    const lineRef = useRef<any>(null); // Using `any` for ref as Line's type from drei can be complex
+    const lineRef = useRef<any>(null); // Using `any` for ref as Line's type from trei can be complex
     
     const { color: targetColor, opacity: targetOpacity, lineWidth: targetWidth } = useMemo(() => {
         switch(agent.status) {

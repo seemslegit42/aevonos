@@ -10,7 +10,7 @@ type UserProp = Pick<User, 'id' | 'email' | 'firstName' | 'lastName' | 'role' | 
 export function MainLayout({ children, user, workspace }: { children: React.ReactNode; user: UserProp; workspace: Workspace | null }) {
   const pathname = usePathname();
 
-  const publicPaths = ['/login', '/register', '/validator'];
+  const publicPaths = ['/login', '/register', '/validator', '/pricing', '/subscribe'];
   const isPublicPage = publicPaths.some(p => pathname.startsWith(p));
 
   // If it's a public page like login, just render the content without the main app layout
