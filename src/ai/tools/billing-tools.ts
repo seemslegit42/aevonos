@@ -9,6 +9,8 @@ import { BillingUsageSchema, RequestCreditTopUpInputSchema, RequestCreditTopUpOu
 import prisma from '@/lib/prisma';
 import { incrementAgentActions } from '@/services/billing-service';
 import { TransactionStatus, TransactionType } from '@prisma/client';
+import { aegisAnomalyScan } from '@/ai/agents/aegis';
+import { createSecurityAlertInDb } from '@/ai/tools/security-tools';
 
 const PLAN_LIMITS = {
   'Apprentice': 100,
@@ -61,7 +63,28 @@ const requestCreditTopUpFlow = ai.defineFlow(
     outputSchema: RequestCreditTopUpOutputSchema,
   },
   async ({ amount, userId, workspaceId }) => {
+    // This flow is now more complex, involving an AI call to Aegis.
+    // It's a billable action.
+    await incrementAgentActions(workspaceId);
+
     try {
+      // Aegis Anomaly Scan
+      const anomalyReport = await aegisAnomalyScan({
+        activityDescription: `User initiated a credit top-up request of ${amount.toLocaleString()} ΞCredits.`,
+        workspaceId,
+      });
+
+      if (anomalyReport.isAnomalous) {
+        // If anomalous, create a security alert.
+        await createSecurityAlertInDb({
+          type: anomalyReport.anomalyType || 'Suspicious Transaction',
+          explanation: `Aegis flagged a credit top-up request as anomalous. Reason: ${anomalyReport.anomalyExplanation}`,
+          riskLevel: anomalyReport.riskLevel || 'medium',
+        }, workspaceId);
+      }
+
+      // Still create the pending transaction regardless of the anomaly report.
+      // The alert serves as a flag for the admin to review before confirming.
       await prisma.transaction.create({
         data: {
           workspaceId,
@@ -72,7 +95,13 @@ const requestCreditTopUpFlow = ai.defineFlow(
           description: `User-initiated e-Transfer top-up request for ${amount.toLocaleString()} credits.`,
         },
       });
-      return { success: true, message: `Your request for ${amount.toLocaleString()} credits has been logged. Credits will be applied upon payment confirmation.` };
+
+      let message = `Your request for ${amount.toLocaleString()} credits has been logged. Credits will be applied upon payment confirmation.`;
+      if (anomalyReport.isAnomalous) {
+        message += ' Note: This transaction has been flagged for administrative review due to unusual activity.';
+      }
+
+      return { success: true, message };
     } catch (e) {
       console.error('[Tool: requestCreditTopUp]', e);
       return { success: false, message: 'Failed to log your top-up request.' };
