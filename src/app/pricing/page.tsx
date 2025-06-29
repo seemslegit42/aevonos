@@ -1,5 +1,7 @@
 
+
 import Link from 'next/link';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import PricingCard from '@/components/pricing/pricing-card';
 import PlanAdvisorWidget from '@/components/pricing/plan-advisor-widget';
@@ -57,9 +59,7 @@ export default function PricingPage() {
             <header className="fixed top-0 left-0 right-0 z-40 bg-background/50 backdrop-blur-lg">
                 <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-6">
                     <Link href="/" className="flex items-center gap-2">
-                         <h1 className="text-xl font-headline font-bold text-foreground tracking-widest">
-                            <span className="text-primary">ΛΞ</span>VON
-                        </h1>
+                        <Image src="/logo-neutral.svg" alt="Aevon OS Logo" width={80} height={24} className="h-6 w-auto" />
                     </Link>
                     <nav className="flex items-center gap-4">
                         <Link href="/login">

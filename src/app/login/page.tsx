@@ -8,6 +8,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { motion } from 'framer-motion';
+import Image from 'next/image';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -16,7 +17,6 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import { FlowerOfLifeIcon } from '@/components/icons/FlowerOfLifeIcon';
-import { CrystalIcon } from '@/components/icons/CrystalIcon';
 
 const formSchema = z.object({
   email: z.string().email(),
@@ -83,7 +83,7 @@ export default function LoginPage() {
                 <Card className="bg-background/80 backdrop-blur-md">
                     <CardHeader className="text-center space-y-4 pt-8">
                         <div className="flex justify-center">
-                           <CrystalIcon className="w-16 h-16 text-primary crystal-pulse" />
+                           <Image src="/logo-neutral.svg" alt="Aevon OS Logo" width={64} height={64} className="w-16 h-16" />
                         </div>
                         <div>
                             <CardTitle className="text-3xl font-headline tracking-widest">

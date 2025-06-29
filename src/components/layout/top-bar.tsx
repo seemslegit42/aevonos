@@ -3,6 +3,7 @@
 
 import React, { useRef, useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -19,7 +20,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Sparkles, ShieldCheck, LogOut, Settings, User as UserIcon, Database, Gem, Mic, MicOff, Loader2 } from 'lucide-react';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { useIsMobile } from '@/hooks/use-is-mobile';
 import { logout } from '@/app/auth/actions';
 import type { User, Workspace } from '@prisma/client';
 import { useAppStore } from '@/store/app-store';
@@ -149,9 +150,9 @@ export default function TopBar({ user, workspace }: TopBarProps) {
   return (
     <header className="flex items-center justify-between w-full px-2 sm:px-4 py-2 bg-foreground/10 backdrop-blur-xl rounded-lg border border-foreground/30 shadow-[0_8px_32px_0_rgba(28,25,52,0.1)] gap-2 sm:gap-4">
       <div className="flex items-center gap-3">
-        <h1 className="text-xl font-headline font-bold text-foreground tracking-widest">
-          <span className="text-primary">ΛΞ</span>VON
-        </h1>
+        <Link href="/">
+            <Image src="/logo-neutral.svg" alt="Aevon OS Logo" width={80} height={24} className="h-6 w-auto" />
+        </Link>
         {workspace && (
           <>
             <div className="h-6 w-px bg-border hidden md:block" />
