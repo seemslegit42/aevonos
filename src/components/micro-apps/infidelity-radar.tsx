@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -12,7 +11,7 @@ import type { DecoyOutput } from '@/ai/agents/decoy-schemas';
 import type { OsintOutput } from '@/ai/agents/osint-schemas';
 import type { DossierOutput } from '@/ai/agents/dossier-schemas';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { useIsMobile } from '@/hooks/use-is-mobile';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Label } from '../ui/label';
 import { Switch } from '../ui/switch';
