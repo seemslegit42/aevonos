@@ -14,44 +14,45 @@ datasource db {
 }
 
 model User {
-  id              String    @id @default(cuid())
-  email           String    @unique
-  password        String
-  firstName       String?
-  lastName        String?
-  role            UserRole  @default(OPERATOR)
-  psyche          UserPsyche @default(ZEN_ARCHITECT)
-  lastLoginAt     DateTime?
-  ownedChaosCards ChaosCard[] @relation("UserOwnedChaosCards")
-  transactions    Transaction[]
+  id                    String                @id @default(cuid())
+  email                 String                @unique
+  password              String
+  firstName             String?
+  lastName              String?
+  role                  UserRole              @default(OPERATOR)
+  psyche                UserPsyche            @default(ZEN_ARCHITECT)
+  lastLoginAt           DateTime?
+  ownedChaosCards       ChaosCard[]           @relation("UserOwnedChaosCards")
+  transactions          Transaction[]
   instrumentDiscoveries InstrumentDiscovery[]
-  ownedWorkspaces Workspace[] @relation("WorkspaceOwner")
-  workspaces      Workspace[] @relation("WorkspaceMembers")
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  ownedWorkspaces       Workspace[]           @relation("WorkspaceOwner")
+  workspaces            Workspace[]           @relation("WorkspaceMembers")
+  createdAt             DateTime              @default(now())
+  updatedAt             DateTime              @updatedAt
+  PulseProfile          PulseProfile?
 }
 
 model Workspace {
-  id              String    @id @default(cuid())
-  name            String
-  ownerId         String
-  owner           User      @relation("WorkspaceOwner", fields: [ownerId], references: [id])
-  planTier        PlanTier  @default(Apprentice)
-  credits         Decimal   @default(0.0)
+  id               String   @id @default(cuid())
+  name             String
+  ownerId          String
+  owner            User     @relation("WorkspaceOwner", fields: [ownerId], references: [id])
+  planTier         PlanTier @default(Apprentice)
+  credits          Decimal  @default(0.0)
   agentActionsUsed Int      @default(0)
-  overageEnabled  Boolean   @default(true)
-  unlockedAppIds  String[]  @default([])
-  
-  members         User[]      @relation("WorkspaceMembers")
-  agents          Agent[]
-  contacts        Contact[]
-  workflows       Workflow[]
-  workflowRuns    WorkflowRun[]
-  securityAlerts  SecurityAlert[]
-  threatFeeds     ThreatFeed[]
-  transactions    Transaction[]
+  overageEnabled   Boolean  @default(true)
+  unlockedAppIds   String[] @default([])
+
+  members               User[]                @relation("WorkspaceMembers")
+  agents                Agent[]
+  contacts              Contact[]
+  workflows             Workflow[]
+  workflowRuns          WorkflowRun[]
+  securityAlerts        SecurityAlert[]
+  threatFeeds           ThreatFeed[]
+  transactions          Transaction[]
   instrumentDiscoveries InstrumentDiscovery[]
-  integrations    Integration[]
+  integrations          Integration[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -82,16 +83,16 @@ model Contact {
 }
 
 model Workflow {
-  id           String        @id @default(cuid())
-  name         String
-  workspaceId  String
-  workspace    Workspace     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  isActive     Boolean       @default(true)
-  triggerType  String        @default("api")
-  definition   Json          @default("{}")
-  runs         WorkflowRun[]
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
+  id          String        @id @default(cuid())
+  name        String
+  workspaceId String
+  workspace   Workspace     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  isActive    Boolean       @default(true)
+  triggerType String        @default("api")
+  definition  Json          @default("{}")
+  runs        WorkflowRun[]
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
 }
 
 model WorkflowRun {
@@ -128,23 +129,23 @@ model ThreatFeed {
 }
 
 model Transaction {
-  id           String          @id @default(cuid())
+  id           String            @id @default(cuid())
   workspaceId  String
-  workspace    Workspace       @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  workspace    Workspace         @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   userId       String?
-  user         User?           @relation(fields: [userId], references: [id])
+  user         User?             @relation(fields: [userId], references: [id])
   agentId      String?
   type         TransactionType
   amount       Decimal
   description  String
   status       TransactionStatus
   instrumentId String? // Used for app/card unlocks, Klepsydra tributes, etc.
-  
+
   // Fields for Klepsydra Engine
-  luckWeight   Float?
-  outcome      String?
-  boonAmount   Decimal?
-  userPsyche   UserPsyche?
+  luckWeight Float?
+  outcome    String?
+  boonAmount Decimal?
+  userPsyche UserPsyche?
 
   createdAt DateTime @default(now())
 }
@@ -162,42 +163,42 @@ model Integration {
 }
 
 model ChaosCard {
-  id              String @id @default(cuid())
-  key             String @unique
-  name            String
-  description     String
-  cardClass       ChaosCardClass
-  cost            Int
-  systemEffect    String
-  users           User[] @relation("UserOwnedChaosCards")
+  id           String         @id @default(cuid())
+  key          String         @unique
+  name         String
+  description  String
+  cardClass    ChaosCardClass
+  cost         Int
+  systemEffect String
+  users        User[]         @relation("UserOwnedChaosCards")
 }
 
 model InstrumentDiscovery {
-  id              String @id @default(cuid())
-  userId          String
-  user            User @relation(fields: [userId], references: [id])
-  workspaceId     String
-  workspace       Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  instrumentId    String // Can be a MicroApp ID or Chaos Card key
-  firstViewedAt   DateTime @default(now())
-  nudgeSentAt     DateTime?
-  converted       Boolean @default(false)
-  dtt             Int? // Discover to Tribute/Unlock in minutes
+  id            String    @id @default(cuid())
+  userId        String
+  user          User      @relation(fields: [userId], references: [id])
+  workspaceId   String
+  workspace     Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  instrumentId  String // Can be a MicroApp ID or Chaos Card key
+  firstViewedAt DateTime  @default(now())
+  nudgeSentAt   DateTime?
+  converted     Boolean   @default(false)
+  dtt           Int? // Discover to Tribute/Unlock in minutes
 
   @@unique([userId, instrumentId])
 }
 
 model PulseProfile {
-  id                  String @id @default(cuid())
-  userId              String @unique
-  user                User @relation(fields: [userId], references: [id])
-  amplitude           Float @default(0.1) // How much luck deviates from baseline
-  frequency           Float @default(0.01) // How fast the luck sine wave oscillates
-  phaseOffset         Float @default(0.0) // A random offset to de-sync users
-  baselineLuck        Float @default(0.5) // The user's base chance of success
-  lastEventTimestamp  DateTime @default(now()) // Timestamp of the last win/loss event
-  consecutiveLosses   Int @default(0) // Tracks loss streaks for pity boons
-  lastResolvedPhase   PulsePhase @default(EQUILIBRIUM)
+  id                 String     @id @default(cuid())
+  userId             String     @unique
+  user               User       @relation(fields: [userId], references: [id])
+  amplitude          Float      @default(0.1) // How much luck deviates from baseline
+  frequency          Float      @default(0.01) // How fast the luck sine wave oscillates
+  phaseOffset        Float      @default(0.0) // A random offset to de-sync users
+  baselineLuck       Float      @default(0.5) // The user's base chance of success
+  lastEventTimestamp DateTime   @default(now()) // Timestamp of the last win/loss event
+  consecutiveLosses  Int        @default(0) // Tracks loss streaks for pity boons
+  lastResolvedPhase  PulsePhase @default(EQUILIBRIUM)
 
   @@index([userId])
 }
@@ -260,8 +261,8 @@ enum ChaosCardClass {
 }
 
 enum UserPsyche {
-  ZEN_ARCHITECT       // Balanced, methodical, default
-  SYNDICATE_ENFORCER  // High risk, high reward
+  ZEN_ARCHITECT // Balanced, methodical, default
+  SYNDICATE_ENFORCER // High risk, high reward
   RISK_AVERSE_ARTISAN // Low risk, steady progress
 }
 
