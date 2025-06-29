@@ -92,6 +92,7 @@ export default function Kendra(props: KendraOutput | {}) {
         if (props && 'campaignTitle' in props) {
             setResult(props);
         }
+        console.warn("✨ KENDRA.exe booting. Clear the runway.");
     }, [props]);
 
 

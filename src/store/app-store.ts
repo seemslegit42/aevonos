@@ -29,7 +29,6 @@ import type { BarbaraOutput } from '@/ai/agents/barbara-schemas';
 import type { AuditorOutput } from '@/ai/agents/auditor-generalissimo-schemas';
 import type { WingmanOutput } from '@/ai/agents/wingman-schemas';
 import type { KendraOutput } from '@/ai/agents/kendra-schemas';
-import type { StonksBotOutput } from '@/ai/agents/stonks-bot-schemas';
 import { type OrpheanOracleOutput } from '@/ai/agents/orphean-oracle-schemas';
 import type { DossierOutput } from '@/ai/agents/dossier-schemas';
 import { generateSpeech } from '@/ai/flows/tts-flow';
@@ -61,7 +60,6 @@ export type MicroAppType =
   | 'auditor-generalissimo'
   | 'beep-wingman'
   | 'kendra'
-  | 'stonks-bot'
   | 'aegis-threatscope'
   | 'aegis-command'
   | 'usage-monitor'
@@ -314,10 +312,6 @@ export const useAppStore = create<AppState>((set, get) => {
         
         case 'kendra':
             launchApp('kendra', { title: 'KENDRA.exe: Campaign Generated', description: 'Your unhinged marketing plan.', contentProps: report.report as KendraOutput });
-            break;
-        
-        case 'stonks':
-            launchApp('stonks-bot', { title: `Stonks: ${report.report.ticker}`, description: 'Your "financial" advice.', contentProps: report.report as StonksBotOutput });
             break;
         
         case 'orphean-oracle':
