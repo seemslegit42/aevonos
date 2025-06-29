@@ -22,7 +22,6 @@ async function getPulseProfile(userId: string): Promise<PulseProfile> {
   });
 
   if (!profile) {
-    // Assign a random phase offset to de-sync user patterns from the start.
     const phaseOffset = Math.random() * 2 * Math.PI;
     profile = await prisma.pulseProfile.create({
       data: {
@@ -53,14 +52,11 @@ export async function getCurrentPulseValue(userId: string): Promise<number> {
     lastEventTimestamp,
   } = profile;
 
-  // t = time since last event in minutes
   const t = (new Date().getTime() - new Date(lastEventTimestamp).getTime()) / (1000 * 60);
 
-  // The Sine-Rhythm Engine (SRE) formula
   const luckOscillation = amplitude * Math.sin(2 * Math.PI * frequency * t + phaseOffset);
   const finalLuckWeight = baselineLuck + luckOscillation;
   
-  // Clamp the result to a reasonable range (e.g., 0.05 to 0.95) to avoid guaranteed wins/losses.
   return Math.max(0.05, Math.min(0.95, finalLuckWeight));
 }
 

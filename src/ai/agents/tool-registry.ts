@@ -41,10 +41,10 @@ import { getStonksAdvice } from './stonks-bot';
 
 // Tool Imports
 import { createContactInDb, listContactsFromDb, deleteContactInDb, updateContactInDb } from '@/ai/tools/crm-tools';
-import { getUsageDetails, requestCreditTopUpInDb } from '@/ai/tools/billing-tools';
+import { getUsageDetails, requestCreditTopUpInDb } from '@/services/billing-service';
 import { getDatingProfile } from '@/ai/tools/dating-tools';
 import { createSecurityAlertInDb } from '@/ai/tools/security-tools';
-import { createManualTransaction } from '@/ai/tools/ledger-tools';
+import { createManualTransaction } from '@/services/ledger-service';
 
 
 // Schema Imports
@@ -75,7 +75,7 @@ import { OrpheanOracleInputSchema } from './orphean-oracle-schemas';
 import { LumberghAnalysisInputSchema } from './lumbergh-schemas';
 import { LucilleBluthInputSchema } from './lucille-bluth-schemas';
 import { PamScriptInputSchema } from './pam-poovey-schemas';
-import { CreateManualTransactionInputSchema } from '../tools/ledger-schemas';
+import { CreateManualTransactionInputSchema } from '@/ai/tools/ledger-schemas';
 import { StonksBotInputSchema } from './stonks-bot-schemas';
 
 

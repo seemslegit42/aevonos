@@ -189,7 +189,7 @@ export default function TopBar({ user, workspace }: TopBarProps) {
           <PopoverTrigger asChild>
             <Button variant="ghost" className="flex items-center gap-1.5 h-8 px-2">
                 <Database className="w-4 h-4 text-primary" />
-                <span className="hidden md:inline font-medium font-mono">{workspace?.credits?.toLocaleString() ?? 0}</span>
+                <span className="hidden md:inline font-medium font-mono">{(workspace?.credits as unknown as number)?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) ?? '0.00'}</span>
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-80 p-0" align="end">

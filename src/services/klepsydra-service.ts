@@ -50,7 +50,6 @@ export async function calculateOutcome(
   instrumentId: string,
   tributeAmount: number
 ) {
-  // 1. Authorize tribute and get user psyche
   const [user, workspace] = await Promise.all([
     prisma.user.findUnique({
       where: { id: userId },
@@ -70,20 +69,14 @@ export async function calculateOutcome(
     throw new InsufficientCreditsError('Cannot make tribute. Insufficient credits.');
   }
 
-  // Fetch base instrument configuration
   const instrument = INSTRUMENT_CONFIG[instrumentId] || { baseOdds: 0.5, winMultiplier: 2 };
-
-  // Phase IV: Psyche-Cohort Targeting
-  // Modulate the instrument's core properties based on the user's psychological profile.
   const modifiers = PSYCHE_MODIFIERS[user.psyche] || PSYCHE_MODIFIERS.ZEN_ARCHITECT;
   const modifiedBaseOdds = instrument.baseOdds * modifiers.oddsFactor;
   const modifiedWinMultiplier = instrument.winMultiplier * modifiers.boonFactor;
 
-  // 2. Fetch profile & calculate luck
   const luckWeight = await getCurrentPulseValue(userId);
   const finalOdds = Math.max(0, Math.min(1, modifiedBaseOdds * luckWeight));
   
-  // 3. Determine outcome
   let outcome = 'loss';
   let boonAmount = 0;
   const isPity = await shouldTriggerPityBoon(userId);
@@ -94,7 +87,7 @@ export async function calculateOutcome(
     await recordWin(userId); // A pity boon counts as a "win" to reset the loss streak
   } else if (Math.random() < finalOdds) {
     outcome = 'win';
-    boonAmount = tributeAmount * modifiedWinMultiplier; // Use the psyche-modified multiplier
+    boonAmount = tributeAmount * modifiedWinMultiplier;
     await recordWin(userId);
   } else {
     await recordLoss(userId);
@@ -111,10 +104,8 @@ export async function calculateOutcome(
     userPsyche: user.psyche,
   };
 
-  // 4. Log the tribute transaction atomically
   await logTributeEvent(tributeData);
 
-  // 5. Return result
   return {
     outcome,
     boonAmount,

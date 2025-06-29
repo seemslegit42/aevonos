@@ -127,7 +127,7 @@ export default function UsageMonitor(props: Partial<BillingUsage>) {
                      <Progress value={percentage} indicatorClassName={cn(getIndicatorColor(percentage))} />
                      <div className="flex justify-between items-baseline font-mono">
                         <p className="text-lg">{totalActionsUsed.toLocaleString()}</p>
-                        <p className="text-sm text-muted-foreground">/ {planLimit.toLocaleString()} Actions</p>
+                        <p className="text-sm text-muted-foreground">/ {planLimit?.toLocaleString() ?? '...'} Actions</p>
                      </div>
                 </CardContent>
                  <CardFooter className="p-3 pt-0 flex justify-between items-center">
@@ -167,8 +167,8 @@ export default function UsageMonitor(props: Partial<BillingUsage>) {
                                     <div key={tx.id} className="text-xs p-2 rounded-md border border-border/50 bg-background/30">
                                         <div className="flex justify-between items-start">
                                             <p className="font-medium pr-2">{tx.description}</p>
-                                            <p className={cn("font-bold font-mono text-lg whitespace-nowrap", tx.type === TransactionType.CREDIT ? "text-accent" : "text-destructive")}>
-                                                {tx.type === TransactionType.CREDIT ? '+' : '-'}{Number(tx.amount).toLocaleString()}
+                                            <p className={cn("font-bold font-mono text-lg whitespace-nowrap", tx.type === TransactionType.CREDIT || tx.type === TransactionType.TRIBUTE && (tx.amount as unknown as number) > 0 ? "text-accent" : "text-destructive")}>
+                                                {(tx.type === TransactionType.CREDIT || ((tx.type === TransactionType.TRIBUTE) && (tx.amount as unknown as number) > 0)) ? '+' : ''}{Number(tx.amount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                             </p>
                                         </div>
                                         <div className="flex justify-between items-center text-muted-foreground mt-1">

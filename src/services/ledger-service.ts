@@ -1,4 +1,3 @@
-
 'use server';
 /**
  * @fileOverview Service for the Obelisk Pay Credit Ledger.
@@ -42,9 +41,7 @@ export async function createTransaction(input: CreateTransactionInput) {
                 },
             });
 
-            // Optional: Check if the balance has gone negative and handle accordingly.
             if ((workspace.credits as unknown as number) < 0) {
-                // For now, we'll just log it. In the future, this could trigger alerts or disable services.
                 console.warn(`[Ledger Service] Workspace ${workspaceId} has a negative credit balance: ${workspace.credits}`);
             }
 
@@ -58,7 +55,7 @@ export async function createTransaction(input: CreateTransactionInput) {
                     userId,
                     agentId,
                     instrumentId,
-                    status: TransactionStatus.COMPLETED, // Direct transactions are always completed.
+                    status: TransactionStatus.COMPLETED,
                 },
             });
             
@@ -69,7 +66,6 @@ export async function createTransaction(input: CreateTransactionInput) {
 
     } catch (error) {
         console.error(`[Ledger Service] Failed to create transaction for workspace ${workspaceId}:`, error);
-        // We re-throw the error so the calling service is aware of the failure.
         throw new Error('Transaction failed. The ledger remains unchanged.');
     }
 }
@@ -171,7 +167,6 @@ export async function getWorkspaceTransactions(workspaceId: string, limit = 20) 
 export async function confirmPendingTransaction(transactionId: string, workspaceId: string): Promise<Transaction> {
     try {
         const result = await prisma.$transaction(async (tx) => {
-            // 1. Find the pending transaction to ensure it exists and is pending for the correct workspace.
             const pendingTx = await tx.transaction.findFirst({
                 where: { 
                     id: transactionId,
@@ -187,7 +182,6 @@ export async function confirmPendingTransaction(transactionId: string, workspace
                 throw new Error('Can only confirm credit transactions.');
             }
 
-            // 2. Atomically update the workspace's credit balance.
             await tx.workspace.update({
                 where: { id: pendingTx.workspaceId },
                 data: {
@@ -197,7 +191,6 @@ export async function confirmPendingTransaction(transactionId: string, workspace
                 },
             });
 
-            // 3. Update the transaction status to COMPLETED.
             const confirmedTx = await tx.transaction.update({
                 where: { id: transactionId },
                 data: {

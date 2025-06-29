@@ -9,7 +9,7 @@ import { getServerActionSession } from '@/lib/auth';
 import { createTransaction, confirmPendingTransaction } from '@/services/ledger-service';
 import { TransactionType } from '@prisma/client';
 import { z } from 'zod';
-import { requestCreditTopUpInDb } from '@/ai/tools/billing-tools';
+import { requestCreditTopUpInDb } from '@/services/billing-service';
 import { microAppManifests } from '@/config/micro-apps';
 import { chaosCardManifest } from '@/config/chaos-cards';
 import prisma from '@/lib/prisma';
@@ -184,9 +184,7 @@ export async function purchaseMicroApp(appId: string) {
       return { success: false, error: 'App already unlocked.' };
     }
 
-    // Use a transaction to ensure atomicity
     await prisma.$transaction(async (tx) => {
-      // 1. Debit the credits by creating a transaction which in turn updates the balance
       await createTransaction({
         workspaceId: session.workspaceId,
         userId: session.userId,
@@ -196,7 +194,6 @@ export async function purchaseMicroApp(appId: string) {
         instrumentId: appId,
       });
 
-      // 2. Add the app to the unlocked list
       await tx.workspace.update({
         where: { id: session.workspaceId },
         data: {
@@ -206,7 +203,6 @@ export async function purchaseMicroApp(appId: string) {
         },
       });
 
-      // 3. Update the discovery record
       const discovery = await tx.instrumentDiscovery.findFirst({
           where: { userId: session.userId, instrumentId: appId, converted: false }
       });
@@ -248,7 +244,6 @@ export async function purchaseChaosCard(cardKey: string) {
   const { cost, name } = cardManifest;
 
   try {
-    // Klepsydra now handles the tribute and returns the outcome.
     const { outcome, boonAmount } = await calculateOutcome(
         session.userId,
         session.workspaceId,
@@ -256,18 +251,13 @@ export async function purchaseChaosCard(cardKey: string) {
         cost
     );
 
-    // If the outcome is a win or a pity boon, the user gets the card.
     if (outcome === 'win' || outcome === 'pity_boon') {
-        // The transaction for the tribute is already done.
-        // We just need to grant the item and update discovery.
         await prisma.$transaction(async (tx) => {
             const cardInDb = await tx.chaosCard.findUnique({ where: { key: cardKey } });
             if (!cardInDb) {
-              // This should ideally not happen if seed is correct.
               throw new Error('Card does not exist in the database.');
             }
 
-            // Add the card to the user's collection
             await tx.user.update({
                 where: { id: session.userId },
                 data: {
@@ -277,7 +267,6 @@ export async function purchaseChaosCard(cardKey: string) {
                 },
             });
 
-            // Update the discovery record
             const discovery = await tx.instrumentDiscovery.findFirst({
                 where: { userId: session.userId, instrumentId: cardKey, converted: false }
             });
@@ -294,14 +283,14 @@ export async function purchaseChaosCard(cardKey: string) {
             }
         });
 
-        revalidatePath('/'); // Revalidate to reflect changes
+        revalidatePath('/');
         return { 
             success: true, 
             outcome, 
             message: `Tribute successful! Acquired ${name}. You were granted a boon of ${boonAmount.toFixed(2)} Ξ.` 
         };
     } else { // Outcome is a loss
-        revalidatePath('/'); // Revalidate to reflect credit change
+        revalidatePath('/');
         return {
             success: true,
             outcome,
@@ -322,12 +311,10 @@ export async function purchaseChaosCard(cardKey: string) {
 export async function logInstrumentDiscovery(instrumentId: string) {
   const session = await getServerActionSession();
   if (!session?.userId || !session?.workspaceId) {
-    // Fail silently, not critical if discovery logging fails
     return;
   }
 
   try {
-    // Use findFirst + create to avoid race conditions and ensure idempotency
     const existingDiscovery = await prisma.instrumentDiscovery.findFirst({
       where: {
         userId: session.userId,
@@ -345,7 +332,6 @@ export async function logInstrumentDiscovery(instrumentId: string) {
       });
     }
   } catch (error) {
-    // Also fail silently. This isn't a user-facing critical action.
     console.error(`[Action: logInstrumentDiscovery] for instrument ${instrumentId}:`, error);
   }
 }
@@ -356,7 +342,6 @@ export async function getNudges() {
     return [];
   }
 
-  // Nudge if viewed more than 12 minutes ago and not yet converted or nudged.
   const twelveMinutesAgo = new Date(Date.now() - 12 * 60 * 1000);
 
   const ripeDiscoveries = await prisma.instrumentDiscovery.findMany({
@@ -384,7 +369,6 @@ export async function getNudges() {
       }
   });
 
-  // Mark these as nudged to avoid spamming the user.
   await prisma.instrumentDiscovery.updateMany({
       where: {
           id: {
