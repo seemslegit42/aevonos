@@ -1,4 +1,3 @@
-
 'use client';
 import React from 'react';
 import type { Node } from './types';
@@ -9,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { useIsMobile } from '@/hooks/use-is-mobile';
 
 interface PropertyInspectorProps {
     node: Node | null;
@@ -98,8 +97,8 @@ const KifKrokerProperties = ({ node, onUpdate }: { node: Node, onUpdate: (data: 
                 <Label htmlFor="messageSamples">Message Samples</Label>
                 <Textarea 
                     id="messageSamples"
-                    value={Array.isArray(node.data.messageSamples) ? node.data.messageSamples.join('\n') : ''}
-                    onChange={(e) => onUpdate({ ...node.data, messageSamples: e.target.value.split('\n') })} 
+                    value={Array.isArray(node.data.messageSamples) ? node.data.messageSamples.join('\\n') : ''}
+                    onChange={(e) => onUpdate({ ...node.data, messageSamples: e.target.value.split('\\n') })} 
                     className="bg-background/80" 
                     placeholder="One message per line..."
                     rows={5}
@@ -304,7 +303,7 @@ export default function PropertyInspector({ node, onUpdate }: PropertyInspectorP
     <div className="w-full lg:w-80 flex-shrink-0 bg-foreground/10 lg:backdrop-blur-xl lg:border lg:border-foreground/20 lg:rounded-lg p-4 flex-col gap-4 flex h-full">
       <h2 className="font-headline text-lg text-foreground">Inspector</h2>
       <ScrollArea className="flex-grow -mr-4 pr-4">
-        <InspectorContainer className="bg-transparent border-none shadow-none">
+        <InspectorContainer>
             <CardHeader className="p-0">
                 <CardTitle className="text-base">Properties: {node.data.label}</CardTitle>
             </CardHeader>

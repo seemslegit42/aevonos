@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useCallback, useRef, useEffect } from 'react';
@@ -277,68 +276,6 @@ export default function LoomPage() {
         setConnection(null);
     }, [connection, edges]);
 
-  const renderDesktopLayout = () => (
-    <div className="flex-grow flex flex-row min-h-0">
-        <div className="w-64 flex-shrink-0 flex-col min-h-0 border-r border-foreground/20 hidden md:flex">
-            <div className="h-[60%] min-h-0 border-b border-foreground/20">
-                <WorkflowList onSelectWorkflow={handleSelectWorkflow} activeWorkflowId={activeWorkflowId} triggerRefresh={listRefreshTrigger}/>
-            </div>
-            <div className="h-[40%] min-h-0">
-                <WorkflowRunHistory activeWorkflowId={activeWorkflowId} triggerRefresh={listRefreshTrigger}/>
-            </div>
-        </div>
-        <div className="flex-grow flex gap-4 p-4 min-h-0">
-            <NodesSidebar />
-            <WorkflowCanvas 
-                ref={canvasRef}
-                nodes={nodes} 
-                edges={edges} 
-                onNodeClick={setSelectedNode} 
-                selectedNodeId={selectedNode?.id}
-                onConnectStart={onConnectStart}
-                onConnectEnd={onConnectEnd}
-                connectionSourceId={connection?.sourceId}
-            />
-            <PropertyInspector node={selectedNode} onUpdate={updateNodeData} />
-        </div>
-    </div>
-  );
-
-  const renderMobileLayout = () => (
-    <div className="flex-grow flex p-2 min-h-0">
-        <WorkflowCanvas 
-            ref={canvasRef}
-            nodes={nodes} 
-            edges={edges} 
-            onNodeClick={setSelectedNode} 
-            selectedNodeId={selectedNode?.id}
-            onConnectStart={onConnectStart}
-            onConnectEnd={onConnectEnd}
-            connectionSourceId={connection?.sourceId}
-        />
-        <Sheet open={isNodesSheetOpen} onOpenChange={setIsNodesSheetOpen}>
-            <SheetContent side="left" className="p-0 w-72">
-                 <NodesSidebar />
-            </SheetContent>
-        </Sheet>
-        <Sheet open={isInspectorSheetOpen} onOpenChange={(open) => { if (!open) setSelectedNode(null); }}>
-            <SheetContent side="right" className="p-0 w-80">
-                <PropertyInspector node={selectedNode} onUpdate={updateNodeData} />
-            </SheetContent>
-        </Sheet>
-        <Sheet open={isWorkflowsSheetOpen} onOpenChange={setIsWorkflowsSheetOpen}>
-             <SheetContent side="left" className="p-0 w-[85%] max-w-sm">
-                <WorkflowList onSelectWorkflow={handleSelectWorkflow} activeWorkflowId={activeWorkflowId} triggerRefresh={listRefreshTrigger}/>
-            </SheetContent>
-        </Sheet>
-        <Sheet open={isHistorySheetOpen} onOpenChange={setIsHistorySheetOpen}>
-             <SheetContent side="left" className="p-0 w-[85%] max-w-sm">
-                <WorkflowRunHistory activeWorkflowId={activeWorkflowId} triggerRefresh={listRefreshTrigger}/>
-            </SheetContent>
-        </Sheet>
-    </div>
-  );
-
   return (
     <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
         <div className="flex flex-col h-full bg-background">
@@ -357,8 +294,61 @@ export default function LoomPage() {
                 onHistoryClick={() => setIsHistorySheetOpen(true)}
             />
             
-            {isMobile ? renderMobileLayout() : renderDesktopLayout()}
+            <div className="flex-grow flex flex-row min-h-0">
+                {/* Desktop Left Panel */}
+                <div className="w-64 flex-shrink-0 flex-col min-h-0 border-r border-foreground/20 hidden md:flex">
+                    <div className="h-[60%] min-h-0 border-b border-foreground/20">
+                        <WorkflowList onSelectWorkflow={handleSelectWorkflow} activeWorkflowId={activeWorkflowId} triggerRefresh={listRefreshTrigger}/>
+                    </div>
+                    <div className="h-[40%] min-h-0">
+                        <WorkflowRunHistory activeWorkflowId={activeWorkflowId} triggerRefresh={listRefreshTrigger}/>
+                    </div>
+                </div>
 
+                {/* Main Content Area (Canvas and sidebars) */}
+                <div className="flex-grow flex gap-4 p-4 min-h-0">
+                     <div className="hidden md:block">
+                        <NodesSidebar />
+                    </div>
+                    <WorkflowCanvas 
+                        ref={canvasRef}
+                        nodes={nodes} 
+                        edges={edges} 
+                        onNodeClick={setSelectedNode} 
+                        selectedNodeId={selectedNode?.id}
+                        onConnectStart={onConnectStart}
+                        onConnectEnd={onConnectEnd}
+                        connectionSourceId={connection?.sourceId}
+                    />
+                    <div className="hidden lg:block">
+                        <PropertyInspector node={selectedNode} onUpdate={updateNodeData} />
+                    </div>
+                </div>
+            </div>
+
+            {/* Mobile Sheets */}
+            <Sheet open={isNodesSheetOpen} onOpenChange={setIsNodesSheetOpen}>
+                <SheetContent side="left" className="p-0 w-72">
+                    <NodesSidebar />
+                </SheetContent>
+            </Sheet>
+            <Sheet open={isInspectorSheetOpen} onOpenChange={(open) => { if (!open) setSelectedNode(null); }}>
+                <SheetContent side="right" className="p-0 w-80">
+                    <PropertyInspector node={selectedNode} onUpdate={updateNodeData} />
+                </SheetContent>
+            </Sheet>
+            <Sheet open={isWorkflowsSheetOpen} onOpenChange={setIsWorkflowsSheetOpen}>
+                <SheetContent side="left" className="p-0 w-[85%] max-w-sm">
+                    <WorkflowList onSelectWorkflow={handleSelectWorkflow} activeWorkflowId={activeWorkflowId} triggerRefresh={listRefreshTrigger}/>
+                </SheetContent>
+            </Sheet>
+            <Sheet open={isHistorySheetOpen} onOpenChange={setIsHistorySheetOpen}>
+                <SheetContent side="left" className="p-0 w-[85%] max-w-sm">
+                    <WorkflowRunHistory activeWorkflowId={activeWorkflowId} triggerRefresh={listRefreshTrigger}/>
+                </SheetContent>
+            </Sheet>
+
+            {/* Delete Confirmation Dialog */}
             <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
