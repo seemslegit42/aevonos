@@ -3,7 +3,6 @@ import React from 'react';
 import { FileExplorerIcon } from '@/components/icons/FileExplorerIcon';
 import { TerminalIcon } from '@/components/icons/TerminalIcon';
 import { CrystalIcon } from '@/components/icons/CrystalIcon';
-import { EchoIcon } from '@/components/icons/EchoIcon';
 import { AegisIcon } from '@/components/icons/AegisIcon';
 import { PamPooveyIcon } from '@/components/icons/PamPooveyIcon';
 import { AddressBookIcon } from '@/components/icons/AddressBookIcon';
@@ -80,9 +79,6 @@ export const microAppRegistry: Record<MicroAppType, ComponentRegistry> = {
   },
   'ai-suggestion': {
       icon: CrystalIcon,
-  },
-  'echo-recall': {
-    icon: EchoIcon,
   },
   'aegis-control': {
     icon: AegisIcon,

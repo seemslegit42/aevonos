@@ -1,10 +1,10 @@
+
 import { create } from 'zustand';
 import type { DragEndEvent } from '@dnd-kit/core';
 import React from 'react';
 
 import { handleCommand } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
-import type { SessionRecallOutput } from '@/ai/agents/echo-schemas';
 import type { DrSyntaxOutput } from '@/ai/agents/dr-syntax-schemas';
 import type { Contact } from '@/ai/tools/crm-schemas';
 import type { UserCommandOutput, AgentReportSchema } from '@/ai/agents/beep-schemas';
@@ -36,7 +36,6 @@ export type MicroAppType =
   | 'file-explorer' 
   | 'terminal' 
   | 'ai-suggestion'
-  | 'echo-recall'
   | 'aegis-control'
   | 'contact-list'
   | 'contact-editor'
@@ -92,7 +91,6 @@ const defaultAppDetails: Record<MicroAppType, Omit<MicroApp, 'id' | 'position' |
   'file-explorer': { type: 'file-explorer', title: 'File Explorer', description: 'Access and manage your files.' },
   'terminal': { type: 'terminal', title: 'Terminal', description: 'Direct command-line access.' },
   'ai-suggestion': { type: 'ai-suggestion', title: 'AI Suggestion', description: 'Click to execute this command.' },
-  'echo-recall': { type: 'echo-recall', title: 'Echo: Session Recall', description: "A summary of the last session's activity." },
   'aegis-control': { type: 'aegis-control', title: 'Aegis Security Report', description: "Analysis of the last command's security profile." },
   'contact-list': { type: 'contact-list', title: 'Contact List', description: 'A list of your contacts.' },
   'contact-editor': { type: 'contact-editor', title: 'Contact Editor', description: 'Create or update a contact.' },
@@ -129,7 +127,6 @@ const defaultAppSizes: Record<MicroAppType, { width: number; height: number }> =
   'file-explorer': { width: 400, height: 300 },
   'terminal': { width: 450, height: 300 },
   'ai-suggestion': { width: 320, height: 120 },
-  'echo-recall': { width: 320, height: 250 },
   'aegis-control': { width: 320, height: 220 },
   'contact-list': { width: 680, height: 450 },
   'contact-editor': { width: 320, height: 380 },
