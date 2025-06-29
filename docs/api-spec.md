@@ -185,6 +185,35 @@ This document provides the formal OpenAPI 3.0 specification for the ΛΞVON OS P
         }
       }
     },
+    "/users/me/pulse": {
+      "get": {
+        "tags": ["Users"],
+        "summary": "Retrieve the user's current Pulse Narrative.",
+        "operationId": "getUserPulse",
+        "description": "Fetches the poetic, narrative string describing the user's current phase in the Klepsydra (Profit Pulse) Engine.",
+        "responses": {
+          "200": {
+            "description": "The user's current pulse narrative.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "narrative": {
+                      "type": "string",
+                      "example": "The river of fortune swells. Ride it before it turns."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized."
+          }
+        }
+      }
+    },
     "/workspaces/me": {
       "get": {
         "tags": ["Workspaces"],
@@ -1182,15 +1211,6 @@ This document provides the formal OpenAPI 3.0 specification for the ΛΞVON OS P
               "AUDITOR"
             ],
             "description": "The user's role in the workspace."
-          },
-          "rank": {
-            "type": "string",
-            "enum": ["NEOPHYTE", "ARCHITECT", "FORGE_PRIEST", "DEMIURGE"],
-            "description": "The user's gamified rank within the system."
-          },
-          "xp": {
-            "type": "integer",
-            "description": "The user's experience points."
           },
           "lastLoginAt": {
             "type": "string",

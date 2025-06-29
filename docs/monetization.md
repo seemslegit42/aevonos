@@ -1,4 +1,5 @@
-ΛΞVON OS: Monetization - Agent Actions Billing
+
+# ΛΞVON OS: Monetization - Agent Actions Billing
 1. Introduction: The Value-Based Hybrid Model
 ΛΞVON OS is priced by Agent Actions per month, a strategic departure from traditional user-seat models [cite: previous prompt discussion]. This monetization strategy is a weapon against SaaS bloat and unpredictable costs, directly tying the platform's revenue to the tangible value delivered by its AI-driven work. Every agent-triggered action, Micro-App operation, or user instruction executed by ΛΞVON OS is a billable, traceable interaction.
 2. The Core Metric: Agent Actions (CogniOps)
