@@ -6,13 +6,13 @@ import type { BillingUsage } from '@/ai/tools/billing-schemas';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { ArrowUpRight, RefreshCw } from 'lucide-react';
+import { ArrowUpRight, RefreshCw, AlertTriangle, CheckCircle, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter, CardDescription } from '@/components/ui/card';
 import { ScrollArea } from '../ui/scroll-area';
 import { Skeleton } from '../ui/skeleton';
-import { Transaction, TransactionType, Workspace } from '@prisma/client';
+import { Transaction, TransactionStatus, TransactionType, Workspace } from '@prisma/client';
 import TopUpDialog from '../billing/top-up-dialog';
 
 export default function UsageMonitor(props: Partial<BillingUsage>) {
@@ -77,6 +77,12 @@ export default function UsageMonitor(props: Partial<BillingUsage>) {
         if (p < 85) return 'bg-yellow-400';
         return 'bg-destructive';
     };
+    
+    const statusConfig: Record<TransactionStatus, { icon: React.ElementType, color: string, text: string }> = {
+      [TransactionStatus.PENDING]: { icon: Clock, color: 'text-yellow-400', text: 'Pending' },
+      [TransactionStatus.COMPLETED]: { icon: CheckCircle, color: 'text-accent', text: 'Completed' },
+      [TransactionStatus.FAILED]: { icon: AlertTriangle, color: 'text-destructive', text: 'Failed' },
+    };
 
     return (
         <>
@@ -123,17 +129,26 @@ export default function UsageMonitor(props: Partial<BillingUsage>) {
                                 <p className="text-center text-muted-foreground text-sm pt-4">No transactions found.</p>
                             ) : (
                                 <div className="space-y-2">
-                                    {transactions.map(tx => (
-                                        <div key={tx.id} className="text-xs p-2 rounded-md border border-border/50 bg-background/30 flex items-center justify-between">
-                                            <div>
-                                                <p className="font-medium">{tx.description}</p>
-                                                <p className="text-muted-foreground font-mono">{new Date(tx.createdAt).toLocaleString()}</p>
+                                    {transactions.map(tx => {
+                                      const statusInfo = statusConfig[tx.status];
+                                      const Icon = statusInfo.icon;
+                                      return (
+                                        <div key={tx.id} className="text-xs p-2 rounded-md border border-border/50 bg-background/30">
+                                            <div className="flex justify-between items-start">
+                                                <p className="font-medium pr-2">{tx.description}</p>
+                                                <p className={cn("font-bold font-mono text-lg whitespace-nowrap", tx.type === TransactionType.CREDIT ? "text-accent" : "text-destructive")}>
+                                                    {tx.type === TransactionType.CREDIT ? '+' : '-'}{Number(tx.amount).toLocaleString()}
+                                                </p>
                                             </div>
-                                            <p className={cn("font-bold font-mono text-lg", tx.type === TransactionType.CREDIT ? "text-accent" : "text-destructive")}>
-                                                {tx.type === TransactionType.CREDIT ? '+' : '-'}{Number(tx.amount).toLocaleString()}
-                                            </p>
+                                            <div className="flex justify-between items-center text-muted-foreground mt-1">
+                                                <span className="font-mono">{new Date(tx.createdAt).toLocaleString()}</span>
+                                                <span className={cn("flex items-center gap-1 font-semibold", statusInfo.color)}>
+                                                    <Icon className="h-3 w-3" /> {statusInfo.text}
+                                                </span>
+                                            </div>
                                         </div>
-                                    ))}
+                                      )
+                                    })}
                                 </div>
                             )}
                         </ScrollArea>
