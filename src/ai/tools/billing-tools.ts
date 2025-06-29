@@ -1,4 +1,3 @@
-
 'use server';
 /**
  * @fileOverview Tool for fetching billing and usage data.

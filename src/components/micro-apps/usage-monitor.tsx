@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -83,7 +82,7 @@ export default function UsageMonitor(props: Partial<BillingUsage>) {
         totalActionsUsed: workspace.agentActionsUsed,
         planLimit: props.planLimit,
         planTier: workspace.planTier,
-        overageEnabled: workspace.overageEnabled
+        overageEnabled: props.overageEnabled
     } : props;
     
     if (!displayProps.planTier && !isLoading) {
