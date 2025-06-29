@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -14,6 +14,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { UserPsyche } from '@prisma/client';
+import { FlowerOfLifeIcon } from '@/components/icons/FlowerOfLifeIcon';
 
 const formSchema = z.object({
   workspaceName: z.string().trim().min(1),
@@ -47,9 +48,17 @@ const stepVariants = {
 
 
 const PhaseOne = ({ nextPhase, methods }: { nextPhase: () => void, methods: any }) => {
-    const [step, setStep] = useState<'ask' | 'burn' | 'reply'>('ask');
+    const [step, setStep] = useState<'intro' | 'ask' | 'burn' | 'reply'>('intro');
     const { register, watch } = methods;
     const whatMustEnd = watch('whatMustEnd');
+
+    useEffect(() => {
+        if (step === 'intro') {
+            const timer = setTimeout(() => setStep('ask'), 3000); // 3-second delay
+            return () => clearTimeout(timer);
+        }
+    }, [step]);
+
 
     const handleContinue = () => {
         if (!whatMustEnd) return;
@@ -65,6 +74,9 @@ const PhaseOne = ({ nextPhase, methods }: { nextPhase: () => void, methods: any 
     return (
         <div className="text-center w-full max-w-lg mx-auto space-y-8 min-h-[250px] flex items-center justify-center">
             <AnimatePresence mode="wait">
+                {step === 'intro' && (
+                     <motion.div key="intro" exit={{ opacity: 0, transition: { duration: 1 } }} />
+                )}
                 {step === 'ask' && (
                      <motion.div
                         key="question"
@@ -338,9 +350,22 @@ export default function RegisterPage() {
     }
 
     return (
-        <div className="w-full h-screen bg-background flex items-center justify-center p-4">
+        <div className="w-full h-screen bg-background flex items-center justify-center p-4 overflow-hidden">
+             <AnimatePresence>
+                {phase >= 2 && phase < 6 && (
+                    <motion.div 
+                        key="background-ritual"
+                        initial={{ opacity: 0, scale: 0.5 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ duration: 2, ease: 'easeOut' }}
+                        className="absolute inset-0 -z-10 flex items-center justify-center"
+                    >
+                        <FlowerOfLifeIcon className="w-full h-full max-w-3xl max-h-3xl" />
+                    </motion.div>
+                )}
+            </AnimatePresence>
              <FormProvider {...methods}>
-                <form onSubmit={methods.handleSubmit(onSubmit)} className="w-full">
+                <form onSubmit={methods.handleSubmit(onSubmit)} className="w-full relative z-10">
                     <AnimatePresence mode="wait" initial={false} custom={direction}>
                         <motion.div
                             key={phase}
@@ -358,3 +383,5 @@ export default function RegisterPage() {
         </div>
     );
 }
+
+    
