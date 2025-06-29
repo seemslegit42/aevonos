@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -50,7 +51,7 @@ const StepOne = ({ nextStep }: { nextStep: () => void }) => (
         className="text-center space-y-4"
     >
         <div className="flex justify-center">
-            <img src="/logo-green.png" alt="Aevon OS Logo" width="80" height="80" className="w-20 h-20" />
+            <Image src="/logo-green.png" alt="Aevon OS Logo" width={80} height={80} className="w-20 h-20" />
         </div>
         <h1 className="text-3xl font-headline tracking-widest text-primary">Rite of Invocation</h1>
         <p className="text-muted-foreground">The canvas must be summoned. State your claim.</p>
