@@ -33,6 +33,10 @@ import {
     type UserCommandOutput,
     AgentReportSchema,
 } from './beep-schemas';
+import {
+    getConversationHistory,
+    saveConversationHistory,
+} from '@/services/conversation-service';
 
 
 // LangGraph State
@@ -211,10 +215,17 @@ export async function processUserCommand(input: UserCommandInput): Promise<UserC
   User Command: ${input.userCommand}`;
 
 
+  const history = await getConversationHistory(input.userId, input.workspaceId);
+
   const result = await app.invoke({
-    messages: [new HumanMessage(initialPrompt)],
+    messages: [...history, new HumanMessage(initialPrompt)],
     workspaceId: input.workspaceId,
   });
+
+  // Save the full conversation history for the next turn.
+  const finalMessages = result.messages;
+  await saveConversationHistory(input.userId, input.workspaceId, finalMessages);
+
 
   // Extract all agent reports from the full message history
   const agentReports: z.infer<typeof AgentReportSchema>[] = [];
