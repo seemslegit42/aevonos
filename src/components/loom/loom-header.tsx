@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Save, Play, Trash2, Loader2, ArrowLeft } from 'lucide-react';
 import type { Workflow } from '@/app/loom/page';
+import type { UserRole } from '@prisma/client';
 
 interface LoomHeaderProps {
   activeWorkflow: Workflow | null;
@@ -16,6 +17,8 @@ interface LoomHeaderProps {
   onDelete: () => void;
   isSaving: boolean;
   isRunning: boolean;
+  userRole: UserRole | null;
+  isLoadingUser: boolean;
 }
 
 export default function LoomHeader({ 
@@ -25,8 +28,14 @@ export default function LoomHeader({
     onRun,
     onDelete,
     isSaving,
-    isRunning
+    isRunning,
+    userRole,
+    isLoadingUser,
 }: LoomHeaderProps) {
+  const canEdit = userRole === 'ADMIN' || userRole === 'MANAGER';
+  const canRun = userRole !== 'AUDITOR';
+  const isActionDisabled = isSaving || isRunning || isLoadingUser;
+
   return (
     <header className="flex-shrink-0 p-2 border-b border-foreground/20 flex items-center justify-between gap-4 h-16">
       <div className="flex items-center gap-4">
@@ -40,22 +49,23 @@ export default function LoomHeader({
           onChange={(e) => onWorkflowNameChange(e.target.value)}
           placeholder="Workflow Name"
           className="text-lg font-headline bg-transparent border-0 focus-visible:ring-0 focus-visible:ring-offset-0 p-0 h-auto"
+          disabled={!canEdit}
         />
       </div>
       <div className="flex items-center gap-2">
         {activeWorkflow?.id && (
             <>
-                <Button variant="outline" onClick={onDelete}>
+                <Button variant="outline" onClick={onDelete} disabled={isActionDisabled || !canEdit}>
                     <Trash2 />
                     <span className="hidden md:inline">Delete</span>
                 </Button>
-                <Button variant="outline" onClick={onRun} disabled={isRunning || isSaving}>
+                <Button variant="outline" onClick={onRun} disabled={isActionDisabled || !canRun}>
                     {isRunning ? <Loader2 className="animate-spin" /> : <Play />}
                     <span className="hidden md:inline">Run</span>
                 </Button>
             </>
         )}
-        <Button onClick={onSave} disabled={isSaving || isRunning}>
+        <Button onClick={onSave} disabled={isActionDisabled || !canEdit}>
           {isSaving ? <Loader2 className="animate-spin" /> : <Save />}
           <span className="hidden md:inline">Save</span>
         </Button>

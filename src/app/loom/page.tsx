@@ -13,6 +13,7 @@ import WorkflowList from '@/components/loom/workflow-list';
 import WorkflowRunHistory from '@/components/loom/workflow-run-history';
 import { useToast } from '@/hooks/use-toast';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import type { User, UserRole } from '@prisma/client';
 
 
 export interface Node {
@@ -69,6 +70,25 @@ export default function LoomPage() {
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
     const { toast } = useToast();
+    const [userRole, setUserRole] = useState<UserRole | null>(null);
+    const [isLoadingUser, setIsLoadingUser] = useState(true);
+
+    useEffect(() => {
+        const fetchUserRole = async () => {
+            setIsLoadingUser(true);
+            try {
+                const res = await fetch('/api/users/me');
+                if (!res.ok) throw new Error('Could not fetch user permissions');
+                const userData: User = await res.json();
+                setUserRole(userData.role);
+            } catch (e) {
+                toast({ variant: 'destructive', title: 'Error', description: (e as Error).message });
+            } finally {
+                setIsLoadingUser(false);
+            }
+        };
+        fetchUserRole();
+    }, [toast]);
 
     useEffect(() => {
         setNodes(activeWorkflow.definition.nodes);
@@ -119,7 +139,10 @@ export default function LoomPage() {
                 })
             });
 
-            if (!response.ok) throw new Error('Failed to save workflow.');
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Failed to save workflow.');
+            }
             
             const savedWorkflow = await response.json();
             setActiveWorkflow(savedWorkflow);
@@ -128,7 +151,7 @@ export default function LoomPage() {
             toast({ title: 'Success', description: 'Workflow saved.' });
             setListRefreshTrigger(val => val + 1);
         } catch (e) {
-            toast({ variant: 'destructive', title: 'Error', description: 'Could not save workflow.' });
+            toast({ variant: 'destructive', title: 'Error', description: (e as Error).message });
         } finally {
             setIsSaving(false);
         }
@@ -180,13 +203,16 @@ export default function LoomPage() {
         
         try {
             const response = await fetch(`/api/workflows/${activeWorkflow.id}`, { method: 'DELETE' });
-            if (response.status !== 204) throw new Error('Failed to delete workflow.');
+            if (response.status !== 204) {
+                 const errorData = await response.json();
+                 throw new Error(errorData.error || 'Failed to delete workflow.');
+            }
             
             toast({ title: 'Success', description: 'Workflow deleted.' });
             handleSelectWorkflow(null); // Reset to new workflow
             setListRefreshTrigger(val => val + 1);
         } catch (e) {
-             toast({ variant: 'destructive', title: 'Error', description: 'Could not delete workflow.' });
+             toast({ variant: 'destructive', title: 'Error', description: (e as Error).message });
         } finally {
             setIsDeleteDialogOpen(false);
         }
@@ -269,6 +295,8 @@ export default function LoomPage() {
             onDelete={() => setIsDeleteDialogOpen(true)}
             isSaving={isSaving}
             isRunning={isRunning}
+            userRole={userRole}
+            isLoadingUser={isLoadingUser}
         />
         <div className="flex-grow flex min-h-0">
              <div className="w-64 flex-shrink-0 flex flex-col min-h-0 border-r border-foreground/20">

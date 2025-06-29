@@ -4,7 +4,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { getSession } from '@/lib/auth';
-import { WorkflowRunStatus } from '@prisma/client';
+import { UserRole, WorkflowRunStatus } from '@prisma/client';
 import { executeWorkflow } from '@/lib/workflow-executor';
 
 interface RouteParams {
@@ -15,8 +15,13 @@ interface RouteParams {
 
 export async function POST(request: NextRequest, { params }: RouteParams) {
   const session = await getSession(request);
-  if (!session?.workspaceId) {
+  if (!session?.workspaceId || !session.userId) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const user = await prisma.user.findUnique({ where: { id: session.userId } });
+  if (!user || user.role === UserRole.AUDITOR) {
+      return NextResponse.json({ error: 'Permission denied. This action is not available for auditors.' }, { status: 403 });
   }
   
   try {

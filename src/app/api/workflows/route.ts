@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { z } from 'zod';
 import { getSession } from '@/lib/auth';
+import { UserRole } from '@prisma/client';
 
 const WorkflowCreationRequestSchema = z.object({
   name: z.string(),
@@ -35,8 +36,13 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   const session = await getSession(request);
-  if (!session?.workspaceId) {
+  if (!session?.workspaceId || !session.userId) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const user = await prisma.user.findUnique({ where: { id: session.userId } });
+  if (!user || (user.role !== UserRole.ADMIN && user.role !== UserRole.MANAGER)) {
+      return NextResponse.json({ error: 'Permission denied. Administrator or Manager access required.' }, { status: 403 });
   }
   
   try {
