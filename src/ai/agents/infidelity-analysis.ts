@@ -43,7 +43,7 @@ Your analysis should be based on patterns, inconsistencies, and psychological in
     const { output } = await ai.generate({
         prompt: finalPrompt,
         output: { schema: InfidelityAnalysisOutputSchema },
-        model: 'googleai/gemini-2.0-flash',
+        model: 'googleai/gemini-1.5-flash-latest',
     });
     
     return output!;

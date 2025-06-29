@@ -44,7 +44,7 @@ Based on this, generate a single, concise decoy message. The message should be n
     const { output } = await ai.generate({
         prompt: finalPrompt,
         output: { schema: z.object({ decoyMessage: z.string() }) },
-        model: 'googleai/gemini-2.0-flash',
+        model: 'googleai/gemini-1.5-flash-latest',
     });
     
     return {

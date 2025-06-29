@@ -37,7 +37,6 @@ import { TransactionSchema } from '@/ai/tools/ledger-schemas';
 const LaunchableAppTypeSchema = z.enum([
   'file-explorer',
   'terminal',
-  'echo-recall',
   'pam-poovey-onboarding',
   'infidelity-radar',
   'vin-diesel',
@@ -51,7 +50,7 @@ const LaunchableAppTypeSchema = z.enum([
   'orphean-oracle',
   'jroc-business-kit',
   'lahey-surveillance',
-  'the-foremanator',
+  'foremanator',
   'sterileish',
   'beep-wingman',
   'aegis-threatscope',
