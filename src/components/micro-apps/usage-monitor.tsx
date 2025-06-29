@@ -12,42 +12,50 @@ import { useToast } from '@/hooks/use-toast';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter, CardDescription } from '@/components/ui/card';
 import { ScrollArea } from '../ui/scroll-area';
 import { Skeleton } from '../ui/skeleton';
-import { Transaction, TransactionStatus, TransactionType, Workspace } from '@prisma/client';
+import { Transaction, TransactionStatus, TransactionType, User, UserRole, Workspace } from '@prisma/client';
 import TopUpDialog from '../billing/top-up-dialog';
+
+type UserProp = Pick<User, 'id' | 'email' | 'firstName' | 'lastName' | 'role'> | null;
 
 export default function UsageMonitor(props: Partial<BillingUsage>) {
     const { toast } = useToast();
     const [transactions, setTransactions] = useState<Transaction[]>([]);
-    const [isTxLoading, setIsTxLoading] = useState(true);
     const [workspace, setWorkspace] = useState<Workspace | null>(null);
+    const [currentUser, setCurrentUser] = useState<UserProp>(null);
+    const [isLoading, setIsLoading] = useState(true);
+    
     const [isTopUpOpen, setIsTopUpOpen] = useState(false);
     const [confirmingId, setConfirmingId] = useState<string | null>(null);
 
-    const fetchAllData = async () => {
-        setIsTxLoading(true);
+    const fetchAllData = React.useCallback(async () => {
+        setIsLoading(true);
         try {
-            const [txResponse, wsResponse] = await Promise.all([
+            const [txResponse, wsResponse, userResponse] = await Promise.all([
                 fetch('/api/billing/transactions'),
-                fetch('/api/workspaces/me')
+                fetch('/api/workspaces/me'),
+                fetch('/api/users/me')
             ]);
             if (!txResponse.ok) throw new Error('Failed to fetch transaction history.');
             if (!wsResponse.ok) throw new Error('Failed to fetch workspace data.');
+            if (!userResponse.ok) throw new Error('Failed to fetch user data.');
             
             const txData = await txResponse.json();
             const wsData = await wsResponse.json();
+            const userData = await userResponse.json();
 
             setTransactions(txData);
             setWorkspace(wsData);
+            setCurrentUser(userData);
         } catch (error) {
             toast({ variant: 'destructive', title: 'Error', description: (error as Error).message });
         } finally {
-            setIsTxLoading(false);
+            setIsLoading(false);
         }
-    };
+    }, [toast]);
     
     useEffect(() => {
         fetchAllData();
-    }, []);
+    }, [fetchAllData]);
 
     const handleConfirm = async (transactionId: string) => {
         setConfirmingId(transactionId);
@@ -78,7 +86,7 @@ export default function UsageMonitor(props: Partial<BillingUsage>) {
         overageEnabled: workspace.overageEnabled
     } : props;
     
-    if (!displayProps.planTier) {
+    if (!displayProps.planTier && !isLoading) {
         return (
              <div className="p-4 text-center text-muted-foreground">
                 <p>No usage data loaded.</p>
@@ -133,11 +141,11 @@ export default function UsageMonitor(props: Partial<BillingUsage>) {
                             <CardTitle className="text-base">Transaction History</CardTitle>
                             <CardDescription className="text-xs">Recent credit and debit activity.</CardDescription>
                         </div>
-                        <Button variant="ghost" size="icon" onClick={fetchAllData} disabled={isTxLoading}><RefreshCw className={cn("h-4 w-4", isTxLoading && "animate-spin")}/></Button>
+                        <Button variant="ghost" size="icon" onClick={fetchAllData} disabled={isLoading}><RefreshCw className={cn("h-4 w-4", isLoading && "animate-spin")}/></Button>
                      </CardHeader>
                      <CardContent className="p-3 pt-0 flex-grow min-h-0">
                         <ScrollArea className="h-full">
-                            {isTxLoading ? (
+                            {isLoading ? (
                                 <div className="space-y-2">
                                     <Skeleton className="h-10 w-full" />
                                     <Skeleton className="h-10 w-full" />
@@ -164,7 +172,7 @@ export default function UsageMonitor(props: Partial<BillingUsage>) {
                                                     <Icon className="h-3 w-3" /> {statusInfo.text}
                                                 </span>
                                             </div>
-                                            {tx.status === TransactionStatus.PENDING && tx.type === TransactionType.CREDIT && (
+                                            {tx.status === TransactionStatus.PENDING && tx.type === TransactionType.CREDIT && currentUser?.role === UserRole.ADMIN && (
                                                 <div className="flex justify-end mt-2">
                                                     <Button size="sm" variant="secondary" onClick={() => handleConfirm(tx.id)} disabled={confirmingId === tx.id}>
                                                         {confirmingId === tx.id ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle className="mr-2 h-4 w-4" />}

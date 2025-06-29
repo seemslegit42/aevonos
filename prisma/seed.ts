@@ -1,5 +1,5 @@
 
-import { PrismaClient, AgentStatus, SecurityRiskLevel, TransactionType, PlanTier } from '@prisma/client'
+import { PrismaClient, AgentStatus, SecurityRiskLevel, TransactionType, PlanTier, UserRole } from '@prisma/client'
 import bcrypt from 'bcryptjs'
 
 const prisma = new PrismaClient()
@@ -27,6 +27,7 @@ async function main() {
       password: hashedPassword,
       firstName: 'The',
       lastName: 'Architect',
+      role: UserRole.ADMIN, // Assign ADMIN role
     },
   })
   console.log(`Created user with id: ${user.id}`)
@@ -54,6 +55,7 @@ async function main() {
         amount: 100.0,
         description: "Initial workspace credit grant.",
         userId: user.id,
+        status: 'COMPLETED',
         // Also update the workspace balance since this is a seed script bypassing the service
         workspace: {
           update: {

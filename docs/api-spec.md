@@ -1028,13 +1028,8 @@ Here is the updated document: docs/API/PUBLIC-API-SPEC.md.This document provides
         "type": "object",
         "properties": {
           "id": {
-            "type": "integer",
-            "description": "Internal database ID."
-          },
-          "uuid": {
             "type": "string",
-            "format": "uuid",
-            "description": "Publicly exposed unique identifier for the user."
+            "description": "Unique identifier for the user (CUID)."
           },
           "email": {
             "type": "string",
@@ -1047,6 +1042,14 @@ Here is the updated document: docs/API/PUBLIC-API-SPEC.md.This document provides
           "lastName": {
             "type": "string",
             "nullable": true
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "ADMIN",
+              "MEMBER"
+            ],
+            "description": "The user's role in the workspace."
           },
           "lastLoginAt": {
             "type": "string",
@@ -1062,7 +1065,13 @@ Here is the updated document: docs/API/PUBLIC-API-SPEC.md.This document provides
             "format": "date-time"
           }
         },
-        "required": ["id", "uuid", "email", "createdAt", "updatedAt"]
+        "required": [
+          "id",
+          "email",
+          "role",
+          "createdAt",
+          "updatedAt"
+        ]
       },
       "UserUpdateRequest": {
         "type": "object",
@@ -1607,4 +1616,4 @@ Here is the updated document: docs/API/PUBLIC-API-SPEC.md.This document provides
     }
   }
 }
-3. Implementation Notes (Fullstack Next.js, Prisma, PostgreSQL, LangGraph)Next.js API Routes (Backend): The API endpoints will primarily be implemented as Edge Functions or Serverless Functions within Next.js's pages/api or app/api directory structure. This allows for serverless deployment on platforms like Vercel.Prisma (ORM for PostgreSQL): Data persistence will be managed using Prisma. Each API route handler will utilize Prisma Client to interact with the PostgreSQL database. Prisma's type-safe queries align well with the TypeScript-first approach. Multi-tenancy (tenant_id) will be strictly enforced at the Prisma query level for data isolation.PostgreSQL (Database): The primary database will be PostgreSQL, following the defined schema principles (multi-tenancy via tenant_id, UUIDs for public IDs, JSONB for flexible data like workflow.definition and contact.customProperties). This provides robust, scalable, and transactional data storage.LangGraph (AI Workflow Orchestration):The workflow.definition field within the database will store the serialized representation of LangGraph-based workflows.The /workflows/{workflowId}/run endpoint will trigger these LangGraph workflows. The backend API route will instantiate and execute the LangGraph definition, passing the trigger_payload as input.Loom Studio's visual builder will generate/manipulate these LangGraph definitions.BEEP's agentic orchestration will involve dynamically constructing or selecting LangGraph workflows for execution. LangGraph's multi-actor collaboration and state-based nature are crucial for BEEP's ability to coordinate complex agent teams and persist context.Authentication: JWTs, issued upon successful login, will be validated by the Next.js API routes. The tenant_id embedded within the JWT will be extracted and used for all database queries to ensure strict data isolation in the multi-tenant PostgreSQL schema.Error Handling: Standard HTTP status codes (e.g., 400, 401, 404, 409) will be used, with clear error messages in the response body.
+3. Implementation Notes (Fullstack Next.js, Prisma, PostgreSQL, LangGraph)Next.js API Routes (Backend): The API endpoints will primarily be implemented as Edge Functions or Serverless Functions within Next.js's pages/api or app/api directory structure. This allows for serverless deployment on platforms like Vercel.Prisma (ORM for PostgreSQL): Data persistence will be managed using Prisma. Each API route handler will utilize Prisma Client to interact with the PostgreSQL database. Multi-tenancy (tenant_id) will be strictly enforced at the Prisma query level for data isolation.PostgreSQL (Database): The primary database will be PostgreSQL, following the defined schema principles (multi-tenancy via tenant_id, UUIDs for public IDs, JSONB for flexible data like workflow.definition and contact.customProperties). This provides robust, scalable, and transactional data storage.LangGraph (AI Workflow Orchestration):The workflow.definition field within the database will store the serialized representation of LangGraph-based workflows.The /workflows/{workflowId}/run endpoint will trigger these LangGraph workflows. The backend API route will instantiate and execute the LangGraph definition, passing the trigger_payload as input.Loom Studio's visual builder will generate/manipulate these LangGraph definitions.BEEP's agentic orchestration will involve dynamically constructing or selecting LangGraph workflows for execution. LangGraph's multi-actor collaboration and state-based nature are crucial for BEEP's ability to coordinate complex agent teams and persist context.Authentication: JWTs, issued upon successful login, will be validated by the Next.js API routes. The tenant_id embedded within the JWT will be extracted and used for all database queries to ensure strict data isolation in the multi-tenant PostgreSQL schema.Error Handling: Standard HTTP status codes (e.g., 400, 401, 404, 409) will be used, with clear error messages in the response body.

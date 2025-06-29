@@ -21,13 +21,20 @@ export async function GET(request: NextRequest) {
 
   const user = await prisma.user.findUnique({
     where: { id: session.userId },
+    select: {
+      id: true,
+      email: true,
+      firstName: true,
+      lastName: true,
+      role: true,
+    },
   });
 
   if (!user) {
     return NextResponse.json({ error: 'User not found.' }, { status: 404 });
   }
 
-  const { password, ...userResponse } = user;
+  const { password, ...userResponse } = user as any;
   return NextResponse.json(userResponse);
 }
 

@@ -132,7 +132,10 @@ export async function confirmEtransfer(transactionId: string) {
     return { success: false, error: 'Unauthorized' };
   }
 
-  // Future: Add admin role check here to ensure only authorized users can confirm.
+  const user = await prisma.user.findUnique({ where: { id: session.userId } });
+  if (user?.role !== 'ADMIN') {
+    return { success: false, error: 'Permission denied. Administrator access required.' };
+  }
 
   try {
     await confirmPendingTransaction(transactionId, session.workspaceId);
