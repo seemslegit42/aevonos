@@ -916,5 +916,3 @@ export async function processUserCommand(input: UserCommandInput): Promise<UserC
 
   return finalResponse;
 }
-
-    

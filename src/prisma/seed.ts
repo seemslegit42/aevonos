@@ -1,5 +1,5 @@
 
-import { PrismaClient, AgentStatus, SecurityRiskLevel, TransactionType, PlanTier, UserRole, ChaosCardClass } from '@prisma/client'
+import { PrismaClient, AgentStatus, SecurityRiskLevel, TransactionType, PlanTier, UserRole, UserPsyche, ChaosCardClass } from '@prisma/client'
 import bcrypt from 'bcryptjs'
 import { chaosCardManifest } from '../config/chaos-cards';
 
@@ -31,6 +31,7 @@ async function main() {
       firstName: 'The',
       lastName: 'Architect',
       role: UserRole.ADMIN,
+      psyche: UserPsyche.ZEN_ARCHITECT,
     },
   });
   console.log(`Created ADMIN user with id: ${adminUser.id}`)
@@ -42,6 +43,7 @@ async function main() {
       firstName: 'Project',
       lastName: 'Manager',
       role: UserRole.MANAGER,
+      psyche: UserPsyche.SYNDICATE_ENFORCER,
     },
   });
   console.log(`Created MANAGER user with id: ${managerUser.id}`)
@@ -53,6 +55,7 @@ async function main() {
       firstName: 'Field',
       lastName: 'Operator',
       role: UserRole.OPERATOR,
+      psyche: UserPsyche.RISK_AVERSE_ARTISAN,
     },
   });
   console.log(`Created OPERATOR user with id: ${operatorUser.id}`)
@@ -64,6 +67,7 @@ async function main() {
       firstName: 'Compliance',
       lastName: 'Auditor',
       role: UserRole.AUDITOR,
+      psyche: UserPsyche.ZEN_ARCHITECT,
     },
   });
   console.log(`Created AUDITOR user with id: ${auditorUser.id}`)
