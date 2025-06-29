@@ -9,30 +9,41 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Check } from 'lucide-react';
 import { type MicroAppManifest } from '@/config/micro-apps';
 import { Skeleton } from '../ui/skeleton';
+import { Workspace } from '@prisma/client';
 
 export default function Armory() {
   const [apps, setApps] = useState<MicroAppManifest[]>([]);
+  const [workspace, setWorkspace] = useState<Workspace | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    async function getMicroApps() {
+  const fetchArmoryData = async () => {
+      setIsLoading(true);
       try {
-        const response = await fetch('/api/microapps');
-        if (!response.ok) {
-          console.error(`Failed to fetch microapps: ${response.status} ${response.statusText}`);
-          return;
-        }
-        const data = await response.json();
-        setApps(data);
+        const [appsResponse, workspaceResponse] = await Promise.all([
+            fetch('/api/microapps'),
+            fetch('/api/workspaces/me')
+        ]);
+        
+        if (!appsResponse.ok) throw new Error('Failed to fetch microapps');
+        if (!workspaceResponse.ok) throw new Error('Failed to fetch workspace data');
+        
+        const appsData = await appsResponse.json();
+        const workspaceData = await workspaceResponse.json();
+
+        setApps(appsData);
+        setWorkspace(workspaceData);
       } catch (error) {
-        console.error("Error fetching micro-apps:", error);
+        console.error("Error fetching Armory data:", error);
       } finally {
         setIsLoading(false);
       }
-    }
-    getMicroApps();
+  };
+
+  useEffect(() => {
+    fetchArmoryData();
   }, []);
 
+  const unlockedAppIds = workspace?.unlockedAppIds || [];
   const disgruntledPackApps = apps.filter(app => app.isFeatured);
 
   return (
@@ -70,7 +81,14 @@ export default function Armory() {
                      </div>
                  ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {apps.map(app => <MicroAppListingCard key={app.id} app={app} />)}
+                      {apps.map(app => (
+                          <MicroAppListingCard 
+                            key={app.id} 
+                            app={app} 
+                            unlockedAppIds={unlockedAppIds}
+                            onAcquire={fetchArmoryData}
+                          />
+                      ))}
                     </div>
                  )}
             </section>

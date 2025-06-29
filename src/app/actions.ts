@@ -10,6 +10,9 @@ import { createTransaction, confirmPendingTransaction } from '@/services/ledger-
 import { TransactionType } from '@prisma/client';
 import { z } from 'zod';
 import { requestCreditTopUpInDb } from '@/ai/tools/billing-tools';
+import { microAppManifests } from '@/config/micro-apps';
+import prisma from '@/lib/prisma';
+
 
 export async function handleCommand(command: string): Promise<UserCommandOutput> {
   const session = await getServerActionSession();
@@ -138,5 +141,70 @@ export async function confirmEtransfer(transactionId: string) {
   } catch (error) {
     console.error('[Action: confirmEtransfer]', error);
     return { success: false, error: error instanceof Error ? error.message : 'Failed to confirm transaction.' };
+  }
+}
+
+export async function purchaseMicroApp(appId: string) {
+  const session = await getServerActionSession();
+  if (!session?.userId || !session?.workspaceId) {
+    return { success: false, error: 'Unauthorized' };
+  }
+
+  const appManifest = microAppManifests.find(app => app.id === appId);
+  if (!appManifest) {
+    return { success: false, error: 'Micro-App not found.' };
+  }
+
+  const { creditCost, name } = appManifest;
+  if (creditCost <= 0) {
+    return { success: false, error: 'This app cannot be purchased.' };
+  }
+
+  try {
+    const workspace = await prisma.workspace.findUnique({
+      where: { id: session.workspaceId },
+    });
+
+    if (!workspace) {
+      return { success: false, error: 'Workspace not found.' };
+    }
+
+    if ((workspace.credits as unknown as number) < creditCost) {
+      return { success: false, error: 'Insufficient ΞCredits.' };
+    }
+    
+    if (workspace.unlockedAppIds.includes(appId)) {
+      return { success: false, error: 'App already unlocked.' };
+    }
+
+    // Use a transaction to ensure atomicity
+    await prisma.$transaction(async (tx) => {
+      // 1. Debit the credits by creating a transaction which in turn updates the balance
+      await createTransaction({
+        workspaceId: session.workspaceId,
+        userId: session.userId,
+        type: TransactionType.DEBIT,
+        amount: creditCost,
+        description: `Micro-App Unlock: ${name}`,
+      });
+
+      // 2. Add the app to the unlocked list
+      await tx.workspace.update({
+        where: { id: session.workspaceId },
+        data: {
+          unlockedAppIds: {
+            push: appId,
+          },
+        },
+      });
+    });
+
+    revalidatePath('/'); // Revalidate to reflect changes across the app
+    return { success: true, message: `Successfully unlocked ${name}!` };
+
+  } catch (error) {
+    console.error(`[Action: purchaseMicroApp] for app ${appId}:`, error);
+    const errorMessage = error instanceof Error ? error.message : 'Failed to complete purchase.';
+    return { success: false, error: errorMessage };
   }
 }

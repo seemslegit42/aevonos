@@ -1,35 +1,45 @@
 
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Image from 'next/image';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ShoppingCart, Check } from 'lucide-react';
+import { ShoppingCart, Check, Loader2 } from 'lucide-react';
 import type { MicroAppManifest } from '@/config/micro-apps';
 import { useToast } from '@/hooks/use-toast';
+import { purchaseMicroApp } from '@/app/actions';
 
-export function MicroAppListingCard({ app }: { app: MicroAppManifest }) {
+interface MicroAppListingCardProps {
+  app: MicroAppManifest;
+  unlockedAppIds: string[];
+  onAcquire: () => void;
+}
+
+export function MicroAppListingCard({ app, unlockedAppIds, onAcquire }: MicroAppListingCardProps) {
   const { toast } = useToast();
-  const isFree = app.price.toLowerCase() === 'included';
+  const [isAcquiring, setIsAcquiring] = useState(false);
+  const isIncluded = app.priceModel === 'included';
+  const isUnlocked = isIncluded || unlockedAppIds.includes(app.id);
 
-  const handleAcquire = () => {
-    if (isFree) {
-      toast({
-        title: 'App Activated',
-        description: `"${app.name}" has been added to your canvas.`,
-      });
+  const handleAcquire = async () => {
+    if (isUnlocked || isAcquiring) return;
+    setIsAcquiring(true);
+    const result = await purchaseMicroApp(app.id);
+    if (result.success) {
+      toast({ title: 'Acquisition Successful', description: result.message });
+      onAcquire();
     } else {
-      toast({
-        title: 'Acquisition Initiated',
-        description: `Opening secure channel to acquire "${app.name}". This is a mock action.`,
-      });
+      toast({ variant: 'destructive', title: 'Acquisition Failed', description: result.error });
     }
+    setIsAcquiring(false);
   };
 
-  const ActionIcon = isFree ? Check : ShoppingCart;
-  const actionText = isFree ? 'Activate' : 'Acquire';
-  const buttonVariant = isFree ? 'secondary' : 'default';
+  const getActionContent = () => {
+      if (isAcquiring) return <Loader2 className="animate-spin" />;
+      if (isUnlocked) return <><Check className="mr-2 h-4 w-4" /> Unlocked</>;
+      return <><ShoppingCart className="mr-2 h-4 w-4" /> Acquire</>;
+  }
 
   return (
     <Card className="bg-foreground/10 backdrop-blur-xl border border-foreground/30 shadow-[0_8px_32px_0_rgba(28,25,52,0.1)] hover:border-primary transition-all duration-300 flex flex-col group overflow-hidden">
@@ -52,9 +62,11 @@ export function MicroAppListingCard({ app }: { app: MicroAppManifest }) {
         <p className="text-sm text-foreground/80">{app.description}</p>
       </CardContent>
       <CardFooter className="flex justify-between items-center p-4 pt-0">
-        <p className="text-2xl font-bold text-primary font-headline">{app.price}</p>
-        <Button variant={buttonVariant} onClick={handleAcquire}>
-            <ActionIcon className="mr-2 h-4 w-4" /> {actionText}
+        <p className="text-2xl font-bold text-primary font-headline">
+            {isIncluded ? 'Included' : `${app.creditCost} Ξ`}
+        </p>
+        <Button variant={isUnlocked ? "secondary" : "default"} onClick={handleAcquire} disabled={isUnlocked || isAcquiring}>
+            {getActionContent()}
         </Button>
       </CardFooter>
     </Card>
