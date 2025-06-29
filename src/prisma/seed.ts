@@ -33,6 +33,8 @@ async function main() {
       agentAlias: 'BEEP',
       role: UserRole.ADMIN,
       psyche: UserPsyche.ZEN_ARCHITECT,
+      foundingVow: "The tyranny of dashboards and endless SaaS tabs.",
+      foundingGoal: "An agentic operating system that anticipates, acts, and disappears.",
     },
   });
   console.log(`Created ADMIN user with id: ${adminUser.id}`)
@@ -46,6 +48,8 @@ async function main() {
       agentAlias: 'Overseer',
       role: UserRole.MANAGER,
       psyche: UserPsyche.SYNDICATE_ENFORCER,
+      foundingVow: "Manual follow-ups and chasing status updates.",
+      foundingGoal: "A self-driving project management machine.",
     },
   });
   console.log(`Created MANAGER user with id: ${managerUser.id}`)
@@ -59,6 +63,8 @@ async function main() {
       agentAlias: 'Field',
       role: UserRole.OPERATOR,
       psyche: UserPsyche.RISK_AVERSE_ARTISAN,
+      foundingVow: "The fear of making a mistake in a complex system.",
+      foundingGoal: "A reliable toolkit that I can trust.",
     },
   });
   console.log(`Created OPERATOR user with id: ${operatorUser.id}`)
@@ -72,6 +78,8 @@ async function main() {
       agentAlias: 'Auditron',
       role: UserRole.AUDITOR,
       psyche: UserPsyche.ZEN_ARCHITECT,
+      foundingVow: "Ambiguity in audit trails.",
+      foundingGoal: "An immutable, self-documenting ledger of all actions.",
     },
   });
   console.log(`Created AUDITOR user with id: ${auditorUser.id}`)

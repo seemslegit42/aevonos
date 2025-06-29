@@ -273,11 +273,10 @@ export default function RegisterPage() {
     
     async function onSubmit(values: FormData) {
         try {
-            const { whatMustEnd, goal, ...apiValues } = values;
             const response = await fetch('/api/auth/register', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(apiValues),
+                body: JSON.stringify(values),
             });
             const responseData = await response.json();
             if (!response.ok) {

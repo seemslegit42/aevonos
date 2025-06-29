@@ -12,7 +12,9 @@ const RegisterRequestSchema = z.object({
   password: z.string().min(8, "Password must be at least 8 characters long"),
   workspaceName: z.string().trim().min(1, { message: "Workspace name cannot be empty." }),
   agentAlias: z.string().optional(),
-  psyche: z.nativeEnum(UserPsyche).optional(),
+  psyche: z.nativeEnum(UserPsyche),
+  whatMustEnd: z.string().optional(),
+  goal: z.string().optional(),
 });
 
 // Corresponds to operationId `registerUser`
@@ -25,7 +27,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid registration request.', issues: validation.error.issues }, { status: 400 });
     }
     
-    const { email, password, workspaceName, agentAlias, psyche } = validation.data;
+    const { email, password, workspaceName, agentAlias, psyche, whatMustEnd, goal } = validation.data;
     
     const existingUser = await prisma.user.findUnique({
         where: { email },
@@ -45,6 +47,8 @@ export async function POST(request: Request) {
                 password: hashedPassword,
                 agentAlias: agentAlias || 'BEEP', // Default to BEEP if not provided
                 psyche: psyche || UserPsyche.ZEN_ARCHITECT, // Default to ZEN_ARCHITECT
+                foundingVow: whatMustEnd,
+                foundingGoal: goal,
             }
         });
         
