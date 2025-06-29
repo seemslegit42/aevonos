@@ -5,7 +5,7 @@ import { Toaster } from "@/components/ui/toaster"
 import { MainLayout } from '@/components/layout/main-layout';
 import { getServerActionSession } from '@/lib/auth';
 import prisma from '@/lib/prisma';
-import type { User, Workspace } from '@prisma/client';
+import { type User, type Workspace, UserPsyche } from '@prisma/client';
 import { cn } from '@/lib/utils';
 
 export const metadata: Metadata = {
@@ -13,7 +13,13 @@ export const metadata: Metadata = {
   description: 'An agentic operating system interface.',
 };
 
-type UserProp = Pick<User, 'id' | 'email' | 'firstName' | 'lastName' | 'role' | 'agentAlias'> | null;
+type UserProp = Pick<User, 'id' | 'email' | 'firstName' | 'lastName' | 'role' | 'agentAlias' | 'psyche'> | null;
+
+const psycheToCovenantClass: Record<UserPsyche, string> = {
+  [UserPsyche.SYNDICATE_ENFORCER]: 'theme-covenant-motion',
+  [UserPsyche.RISK_AVERSE_ARTISAN]: 'theme-covenant-worship',
+  [UserPsyche.ZEN_ARCHITECT]: 'theme-covenant-silence',
+}
 
 export default async function RootLayout({
   children,
@@ -23,6 +29,7 @@ export default async function RootLayout({
   let user: UserProp = null;
   let workspace: Workspace | null = null;
   let activeThemeClass = '';
+  let covenantClass = '';
 
   try {
     const session = await getServerActionSession();
@@ -38,6 +45,7 @@ export default async function RootLayout({
                   lastName: true,
                   role: true,
                   agentAlias: true,
+                  psyche: true,
                 },
             }),
             prisma.workspace.findUnique({
@@ -61,6 +69,10 @@ export default async function RootLayout({
           activeThemeClass = 'theme-acropolis-marble';
         }
 
+        if (fetchedUser?.psyche) {
+          covenantClass = psycheToCovenantClass[fetchedUser.psyche] || '';
+        }
+
     }
   } catch (error) {
     console.error('[RootLayout] Failed to get session data, possibly a database connection issue:', error);
@@ -69,7 +81,7 @@ export default async function RootLayout({
 
 
   return (
-    <html lang="en" className={cn("dark", activeThemeClass)}>
+    <html lang="en" className={cn("dark", activeThemeClass, covenantClass)}>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />

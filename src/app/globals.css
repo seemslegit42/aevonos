@@ -91,6 +91,39 @@
     --input: 220 10% 20%;
     --ring: 45 100% 60%;
   }
+  
+  .dark.theme-covenant-motion {
+    --background: 220 40% 10%;
+    --foreground: 180 100% 95%;
+    --primary: 175 100% 45%;
+    --accent: 300 100% 60%;
+    --border: 220 40% 30%;
+    --card: 220 40% 13%;
+    --muted: 220 40% 20%;
+    --muted-foreground: 220 40% 60%;
+  }
+
+  .dark.theme-covenant-worship {
+    --background: 30 20% 8%;
+    --foreground: 45 40% 90%;
+    --primary: 45 100% 60%;
+    --accent: 0 70% 55%;
+    --border: 30 20% 25%;
+    --card: 30 20% 11%;
+    --muted: 30 20% 18%;
+    --muted-foreground: 45 40% 60%;
+  }
+
+  .dark.theme-covenant-silence {
+    --background: 240 10% 4%;
+    --foreground: 0 0% 98%;
+    --primary: 0 0% 90%;
+    --accent: 240 5% 50%;
+    --border: 240 10% 15%;
+    --card: 240 10% 8%;
+    --muted: 240 10% 12%;
+    --muted-foreground: 240 10% 50%;
+  }
 
   * {
     @apply border-border;
