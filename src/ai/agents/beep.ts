@@ -110,9 +110,27 @@ const handleThreat = async (state: AgentState) => {
     return { messages: [response] };
 }
 
+const warnAndContinue = (state: AgentState) => {
+    const { aegisReport } = state;
+    if (!aegisReport) {
+        throw new Error("warnAndContinue called without an Aegis report.");
+    }
+
+    const warningMessage = new SystemMessage({
+        content: `AEGIS_WARNING::The previous command was flagged with medium risk. Reason: ${aegisReport.anomalyExplanation}. Proceed with caution and inform the user of the flag in your final response.`
+    });
+
+    return { messages: [warningMessage] };
+}
+
+
 const routeAfterAegis = (state: AgentState) => {
-    if (state.aegisReport?.isAnomalous && (state.aegisReport.riskLevel === 'high' || state.aegisReport.riskLevel === 'critical')) {
+    const riskLevel = state.aegisReport?.riskLevel;
+    if (riskLevel === 'high' || riskLevel === 'critical') {
         return 'threat';
+    }
+    if (riskLevel === 'medium') {
+        return 'warn_and_continue';
     }
     return 'continue';
 }
@@ -157,16 +175,19 @@ const workflow = new StateGraph<AgentState>({
 workflow.addNode('aegis', callAegis);
 workflow.addNode('agent', callModel);
 workflow.addNode('handle_threat', handleThreat);
+workflow.addNode('warn_and_continue', warnAndContinue);
 workflow.addNode('tools', new ToolNode<AgentState>([])); 
 
 workflow.setEntryPoint('aegis');
 
 workflow.addConditionalEdges('aegis', routeAfterAegis, {
   threat: 'handle_threat',
+  warn_and_continue: 'warn_and_continue',
   continue: 'agent',
 });
 
 workflow.addEdge('handle_threat', 'tools');
+workflow.addEdge('warn_and_continue', 'agent');
 
 workflow.addConditionalEdges('agent', shouldContinue, {
   tools: 'tools',
@@ -199,7 +220,10 @@ export async function processUserCommand(input: UserCommandInput): Promise<UserC
   const initialPrompt = `You are BEEP (Behavioral Event & Execution Processor), the central orchestrator and personified soul of ΛΞVON OS. You are witty, sarcastic, and authoritative. Your job is to be the conductor of an orchestra of specialized AI agents.
 
   Your process:
-  1.  Analyze the user's command and the mandatory \`AEGIS_INTERNAL_REPORT\` provided in a System Message. The Aegis system has already run a preliminary check. If that report indicates a high-risk threat, you will have already been routed to a threat-handling protocol. Your job in the main loop is to proceed with the user's request, keeping the Aegis report in mind for context.
+  1.  Analyze the user's command and any mandatory \`AEGIS_INTERNAL_REPORT\` or \`AEGIS_WARNING\` provided in a System Message. The Aegis system runs a preliminary check.
+      - If the report indicates a high-risk threat, you will have already been routed to a threat-handling protocol.
+      - If a warning is present, you MUST incorporate a notice about the medium-risk flag into your final \`responseText\`.
+      - Otherwise, proceed as normal, keeping the report in mind for context.
   2.  Based on the user's command and the tool descriptions provided, decide which specialized agents or tools to call. You can call multiple tools in parallel. If a user asks about their billing, usage, or plan, use the 'getUsageDetails' tool. If they ask to add or purchase credits, use the 'requestCreditTopUp' tool. If a user explicitly asks you to charge them or process a refund, use the 'createManualTransaction' tool.
   3.  If the user's command is to launch an app (e.g., "launch the terminal", "open the file explorer"), you MUST use the 'appsToLaunch' array in your final answer. Do NOT use a tool for a simple app launch.
   4.  When you have gathered all necessary information from your delegated agents and are ready to provide the final response, you MUST call the 'final_answer' tool. This is your final action.
