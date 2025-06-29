@@ -3,6 +3,7 @@ import { NextResponse, NextRequest } from 'next/server';
 import { z } from 'zod';
 import prisma from '@/lib/prisma';
 import { getSession } from '@/lib/auth';
+import { IntegrationStatus } from '@prisma/client';
 
 
 interface RouteParams {
@@ -15,7 +16,7 @@ interface RouteParams {
 const IntegrationUpdateRequestSchema = z.object({
   name: z.string().optional(),
   configDetails: z.record(z.any()).optional(),
-  status: z.enum(["active", "inactive", "error"]).optional(),
+  status: z.nativeEnum(IntegrationStatus).optional(),
 });
 
 // Corresponds to operationId `getIntegration`

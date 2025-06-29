@@ -4,6 +4,7 @@ import { z } from 'zod';
 import prisma from '@/lib/prisma';
 import { getSession } from '@/lib/auth';
 import { integrationManifests } from '@/config/integration-manifests';
+import { IntegrationStatus } from '@prisma/client';
 
 // Based on IntegrationConfigurationRequest schema from api-spec.md
 const IntegrationConfigurationRequestSchema = z.object({
@@ -50,7 +51,7 @@ export async function POST(request: NextRequest) {
             workspaceId: session.workspaceId,
             integrationManifestId: integrationTypeId,
             name: name,
-            status: "active",
+            status: IntegrationStatus.active,
             configDetails: configDetails,
         }
     });
