@@ -21,7 +21,7 @@ import {
 import { Sparkles, ShieldCheck, LogOut, Settings, User as UserIcon, Database } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { logout } from '@/app/auth/actions';
-import type { User, Workspace } from '@prisma/client';
+import type { User, Workspace, UserRole } from '@prisma/client';
 import { useAppStore } from '@/store/app-store';
 import UserProfileDialog from '@/components/user-profile-dialog';
 import WorkspaceSettingsDialog from '@/components/workspace-settings-dialog';
@@ -29,7 +29,7 @@ import { Badge } from '@/components/ui/badge';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import BillingPopoverContent from '@/components/billing-popover';
 
-type UserProp = Pick<User, 'id' | 'email' | 'firstName' | 'lastName'> | null;
+type UserProp = Pick<User, 'id' | 'email' | 'firstName' | 'lastName' | 'role'> | null;
 
 interface TopBarProps {
   user: UserProp;
@@ -117,11 +117,14 @@ export default function TopBar({ user, workspace }: TopBarProps) {
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-56" align="end" forceMount>
                 <DropdownMenuLabel className="font-normal">
-                    <div className="flex flex-col space-y-1">
-                        <p className="text-sm font-medium leading-none">{user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() : 'The Architect'}</p>
-                        <p className="text-xs leading-none text-muted-foreground">
-                            {user?.email || 'architect@aevonos.com'}
-                        </p>
+                    <div className="flex justify-between items-center">
+                        <div className="flex flex-col space-y-1">
+                            <p className="text-sm font-medium leading-none">{user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() : 'The Architect'}</p>
+                            <p className="text-xs leading-none text-muted-foreground">
+                                {user?.email || 'architect@aevonos.com'}
+                            </p>
+                        </div>
+                         {user?.role && <Badge variant="outline" className="capitalize text-xs">{user.role.toLowerCase()}</Badge>}
                     </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />

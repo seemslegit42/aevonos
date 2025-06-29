@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import prisma from '@/lib/prisma';
 import { getSession } from '@/lib/auth';
-import { AgentStatus } from '@prisma/client';
+import { AgentStatus, UserRole } from '@prisma/client';
 
 const AgentDeploymentRequestSchema = z.object({
   name: z.string(),
@@ -34,11 +34,17 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   const session = await getSession(request);
-  if (!session?.workspaceId) {
+  if (!session?.workspaceId || !session.userId) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   try {
+    const user = await prisma.user.findUnique({ where: { id: session.userId } });
+
+    if (!user || (user.role !== UserRole.ADMIN && user.role !== UserRole.MANAGER)) {
+        return NextResponse.json({ error: 'Permission denied. Administrator or Manager access required.' }, { status: 403 });
+    }
+
     const body = await request.json();
     const validation = AgentDeploymentRequestSchema.safeParse(body);
 

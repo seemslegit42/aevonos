@@ -21,27 +21,66 @@ async function main() {
   console.log('No existing data found. Seeding from scratch...');
 
   const hashedPassword = await bcrypt.hash('password123', 10);
-  const user = await prisma.user.create({
+  
+  // Create multiple users with different roles
+  const adminUser = await prisma.user.create({
     data: {
       email: 'architect@aevonos.com',
       password: hashedPassword,
       firstName: 'The',
       lastName: 'Architect',
-      role: UserRole.ADMIN, // Assign ADMIN role
+      role: UserRole.ADMIN,
     },
-  })
-  console.log(`Created user with id: ${user.id}`)
+  });
+  console.log(`Created ADMIN user with id: ${adminUser.id}`)
+
+  const managerUser = await prisma.user.create({
+    data: {
+      email: 'manager@aevonos.com',
+      password: hashedPassword,
+      firstName: 'Project',
+      lastName: 'Manager',
+      role: UserRole.MANAGER,
+    },
+  });
+  console.log(`Created MANAGER user with id: ${managerUser.id}`)
+
+  const operatorUser = await prisma.user.create({
+    data: {
+      email: 'operator@aevonos.com',
+      password: hashedPassword,
+      firstName: 'Field',
+      lastName: 'Operator',
+      role: UserRole.OPERATOR,
+    },
+  });
+  console.log(`Created OPERATOR user with id: ${operatorUser.id}`)
+  
+  const auditorUser = await prisma.user.create({
+    data: {
+      email: 'auditor@aevonos.com',
+      password: hashedPassword,
+      firstName: 'Compliance',
+      lastName: 'Auditor',
+      role: UserRole.AUDITOR,
+    },
+  });
+  console.log(`Created AUDITOR user with id: ${auditorUser.id}`)
+
 
   const newWorkspace = await prisma.workspace.create({
     data: {
       name: 'Primary Canvas',
-      ownerId: user.id,
+      ownerId: adminUser.id,
       planTier: PlanTier.Artisan,
-      // The ledger service will handle setting the initial credits via a transaction.
-      // We set it to 0 here initially.
       credits: 0.0,
       members: {
-        connect: { id: user.id }
+        connect: [
+          { id: adminUser.id },
+          { id: managerUser.id },
+          { id: operatorUser.id },
+          { id: auditorUser.id },
+        ],
       }
     },
   })
@@ -54,7 +93,7 @@ async function main() {
         type: TransactionType.CREDIT,
         amount: 100.0,
         description: "Initial workspace credit grant.",
-        userId: user.id,
+        userId: adminUser.id,
         status: 'COMPLETED',
         // Also update the workspace balance since this is a seed script bypassing the service
         workspace: {

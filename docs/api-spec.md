@@ -1047,7 +1047,9 @@ Here is the updated document: docs/API/PUBLIC-API-SPEC.md.This document provides
             "type": "string",
             "enum": [
               "ADMIN",
-              "MEMBER"
+              "MANAGER",
+              "OPERATOR",
+              "AUDITOR"
             ],
             "description": "The user's role in the workspace."
           },
