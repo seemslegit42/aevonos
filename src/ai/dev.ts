@@ -33,3 +33,5 @@ import '@/ai/tools/firecrawler-tools.ts';
 import '@/ai/agents/kendra.ts';
 import '@/ai/agents/plan-advisor.ts';
 import '@/ai/tools/ledger-tools.ts';
+import '@/ai/agents/stonks-bot.ts';
+import '@/ai/tools/finance-tools.ts';

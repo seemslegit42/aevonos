@@ -30,6 +30,7 @@ import { LumberghAnalysisOutputSchema } from './lumbergh-schemas';
 import { LucilleBluthOutputSchema } from './lucille-bluth-schemas';
 import { PamAudioOutputSchema } from './pam-poovey-schemas';
 import { TransactionSchema } from '@/ai/tools/ledger-schemas';
+import { StonksBotOutputSchema } from './stonks-bot-schemas';
 
 
 // Schemas from the original BEEP agent, preserved for the public contract.
@@ -62,6 +63,7 @@ const LaunchableAppTypeSchema = z.enum([
   'barbara',
   'oracle',
   'armory',
+  'stonks-bot',
 ]);
 
 export const AppToLaunchSchema = z.object({
@@ -258,6 +260,10 @@ export const AgentReportSchema = z.discriminatedUnion('agent', [
   z.object({
     agent: z.literal('pam-poovey'),
     report: PamAudioOutputSchema.describe('The full report from the Pam Poovey agent.'),
+  }),
+  z.object({
+    agent: z.literal('stonks'),
+    report: StonksBotOutputSchema.describe('The full report from the Stonks Bot.'),
   }),
 ]);
 

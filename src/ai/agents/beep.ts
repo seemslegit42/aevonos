@@ -82,6 +82,8 @@ import { generatePamRant } from './pam-poovey';
 import { PamScriptInputSchema } from './pam-poovey-schemas';
 import { createManualTransaction } from '@/ai/tools/ledger-tools';
 import { CreateManualTransactionInputSchema } from '../tools/ledger-schemas';
+import { getStonksAdvice } from './stonks-bot';
+import { StonksBotInputSchema } from './stonks-bot-schemas';
 import {
     type UserCommandInput,
     UserCommandOutputSchema,
@@ -637,6 +639,20 @@ class PamPooveyTool extends Tool {
   }
 }
 
+class StonksBotTool extends Tool {
+    name = 'getStonksAdvice';
+    description = 'Gets unhinged, bullish, and financially irresponsible advice for a stock ticker. This is not financial advice.';
+    schema = StonksBotInputSchema.omit({ workspaceId: true });
+    workspaceId: string;
+    constructor(context: AgentContext) { super(); this.workspaceId = context.workspaceId; }
+    
+    async _call(input: z.infer<typeof StonksBotInputSchema.omit<{ workspaceId: true }>>) {
+        const result = await getStonksAdvice({ ...input, workspaceId: this.workspaceId });
+        const report: z.infer<typeof AgentReportSchema> = { agent: 'stonks', report: result };
+        return JSON.stringify(report);
+    }
+}
+
 
 // LangGraph State
 interface AgentState {
@@ -795,6 +811,7 @@ export async function processUserCommand(input: UserCommandInput): Promise<UserC
     new DecoyTool(context), new DossierTool(context), new KendraTool(context),
     new OrpheanOracleTool(context), new LumberghTool(context), new LucilleBluthTool(context),
     new PamPooveyTool(context), new GetDatingProfileTool(context),
+    new StonksBotTool(context),
   ];
 
   // Re-bind the model with the schemas from the dynamically created tools for this request.

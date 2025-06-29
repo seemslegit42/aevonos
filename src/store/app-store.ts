@@ -32,6 +32,7 @@ import type { KendraOutput } from '@/ai/agents/kendra-schemas';
 import { type OrpheanOracleOutput } from '@/ai/agents/orphean-oracle-schemas';
 import type { DossierOutput } from '@/ai/agents/dossier-schemas';
 import { generateSpeech } from '@/ai/flows/tts-flow';
+import { StonksBotOutput } from '@/ai/agents/stonks-bot-schemas';
 
 // Define the types of MicroApps available in the OS
 export type MicroAppType = 
@@ -67,7 +68,8 @@ export type MicroAppType =
   | 'armory'
   | 'user-profile-settings'
   | 'workspace-settings'
-  | 'top-up';
+  | 'top-up'
+  | 'stonks-bot';
 
 // Define the shape of a MicroApp instance
 export interface MicroApp {
@@ -355,6 +357,10 @@ export const useAppStore = create<AppState>((set, get) => {
             break;
         case 'legal-dossier':
             infidelityProps.legalDossierReport = report.report as DossierOutput;
+            break;
+        
+        case 'stonks':
+            launchApp('stonks-bot', { contentProps: report.report as StonksBotOutput });
             break;
       }
     }

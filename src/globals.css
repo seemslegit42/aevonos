@@ -1,0 +1,121 @@
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 3.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 3.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 3.9%;
+    --primary: 0 0% 9%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 0 0% 96.1%;
+    --secondary-foreground: 0 0% 9%;
+    --muted: 0 0% 96.1%;
+    --muted-foreground: 0 0% 45.1%;
+    --accent: 0 0% 96.1%;
+    --accent-foreground: 0 0% 9%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 89.8%;
+    --input: 0 0% 89.8%;
+    --ring: 0 0% 3.9%;
+    --radius: 0.5rem;
+  }
+ 
+  .dark {
+    --background: 240 5% 6%;
+    --foreground: 210 20% 90%;
+    --card: 240 5% 10%;
+    --card-foreground: 210 20% 90%;
+    --popover: 240 5% 6%;
+    --popover-foreground: 210 20% 90%;
+    --primary: 45 80% 50%;
+    --primary-foreground: 45 30% 10%;
+    --secondary: 30 5% 13%;
+    --secondary-foreground: 210 20% 90%;
+    --muted: 30 5% 13%;
+    --muted-foreground: 215 20% 55%;
+    --accent: 290 70% 60%;
+    --accent-foreground: 210 20% 90%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 5% 15%;
+    --input: 240 5% 15%;
+    --ring: 45 80% 50%;
+    
+    /* For Iridescent Aurora background */
+    --iridescent-one: 45 80% 50%;   /* Regal Gold */
+    --iridescent-two: 25 95% 60%;   /* Orange */
+    --iridescent-three: 290 70% 65%; /* Deep Magenta */
+    
+    /* Themed app colors */
+    --military-green: 82 20% 30%;
+    --ledger-cream: 45 33% 95%;
+    --steely-lavender: 247 25% 60%;
+    --polished-chrome: 240 5% 50%;
+    --faded-cream: 39 52% 94%;
+    --gilded-accent: 51 100% 50%;
+    --pale-green: 145 58% 82%;
+    --stonks-green: 145 58% 57%;
+    --kendra-fuchsia: 300 100% 50%;
+    --y2k-blueviolet: 271 76% 53%;
+    --noir-sepia: 35 30% 85%;
+    --noir-ink: 25 15% 15%;
+  }
+
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground font-body;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-headline;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  .grain-overlay::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 800 800' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+    opacity: 0.025; /* Very subtle grain */
+    pointer-events: none;
+    z-index: 1; /* Place it above the aurora but below content */
+  }
+  .crystal-pulse {
+    animation: crystal-pulse 5s ease-in-out infinite;
+  }
+  .animate-subtle-pulse {
+    animation: subtle-pulse 8s ease-in-out infinite;
+  }
+}
+
+@keyframes crystal-pulse {
+    0%, 100% {
+        transform: scale(1);
+        opacity: 0.8;
+    }
+    50% {
+        transform: scale(1.05);
+        opacity: 1;
+    }
+}
+
+@keyframes subtle-pulse {
+    0%, 100% {
+        opacity: 0.2;
+    }
+    50% {
+        opacity: 0.35;
+    }
+}
