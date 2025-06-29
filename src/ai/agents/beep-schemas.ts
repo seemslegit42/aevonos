@@ -1,7 +1,7 @@
 
 
 import { z } from 'zod';
-import { SecurityRiskLevel } from '@prisma/client';
+import { SecurityRiskLevel, UserPsyche } from '@prisma/client';
 import { DrSyntaxOutputSchema } from './dr-syntax-schemas';
 import { AegisAnomalyScanOutputSchema } from './aegis-schemas';
 import { ContactSchema, DeleteContactOutputSchema } from '@/ai/tools/crm-schemas';
@@ -271,6 +271,7 @@ export const UserCommandInputSchema = z.object({
   userCommand: z.string().describe('A natural language command from the user about what they want to do or launch.'),
   userId: z.string(),
   workspaceId: z.string(),
+  psyche: z.nativeEnum(UserPsyche),
 });
 export type UserCommandInput = z.infer<typeof UserCommandInputSchema>;
 

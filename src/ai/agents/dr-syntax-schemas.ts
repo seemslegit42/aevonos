@@ -1,4 +1,5 @@
 import {z} from 'zod';
+import { UserPsyche } from '@prisma/client';
 
 export const DrSyntaxInputSchema = z.object({
   content: z
@@ -8,6 +9,7 @@ export const DrSyntaxInputSchema = z.object({
     .enum(['prompt', 'code', 'copy'])
     .describe('The type of content being submitted.'),
   workspaceId: z.string().describe('The ID of the workspace performing the action.'),
+  psyche: z.nativeEnum(UserPsyche).describe("The user's psychological profile, for tuning the response tone."),
 });
 export type DrSyntaxInput = z.infer<typeof DrSyntaxInputSchema>;
 

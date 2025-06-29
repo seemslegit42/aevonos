@@ -5,6 +5,7 @@
 
 import { Tool, DynamicTool } from '@langchain/core/tools';
 import { z } from 'zod';
+import { UserPsyche } from '@prisma/client';
 
 import {
     AgentReportSchema,
@@ -79,10 +80,11 @@ import { CreateManualTransactionInputSchema } from '@/ai/tools/ledger-schemas';
 import { StonksBotInputSchema } from './stonks-bot-schemas';
 
 
-// Context for multi-tenancy
+// Context for multi-tenancy and personalization
 interface AgentContext {
     userId: string;
     workspaceId: string;
+    psyche: UserPsyche;
 }
 
 // This tool is a container for the final structured output.
@@ -105,7 +107,7 @@ class FinalAnswerTool extends Tool {
  * @returns An array of LangChain Tool instances.
  */
 export function getTools(context: AgentContext): Tool[] {
-    const { userId, workspaceId } = context;
+    const { userId, workspaceId, psyche } = context;
 
     const createAgentTool = ({
         name,
@@ -144,9 +146,9 @@ export function getTools(context: AgentContext): Tool[] {
         createAgentTool({
             name: 'critiqueContent',
             description: 'Sends content to Dr. Syntax for a harsh but effective critique. Use this when a user asks for a review, critique, or feedback on a piece of text, code, or a prompt. Extract the content and content type from the user command.',
-            schema: DrSyntaxInputSchema.omit({ workspaceId: true }),
+            schema: DrSyntaxInputSchema.omit({ workspaceId: true, psyche: true }),
             agentName: 'dr-syntax',
-            agentFunc: (toolInput) => drSyntaxCritique({ ...toolInput, workspaceId }),
+            agentFunc: (toolInput) => drSyntaxCritique({ ...toolInput, workspaceId, psyche }),
         }),
         
         createAgentTool({

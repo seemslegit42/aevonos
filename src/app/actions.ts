@@ -28,12 +28,27 @@ export async function handleCommand(command: string): Promise<UserCommandOutput>
         responseText: 'Your session is invalid. Please log in again.'
     };
   }
+
+  const user = await prisma.user.findUnique({
+    where: { id: session.userId },
+    select: { psyche: true }
+  });
+
+  if (!user) {
+    return {
+        appsToLaunch: [],
+        agentReports: [],
+        suggestedCommands: ['Error: User not found.'],
+        responseText: 'Could not identify the active user.'
+    };
+  }
   
   try {
     const result = await processUserCommand({ 
         userCommand: command,
         userId: session.userId,
         workspaceId: session.workspaceId,
+        psyche: user.psyche,
     });
     revalidatePath('/');
     return result;

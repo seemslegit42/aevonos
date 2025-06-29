@@ -174,10 +174,10 @@ const app = workflow.compile();
 
 // Public-facing function to process user commands
 export async function processUserCommand(input: UserCommandInput): Promise<UserCommandOutput> {
-  const { userId, workspaceId } = input;
+  const { userId, workspaceId, psyche } = input;
   
   // Dynamically get the toolset for this specific context.
-  const tools = getTools({ userId, workspaceId });
+  const tools = getTools({ userId, workspaceId, psyche });
 
   // Re-bind the model with the schemas from the dynamically created tools for this request.
   modelWithTools.kwargs.tools = tools.map(tool => ({
