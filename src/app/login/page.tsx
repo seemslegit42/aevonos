@@ -52,11 +52,11 @@ const StepOne = ({ nextStep }: { nextStep: () => void }) => (
         className="text-center space-y-4"
     >
         <div className="flex justify-center">
-            <Image src="/logo-neutral.svg" alt="Aevon OS Logo" width={80} height={80} className="w-20 h-20" />
+            <Image src="/logo.svg" alt="Aevon OS Logo" width={80} height={80} className="w-20 h-20" />
         </div>
         <h1 className="text-3xl font-headline tracking-widest text-primary">Rite of Invocation</h1>
         <p className="text-muted-foreground">The canvas must be summoned. State your claim.</p>
-        <Button onClick={nextStep} className="w-full max-w-xs mx-auto">Begin</Button>
+        <Button onClick={nextStep} className="w-full max-w-xs mx-auto">Cross the Threshold</Button>
     </motion.div>
 );
 
