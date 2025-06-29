@@ -95,7 +95,7 @@ export default function TopBar({ user, workspace }: TopBarProps) {
           </Button>
            <div className="h-6 w-px bg-[rgba(245,255,250,0.25)]" />
           <span>
-            Session: <span className="text-gilded-accent font-bold">Active</span>
+            Ξ <span className="text-gilded-accent font-bold">{workspace?.credits?.toFixed(2) ?? '0.00'}</span>
           </span>
         </div>
       </div>
