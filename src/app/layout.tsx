@@ -6,6 +6,7 @@ import { MainLayout } from '@/components/layout/main-layout';
 import { getServerActionSession } from '@/lib/auth';
 import prisma from '@/lib/prisma';
 import type { User, Workspace } from '@prisma/client';
+import { cn } from '@/lib/utils';
 
 export const metadata: Metadata = {
   title: 'ΛΞVON OS',
@@ -21,12 +22,13 @@ export default async function RootLayout({
 }>) {
   let user: UserProp = null;
   let workspace: Workspace | null = null;
+  let activeThemeClass = '';
 
   try {
     const session = await getServerActionSession();
     if (session?.userId && session?.workspaceId) {
-        // Fetch user and workspace in parallel
-        [user, workspace] = await Promise.all([
+        // Fetch user, workspace, and active effects in parallel
+        const [fetchedUser, fetchedWorkspace, activeEffect] = await Promise.all([
             prisma.user.findUnique({
                 where: { id: session.userId },
                  select: {
@@ -39,8 +41,25 @@ export default async function RootLayout({
             }),
             prisma.workspace.findUnique({
                 where: { id: session.workspaceId }
+            }),
+            prisma.activeSystemEffect.findFirst({
+              where: {
+                  workspaceId: session.workspaceId,
+                  expiresAt: { gt: new Date() },
+              },
+              orderBy: {
+                  createdAt: 'desc',
+              },
             })
         ]);
+        
+        user = fetchedUser;
+        workspace = fetchedWorkspace;
+
+        if (activeEffect?.cardKey === 'ACROPOLIS_MARBLE') {
+          activeThemeClass = 'theme-acropolis-marble';
+        }
+
     }
   } catch (error) {
     console.error('[RootLayout] Failed to get session data, possibly a database connection issue:', error);
@@ -49,7 +68,7 @@ export default async function RootLayout({
 
 
   return (
-    <html lang="en" className="dark">
+    <html lang="en" className={cn("dark", activeThemeClass)}>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />

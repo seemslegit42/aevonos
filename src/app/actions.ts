@@ -281,6 +281,23 @@ export async function purchaseChaosCard(cardKey: string) {
                   },
                 },
             });
+            
+            // Activate system effect if applicable
+            if (cardManifest.systemEffect && cardManifest.cardClass === 'AESTHETIC') {
+               await tx.activeSystemEffect.deleteMany({
+                  where: {
+                    workspaceId: session.workspaceId,
+                    cardKey: { in: ['ACROPOLIS_MARBLE'] }
+                  }
+               });
+               await tx.activeSystemEffect.create({
+                  data: {
+                    workspaceId: session.workspaceId!,
+                    cardKey: cardKey,
+                    expiresAt: new Date(Date.now() + 60 * 60 * 1000) // 1 hour
+                  }
+               });
+            }
 
             const discovery = await tx.instrumentDiscovery.findFirst({
                 where: { userId: session.userId, instrumentId: cardKey, converted: false }

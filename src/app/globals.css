@@ -69,6 +69,26 @@
     --noir-ink: 25 15% 15%;
   }
 
+  .dark.theme-acropolis-marble {
+    --background: 220 10% 8%;
+    --foreground: 220 15% 95%;
+    --card: 220 10% 12%;
+    --card-foreground: 220 15% 95%;
+    --popover: 220 10% 8%;
+    --popover-foreground: 220 15% 95%;
+    --primary: 45 100% 60%;
+    --primary-foreground: 45 50% 10%;
+    --secondary: 220 10% 15%;
+    --secondary-foreground: 220 15% 95%;
+    --muted: 220 10% 15%;
+    --muted-foreground: 220 15% 65%;
+    --accent: 50 90% 70%;
+    --accent-foreground: 45 50% 10%;
+    --border: 220 10% 20%;
+    --input: 220 10% 20%;
+    --ring: 45 100% 60%;
+  }
+
   * {
     @apply border-border;
   }
