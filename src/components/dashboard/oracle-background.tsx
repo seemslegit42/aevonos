@@ -1,9 +1,8 @@
-
 'use client';
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { OrbitControls, Sparkles, Line, Edges, Html } from '@react-three/drei';
+import { OrbitControls, Sparkles, Line, Edges, Html } from '@dnd-kit/drei';
 import * as THREE from 'three';
 import { type Agent as AgentData, AgentStatus } from '@prisma/client';
 import { cn } from '@/lib/utils';
