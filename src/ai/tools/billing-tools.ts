@@ -10,12 +10,7 @@ import { authorizeAndDebitAgentActions } from '@/services/billing-service';
 import { TransactionStatus, TransactionType } from '@prisma/client';
 import { aegisAnomalyScan } from '@/ai/agents/aegis';
 import { createSecurityAlertInDb } from '@/ai/tools/security-tools';
-
-const PLAN_LIMITS = {
-  'Apprentice': 100,
-  'Artisan': 2000,
-  'Priesthood': 100000,
-} as const;
+import { PLAN_LIMITS } from '@/config/billing';
 
 // This flow now requires a workspaceId to fetch the correct data.
 const getUsageDetailsFlow = ai.defineFlow(

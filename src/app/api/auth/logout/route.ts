@@ -1,2 +1,1 @@
-// This API route has been deprecated in favor of a server action in src/app/auth/actions.ts
-// This file can be safely deleted.
+// This file has been decommissioned as part of the comprehensive overhaul.

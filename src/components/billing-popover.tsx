@@ -1,4 +1,3 @@
-
 'use client';
 
 import React from 'react';
@@ -8,17 +7,12 @@ import { Progress } from '@/components/ui/progress';
 import { Shell } from 'lucide-react';
 import { useAppStore } from '@/store/app-store';
 import { cn } from '@/lib/utils';
+import { PLAN_LIMITS } from '@/config/billing';
 
 
 interface BillingPopoverContentProps {
   workspace: Workspace | null;
 }
-
-const PLAN_LIMITS = {
-  'Apprentice': 100,
-  'Artisan': 2000,
-  'Priesthood': 100000,
-} as const;
 
 export default function BillingPopoverContent({ workspace }: BillingPopoverContentProps) {
   const { upsertApp } = useAppStore();

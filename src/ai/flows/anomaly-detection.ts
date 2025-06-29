@@ -1,1 +1,1 @@
-// This flow has been deprecated and moved to the Aegis agent kernel at src/ai/agents/aegis.ts
+// This file has been decommissioned as part of the comprehensive overhaul.
