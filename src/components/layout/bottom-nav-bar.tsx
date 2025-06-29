@@ -85,11 +85,11 @@ export default function BottomNavBar() {
             transition={{ type: "spring", stiffness: 100, damping: 20, delay: 0.2 }}
             className="fixed bottom-4 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-sm h-16 md:hidden z-50"
         >
-            <div className="relative w-full h-full flex items-center justify-around bg-background/80 backdrop-blur-lg border border-foreground/30 rounded-2xl shadow-2xl shadow-black/30">
+            <div className="relative w-full h-full flex items-center justify-around bg-[rgba(245,255,250,0.15)] backdrop-blur-[20px] border border-[rgba(245,255,250,0.3)] rounded-2xl shadow-[0_8px_32px_0_rgba(28,25,52,0.1)]">
                 {leftNavItems.map((item) => <NavButton key={item.label} item={item} />)}
 
                 <div className="relative -top-5">
-                    <button onClick={handleBeepFocus} className="group relative w-16 h-16 flex items-center justify-center bg-primary rounded-full border-4 border-background shadow-lg transition-transform duration-200 hover:scale-110 active:scale-100 focus:outline-none focus:ring-4 focus:ring-primary/50">
+                    <button onClick={handleBeepFocus} className="group relative w-16 h-16 flex items-center justify-center bg-gradient-to-r from-primary to-roman-aqua rounded-full border-4 border-background shadow-lg transition-transform duration-200 hover:scale-110 active:scale-100 focus:outline-none focus:ring-4 focus:ring-primary/50">
                         <BeepIcon className="w-14 h-14 text-primary-foreground group-hover:animate-pulse" />
                     </button>
                 </div>

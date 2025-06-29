@@ -10,7 +10,7 @@ import type { User, Workspace } from '@prisma/client';
 import { useAppStore } from '@/store/app-store';
 import { cn } from '@/lib/utils';
 
-type UserProp = Pick<User, 'id' | 'email' | 'firstName' | 'lastName' | 'role'> | null;
+type UserProp = Pick<User, 'id' | 'email' | 'firstName' | 'lastName' | 'role' | 'agentAlias'> | null;
 
 interface TopBarProps {
   user: UserProp;
@@ -47,6 +47,9 @@ export default function TopBar({ user, workspace }: TopBarProps) {
   
   const roleText = user?.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1).toLowerCase() : 'Operator';
   const sessionText = `${roleText} | Session: `;
+  
+  const agentName = user?.agentAlias || 'BEEP';
+  const placeholderText = isMobile ? `${agentName} Command...` : `Ask ${agentName} to...`;
 
   return (
     <header className="flex items-center justify-between w-full px-2 sm:px-4 py-2 bg-[rgba(245,255,250,0.10)] backdrop-blur-[25px] rounded-lg border border-[rgba(245,255,250,0.25)] shadow-[0_4px_24px_0_rgba(28,25,52,0.1)] gap-2 sm:gap-4">
@@ -61,7 +64,7 @@ export default function TopBar({ user, workspace }: TopBarProps) {
           <Input
             name="command"
             type="text"
-            placeholder={isMobile ? "BEEP Command..." : "Ask BEEP to..."}
+            placeholder={placeholderText}
             className="w-full bg-[rgba(245,255,250,0.2)] text-foreground placeholder:text-muted-foreground border-0 focus-visible:ring-1 focus-visible:ring-primary h-10"
             disabled={isLoading}
           />

@@ -13,7 +13,7 @@ export const metadata: Metadata = {
   description: 'An agentic operating system interface.',
 };
 
-type UserProp = Pick<User, 'id' | 'email' | 'firstName' | 'lastName' | 'role'> | null;
+type UserProp = Pick<User, 'id' | 'email' | 'firstName' | 'lastName' | 'role' | 'agentAlias'> | null;
 
 export default async function RootLayout({
   children,
@@ -37,6 +37,7 @@ export default async function RootLayout({
                   firstName: true,
                   lastName: true,
                   role: true,
+                  agentAlias: true,
                 },
             }),
             prisma.workspace.findUnique({

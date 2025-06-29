@@ -9,7 +9,7 @@ import BottomNavBar from './bottom-nav-bar';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 
-type UserProp = Pick<User, 'id' | 'email' | 'firstName' | 'lastName' | 'role'> | null;
+type UserProp = Pick<User, 'id' | 'email' | 'firstName' | 'lastName' | 'role' | 'agentAlias'> | null;
 
 export function MainLayout({ children, user, workspace }: { children: React.ReactNode; user: UserProp; workspace: Workspace | null }) {
   const pathname = usePathname();
