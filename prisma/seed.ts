@@ -31,6 +31,11 @@ async function main() {
       firstName: 'The',
       lastName: 'Architect',
       role: UserRole.ADMIN,
+      pulseProfile: {
+        create: {
+          phaseOffset: Math.random() * 2 * Math.PI,
+        }
+      }
     },
   });
   console.log(`Created ADMIN user with id: ${adminUser.id}`)
@@ -42,6 +47,11 @@ async function main() {
       firstName: 'Project',
       lastName: 'Manager',
       role: UserRole.MANAGER,
+       pulseProfile: {
+        create: {
+          phaseOffset: Math.random() * 2 * Math.PI,
+        }
+      }
     },
   });
   console.log(`Created MANAGER user with id: ${managerUser.id}`)
@@ -53,6 +63,11 @@ async function main() {
       firstName: 'Field',
       lastName: 'Operator',
       role: UserRole.OPERATOR,
+       pulseProfile: {
+        create: {
+          phaseOffset: Math.random() * 2 * Math.PI,
+        }
+      }
     },
   });
   console.log(`Created OPERATOR user with id: ${operatorUser.id}`)
@@ -64,6 +79,11 @@ async function main() {
       firstName: 'Compliance',
       lastName: 'Auditor',
       role: UserRole.AUDITOR,
+       pulseProfile: {
+        create: {
+          phaseOffset: Math.random() * 2 * Math.PI,
+        }
+      }
     },
   });
   console.log(`Created AUDITOR user with id: ${auditorUser.id}`)
