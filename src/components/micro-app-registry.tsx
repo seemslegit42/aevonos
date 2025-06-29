@@ -31,6 +31,8 @@ import { AegisCommandIcon } from './icons/AegisCommandIcon';
 import { UsageMonitorIcon } from './icons/UsageMonitorIcon';
 import { ArmoryIcon } from './icons/ArmoryIcon';
 import { DrSyntaxIcon } from './icons/DrSyntaxIcon';
+import { UserSettingsIcon } from './icons/UserSettingsIcon';
+import { WorkspaceSettingsIcon } from './icons/WorkspaceSettingsIcon';
 
 import { type MicroAppType } from '@/store/app-store';
 import ContactList from './micro-apps/contact-list';
@@ -61,6 +63,8 @@ import UsageMonitor from './micro-apps/usage-monitor';
 import Armory from './micro-apps/armory';
 import ContactEditor from './micro-apps/contact-editor';
 import DrSyntax from './micro-apps/dr-syntax';
+import UserProfileSettings from './micro-apps/user-profile-settings';
+import WorkspaceSettings from './micro-apps/workspace-settings';
 
 type ComponentRegistry = {
     icon: React.ComponentType<any>;
@@ -192,6 +196,14 @@ export const microAppRegistry: Record<MicroAppType, ComponentRegistry> = {
     icon: DrSyntaxIcon,
     content: DrSyntax,
   },
+  'user-profile-settings': {
+      icon: UserSettingsIcon,
+      content: UserProfileSettings,
+  },
+  'workspace-settings': {
+      icon: WorkspaceSettingsIcon,
+      content: WorkspaceSettings,
+  }
 };
 
 export const getAppIcon = (type: MicroAppType) => {

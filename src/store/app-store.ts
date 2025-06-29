@@ -64,7 +64,9 @@ export type MicroAppType =
   | 'aegis-command'
   | 'usage-monitor'
   | 'dr-syntax'
-  | 'armory';
+  | 'armory'
+  | 'user-profile-settings'
+  | 'workspace-settings';
 
 // Define the shape of a MicroApp instance
 export interface MicroApp {
@@ -119,6 +121,8 @@ const defaultAppDetails: Record<MicroAppType, Omit<MicroApp, 'id' | 'position' |
   'usage-monitor': { type: 'usage-monitor', title: 'Usage Monitor', description: 'Track your Agent Action consumption.' },
   'armory': { type: 'armory', title: 'The Armory', description: 'A catalog of available micro-apps and tools.' },
   'dr-syntax': { type: 'dr-syntax', title: 'Dr. Syntax: The Critic', description: 'Submit your mediocrity for judgment.' },
+  'user-profile-settings': { type: 'user-profile-settings', title: 'User Profile', description: 'Manage your user profile settings.' },
+  'workspace-settings': { type: 'workspace-settings', title: 'Workspace Settings', description: 'Manage your workspace settings.' },
 };
 
 const defaultAppSizes: Record<MicroAppType, { width: number; height: number }> = {
@@ -154,6 +158,8 @@ const defaultAppSizes: Record<MicroAppType, { width: number; height: number }> =
   'usage-monitor': { width: 400, height: 600 },
   'armory': { width: 800, height: 600 },
   'dr-syntax': { width: 360, height: 500 },
+  'user-profile-settings': { width: 340, height: 300 },
+  'workspace-settings': { width: 340, height: 240 },
 };
 
 export interface AppState {

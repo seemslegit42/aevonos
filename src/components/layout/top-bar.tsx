@@ -23,8 +23,6 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { logout } from '@/app/auth/actions';
 import type { User, Workspace } from '@prisma/client';
 import { useAppStore } from '@/store/app-store';
-import UserProfileDialog from '@/components/user-profile-dialog';
-import WorkspaceSettingsDialog from '@/components/workspace-settings-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import BillingPopoverContent from '@/components/billing-popover';
@@ -42,7 +40,7 @@ export default function TopBar({ user, workspace }: TopBarProps) {
   const formRef = useRef<HTMLFormElement>(null);
   const isMobile = useIsMobile();
   const [isMounted, setIsMounted] = useState(false);
-  const { handleCommandSubmit, isLoading } = useAppStore();
+  const { handleCommandSubmit, isLoading, upsertApp } = useAppStore();
   const { toast } = useToast();
 
   const [isListening, setIsListening] = useState(false);
@@ -138,6 +136,15 @@ export default function TopBar({ user, workspace }: TopBarProps) {
   };
 
   const placeholderText = isListening ? "Listening..." : isMobile ? "BEEP Command..." : "BEEP: Tell me what you want to achieve...";
+  
+  const handleOpenProfileSettings = () => {
+    upsertApp('user-profile-settings', { id: 'singleton-user-profile-settings', contentProps: { user } });
+  }
+
+  const handleOpenWorkspaceSettings = () => {
+      upsertApp('workspace-settings', { id: 'singleton-workspace-settings', contentProps: { workspace } });
+  }
+
 
   return (
     <header className="flex items-center justify-between w-full px-2 sm:px-4 py-2 bg-foreground/10 backdrop-blur-xl rounded-lg border border-foreground/30 shadow-[0_8px_32px_0_rgba(28,25,52,0.1)] gap-2 sm:gap-4">
@@ -218,18 +225,14 @@ export default function TopBar({ user, workspace }: TopBarProps) {
                     {isNarrativeLoading ? <Loader2 className="h-3 w-3 animate-spin"/> : pulseNarrative}
                 </div>
                 <DropdownMenuSeparator />
-                <UserProfileDialog user={user}>
-                    <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="cursor-pointer">
-                        <UserIcon className="mr-2 h-4 w-4" />
-                        <span>Profile Settings</span>
-                    </DropdownMenuItem>
-                </UserProfileDialog>
-                <WorkspaceSettingsDialog workspace={workspace}>
-                  <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="cursor-pointer">
-                      <Settings className="mr-2 h-4 w-4" />
-                      <span>Workspace Settings</span>
-                  </DropdownMenuItem>
-                </WorkspaceSettingsDialog>
+                <DropdownMenuItem onSelect={(e) => { e.preventDefault(); handleOpenProfileSettings(); }} className="cursor-pointer">
+                    <UserIcon className="mr-2 h-4 w-4" />
+                    <span>Profile Settings</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onSelect={(e) => { e.preventDefault(); handleOpenWorkspaceSettings(); }} className="cursor-pointer">
+                    <Settings className="mr-2 h-4 w-4" />
+                    <span>Workspace Settings</span>
+                </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <AlertDialog>
                   <AlertDialogTrigger asChild>

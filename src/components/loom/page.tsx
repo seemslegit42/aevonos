@@ -1,9 +1,10 @@
+
 'use client';
 
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { DndContext, DragEndEvent, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 
-import NodesSidebar, { NodeType } from '@/components/loom/nodes-sidebar';
+import NodesSidebar from '@/components/loom/nodes-sidebar';
 import WorkflowCanvas from '@/components/loom/workflow-canvas';
 import PropertyInspector from '@/components/loom/property-inspector';
 import LoomHeader from '@/components/loom/loom-header';
@@ -14,29 +15,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import type { User, UserRole } from '@prisma/client';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-
-
-export interface Node {
-  id: string;
-  type: NodeType;
-  position: { x: number; y: number };
-  data: { label: string; [key: string]: any };
-}
-
-export interface Edge {
-  id: string;
-  source: string;
-  target: string;
-}
-
-export interface Workflow {
-  id?: string; // Now CUID from DB
-  name: string;
-  definition: {
-    nodes: Node[];
-    edges: Edge[];
-  };
-}
+import type { Node, Edge, Workflow, NodeType } from '@/components/loom/types';
 
 const BLANK_WORKFLOW: Workflow = {
   name: 'Untitled Workflow',
