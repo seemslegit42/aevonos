@@ -72,8 +72,6 @@ import { generateDossier } from '@/ai/agents/dossier-agent';
 import { DossierInputSchema } from './dossier-schemas';
 import { getKendraTake } from '@/ai/agents/kendra';
 import { KendraInputSchema } from './kendra-schemas';
-import { getStonksAdvice } from '@/ai/agents/stonks-bot';
-import { StonksBotInputSchema } from './stonks-bot-schemas';
 import { invokeOracle } from '@/ai/agents/orphean-oracle-flow';
 import { OrpheanOracleInputSchema } from './orphean-oracle-schemas';
 import { analyzeInvite } from '@/ai/agents/lumbergh';
@@ -577,20 +575,6 @@ class KendraTool extends Tool {
   }
 }
 
-class StonksBotTool extends Tool {
-  name = 'getStonksAdvice';
-  description = 'Gets unhinged, but entertaining, stock advice for a given ticker symbol. Use this when the user asks about stocks, stonks, or the market.';
-  schema = StonksBotInputSchema.omit({ workspaceId: true });
-  workspaceId: string;
-  constructor(context: AgentContext) { super(); this.workspaceId = context.workspaceId; }
-
-  async _call(input: z.infer<typeof StonksBotInputSchema.omit<{ workspaceId: true }>>) {
-    const result = await getStonksAdvice({ ...input, workspaceId: this.workspaceId });
-    const report: z.infer<typeof AgentReportSchema> = { agent: 'stonks', report: result };
-    return JSON.stringify(report);
-  }
-}
-
 class OrpheanOracleTool extends Tool {
   name = 'invokeOrpheanOracle';
   description = 'Consults the Orphean Oracle to translate raw business data into a profound, metaphorical, visual narrative. Use this when the user asks for a "story" about their data, or wants to "see" their business performance in a new way.';
@@ -808,7 +792,7 @@ export async function processUserCommand(input: UserCommandInput): Promise<UserC
     new VandelayTool(context), new JrocTool(context), new LaheyTool(context), new ForemanatorTool(context),
     new SterileishTool(context), new PaperTrailTool(context), new BarbaraTool(context), new AuditorTool(context),
     new WingmanTool(context), new OsintTool(context), new InfidelityAnalysisTool(context),
-    new DecoyTool(context), new DossierTool(context), new KendraTool(context), new StonksBotTool(context),
+    new DecoyTool(context), new DossierTool(context), new KendraTool(context),
     new OrpheanOracleTool(context), new LumberghTool(context), new LucilleBluthTool(context),
     new PamPooveyTool(context), new GetDatingProfileTool(context),
   ];

@@ -25,7 +25,6 @@ import { InfidelityAnalysisOutputSchema } from './infidelity-analysis-schemas';
 import { DecoyOutputSchema } from './decoy-schemas';
 import { DossierOutputSchema } from './dossier-schemas';
 import { KendraOutputSchema } from './kendra-schemas';
-import { StonksBotOutputSchema } from './stonks-bot-schemas';
 import { OrpheanOracleOutputSchema } from './orphean-oracle-schemas';
 import { LumberghAnalysisOutputSchema } from './lumbergh-schemas';
 import { LucilleBluthOutputSchema } from './lucille-bluth-schemas';
@@ -58,7 +57,6 @@ const LaunchableAppTypeSchema = z.enum([
   'aegis-command',
   'usage-monitor',
   'kendra',
-  'stonks-bot',
   'auditor-generalissimo',
   'contact-list',
   'barbara',
@@ -244,10 +242,6 @@ export const AgentReportSchema = z.discriminatedUnion('agent', [
   z.object({
     agent: z.literal('kendra'),
     report: KendraOutputSchema.describe('The full report from the KENDRA.exe agent.'),
-  }),
-  z.object({
-    agent: z.literal('stonks'),
-    report: StonksBotOutputSchema.describe('The full report from the Stonks Bot agent.'),
   }),
   z.object({
     agent: z.literal('orphean-oracle'),

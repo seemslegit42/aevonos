@@ -25,7 +25,6 @@ import { BarbaraIcon } from './icons/BarbaraIcon';
 import { AuditorGeneralissimoIcon } from './icons/AuditorGeneralissimoIcon';
 import { BeepWingmanIcon } from './icons/BeepWingmanIcon';
 import { KendraIcon } from './icons/KendraIcon';
-import { StonksIcon } from './icons/StonksIcon';
 import { AegisThreatScopeIcon } from './icons/AegisThreatScopeIcon';
 import { AegisCommandIcon } from './icons/AegisCommandIcon';
 import { UsageMonitorIcon } from './icons/UsageMonitorIcon';
@@ -57,7 +56,6 @@ import Barbara from './micro-apps/barbara';
 import AuditorGeneralissimo from './micro-apps/auditor-generalissimo';
 import BeepWingman from './micro-apps/beep-wingman';
 import Kendra from './micro-apps/kendra';
-import StonksBot from './micro-apps/stonks-bot';
 import AegisThreatScope from './micro-apps/aegis-threatscope';
 import AegisCommand from './micro-apps/aegis-command';
 import UsageMonitor from './micro-apps/usage-monitor';
@@ -170,10 +168,6 @@ export const microAppRegistry: Record<MicroAppType, ComponentRegistry> = {
   'kendra': {
     icon: KendraIcon,
     content: Kendra,
-  },
-  'stonks-bot': {
-    icon: StonksIcon,
-    content: StonksBot,
   },
   'aegis-threatscope': {
     icon: AegisThreatScopeIcon,
