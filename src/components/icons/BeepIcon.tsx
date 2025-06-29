@@ -1,3 +1,4 @@
+
 import React from 'react';
 
 export const BeepIcon = (props: React.SVGProps<SVGSVGElement>) => (

@@ -21,5 +21,4 @@ export const UserSettingsIcon = (props: React.SVGProps<SVGSVGElement>) => (
     </g>
   </svg>
 );
-
     
