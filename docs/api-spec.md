@@ -770,6 +770,44 @@ This document provides the formal OpenAPI 3.0 specification for the ΛΞVON OS P
         }
       }
     },
+    "/billing/transactions": {
+      "get": {
+        "tags": ["Billing"],
+        "summary": "Retrieve transaction history for the current workspace.",
+        "operationId": "getTransactionHistory",
+        "description": "Provides a list of all credit and debit transactions, including Agent Action costs and manual top-ups, from the Obelisk Pay ledger.",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Maximum number of transactions to return.",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A list of transactions.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Transaction"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized."
+          }
+        }
+      }
+    },
     "/microapps": {
       "get": {
         "tags": ["MicroApps"],
@@ -1278,6 +1316,47 @@ This document provides the formal OpenAPI 3.0 specification for the ΛΞVON OS P
           }
         },
         "required": ["id", "name", "planTier", "createdAt", "updatedAt"]
+      },
+      "Transaction": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier for the transaction (CUID)."
+          },
+          "workspaceId": {
+            "type": "string",
+            "description": "ID of the associated workspace."
+          },
+          "userId": {
+            "type": "string",
+            "nullable": true,
+            "description": "ID of the user who initiated the transaction, if applicable."
+          },
+          "type": {
+            "type": "string",
+            "enum": ["CREDIT", "DEBIT", "TRIBUTE"],
+            "description": "The type of transaction."
+          },
+          "amount": {
+            "type": "number",
+            "description": "The value of the transaction. Positive for credits, negative for debits (in the case of TRIBUTE)."
+          },
+          "description": {
+            "type": "string",
+            "description": "A human-readable description of the transaction."
+          },
+          "status": {
+            "type": "string",
+            "enum": ["PENDING", "COMPLETED", "FAILED"],
+            "description": "The status of the transaction."
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": ["id", "workspaceId", "type", "amount", "description", "status", "createdAt"]
       },
       "WorkflowDefinition": {
         "type": "object",

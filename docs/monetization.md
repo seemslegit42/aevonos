@@ -11,24 +11,26 @@ Our monetization model is a sophisticated hybrid that balances predictable recur
 3.1. Tiered Subscriptions (Gated by Agentic Capacity)
 Subscription tiers are uniquely structured by gating access to agentic capacity (CogniOps), which is the core value metric customers pay for.
 Apprentice (Free):
-Price: $0
-Target User: Individuals, Explorers, Developers. Primary acquisition funnel for Product-Led Growth.
-CogniOps Quota: Strictly limited monthly quota (e.g., 100 CogniOps) to demonstrate BEEP's power for simple tasks, but insufficient for meaningful continuous automation [cite: 1 (Monetization Strategies)].
-Limitations: Restricted access to the full third-party Armory marketplace and custom workflow creation in Loom Studio [cite: 1 (Monetization Strategies)].
+- **Price:** $0
+- **Target User:** Individuals, Explorers, Developers. Primary acquisition funnel for Product-Led Growth.
+- **CogniOps Quota:** Strictly limited monthly quota (e.g., 100 CogniOps) to demonstrate BEEP's power for simple tasks, but insufficient for meaningful continuous automation [cite: 1 (Monetization Strategies)].
+- **Limitations:** Restricted access to the full third-party Armory marketplace and custom workflow creation in Loom Studio [cite: 1 (Monetization Strategies)].
 Artisan (Pro):
-Price: ~$20 / user / month (positioning as a premium tool).
-Target User: Solo Operators, Small Teams, Power Users. Primary self-service revenue engine.
-CogniOps Quota: Generous monthly quota (e.g., 2,000 CogniOps).
-Features: Unlocks full ecosystem power, including unrestricted Armory marketplace access and unlimited custom agentic workflow creation in Loom Studio. Overage handled via prepaid credits [cite: 1 (Monetization Strategies)].
+- **Price:** ~$20 / user / month (positioning as a premium tool).
+- **Target User:** Solo Operators, Small Teams, Power Users. Primary self-service revenue engine.
+- **CogniOps Quota:** Generous monthly quota (e.g., 2,000 CogniOps).
+- **Features:** Unlocks full ecosystem power, including unrestricted Armory marketplace access and unlimited custom agentic workflow creation in Loom Studio. Overage handled via prepaid credits [cite: 1 (Monetization Strategies)].
 Priesthood (Enterprise):
-Price: Custom Quote (based on user volume, service needs, support levels).
-Target User: Larger Organizations, Autonomous Corporate Departments, Businesses with stringent security/compliance needs.
-Features: Includes everything in Artisan tier plus advanced security/governance (Aegis with SSO, audit logs), very high/unlimited CogniOps quotas, advanced admin tools, dedicated/premium support [cite: 1 (Monetization Strategies)].
+- **Price:** Custom Quote (based on user volume, service needs, support levels).
+- **Target User:** Larger Organizations, Autonomous Corporate Departments, Businesses with stringent security/compliance needs.
+- **Features:** Includes everything in Artisan tier plus advanced security/governance (Aegis with SSO, audit logs), very high/unlimited CogniOps quotas, advanced admin tools, dedicated/premium support [cite: 1 (Monetization Strategies)].
 3.2. Usage-Based Billing for BEEP AI Layer (Prepaid Credits)
 To manage overages and provide budget predictability, a prepaid credit system is used.
 Mechanism: Users purchase a bank of "ΛΞVON Credits" upfront. These credits are drawn down as they consume CogniOps beyond their subscription tier's monthly allowance [cite: 1 (Monetization Strategies)].
 Benefits: Offers firm budget control for users, prevents surprise bills, improves cash flow for ΛΞVON OS by collecting revenue upfront, and reduces involuntary churn [cite: 1 (Monetization Strategies)].
 Risk Management: This component is a fundamental risk management requirement, ensuring scalable profitability by aligning revenue with the variable COGS of AI computation [cite: 1 (Monetization Strategies)].
+### 3.3. The Engine: Obelisk Pay
+All ΞCredit transactions, from Agent Action debits to Armory purchases, are powered by Obelisk Pay—the sovereign, closed-loop payment engine of ΛΞVON OS. This system provides unparalleled speed and precision, ensuring every unit of value is tracked without reliance on external processors. For more details on its architecture, see the [Obelisk Pay documentation](./OBELISK-PAY.md).
 4. The Ecosystem Engine: ΛΞVON Armory Marketplace Monetization
 The "ΛΞVON Armory" is the engine of the ecosystem, positioned as the central, sanctified repository of tools.
 Curation as a Differentiator: A rigorously curated marketplace enforces high standards of quality, security, and aesthetic cohesion ("Verdigris Interface Protocol™"), building a premium, trustworthy user experience [cite: 1 (Monetization Strategies)].
