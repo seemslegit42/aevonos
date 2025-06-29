@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
@@ -271,7 +272,7 @@ export default function OracleBackground({ initialAgents }: { initialAgents: Age
             console.error("Oracle background sync failed:", err);
         }
     };
-    const interval = setInterval(fetchAgents, 5000);
+    const interval = setInterval(fetchAgents, 15000); // Optimized polling
     return () => clearInterval(interval);
   }, []);
 

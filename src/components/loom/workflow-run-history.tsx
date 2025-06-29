@@ -194,7 +194,7 @@ export default function WorkflowRunHistory({ activeWorkflowId, triggerRefresh }:
 
   useEffect(() => {
     fetchRuns();
-    const interval = setInterval(fetchRuns, 5000); // Poll every 5 seconds
+    const interval = setInterval(fetchRuns, 10000); // Poll every 10 seconds
     return () => clearInterval(interval);
   }, [activeWorkflowId, triggerRefresh]);
 

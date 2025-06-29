@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState } from 'react';
@@ -102,12 +103,12 @@ export default function RegisterPage() {
     visible: {
       x: 0,
       opacity: 1,
-      transition: { type: 'tween', duration: 0.4, ease: "easeInOut" }
+      transition: { type: 'tween', duration: 0.3, ease: "easeInOut" }
     },
     exit: (direction: number) => ({
       x: direction < 0 ? '100%' : '-100%',
       opacity: 0,
-      transition: { type: 'tween', duration: 0.4, ease: "easeInOut" }
+      transition: { type: 'tween', duration: 0.3, ease: "easeInOut" }
     })
   };
   
