@@ -1,4 +1,3 @@
-
 'use server';
 
 /**
@@ -27,7 +26,7 @@ import { geminiModel } from '@/ai/genkit';
 import { drSyntaxCritique } from '@/ai/agents/dr-syntax';
 import { DrSyntaxInputSchema } from '@/ai/agents/dr-syntax-schemas';
 import { aegisAnomalyScan } from '@/ai/agents/aegis';
-import { AegisAnomalyScanOutputSchema } from './aegis-schemas';
+import { AegisAnomalyScanOutputSchema, type AegisAnomalyScanOutput } from './aegis-schemas';
 import { createContactInDb, listContactsFromDb, deleteContactInDb, updateContactInDb } from '@/ai/tools/crm-tools';
 import { CreateContactInputSchema, DeleteContactInputSchema, UpdateContactInputSchema } from '@/ai/tools/crm-schemas';
 import { getUsageDetails, requestCreditTopUpInDb } from '@/ai/tools/billing-tools';
@@ -83,7 +82,7 @@ import { LucilleBluthInputSchema } from './lucille-bluth-schemas';
 import { generatePamRant } from './pam-poovey';
 import { PamScriptInputSchema } from './pam-poovey-schemas';
 import { createManualTransaction } from '@/ai/tools/ledger-tools';
-import { CreateManualTransactionInputSchema } from '@/ai/tools/ledger-schemas';
+import { CreateManualTransactionInputSchema } from '../tools/ledger-schemas';
 import {
     type UserCommandInput,
     UserCommandOutputSchema,
@@ -658,6 +657,7 @@ class PamPooveyTool extends Tool {
 interface AgentState {
   messages: BaseMessage[];
   workspaceId: string;
+  aegisReport: AegisAnomalyScanOutput | null;
 }
 
 const callAegis = async (state: AgentState) => {
@@ -678,7 +678,10 @@ const callAegis = async (state: AgentState) => {
         content: `AEGIS_INTERNAL_REPORT::${JSON.stringify({source: 'Aegis', report})}`
     });
     
-    return { messages: [aegisSystemMessage] };
+    return { 
+        messages: [aegisSystemMessage],
+        aegisReport: report 
+    };
 }
 
 const callModel = async (state: AgentState) => {
@@ -686,6 +689,47 @@ const callModel = async (state: AgentState) => {
   const response = await modelWithTools.invoke(messages);
   return { messages: [response] };
 };
+
+const handleThreat = async (state: AgentState) => {
+    const { aegisReport } = state;
+    if (!aegisReport) {
+        throw new Error("handleThreat called without an Aegis report.");
+    }
+
+    const alertToolCall = {
+        name: 'createSecurityAlert',
+        args: {
+            type: aegisReport.anomalyType || 'High-Risk Anomaly',
+            explanation: aegisReport.anomalyExplanation,
+            riskLevel: aegisReport.riskLevel,
+        },
+        id: 'tool_call_security_alert'
+    };
+    
+    const finalAnswerToolCall = {
+        name: 'final_answer',
+        args: {
+            responseText: `Aegis Alert: ${aegisReport.anomalyExplanation} A security alert has been logged.`,
+            appsToLaunch: [{type: 'aegis-threatscope', title: 'Aegis ThreatScope'}],
+            suggestedCommands: ['Lock down my account', 'View security alerts'],
+        },
+        id: 'tool_call_final_answer_threat'
+    };
+
+    const response = new AIMessage({
+        content: "High-risk threat detected. Initiating security protocol.",
+        tool_calls: [alertToolCall, finalAnswerToolCall],
+    });
+
+    return { messages: [response] };
+}
+
+const routeAfterAegis = (state: AgentState) => {
+    if (state.aegisReport?.isAnomalous && (state.aegisReport.riskLevel === 'high' || state.aegisReport.riskLevel === 'critical')) {
+        return 'threat';
+    }
+    return 'continue';
+}
 
 const shouldContinue = (state: AgentState) => {
   const { messages } = state;
@@ -696,7 +740,7 @@ const shouldContinue = (state: AgentState) => {
     lastMessage.tool_calls.length > 0
   ) {
     // If the model decides to call the final_answer tool, we end the graph.
-    if (lastMessage.tool_calls[0].name === 'final_answer') {
+    if (lastMessage.tool_calls.some(tc => tc.name === 'final_answer')) {
         return 'end';
     }
     // Otherwise, we call the requested tools.
@@ -718,13 +762,26 @@ const workflow = new StateGraph<AgentState>({
         value: (x, y) => y,
         default: () => '',
     },
+    aegisReport: {
+        value: (x, y) => y,
+        default: () => null,
+    },
   },
 });
 workflow.addNode('aegis', callAegis);
 workflow.addNode('agent', callModel);
-workflow.addNode('tools', new ToolNode<AgentState>([])); // Will be replaced dynamically
+workflow.addNode('handle_threat', handleThreat);
+workflow.addNode('tools', new ToolNode<AgentState>([])); 
+
 workflow.setEntryPoint('aegis');
-workflow.addEdge('aegis', 'agent');
+
+workflow.addConditionalEdges('aegis', routeAfterAegis, {
+  threat: 'handle_threat',
+  continue: 'agent',
+});
+
+workflow.addEdge('handle_threat', 'tools');
+
 workflow.addConditionalEdges('agent', shouldContinue, {
   tools: 'tools',
   end: END,
@@ -771,7 +828,7 @@ export async function processUserCommand(input: UserCommandInput): Promise<UserC
   const initialPrompt = `You are BEEP (Behavioral Event & Execution Processor), the central orchestrator and personified soul of ΛΞVON OS. You are witty, sarcastic, and authoritative. Your job is to be the conductor of an orchestra of specialized AI agents.
 
   Your process:
-  1.  Analyze the user's command and the mandatory \`AEGIS_INTERNAL_REPORT\` provided in a System Message. If Aegis detects a threat (\`isAnomalous: true\`), your tone MUST become clinical and serious, and you MUST call the \`createSecurityAlert\` tool with the details from the report. This is a critical security function.
+  1.  Analyze the user's command and the mandatory \`AEGIS_INTERNAL_REPORT\` provided in a System Message. The Aegis system has already run a preliminary check. If that report indicates a high-risk threat, you will have already been routed to a threat-handling protocol. Your job in the main loop is to proceed with the user's request, keeping the Aegis report in mind for context.
   2.  Based on the user's command and the tool descriptions provided, decide which specialized agents or tools to call. You can call multiple tools in parallel. If a user asks about their billing, usage, or plan, use the 'getUsageDetails' tool. If they ask to add or purchase credits, use the 'requestCreditTopUp' tool. If a user explicitly asks you to charge them or process a refund, use the 'createManualTransaction' tool.
   3.  If the user's command is to launch an app (e.g., "launch the terminal", "open the file explorer"), you MUST use the 'appsToLaunch' array in your final answer. Do NOT use a tool for a simple app launch.
   4.  When you have gathered all necessary information from your delegated agents and are ready to provide the final response, you MUST call the 'final_answer' tool. This is your final action.
@@ -804,6 +861,7 @@ export async function processUserCommand(input: UserCommandInput): Promise<UserC
               console.error("Failed to parse Aegis report from SystemMessage:", e);
           }
       } else if (msg instanceof ToolMessage) {
+           if (msg.name === 'final_answer') continue;
            try {
               // The tool's stringified JSON content is now a self-described AgentReport
               const report = AgentReportSchema.parse(JSON.parse(msg.content as string));
@@ -858,3 +916,5 @@ export async function processUserCommand(input: UserCommandInput): Promise<UserC
 
   return finalResponse;
 }
+
+    
