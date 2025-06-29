@@ -64,6 +64,7 @@ export type MicroAppType =
   | 'aegis-threatscope'
   | 'aegis-command'
   | 'usage-monitor'
+  | 'dr-syntax'
   | 'armory';
 
 // Define the shape of a MicroApp instance
@@ -118,6 +119,7 @@ const defaultAppDetails: Record<MicroAppType, Omit<MicroApp, 'id' | 'position' |
   'aegis-command': { type: 'aegis-command', title: 'Aegis Command', description: 'Configure Aegis threat intelligence feeds.' },
   'usage-monitor': { type: 'usage-monitor', title: 'Usage Monitor', description: 'Track your Agent Action consumption.' },
   'armory': { type: 'armory', title: 'The Armory', description: 'A catalog of available micro-apps and tools.' },
+  'dr-syntax': { type: 'dr-syntax', title: 'Dr. Syntax: The Critic', description: 'Submit your mediocrity for judgment.' },
 };
 
 const defaultAppSizes: Record<MicroAppType, { width: number; height: number }> = {
@@ -152,6 +154,7 @@ const defaultAppSizes: Record<MicroAppType, { width: number; height: number }> =
   'aegis-command': { width: 380, height: 350 },
   'usage-monitor': { width: 400, height: 600 },
   'armory': { width: 800, height: 600 },
+  'dr-syntax': { width: 360, height: 500 },
 };
 
 export interface AppState {
@@ -307,9 +310,9 @@ export const useAppStore = create<AppState>((set, get) => {
           break;
 
         case 'dr-syntax':
-          launchApp('ai-suggestion', {
-            title: `Critique Result (Rating: ${report.report.rating}/10)`,
-            description: `Critique: ${report.report.critique}\nSuggestion: ${report.report.suggestion}`,
+          upsertApp('dr-syntax', {
+            id: `dr-syntax-report-${Date.now()}`,
+            contentProps: report.report as DrSyntaxOutput,
           });
           break;
 

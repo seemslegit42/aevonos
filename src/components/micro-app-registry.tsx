@@ -30,6 +30,7 @@ import { AegisThreatScopeIcon } from './icons/AegisThreatScopeIcon';
 import { AegisCommandIcon } from './icons/AegisCommandIcon';
 import { UsageMonitorIcon } from './icons/UsageMonitorIcon';
 import { ArmoryIcon } from './icons/ArmoryIcon';
+import { DrSyntaxIcon } from './icons/DrSyntaxIcon';
 
 import { type MicroAppType } from '@/store/app-store';
 import ContactList from './micro-apps/contact-list';
@@ -59,6 +60,7 @@ import AegisCommand from './micro-apps/aegis-command';
 import UsageMonitor from './micro-apps/usage-monitor';
 import Armory from './micro-apps/armory';
 import ContactEditor from './micro-apps/contact-editor';
+import DrSyntax from './micro-apps/dr-syntax';
 
 type ComponentRegistry = {
     icon: React.ComponentType<any>;
@@ -185,6 +187,10 @@ export const microAppRegistry: Record<MicroAppType, ComponentRegistry> = {
   'armory': {
     icon: ArmoryIcon,
     content: Armory,
+  },
+  'dr-syntax': {
+    icon: DrSyntaxIcon,
+    content: DrSyntax,
   },
 };
 
