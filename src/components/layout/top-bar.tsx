@@ -6,14 +6,9 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Input } from '@/components/ui/input';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { logout } from '@/app/auth/actions';
-import type { User, Workspace, UserRole } from '@prisma/client';
+import type { User, Workspace } from '@prisma/client';
 import { useAppStore } from '@/store/app-store';
 import { cn } from '@/lib/utils';
-import { useToast } from '@/hooks/use-toast';
-import { Avatar, AvatarFallback } from '../ui/avatar';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '../ui/dropdown-menu';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '../ui/alert-dialog';
 
 type UserProp = Pick<User, 'id' | 'email' | 'firstName' | 'lastName' | 'role'> | null;
 
@@ -40,7 +35,7 @@ const CurrentTime = () => {
 export default function TopBar({ user, workspace }: TopBarProps) {
   const formRef = useRef<HTMLFormElement>(null);
   const isMobile = useIsMobile();
-  const { handleCommandSubmit, isLoading, upsertApp } = useAppStore();
+  const { handleCommandSubmit, isLoading } = useAppStore();
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -49,22 +44,7 @@ export default function TopBar({ user, workspace }: TopBarProps) {
     handleCommandSubmit(command);
     formRef.current?.reset();
   };
-
-  const getInitials = () => {
-    if (!user) return 'Λ';
-    const first = user.firstName ? user.firstName.charAt(0) : '';
-    const last = user.lastName ? user.lastName.charAt(0) : '';
-    return `${first}${last}`.toUpperCase() || 'Λ';
-  };
   
-  const handleOpenProfileSettings = () => {
-    upsertApp('user-profile-settings', { id: 'singleton-user-profile-settings', contentProps: { user } });
-  }
-
-  const handleOpenWorkspaceSettings = () => {
-      upsertApp('workspace-settings', { id: 'singleton-workspace-settings', contentProps: { workspace } });
-  }
-
   const roleText = user?.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1).toLowerCase() : 'Operator';
   const sessionText = `${roleText} | Session: `;
 
@@ -89,7 +69,7 @@ export default function TopBar({ user, workspace }: TopBarProps) {
       </div>
 
       <div className="flex items-center gap-2 sm:gap-4 text-sm font-code text-foreground">
-        <div className="hidden md:flex items-center gap-4 text-sm text-foreground">
+        <div className="hidden md:flex items-center gap-4 text-sm font-lexend">
           <CurrentTime />
           <div className="h-6 w-px bg-[rgba(245,255,250,0.25)]" />
           <span>
@@ -97,52 +77,6 @@ export default function TopBar({ user, workspace }: TopBarProps) {
             <span className="text-gilded-accent font-bold">Active</span>
           </span>
         </div>
-        <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                    <Avatar className="h-8 w-8 border border-border/50">
-                        <AvatarFallback className="bg-transparent text-sm">{getInitials()}</AvatarFallback>
-                    </Avatar>
-                </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-56" align="end" forceMount>
-                <DropdownMenuLabel className="font-normal">
-                    <div className="flex flex-col space-y-1">
-                        <p className="text-sm font-medium leading-none">{user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() : 'The Architect'}</p>
-                        <p className="text-xs leading-none text-muted-foreground">
-                            {user?.email || 'architect@aevonos.com'}
-                        </p>
-                    </div>
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onSelect={handleOpenProfileSettings} className="cursor-pointer">
-                    Profile Settings
-                </DropdownMenuItem>
-                <DropdownMenuItem onSelect={handleOpenWorkspaceSettings} className="cursor-pointer">
-                    Workspace Settings
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="cursor-pointer text-destructive focus:bg-destructive/20 focus:text-destructive">
-                      Log out
-                    </DropdownMenuItem>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Are you sure you want to terminate the session?</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        This action cannot be undone. You will be logged out and returned to the identity verification gateway.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Remain Connected</AlertDialogCancel>
-                      <AlertDialogAction onClick={() => logout()} className="bg-destructive hover:bg-destructive/90 text-destructive-foreground">Terminate Session</AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-            </DropdownMenuContent>
-        </DropdownMenu>
       </div>
     </header>
   );
