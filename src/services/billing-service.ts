@@ -32,11 +32,17 @@ export async function authorizeAndDebitAgentActions(workspaceId: string, amount:
             // 1. Get workspace and its plan details.
             const workspace = await tx.workspace.findUnique({
                 where: { id: workspaceId },
-                select: { credits: true, agentActionsUsed: true, planTier: true },
+                select: { credits: true, agentActionsUsed: true, planTier: true, reclamationGraceUntil: true },
             });
 
             if (!workspace) {
                 throw new Error(`Workspace with ID ${workspaceId} not found.`);
+            }
+
+            // Check for reclamation grace period
+            if (workspace.reclamationGraceUntil && new Date() < workspace.reclamationGraceUntil) {
+                console.log(`[Billing Service] Workspace ${workspaceId} is in reclamation grace period. Skipping debit.`);
+                return; // User is in grace period, no charge.
             }
 
             const planTier = workspace.planTier as keyof typeof PLAN_LIMITS;
@@ -67,8 +73,8 @@ export async function authorizeAndDebitAgentActions(workspaceId: string, amount:
             }
 
             // 3. If in overage (or partially in overage), check credit balance and debit.
-            const currentCredits = (await tx.workspace.findUnique({ where: { id: workspaceId }, select: { credits: true } }))?.credits ?? 0;
-            if ((currentCredits as unknown as number) < amount) {
+            const currentCredits = (workspace.credits as unknown as number);
+            if (currentCredits < amount) {
                 throw new InsufficientCreditsError(`Insufficient credits for overage. Required: ${amount}, Available: ${currentCredits ?? 0}.`);
             }
 

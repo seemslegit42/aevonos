@@ -1,7 +1,7 @@
 
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -20,8 +20,19 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import type { User } from '@prisma/client';
 import { useAppStore } from '@/store/app-store';
-import { logout } from '@/app/auth/actions';
+import { logout, deleteAccount, acceptReclamationGift } from '@/app/auth/actions';
 import { Separator } from '../ui/separator';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+
 
 const profileFormSchema = z.object({
   firstName: z.string().optional(),
@@ -40,6 +51,8 @@ export default function UserProfileSettings({ id, user }: UserProfileSettingsPro
   const router = useRouter();
   const { toast } = useToast();
   const { closeApp } = useAppStore();
+  const [isReclamationOpen, setIsReclamationOpen] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const form = useForm<ProfileFormData>({
     resolver: zodResolver(profileFormSchema),
@@ -81,7 +94,28 @@ export default function UserProfileSettings({ id, user }: UserProfileSettingsPro
     }
   };
 
+  const handleWalkAway = async () => {
+    setIsProcessing(true);
+    await deleteAccount(); // This will log the user out and redirect
+    setIsProcessing(false);
+  }
+
+  const handleAcceptGift = async () => {
+    setIsProcessing(true);
+    const result = await acceptReclamationGift();
+     if (result.success) {
+        toast({ title: 'Vow Renewed', description: 'The throne is yours once more. Your grace period has begun.' });
+        setIsReclamationOpen(false);
+        closeApp(id);
+        router.refresh();
+    } else {
+        toast({ variant: 'destructive', title: 'Error', description: result.error });
+    }
+    setIsProcessing(false);
+  }
+
   return (
+    <>
     <div className="p-4 h-full flex flex-col justify-between">
         <div>
             <Form {...form}>
@@ -125,11 +159,45 @@ export default function UserProfileSettings({ id, user }: UserProfileSettingsPro
         </div>
         <div>
             <Separator className="my-4" />
-            <Button variant="destructive" onClick={() => logout()} className="w-full">
-                Logout
-            </Button>
+             <div className="space-y-2">
+                <Button variant="outline" onClick={() => logout()} className="w-full">
+                    Logout
+                </Button>
+                <Button variant="destructive" onClick={() => setIsReclamationOpen(true)} className="w-full">
+                    Delete Account
+                </Button>
+            </div>
         </div>
     </div>
+    <AlertDialog open={isReclamationOpen} onOpenChange={setIsReclamationOpen}>
+        <AlertDialogContent>
+            <AlertDialogHeader>
+                <AlertDialogTitle className="font-headline text-2xl text-primary">🕯️ The Rite of Reclamation</AlertDialogTitle>
+                <AlertDialogDescription className="text-muted-foreground text-base text-left">
+                    You stood at the edge of Sovereignty… and turned away. But the system does not punish. It forgives. And once — <strong className="text-foreground">only once</strong> — it will offer you absolution.
+                </AlertDialogDescription>
+            </AlertDialogHeader>
+            <div className="my-4 p-4 rounded-lg bg-primary/10 border border-primary/20 text-center">
+                <h3 className="font-bold text-lg text-primary">You have been offered:</h3>
+                <p className="text-2xl font-headline text-foreground">33 Days of Unburdened Sovereignty</p>
+                <p className="text-xs text-muted-foreground">No ΞCredits required. No questions. No guilt.</p>
+            </div>
+            <p className="text-sm text-muted-foreground">But when the time ends… so does your seat at the table.</p>
+            <AlertDialogFooter>
+                <AlertDialogCancel asChild>
+                    <Button variant="outline" onClick={handleWalkAway} disabled={isProcessing}>
+                        {isProcessing ? <Loader2 className="animate-spin" /> : 'Walk Away'}
+                    </Button>
+                </AlertDialogCancel>
+                <AlertDialogAction asChild>
+                    <Button onClick={handleAcceptGift} disabled={isProcessing}>
+                       {isProcessing ? <Loader2 className="animate-spin" /> : 'Accept the Gift'}
+                    </Button>
+                </AlertDialogAction>
+            </AlertDialogFooter>
+        </AlertDialogContent>
+    </AlertDialog>
+    </>
   );
 }
 
