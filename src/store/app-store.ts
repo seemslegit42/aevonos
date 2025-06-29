@@ -69,7 +69,8 @@ export type MicroAppType =
   | 'user-profile-settings'
   | 'workspace-settings'
   | 'top-up'
-  | 'oracle-of-delphi-valley';
+  | 'oracle-of-delphi-valley'
+  | 'admin-console';
 
 // Define the shape of a MicroApp instance
 export interface MicroApp {
@@ -303,7 +304,7 @@ export const useAppStore = create<AppState>((set, get) => {
         case 'barbara':
             launchApp('barbara', { contentProps: report.report as BarbaraOutput });
             break;
-        
+
         case 'auditor':
             launchApp('auditor-generalissimo', { title: "Auditor's Report", description: "Financial records have been judged.", contentProps: report.report as AuditorOutput });
             break;

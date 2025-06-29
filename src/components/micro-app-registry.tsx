@@ -34,6 +34,7 @@ import { WorkspaceSettingsIcon } from './icons/WorkspaceSettingsIcon';
 import { TopUpIcon } from './icons/TopUpIcon';
 import { StonksIcon } from './icons/StonksIcon';
 import { OracleOfDelphiValleyIcon } from './icons/OracleOfDelphiValleyIcon';
+import { AdminConsoleIcon } from './icons/AdminConsoleIcon';
 
 import { type MicroAppType } from '@/store/app-store';
 import ContactList from './micro-apps/contact-list';
@@ -68,6 +69,7 @@ import WorkspaceSettings from './micro-apps/workspace-settings';
 import TopUp from './micro-apps/top-up';
 import StonksBot from './micro-apps/stonks-bot';
 import OracleOfDelphiValley from './micro-apps/oracle-of-delphi-valley';
+import AdminConsole from './micro-apps/admin-console';
 
 type ComponentRegistry = {
     icon: React.ComponentType<any>;
@@ -211,6 +213,10 @@ export const microAppRegistry: Record<MicroAppType, ComponentRegistry> = {
   'oracle-of-delphi-valley': {
     icon: OracleOfDelphiValleyIcon,
     content: OracleOfDelphiValley,
+  },
+  'admin-console': {
+    icon: AdminConsoleIcon,
+    content: AdminConsole,
   },
 };
 

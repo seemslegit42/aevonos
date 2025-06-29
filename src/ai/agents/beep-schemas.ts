@@ -67,6 +67,7 @@ const LaunchableAppTypeSchema = z.enum([
   'user-profile-settings',
   'workspace-settings',
   'top-up',
+  'admin-console',
 ]);
 
 export const AppToLaunchSchema = z.object({
