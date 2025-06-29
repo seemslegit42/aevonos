@@ -337,12 +337,14 @@ This document provides the formal OpenAPI 3.0 specification for the ΛΞVON OS P
         "type": "object",
         "properties": {
           "email": { "type": "string", "format": "email" },
-          "password": { "type": "string", "format": "password" },
-          "firstName": { "type": "string" },
-          "lastName": { "type": "string" },
-          "workspaceName": { "type": "string" }
+          "password": { "type": "string", "minLength": 8 },
+          "workspaceName": { "type": "string", "description": "The name for the primary workspace or 'Canvas'." },
+          "agentAlias": { "type": "string", "description": "A personalized name for the core BEEP agent.", "nullable": true },
+          "psyche": { "$ref": "#/components/schemas/UserPsyche" },
+          "whatMustEnd": { "type": "string", "description": "The user's declared 'sacrifice' during the Rite of Invocation.", "nullable": true },
+          "goal": { "type": "string", "description": "The user's declared 'vow' or goal during the Rite of Invocation.", "nullable": true }
         },
-        "required": ["email", "password", "workspaceName"]
+        "required": ["email", "password", "workspaceName", "psyche"]
       },
       "AuthResponse": {
         "type": "object",
@@ -363,6 +365,11 @@ This document provides the formal OpenAPI 3.0 specification for the ΛΞVON OS P
           "role": { "type": "string", "enum": ["ADMIN", "MANAGER", "OPERATOR", "AUDITOR"] },
           "lastLoginAt": { "type": "string", "format": "date-time", "nullable": true }
         }
+      },
+       "UserPsyche": {
+        "type": "string",
+        "enum": ["ZEN_ARCHITECT", "SYNDICATE_ENFORCER", "RISK_AVERSE_ARTISAN"],
+        "description": "The psychological archetype chosen by the user during the Rite of Invocation."
       },
       "UserUpdateRequest": {
         "type": "object",
@@ -403,10 +410,15 @@ This document provides the formal OpenAPI 3.0 specification for the ΛΞVON OS P
           "workspaceId": { "type": "string" },
           "userId": { "type": "string", "nullable": true },
           "type": { "type": "string", "enum": ["CREDIT", "DEBIT", "TRIBUTE"] },
-          "amount": { "type": "number", "format": "decimal" },
+          "amount": { "type": "number", "format": "decimal", "description": "The net amount of the transaction. For tributes, this is boonAmount - tributeAmount." },
           "description": { "type": "string" },
           "status": { "type": "string", "enum": ["PENDING", "COMPLETED", "FAILED"] },
-          "createdAt": { "type": "string", "format": "date-time" }
+          "createdAt": { "type": "string", "format": "date-time" },
+          "instrumentId": { "type": "string", "nullable": true, "description": "The ID of the instrument used in a TRIBUTE transaction (e.g., a Chaos Card key)." },
+          "luckWeight": { "type": "number", "format": "float", "nullable": true, "description": "The user's luck value at the time of a TRIBUTE transaction." },
+          "outcome": { "type": "string", "nullable": true, "description": "The outcome of a TRIBUTE transaction (e.g., 'win', 'loss')." },
+          "boonAmount": { "type": "number", "format": "decimal", "nullable": true, "description": "The amount of credits awarded as a boon in a TRIBUTE transaction." },
+          "userPsyche": { "$ref": "#/components/schemas/UserPsyche", "nullable": true }
         }
       },
       "WorkflowDefinition": {
