@@ -74,17 +74,6 @@ function getPhaseFromValue(pulseValue: number, profile: PulseProfile): PulsePhas
 }
 
 /**
- * Determines if the user's pulse is currently in a "crest" phase (high luck).
- * @param userId The ID of the user.
- * @returns True if the user is in a crest phase.
- */
-export async function isInCrestPhase(userId: string): Promise<boolean> {
-    const pulseValue = await getCurrentPulseValue(userId);
-    const profile = await getPulseProfile(userId);
-    return getPhaseFromValue(pulseValue, profile) === PulsePhase.CREST;
-}
-
-/**
  * Records a "win" for the user, resetting the time component and consecutive losses.
  * Can be used within a larger Prisma transaction.
  * @param userId The ID of the user who won.
@@ -140,22 +129,27 @@ export async function shouldTriggerPityBoon(userId: string): Promise<boolean> {
     return profile.consecutiveLosses >= pulseEngineConfig.PITY_THRESHOLD;
 }
 
+
 /**
- * Returns a poetic, narrative string describing the user's current pulse phase.
+ * Returns the full pulse state for a user, including narrative, phase, and value.
  * @param userId The ID of the user.
- * @returns A string with the pulse narrative.
+ * @returns An object with the user's full pulse state.
  */
-export async function getPulseNarrative(userId: string): Promise<string> {
+export async function getUserPulseState(userId: string) {
     const pulseValue = await getCurrentPulseValue(userId);
     const profile = await getPulseProfile(userId);
     const phase = getPhaseFromValue(pulseValue, profile);
-    
-    switch (phase) {
-        case PulsePhase.CREST:
-            return "The river of fortune swells. Ride it before it turns.";
-        case PulsePhase.TROUGH:
-            return "The divine pendulum tilts. Not in your favor, today.";
-        case PulsePhase.EQUILIBRIUM:
-            return "The threads of fate are in balance. All outcomes are your own.";
+
+    let narrative = "The threads of fate are in balance. All outcomes are your own.";
+    if (phase === PulsePhase.CREST) {
+        narrative = "The river of fortune swells. Ride it before it turns.";
+    } else if (phase === PulsePhase.TROUGH) {
+        narrative = "The divine pendulum tilts. Not in your favor, today.";
     }
+
+    return {
+        narrative,
+        phase,
+        value: pulseValue
+    };
 }
