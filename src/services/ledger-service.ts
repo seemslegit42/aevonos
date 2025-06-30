@@ -188,50 +188,46 @@ export async function getWorkspaceTransactions(workspaceId: string, limit = 20) 
 /**
  * Atomically confirms a pending credit transaction, updating its status
  * and applying the credit amount to the workspace's balance.
+ * This is an internal service function. It should be wrapped by a secure server action.
  * @param transactionId The ID of the transaction to confirm.
  * @param workspaceId The ID of the workspace, for an additional security check.
  * @returns The confirmed transaction record.
  */
 export async function confirmPendingTransaction(transactionId: string, workspaceId: string): Promise<Transaction> {
-    try {
-        const result = await prisma.$transaction(async (tx) => {
-            const pendingTx = await tx.transaction.findFirst({
-                where: { 
-                    id: transactionId,
-                    workspaceId: workspaceId,
-                    status: TransactionStatus.PENDING 
-                },
-            });
-
-            if (!pendingTx) {
-                throw new Error('Pending transaction not found or already processed.');
-            }
-            if (pendingTx.type !== TransactionType.CREDIT) {
-                throw new Error('Can only confirm credit transactions.');
-            }
-
-            await tx.workspace.update({
-                where: { id: pendingTx.workspaceId },
-                data: {
-                    credits: {
-                        increment: pendingTx.amount,
-                    },
-                },
-            });
-
-            const confirmedTx = await tx.transaction.update({
-                where: { id: transactionId },
-                data: {
-                    status: TransactionStatus.COMPLETED,
-                },
-            });
-
-            return confirmedTx;
+    const result = await prisma.$transaction(async (tx) => {
+        const pendingTx = await tx.transaction.findFirst({
+            where: { 
+                id: transactionId,
+                workspaceId: workspaceId,
+                status: TransactionStatus.PENDING 
+            },
         });
 
-        return result;
-    } catch (error) {
-        console.error(`[Ledger Service] Failed to confirm transaction ${transactionId}:`, error);
-        throw new Error(error instanceof Error ? error.message : 'Transaction confirmation failed.');
-    }
+        if (!pendingTx) {
+            throw new Error('Pending transaction not found or already processed.');
+        }
+        if (pendingTx.type !== TransactionType.CREDIT) {
+            throw new Error('Can only confirm credit transactions.');
+        }
+
+        await tx.workspace.update({
+            where: { id: pendingTx.workspaceId },
+            data: {
+                credits: {
+                    increment: pendingTx.amount,
+                },
+            },
+        });
+
+        const confirmedTx = await tx.transaction.update({
+            where: { id: transactionId },
+            data: {
+                status: TransactionStatus.COMPLETED,
+            },
+        });
+
+        return confirmedTx;
+    });
+
+    return result;
 }
