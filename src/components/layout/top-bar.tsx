@@ -10,6 +10,7 @@ import type { User, Workspace } from '@prisma/client';
 import { useAppStore } from '@/store/app-store';
 import { cn } from '@/lib/utils';
 import { Button } from '../ui/button';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 type UserProp = Pick<User, 'id' | 'email' | 'firstName' | 'lastName' | 'role' | 'agentAlias'> | null;
 
@@ -97,15 +98,33 @@ export default function TopBar({ user, workspace }: TopBarProps) {
         <div className="hidden md:flex items-center gap-4 text-sm font-lexend">
           <CurrentTime />
           <div className="h-6 w-px bg-border/30" />
-          <Button variant="ghost" className="p-0 h-auto hover:bg-transparent text-foreground" onClick={handleProfileClick}>
-            <span>{displayName} | {roleText}</span>
-          </Button>
+           <TooltipProvider>
+            <Tooltip>
+                <TooltipTrigger asChild>
+                    <Button variant="ghost" className="p-0 h-auto hover:bg-transparent text-foreground" onClick={handleProfileClick}>
+                        <span>{displayName} | {roleText}</span>
+                    </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                    <p>Manage Your Profile</p>
+                </TooltipContent>
+            </Tooltip>
+           </TooltipProvider>
            <div className="h-6 w-px bg-border/30" />
-          <Button variant="ghost" className="p-0 h-auto hover:bg-transparent text-foreground" onClick={handleBillingClick}>
-            <span>
-              Ξ <span className="text-gilded-accent font-bold">{workspace?.credits ? Number(workspace.credits).toFixed(2) : '0.00'}</span>
-            </span>
-          </Button>
+           <TooltipProvider>
+            <Tooltip>
+                <TooltipTrigger asChild>
+                    <Button variant="ghost" className="p-0 h-auto hover:bg-transparent text-foreground" onClick={handleBillingClick}>
+                        <span>
+                        Ξ <span className="text-gilded-accent font-bold">{workspace?.credits ? Number(workspace.credits).toFixed(2) : '0.00'}</span>
+                        </span>
+                    </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                    <p>View Usage & Manage Billing</p>
+                </TooltipContent>
+            </Tooltip>
+           </TooltipProvider>
         </div>
       </div>
     </header>

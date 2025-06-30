@@ -1,3 +1,4 @@
+
 'use client';
 
 import React from 'react';
@@ -7,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Save, Play, Trash2, Loader2, ArrowLeft } from 'lucide-react';
 import type { Workflow } from './types';
 import type { UserRole } from '@prisma/client';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface LoomHeaderProps {
   activeWorkflow: Workflow | null;
@@ -38,11 +40,20 @@ export default function LoomHeader({
   return (
     <header className="flex-shrink-0 p-2 border-b border-foreground/20 flex items-center justify-between gap-4 h-16">
       <div className="flex items-center gap-2 md:gap-4">
-        <Button variant="ghost" size="icon" asChild>
-          <Link href="/">
-            <ArrowLeft />
-          </Link>
-        </Button>
+        <TooltipProvider>
+            <Tooltip>
+                <TooltipTrigger asChild>
+                    <Button variant="ghost" size="icon" asChild>
+                      <Link href="/">
+                        <ArrowLeft />
+                      </Link>
+                    </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                    <p>Return to Canvas</p>
+                </TooltipContent>
+            </Tooltip>
+        </TooltipProvider>
         <Input
           value={activeWorkflow?.name || 'Untitled Workflow'}
           onChange={(e) => onWorkflowNameChange(e.target.value)}
@@ -53,21 +64,44 @@ export default function LoomHeader({
       </div>
       <div className="flex items-center gap-2">
         {activeWorkflow?.id && (
-            <>
-                <Button variant="outline" size="sm" onClick={onDelete} disabled={isActionDisabled || !canEdit}>
-                    <Trash2 className="h-4 w-4 md:mr-2" />
-                    <span className="hidden md:inline">Delete</span>
-                </Button>
-                <Button variant="outline" size="sm" onClick={onRun} disabled={isActionDisabled || !canRun}>
-                    {isRunning ? <Loader2 className="animate-spin h-4 w-4 md:mr-2" /> : <Play className="h-4 w-4 md:mr-2" />}
-                    <span className="hidden md:inline">Run</span>
-                </Button>
-            </>
+            <TooltipProvider>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <Button variant="outline" size="sm" onClick={onDelete} disabled={isActionDisabled || !canEdit}>
+                            <Trash2 className="h-4 w-4 md:mr-2" />
+                            <span className="hidden md:inline">Delete</span>
+                        </Button>
+                    </TooltipTrigger>
+                     <TooltipContent>
+                        <p>Delete this workflow</p>
+                    </TooltipContent>
+                </Tooltip>
+                 <Tooltip>
+                    <TooltipTrigger asChild>
+                         <Button variant="outline" size="sm" onClick={onRun} disabled={isActionDisabled || !canRun}>
+                            {isRunning ? <Loader2 className="animate-spin h-4 w-4 md:mr-2" /> : <Play className="h-4 w-4 md:mr-2" />}
+                            <span className="hidden md:inline">Run</span>
+                        </Button>
+                    </TooltipTrigger>
+                     <TooltipContent>
+                        <p>Trigger a test run</p>
+                    </TooltipContent>
+                </Tooltip>
+            </TooltipProvider>
         )}
-        <Button onClick={onSave} size="sm" disabled={isActionDisabled || !canEdit}>
-          {isSaving ? <Loader2 className="animate-spin h-4 w-4 md:mr-2" /> : <Save className="h-4 w-4 md:mr-2" />}
-          <span className="hidden md:inline">Save</span>
-        </Button>
+        <TooltipProvider>
+            <Tooltip>
+                <TooltipTrigger asChild>
+                     <Button onClick={onSave} size="sm" disabled={isActionDisabled || !canEdit}>
+                      {isSaving ? <Loader2 className="animate-spin h-4 w-4 md:mr-2" /> : <Save className="h-4 w-4 md:mr-2" />}
+                      <span className="hidden md:inline">Save</span>
+                    </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                    <p>Save workflow changes</p>
+                </TooltipContent>
+            </Tooltip>
+        </TooltipProvider>
       </div>
     </header>
   );

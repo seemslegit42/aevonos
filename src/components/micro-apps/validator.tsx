@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useRef, DragEvent } from 'react';
@@ -8,6 +9,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Loader2, Upload, Fingerprint, ShieldCheck, ShieldAlert, FileIcon } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { Tooltip, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 
 type VerificationStatus = 'idle' | 'success' | 'error';
 
@@ -157,9 +159,18 @@ export default function Validator() {
           disabled={isVerifying}
         />
       </div>
-      <Button onClick={handleVerify} disabled={isVerifying || !file || !inputHash} className="w-full">
-        {isVerifying ? <Loader2 className="animate-spin" /> : 'Verify Integrity'}
-      </Button>
+      <TooltipProvider>
+        <Tooltip>
+            <TooltipTrigger asChild>
+                <Button onClick={handleVerify} disabled={isVerifying || !file || !inputHash} className="w-full">
+                    {isVerifying ? <Loader2 className="animate-spin" /> : 'Verify Integrity'}
+                </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+                <p>Compare the file's hash against the expected value.</p>
+            </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
 
       {resultStatus !== 'idle' && <ResultAlert />}
     </div>

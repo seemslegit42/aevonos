@@ -13,10 +13,12 @@ import { ArmoryIcon } from '@/components/icons/ArmoryIcon';
 import { AegisThreatScopeIcon } from '../icons/AegisThreatScopeIcon';
 import { BeepIcon } from '../icons/BeepIcon';
 import type { MicroAppType } from '@/store/app-store';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 type NavItem = {
     label: string;
     icon: React.ComponentType<LucideProps> | React.FC<React.SVGProps<SVGSVGElement>>;
+    tooltipContent: string;
 } & ({
     href: string;
     appType?: never;
@@ -26,13 +28,13 @@ type NavItem = {
 });
 
 const leftNavItems: NavItem[] = [
-    { label: 'Canvas', href: '/', icon: LayoutGrid },
-    { label: 'Loom', href: '/loom', icon: LoomIcon },
+    { label: 'Canvas', href: '/', icon: LayoutGrid, tooltipContent: "Return to the main Canvas" },
+    { label: 'Loom', href: '/loom', icon: LoomIcon, tooltipContent: "Orchestrate agentic workflows" },
 ];
 
 const rightNavItems: NavItem[] = [
-    { label: 'Armory', appType: 'armory', icon: ArmoryIcon },
-    { label: 'Threats', appType: 'aegis-threatscope', icon: AegisThreatScopeIcon },
+    { label: 'Armory', appType: 'armory', icon: ArmoryIcon, tooltipContent: "Acquire new tools & artifacts" },
+    { label: 'Threats', appType: 'aegis-threatscope', icon: AegisThreatScopeIcon, tooltipContent: "View security alerts" },
 ];
 
 
@@ -57,18 +59,27 @@ const NavButton = ({ item }: { item: NavItem }) => {
     );
 
     const buttonClasses = "group flex flex-col items-center justify-center h-full w-16 focus:outline-none focus:ring-2 focus:ring-primary rounded-lg";
+    
+    const buttonElement = item.href ? (
+        <Link href={item.href} className={buttonClasses}>
+            {content}
+        </Link>
+    ) : (
+        <button onClick={() => handleAppLaunch(item as any)} className={buttonClasses}>
+            {content}
+        </button>
+    );
 
     return (
          <div className="flex-1">
-            {item.href ? (
-                <Link href={item.href} className={buttonClasses}>
-                    {content}
-                </Link>
-            ) : (
-                <button onClick={() => handleAppLaunch(item as any)} className={buttonClasses}>
-                    {content}
-                </button>
-            )}
+            <TooltipProvider>
+                <Tooltip>
+                    <TooltipTrigger asChild>{buttonElement}</TooltipTrigger>
+                    <TooltipContent side="top">
+                        <p>{item.tooltipContent}</p>
+                    </TooltipContent>
+                </Tooltip>
+            </TooltipProvider>
         </div>
     )
 }
@@ -89,9 +100,18 @@ export default function BottomNavBar() {
                 {leftNavItems.map((item) => <NavButton key={item.label} item={item} />)}
 
                 <div className="relative -top-5">
-                    <button onClick={handleBeepFocus} className="group relative w-16 h-16 flex items-center justify-center bg-gradient-to-r from-primary to-roman-aqua rounded-full border-4 border-background shadow-lg transition-transform duration-200 hover:scale-110 active:scale-100 focus:outline-none focus:ring-4 focus:ring-primary/50">
-                        <BeepIcon className="w-14 h-14 text-primary-foreground group-hover:animate-pulse" />
-                    </button>
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                 <button onClick={handleBeepFocus} className="group relative w-16 h-16 flex items-center justify-center bg-gradient-to-r from-primary to-roman-aqua rounded-full border-4 border-background shadow-lg transition-transform duration-200 hover:scale-110 active:scale-100 focus:outline-none focus:ring-4 focus:ring-primary/50">
+                                    <BeepIcon className="w-14 h-14 text-primary-foreground group-hover:animate-pulse" />
+                                </button>
+                            </TooltipTrigger>
+                            <TooltipContent side="top">
+                                <p>Summon BEEP</p>
+                            </TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
                 </div>
                 
                 {rightNavItems.map((item) => <NavButton key={item.label} item={item} />)}

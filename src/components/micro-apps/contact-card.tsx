@@ -8,6 +8,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardFooter } from '@/comp
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Trash2, Edit } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface ContactCardProps {
   contact: Contact;
@@ -46,12 +47,28 @@ export default function ContactCard({ contact }: ContactCardProps) {
             </div>
         </CardHeader>
         <CardFooter className="p-2 pt-0 mt-auto flex justify-end gap-1">
-            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleEdit}>
-                <Edit className="h-4 w-4 text-muted-foreground hover:text-primary" />
-            </Button>
-            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleDelete}>
-                <Trash2 className="h-4 w-4 text-muted-foreground hover:text-destructive" />
-            </Button>
+            <TooltipProvider>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleEdit}>
+                            <Edit className="h-4 w-4 text-muted-foreground hover:text-primary" />
+                        </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                        <p>Edit Contact</p>
+                    </TooltipContent>
+                </Tooltip>
+                 <Tooltip>
+                    <TooltipTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleDelete}>
+                            <Trash2 className="h-4 w-4 text-muted-foreground hover:text-destructive" />
+                        </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                        <p>Delete Contact</p>
+                    </TooltipContent>
+                </Tooltip>
+            </TooltipProvider>
         </CardFooter>
     </Card>
   );
