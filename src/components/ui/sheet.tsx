@@ -64,7 +64,7 @@ const SheetContent = React.forwardRef<
       ref={ref}
       className={cn(
         sheetVariants({ side }), 
-        "border-[rgba(245,255,250,0.3)] bg-[rgba(245,255,250,0.15)] text-card-foreground shadow-[0_8px_32px_0_rgba(28,25,52,0.1)] backdrop-blur-[20px]",
+        "bg-background/70 backdrop-blur-xl border border-border/20 shadow-lg",
         className
         )}
       {...props}

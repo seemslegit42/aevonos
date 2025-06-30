@@ -67,7 +67,7 @@ export default function TopBar({ user, workspace }: TopBarProps) {
   const placeholderText = isMobile ? `${agentName} Command...` : `Ask ${agentName} to...`;
 
   return (
-    <header className="flex items-center justify-between w-full px-2 sm:px-4 py-2 rounded-lg border border-[rgba(245,255,250,0.3)] bg-[rgba(245,255,250,0.15)] shadow-[0_8px_32px_0_rgba(28,25,52,0.1)] backdrop-blur-[20px] gap-2 sm:gap-4">
+    <header className="flex items-center justify-between w-full px-2 sm:px-4 py-2 bg-background/70 backdrop-blur-xl border border-border/20 shadow-lg rounded-lg gap-2 sm:gap-4">
       <div className="flex items-center gap-3">
         <Link href="/">
             <Image src="/logo-neutral.svg" alt="Aevon OS Logo" width={32} height={32} />
