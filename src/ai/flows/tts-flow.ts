@@ -8,41 +8,14 @@
 
 import { ai } from '@/ai/genkit';
 import { googleAI } from '@genkit-ai/googleai';
-import wav from 'wav';
 import { 
     GenerateSpeechInputSchema, 
     GenerateSpeechOutputSchema,
     type GenerateSpeechInput,
     type GenerateSpeechOutput
 } from './tts-schemas';
+import { toWav } from '@/lib/audio-utils';
 
-
-async function toWav(
-  pcmData: Buffer,
-  channels = 1,
-  rate = 24000,
-  sampleWidth = 2
-): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const writer = new wav.Writer({
-      channels,
-      sampleRate: rate,
-      bitDepth: sampleWidth * 8,
-    });
-
-    let bufs: any[] = [];
-    writer.on('error', reject);
-    writer.on('data', function (d) {
-      bufs.push(d);
-    });
-    writer.on('end', function () {
-      resolve(Buffer.concat(bufs).toString('base64'));
-    });
-
-    writer.write(pcmData);
-    writer.end();
-  });
-}
 
 const voiceMap: Record<NonNullable<GenerateSpeechInput['mood']>, string> = {
     neutral: 'Cetus', // Professional, clear

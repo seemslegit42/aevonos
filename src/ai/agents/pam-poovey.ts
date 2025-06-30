@@ -8,7 +8,6 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
 import { googleAI } from '@genkit-ai/googleai';
-import wav from 'wav';
 import {
   PamScriptInputSchema,
   PamScriptOutputSchema,
@@ -17,6 +16,7 @@ import {
   type PamAudioOutput,
 } from './pam-poovey-schemas';
 import { authorizeAndDebitAgentActions } from '@/services/billing-service';
+import { toWav } from '@/lib/audio-utils';
 
 
 // Text Generation
@@ -48,33 +48,6 @@ const generatePamScriptFlow = ai.defineFlow(
 );
 
 // Audio Generation
-async function toWav(
-  pcmData: Buffer,
-  channels = 1,
-  rate = 24000,
-  sampleWidth = 2
-): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const writer = new wav.Writer({
-      channels,
-      sampleRate: rate,
-      bitDepth: sampleWidth * 8,
-    });
-
-    let bufs: any[] = [];
-    writer.on('error', reject);
-    writer.on('data', function (d) {
-      bufs.push(d);
-    });
-    writer.on('end', function () {
-      resolve(Buffer.concat(bufs).toString('base64'));
-    });
-
-    writer.write(pcmData);
-    writer.end();
-  });
-}
-
 const generatePamAudioFlow = ai.defineFlow(
   {
     name: 'generatePamAudioFlow',
