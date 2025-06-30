@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useCallback, useRef, useEffect } from 'react';
@@ -12,7 +13,7 @@ import WorkflowRunHistory from '@/components/loom/workflow-run-history';
 import { useToast } from '@/hooks/use-toast';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import type { User, UserRole } from '@prisma/client';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { useIsMobile } from '@/hooks/use-is-mobile';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import type { Node, Edge, Workflow, NodeType } from '@/components/loom/types';
 import LoomMobileToolbar from '@/components/loom/loom-mobile-toolbar';
@@ -306,6 +307,18 @@ export default function LoomPage() {
         setConditionEdgeInfo(null);
     }
 
+    const handleToggleArchitectView = () => {
+        if (userRole === 'ADMIN') {
+            setIsArchitectView(prev => !prev);
+        } else {
+            toast({
+                variant: 'destructive',
+                title: 'Forbidden',
+                description: 'You do not have the required privileges to enter Architect View.',
+            });
+        }
+    };
+
   return (
     <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
         <div className="flex flex-col h-full bg-background">
@@ -320,7 +333,7 @@ export default function LoomPage() {
                 userRole={userRole}
                 isLoadingUser={isLoadingUser}
                 isArchitectView={isArchitectView}
-                onToggleArchitectView={() => setIsArchitectView(prev => !prev)}
+                onToggleArchitectView={handleToggleArchitectView}
             />
             
              {isArchitectView ? (
