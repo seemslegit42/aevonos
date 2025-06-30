@@ -1,14 +1,14 @@
-
 'use client';
 
 import React from 'react';
 import Link from 'next/link';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Save, Play, Trash2, Loader2, ArrowLeft } from 'lucide-react';
+import { Save, Play, Trash2, Loader2, ArrowLeft, Eye } from 'lucide-react';
 import type { Workflow } from './types';
 import type { UserRole } from '@prisma/client';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { cn } from '@/lib/utils';
 
 interface LoomHeaderProps {
   activeWorkflow: Workflow | null;
@@ -20,6 +20,8 @@ interface LoomHeaderProps {
   isRunning: boolean;
   userRole: UserRole | null;
   isLoadingUser: boolean;
+  isArchitectView: boolean;
+  onToggleArchitectView: () => void;
 }
 
 export default function LoomHeader({ 
@@ -32,9 +34,12 @@ export default function LoomHeader({
     isRunning,
     userRole,
     isLoadingUser,
+    isArchitectView,
+    onToggleArchitectView,
 }: LoomHeaderProps) {
   const canEdit = userRole === 'ADMIN' || userRole === 'MANAGER';
   const canRun = userRole !== 'AUDITOR';
+  const isAdmin = userRole === 'ADMIN';
   const isActionDisabled = isSaving || isRunning || isLoadingUser;
 
   return (
@@ -59,11 +64,25 @@ export default function LoomHeader({
           onChange={(e) => onWorkflowNameChange(e.target.value)}
           placeholder="Workflow Name"
           className="text-lg font-headline bg-transparent border-0 focus-visible:ring-0 focus-visible:ring-offset-0 p-0 h-auto"
-          disabled={!canEdit}
+          disabled={!canEdit || isArchitectView}
         />
       </div>
       <div className="flex items-center gap-2">
-        {activeWorkflow?.id && (
+        {isAdmin && (
+           <TooltipProvider>
+              <Tooltip>
+                  <TooltipTrigger asChild>
+                      <Button variant="ghost" size="icon" onClick={onToggleArchitectView}>
+                          <Eye className={cn("h-5 w-5", isArchitectView && "text-primary")} />
+                      </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                      <p>{isArchitectView ? "Return to Workflow Editor" : "Enter Architect View (Loom of Fates)"}</p>
+                  </TooltipContent>
+              </Tooltip>
+           </TooltipProvider>
+        )}
+        {!isArchitectView && activeWorkflow?.id && (
             <TooltipProvider>
                 <Tooltip>
                     <TooltipTrigger asChild>
@@ -89,19 +108,21 @@ export default function LoomHeader({
                 </Tooltip>
             </TooltipProvider>
         )}
-        <TooltipProvider>
-            <Tooltip>
-                <TooltipTrigger asChild>
+        {!isArchitectView && (
+          <TooltipProvider>
+              <Tooltip>
+                  <TooltipTrigger asChild>
                      <Button onClick={onSave} size="sm" disabled={isActionDisabled || !canEdit}>
                       {isSaving ? <Loader2 className="animate-spin h-4 w-4 md:mr-2" /> : <Save className="h-4 w-4 md:mr-2" />}
                       <span className="hidden md:inline">Save</span>
                     </Button>
-                </TooltipTrigger>
-                <TooltipContent>
+                  </TooltipTrigger>
+                  <TooltipContent>
                     <p>Save workflow changes</p>
-                </TooltipContent>
-            </Tooltip>
-        </TooltipProvider>
+                  </TooltipContent>
+              </Tooltip>
+          </TooltipProvider>
+        )}
       </div>
     </header>
   );
