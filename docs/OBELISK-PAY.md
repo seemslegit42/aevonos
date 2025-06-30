@@ -25,7 +25,7 @@ This is the **single source of truth** for all financial operations. It is not a
 
 - **`createTransaction` (Internal)**: The core internal function that atomically debits or credits a workspace balance and creates the corresponding `Transaction` record. This function is **not** exposed as an agent tool.
 - **`createManualTransaction` (Tool)**: An agent-callable wrapper around `createTransaction` for user-initiated debits/credits.
-- **`logTributeEvent` (Service-to-Service)**: A specialized function called by the `klepsydra-service` to atomically process the financial outcome of a tribute to a Folly Instrument. This ensures that the risk/reward calculation and the financial transaction are inseparable.
+- **`logTributeEvent` (Service-to-Service)**: A specialized function called by the `klepsydra-service` to atomically process the financial outcome of a tribute to a Folly Instrument. It validates sufficient credits before executing the transaction.
 - **`getWorkspaceTransactions`**: Retrieves a paginated history of transactions for a workspace.
 
 ### 2.2. Prisma Schema (`Transaction` Model)
@@ -75,7 +75,7 @@ model Transaction {
 ### 3.2. Klepsydra Engine (`klepsydra-service`)
 - Obelisk Pay is the **transactional backbone** for the entire Klepsydra Engine.
 - When a user makes a tribute, the `klepsydra-service` calculates the `outcome` and `boonAmount`.
-- It then calls the `logTributeEvent` function in `ledger-service`. This function performs the atomic operation of debiting the `tributeAmount` and crediting the `boonAmount` in a single `TRIBUTE` transaction.
+- It then calls the `logTributeEvent` function in `ledger-service`. This function first validates if the workspace has sufficient credits for the `tributeAmount`. If so, it atomically updates the balance and records the event in a single `TRIBUTE` transaction. This atomic operation guarantees that the ledger remains consistent and funds cannot be spent if they are not available.
 - This tight coupling ensures that the gamified risk layer and the hard financial ledger are always perfectly synchronized. The `Transaction` log for a `TRIBUTE` contains all the rich metadata (luck, outcome, etc.) needed to analyze the **Tribute Velocity Index (TVI)**.
 
 ---

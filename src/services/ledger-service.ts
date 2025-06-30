@@ -126,8 +126,18 @@ export async function logTributeEvent(input: LogTributeEventInput) {
 
     try {
         const tributeLog = await prisma.$transaction(async (tx) => {
-            // 1. Atomically update the workspace's credit balance with the net result.
-            const workspace = await tx.workspace.update({
+            // 1. Get current credits for validation. This is the crucial fix.
+            const workspace = await tx.workspace.findUnique({
+                where: { id: workspaceId },
+                select: { credits: true },
+            });
+
+            if (!workspace || (workspace.credits as unknown as number) < tributeAmount) {
+                throw new InsufficientCreditsError('Insufficient credits to make this tribute.');
+            }
+
+            // 2. Atomically update the workspace's credit balance with the net result.
+            await tx.workspace.update({
                 where: { id: workspaceId },
                 data: {
                     credits: {
@@ -135,12 +145,8 @@ export async function logTributeEvent(input: LogTributeEventInput) {
                     },
                 },
             });
-
-            if ((workspace.credits as unknown as number) < 0) {
-                console.warn(`[Ledger Service] Workspace ${workspaceId} has gone into negative balance following a tribute.`);
-            }
-
-            // 2. Create the single, immutable TributeLog entry.
+            
+            // 3. Create the single, immutable TributeLog entry.
             return await tx.transaction.create({
                 data: {
                     workspaceId,
@@ -160,8 +166,8 @@ export async function logTributeEvent(input: LogTributeEventInput) {
 
         return tributeLog;
     } catch (error) {
-        if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
-            throw new InsufficientCreditsError('Could not process tribute. Insufficient credits.');
+         if (error instanceof InsufficientCreditsError) {
+            throw error;
         }
         console.error(`[Ledger Service] Failed to log tribute for workspace ${workspaceId}:`, error);
         throw new Error('Tribute event failed. The ledger remains unchanged.');
