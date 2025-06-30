@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { OrbitControls, Sparkles, Line, Edges, Html } from '@dnd-kit/drei';
+import { OrbitControls, Sparkles, Line, Edges, Html, Torus } from '@react-three/drei';
 import * as THREE from 'three';
 import { type Agent as AgentData, AgentStatus } from '@prisma/client';
 import { cn } from '@/lib/utils';
@@ -103,7 +103,10 @@ type BeepCoreState = 'idle' | 'listening' | 'speaking' | 'alert';
 
 function BeepCore({ state }: { state: BeepCoreState }) {
     const groupRef = useRef<THREE.Group>(null!);
+    const coreMeshRef = useRef<THREE.Mesh>(null!);
     const materialRef = useRef<THREE.MeshStandardMaterial>(null!);
+    const lightRef = useRef<THREE.PointLight>(null!);
+    const ringsRef = useRef<THREE.Group>(null!);
 
     const targetState = useRef({
         scale: 1,
@@ -121,13 +124,13 @@ function BeepCore({ state }: { state: BeepCoreState }) {
 
         switch (state) {
             case 'listening':
-                targetState.current = { scale: 1.1, color: colors.accent, emissiveIntensity: 2.0, rotationSpeed: 1.5 };
+                targetState.current = { scale: 1.1, color: colors.accent, emissiveIntensity: 2.5, rotationSpeed: 1.5 };
                 break;
             case 'speaking':
-                targetState.current = { scale: 1.1, color: colors.accent, emissiveIntensity: 1.8, rotationSpeed: 0.8 };
+                targetState.current = { scale: 1.1, color: colors.accent, emissiveIntensity: 2.0, rotationSpeed: 0.8 };
                 break;
             case 'alert':
-                targetState.current = { scale: 1.2, color: colors.destructive, emissiveIntensity: 2.5, rotationSpeed: 5 };
+                targetState.current = { scale: 1.2, color: colors.destructive, emissiveIntensity: 3.0, rotationSpeed: 5 };
                 break;
             default: // idle
                 targetState.current = { scale: 1, color: colors.primary, emissiveIntensity: 1.5, rotationSpeed: 0.2 };
@@ -139,42 +142,60 @@ function BeepCore({ state }: { state: BeepCoreState }) {
         const { clock } = state;
         const group = groupRef.current;
         const material = materialRef.current;
-        if (!group || !material) return;
+        const light = lightRef.current;
+        const rings = ringsRef.current;
+        if (!group || !material || !light || !rings) return;
         
         group.scale.lerp(new THREE.Vector3(1,1,1).multiplyScalar(targetState.current.scale), 0.1);
         material.color.lerp(targetState.current.color, 0.1);
         material.emissive.lerp(targetState.current.color, 0.1);
+        light.color.lerp(targetState.current.color, 0.1);
         material.emissiveIntensity = THREE.MathUtils.lerp(material.emissiveIntensity, targetState.current.emissiveIntensity, 0.1);
+        light.intensity = THREE.MathUtils.lerp(light.intensity, targetState.current.emissiveIntensity * 2, 0.1);
         
         group.rotation.y += targetState.current.rotationSpeed * delta * 0.5;
 
         if(state !== 'idle') {
-            group.rotation.x = THREE.MathUtils.lerp(group.rotation.x, Math.sin(clock.getElapsedTime() * targetState.current.rotationSpeed * 0.5) * 0.1, 0.1);
-            group.rotation.z = THREE.MathUtils.lerp(group.rotation.z, Math.cos(clock.getElapsedTime() * targetState.current.rotationSpeed * 0.5) * 0.1, 0.1);
+            const wobbleFactor = state === 'alert' ? 0.3 : 0.1;
+            group.rotation.x = THREE.MathUtils.lerp(group.rotation.x, Math.sin(clock.getElapsedTime() * targetState.current.rotationSpeed * 0.5) * wobbleFactor, 0.1);
+            group.rotation.z = THREE.MathUtils.lerp(group.rotation.z, Math.cos(clock.getElapsedTime() * targetState.current.rotationSpeed * 0.5) * wobbleFactor, 0.1);
         } else {
              group.rotation.x = THREE.MathUtils.lerp(group.rotation.x, 0, 0.1);
              group.rotation.z = THREE.MathUtils.lerp(group.rotation.z, 0, 0.1);
         }
+        
+        const ringSpeedMultiplier = state === 'idle' ? 1 : 3;
+        if (rings.children[0]) rings.children[0].rotation.x += delta * 0.2 * ringSpeedMultiplier;
+        if (rings.children[1]) rings.children[1].rotation.y += delta * 0.3 * ringSpeedMultiplier;
     });
 
     return (
         <group ref={groupRef}>
-            <mesh>
+            <pointLight ref={lightRef} distance={5} />
+            <mesh ref={coreMeshRef}>
                 <icosahedronGeometry args={[0.8, 2]} />
                 <meshStandardMaterial
                     ref={materialRef}
                     metalness={0.9}
                     roughness={0.1}
-                    // Initial values set here, then animated in useFrame
                     color='hsl(var(--primary))'
                     emissive='hsl(var(--primary))'
+                    transparent
+                    opacity={0.9}
                 />
                 <Edges scale={1.001} threshold={15} color="hsl(var(--primary-foreground))" />
             </mesh>
+            <group ref={ringsRef}>
+                <Torus args={[1.2, 0.02, 16, 100]} rotation={[Math.PI / 2, 0, 0]}>
+                    <meshStandardMaterial color="hsl(var(--accent))" emissive="hsl(var(--accent))" emissiveIntensity={0.5} roughness={0} metalness={0.5} />
+                </Torus>
+                <Torus args={[1.5, 0.02, 16, 100]} rotation={[Math.PI / 2, Math.PI / 3, 0]}>
+                    <meshStandardMaterial color="hsl(var(--roman-aqua))" emissive="hsl(var(--roman-aqua))" emissiveIntensity={0.5} roughness={0} metalness={0.5} />
+                </Torus>
+            </group>
         </group>
     );
 }
-
 
 function AgentConnection({ agent, position }: { agent: AgentData, position: THREE.Vector3 }) {
     const lineRef = useRef<any>(null); // Using `any` for ref as Line's type from trei can be complex
