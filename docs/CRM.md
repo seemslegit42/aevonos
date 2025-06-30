@@ -14,7 +14,7 @@ Unlike bloated, traditional CRMs, the ΛΞVON OS implementation prioritizes spee
 
 ## 2. Core Components & Implementation
 
-### 2.1. Agentic Tools (`tools/crm-tools.ts`)
+### 2.1. Agentic Tools (`ai/tools/crm-tools.ts`)
 The heart of the CRM is a set of multi-tenant, usage-tracked Genkit flows that perform atomic database operations. These are the primary interface for BEEP.
 - **`createContactInDb`**: Adds a new contact record.
 - **`listContactsFromDb`**: Retrieves all contacts for the current workspace.
