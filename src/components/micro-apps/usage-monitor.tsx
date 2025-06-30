@@ -2,7 +2,6 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import type { BillingUsage } from '@/ai/tools/billing-schemas';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -17,18 +16,23 @@ import { useAppStore } from '@/store/app-store';
 import { Separator } from '../ui/separator';
 import { chaosCardManifest } from '@/config/chaos-cards';
 import { confirmPendingTransactionAction } from '@/app/admin/actions';
+import { PLAN_LIMITS } from '@/config/billing';
 
 type UserProp = Pick<User, 'id' | 'email' | 'firstName' | 'lastName' | 'role'> | null;
+type UsageMonitorProps = {
+    workspace: Workspace | null;
+    user: UserProp;
+}
 
 const chaosCardMap = new Map(chaosCardManifest.map(c => [c.key, c]));
 
-export default function UsageMonitor(props: Partial<BillingUsage>) {
+export default function UsageMonitor({ workspace: initialWorkspace, user: initialUser }: UsageMonitorProps) {
     const { toast } = useToast();
     const { upsertApp } = useAppStore();
     const [transactions, setTransactions] = useState<Transaction[]>([]);
-    const [workspace, setWorkspace] = useState<Workspace | null>(null);
-    const [currentUser, setCurrentUser] = useState<UserProp>(null);
-    const [isLoading, setIsLoading] = useState(true);
+    const [workspace, setWorkspace] = useState<Workspace | null>(initialWorkspace);
+    const [currentUser, setCurrentUser] = useState<UserProp>(initialUser);
+    const [isLoading, setIsLoading] = useState(!initialWorkspace);
     
     const [confirmingId, setConfirmingId] = useState<string | null>(null);
 
@@ -89,14 +93,12 @@ export default function UsageMonitor(props: Partial<BillingUsage>) {
         }
     };
     
-    const displayProps = workspace ? {
-        totalActionsUsed: workspace.agentActionsUsed,
-        planLimit: props.planLimit,
-        planTier: workspace.planTier,
-        overageEnabled: props.overageEnabled
-    } : props;
+    const planTier = workspace?.planTier as keyof typeof PLAN_LIMITS | undefined;
+    const planLimit = planTier ? PLAN_LIMITS[planTier] : 0;
+    const totalActionsUsed = workspace?.agentActionsUsed ?? 0;
+    const overageEnabled = workspace?.overageEnabled ?? false;
     
-    if (!displayProps.planTier && !isLoading) {
+    if (!planTier && !isLoading) {
         return (
              <div className="p-4 text-center text-muted-foreground">
                 <p>No usage data loaded.</p>
@@ -105,7 +107,6 @@ export default function UsageMonitor(props: Partial<BillingUsage>) {
         )
     }
 
-    const { totalActionsUsed = 0, planLimit = 0, planTier, overageEnabled } = displayProps;
     const percentage = planLimit > 0 ? Math.min((totalActionsUsed / planLimit) * 100, 100) : 0;
 
     const getIndicatorColor = (p: number) => {

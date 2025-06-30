@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useRef, useState, useEffect } from 'react';
@@ -57,7 +56,10 @@ export default function TopBar({ user, workspace }: TopBarProps) {
   };
   
   const handleBillingClick = () => {
-      upsertApp('usage-monitor', { id: 'singleton-usage-monitor' });
+      upsertApp('usage-monitor', { 
+        id: 'singleton-usage-monitor',
+        contentProps: { workspace, user }
+      });
   }
 
   const displayName = user ? (user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : user.email) : "Operator";
@@ -82,6 +84,7 @@ export default function TopBar({ user, workspace }: TopBarProps) {
             placeholder={placeholderText}
             className={cn(
               "w-full h-10",
+              "focus-visible:ring-1 focus-visible:ring-roman-aqua",
               isLoading && "ring-1 ring-inset ring-roman-aqua animate-pulse"
             )}
             disabled={isLoading}
