@@ -19,16 +19,20 @@ import type { Node, Edge, Workflow, NodeType } from '@/components/loom/types';
 import LoomMobileToolbar from '@/components/loom/loom-mobile-toolbar';
 
 const BLANK_WORKFLOW: Workflow = {
-  name: 'Untitled Workflow',
+  name: 'New Contact Follow-up',
   definition: {
     nodes: [
         { id: 'trigger-1', type: 'trigger', position: { x: 50, y: 150 }, data: { label: 'BEEP Command Received' } },
-        { id: 'tool-winston-wolfe', type: 'tool-winston-wolfe', position: { x: 350, y: 150 }, data: { label: 'Solve Reputation Problem', reviewText: "This product is terrible! It broke after one use." } },
-        { id: 'tool-final-answer', type: 'tool-final-answer', position: { x: 650, y: 150 }, data: { label: 'Final Answer' } },
+        { id: 'tool-crm-1', type: 'tool-crm', position: { x: 250, y: 50 }, data: { label: 'CRM: Create Contact', action: 'create', firstName: 'Jane', lastName: 'Doe', email: 'jane.doe@aevonos.com' }},
+        { id: 'logic-1', type: 'logic', position: { x: 480, y: 150 }, data: { label: 'Check for Email', variable: 'newContact.email', operator: 'exists', value: '' }},
+        { id: 'tool-final-answer-true', type: 'tool-final-answer', position: { x: 700, y: 50 }, data: { label: 'Final Answer: Success' } },
+        { id: 'tool-final-answer-false', type: 'tool-final-answer', position: { x: 700, y: 250 }, data: { label: 'Final Answer: Needs Info' } },
     ],
     edges: [
-        { id: 'e-trigger-agent', source: 'trigger-1', target: 'tool-winston-wolfe' },
-        { id: 'e-agent-final', source: 'tool-winston-wolfe', target: 'tool-final-answer' },
+        { id: 'e-trigger-crm', source: 'trigger-1', target: 'tool-crm-1' },
+        { id: 'e-crm-logic', source: 'tool-crm-1', target: 'logic-1' },
+        { id: 'e-logic-true', source: 'logic-1', target: 'tool-final-answer-true', condition: 'true' },
+        { id: 'e-logic-false', source: 'logic-1', target: 'tool-final-answer-false', condition: 'false' },
     ],
   },
 };
@@ -48,6 +52,7 @@ export default function LoomPage() {
     const [isRunning, setIsRunning] = useState(false);
     const [listRefreshTrigger, setListRefreshTrigger] = useState(0);
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+    const [conditionEdgeInfo, setConditionEdgeInfo] = useState<{ sourceId: string; targetId: string } | null>(null);
     
     // Mobile Sheet States
     const [isNodesSheetOpen, setIsNodesSheetOpen] = useState(false);
@@ -242,6 +247,11 @@ export default function LoomPage() {
                 newNodeData.action = 'list';
                 newNodeData.label = 'CRM: List Contacts';
             }
+            if (type === 'logic') {
+                newNodeData.variable = 'payload.field';
+                newNodeData.operator = 'exists';
+                newNodeData.value = '';
+            }
 
             const newNode: Node = { id: `${type}-${new Date().getTime()}`, type, position, data: newNodeData };
             setNodes((nds) => [...nds, newNode]);
@@ -270,13 +280,30 @@ export default function LoomPage() {
             setConnection(null);
             return;
         }
+        
+        const sourceNode = nodes.find(n => n.id === connection.sourceId);
+        
+        if (sourceNode?.type === 'logic') {
+            setConditionEdgeInfo({ sourceId: connection.sourceId, targetId });
+        } else {
+             const newEdge: Edge = { id: `e-${connection.sourceId}-${targetId}`, source: connection.sourceId, target: targetId };
+             if (!edges.some(e => e.id === newEdge.id)) {
+                 setEdges((eds) => [...eds, newEdge]);
+             }
+        }
 
-        const newEdge: Edge = { id: `e-${connection.sourceId}-${targetId}`, source: connection.sourceId, target: targetId };
+        setConnection(null);
+    }, [connection, edges, nodes]);
+
+    const handleAddConditionalEdge = (condition: 'true' | 'false') => {
+        if (!conditionEdgeInfo) return;
+        const { sourceId, targetId } = conditionEdgeInfo;
+        const newEdge: Edge = { id: `e-${sourceId}-${targetId}-${condition}`, source: sourceId, target: targetId, condition };
         if (!edges.some(e => e.id === newEdge.id)) {
             setEdges((eds) => [...eds, newEdge]);
         }
-        setConnection(null);
-    }, [connection, edges]);
+        setConditionEdgeInfo(null);
+    }
 
   return (
     <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
@@ -355,6 +382,27 @@ export default function LoomPage() {
                     <WorkflowRunHistory activeWorkflowId={activeWorkflowId} triggerRefresh={listRefreshTrigger}/>
                 </SheetContent>
             </Sheet>
+
+            {/* Condition Dialog */}
+            <AlertDialog open={!!conditionEdgeInfo} onOpenChange={() => setConditionEdgeInfo(null)}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                    <AlertDialogTitle>Set Branch Condition</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        Select the condition for this path. The workflow will follow this branch if the logic node's evaluation is...
+                    </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                    <AlertDialogAction onClick={() => handleAddConditionalEdge('true')}>
+                        True
+                    </AlertDialogAction>
+                    <AlertDialogAction onClick={() => handleAddConditionalEdge('false')}>
+                        False
+                    </AlertDialogAction>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
 
             {/* Delete Confirmation Dialog */}
             <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>

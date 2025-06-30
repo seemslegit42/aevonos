@@ -100,7 +100,7 @@ export default function UserManagementTab() {
         <TableRow key={i}>
           <TableCell><Skeleton className="h-5 w-32" /></TableCell>
           <TableCell><Skeleton className="h-5 w-24" /></TableCell>
-          <TableCell><Skeleton className="h-5 w-24" /></TableCell>
+          <TableCell className="hidden md:table-cell"><Skeleton className="h-5 w-24" /></TableCell>
           <TableCell className="text-right"><Skeleton className="h-8 w-8 ml-auto" /></TableCell>
         </TableRow>
       ));
@@ -119,7 +119,7 @@ export default function UserManagementTab() {
         <TableCell>
             <Badge variant={user.role === UserRole.ADMIN ? 'destructive' : 'secondary'}>{user.role}</Badge>
         </TableCell>
-        <TableCell className="text-muted-foreground text-xs">
+        <TableCell className="hidden md:table-cell text-muted-foreground text-xs">
           {user.lastLoginAt ? `${formatDistanceToNow(new Date(user.lastLoginAt))} ago` : 'Never'}
         </TableCell>
         <TableCell className="text-right">
@@ -150,7 +150,7 @@ export default function UserManagementTab() {
             <TableRow>
               <TableHead>User</TableHead>
               <TableHead>Role</TableHead>
-              <TableHead>Last Login</TableHead>
+              <TableHead className="hidden md:table-cell">Last Login</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
