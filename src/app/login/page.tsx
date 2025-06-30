@@ -95,7 +95,7 @@ export default function LoginPage() {
                 
                 <div className="relative">
                     <Image
-                      src="/logo-neutral.svg"
+                      src="/logo-white.png"
                       alt="Aevon OS Logo"
                       width={60}
                       height={60}
@@ -155,7 +155,7 @@ export default function LoginPage() {
                 <div className="relative text-xs text-muted-foreground">
                     <Separator className="my-4 bg-border/20"/>
                     <p>New Operator?{' '}
-                      <Link href="/register" className="font-medium text-primary hover:text-primary/80 transition-colors">
+                      <Link href="/register" className="font-medium text-roman-aqua hover:text-roman-aqua/80 transition-colors">
                         Perform the Rite of Invocation.
                       </Link>
                     </p>
