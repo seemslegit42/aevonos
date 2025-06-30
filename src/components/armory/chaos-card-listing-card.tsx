@@ -23,7 +23,7 @@ const classStyles = {
     AESTHETIC: 'border-accent text-accent',
     AGENTIC: 'border-primary text-primary',
     SYSTEMIC: 'border-yellow-400 text-yellow-400',
-    SYNDICATE: 'border-blue-400 text-blue-400',
+    SYNDICATE: 'border-ring text-ring',
 };
 
 export function ChaosCardListingCard({ card, ownedCardKeys, onAcquire }: ChaosCardListingCardProps) {
@@ -117,5 +117,3 @@ export function ChaosCardListingCard({ card, ownedCardKeys, onAcquire }: ChaosCa
     </Card>
   );
 }
-
-    

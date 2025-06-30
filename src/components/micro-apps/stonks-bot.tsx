@@ -29,7 +29,7 @@ const ratingColors: Record<string, string> = {
     'HODL': 'text-yellow-400',
     'BUY THE DIP': 'text-stonks-green',
     'ALL IN': 'text-stonks-anxiety',
-    'Consider a diversified position': 'text-blue-400',
+    'Consider a diversified position': 'text-secondary-foreground',
     'The runes are unclear': 'text-purple-400',
     'Sell to the fools': 'text-orange-500'
 }
