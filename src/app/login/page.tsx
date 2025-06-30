@@ -2,7 +2,6 @@
 'use client';
 
 import React, { useState } from 'react';
-import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -94,7 +93,7 @@ export default function LoginPage() {
                 </div>
                 
                 <div className="relative">
-                    <Image
+                    <img
                       src="/logo.png"
                       alt="ΛΞVON OS Logo"
                       width={60}
