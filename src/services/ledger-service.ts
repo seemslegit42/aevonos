@@ -10,6 +10,7 @@ import { z } from 'zod';
 import { Prisma, Transaction, TransactionStatus, TransactionType, UserPsyche } from '@prisma/client';
 import { InsufficientCreditsError } from '@/lib/errors';
 import { CreateManualTransactionInputSchema } from '@/ai/tools/ledger-schemas';
+import { differenceInMinutes } from 'date-fns';
 
 const CreateTransactionInputSchema = z.object({
   workspaceId: z.string(),
@@ -101,79 +102,69 @@ export async function createManualTransaction(
   });
 }
 
-
-export const LogTributeEventInputSchema = z.object({
-    workspaceId: z.string(),
-    userId: z.string(),
-    instrumentId: z.string(),
-    tributeAmount: z.number(),
-    luckWeight: z.number(),
-    outcome: z.string(),
-    boonAmount: z.number(),
-    userPsyche: z.nativeEnum(UserPsyche),
-});
-export type LogTributeEventInput = z.infer<typeof LogTributeEventInputSchema>;
-
 /**
- * Atomically logs a tribute event, updating the workspace balance and creating a single, immutable transaction record.
- * @param input The details of the tribute event.
- * @returns The newly created transaction log.
+ * Atomically processes a Micro-App purchase, handling credit debit, transaction
+ * logging, and unlocking the app for the workspace.
+ * @returns A promise that resolves upon successful completion.
  */
-export async function logTributeEvent(input: LogTributeEventInput) {
-    const { workspaceId, userId, instrumentId, tributeAmount, luckWeight, outcome, boonAmount, userPsyche } = LogTributeEventInputSchema.parse(input);
+export async function processMicroAppPurchase(
+  userId: string,
+  workspaceId: string,
+  appId: string,
+  appName: string,
+  creditCost: number
+) {
+  return prisma.$transaction(async (tx) => {
+    // 1. Validate credits and ownership
+    const workspace = await tx.workspace.findUnique({
+      where: { id: workspaceId },
+      select: { credits: true, unlockedAppIds: true },
+    });
 
-    const netAmount = boonAmount - tributeAmount;
-
-    try {
-        const tributeLog = await prisma.$transaction(async (tx) => {
-            // 1. Get current credits for validation. This is the crucial fix.
-            const workspace = await tx.workspace.findUnique({
-                where: { id: workspaceId },
-                select: { credits: true },
-            });
-
-            if (!workspace || (workspace.credits as unknown as number) < tributeAmount) {
-                throw new InsufficientCreditsError('Insufficient credits to make this tribute.');
-            }
-
-            // 2. Atomically update the workspace's credit balance with the net result.
-            await tx.workspace.update({
-                where: { id: workspaceId },
-                data: {
-                    credits: {
-                        increment: new Prisma.Decimal(netAmount),
-                    },
-                },
-            });
-            
-            // 3. Create the single, immutable TributeLog entry.
-            return await tx.transaction.create({
-                data: {
-                    workspaceId,
-                    userId,
-                    type: TransactionType.TRIBUTE,
-                    amount: new Prisma.Decimal(netAmount), // Net change in credits
-                    description: `Folly: ${instrumentId} - ${outcome}`,
-                    instrumentId,
-                    luckWeight,
-                    outcome,
-                    boonAmount: new Prisma.Decimal(boonAmount),
-                    userPsyche,
-                    status: TransactionStatus.COMPLETED,
-                },
-            });
-        });
-
-        return tributeLog;
-    } catch (error) {
-         if (error instanceof InsufficientCreditsError) {
-            throw error;
-        }
-        console.error(`[Ledger Service] Failed to log tribute for workspace ${workspaceId}:`, error);
-        throw new Error('Tribute event failed. The ledger remains unchanged.');
+    if (!workspace) throw new Error('Workspace not found.');
+    if ((workspace.credits as unknown as number) < creditCost) {
+      throw new InsufficientCreditsError('Insufficient ΞCredits to acquire this Micro-App.');
     }
-}
+    if (workspace.unlockedAppIds.includes(appId)) {
+      throw new Error('Micro-App already unlocked.');
+    }
 
+    // 2. Debit credits and unlock app atomically
+    await tx.workspace.update({
+      where: { id: workspaceId },
+      data: {
+        credits: { decrement: creditCost },
+        unlockedAppIds: { push: appId },
+      },
+    });
+
+    // 3. Create the transaction log
+    await tx.transaction.create({
+      data: {
+        workspaceId,
+        userId,
+        type: TransactionType.DEBIT,
+        amount: creditCost,
+        description: `Micro-App Unlock: ${appName}`,
+        instrumentId: appId,
+        status: 'COMPLETED',
+      },
+    });
+
+    // 4. Update instrument discovery log
+    const discovery = await tx.instrumentDiscovery.findFirst({
+      where: { userId, instrumentId: appId, converted: false },
+    });
+
+    if (discovery) {
+      const dtt = differenceInMinutes(new Date(), discovery.firstViewedAt);
+      await tx.instrumentDiscovery.update({
+        where: { id: discovery.id },
+        data: { converted: true, dtt: dtt > 0 ? dtt : 1 },
+      });
+    }
+  });
+}
 
 /**
  * Retrieves the most recent transactions for a given workspace.

@@ -6,16 +6,13 @@ import type { UserCommandOutput } from '@/ai/agents/beep-schemas';
 import { revalidatePath } from 'next/cache';
 import { scanEvidence as scanEvidenceFlow, type PaperTrailScanInput, type PaperTrailScanOutput } from '@/ai/agents/paper-trail';
 import { getServerActionSession } from '@/lib/auth';
-import { confirmPendingTransaction } from '@/services/ledger-service';
+import { processMicroAppPurchase } from '@/services/ledger-service';
 import { z } from 'zod';
 import { requestCreditTopUpInDb } from '@/services/billing-service';
 import { microAppManifests } from '@/config/micro-apps';
 import { chaosCardManifest } from '@/config/chaos-cards';
-import prisma from '@/lib/prisma';
-import { differenceInMinutes } from 'date-fns';
-import { calculateOutcome } from '@/services/klepsydra-service';
+import { processChaosCardTribute } from '@/services/klepsydra-service';
 import { InsufficientCreditsError } from '@/lib/errors';
-import { TransactionType } from '@prisma/client';
 import { acceptReclamationGift } from './auth/actions';
 
 
@@ -132,27 +129,6 @@ export async function requestCreditTopUp(amount: number) {
     return result;
 }
 
-export async function confirmEtransfer(transactionId: string) {
-  const session = await getServerActionSession();
-  if (!session?.userId || !session?.workspaceId) {
-    return { success: false, error: 'Unauthorized' };
-  }
-
-  const user = await prisma.user.findUnique({ where: { id: session.userId } });
-  if (user?.role !== 'ADMIN') {
-    return { success: false, error: 'Permission denied. Administrator access required.' };
-  }
-
-  try {
-    await confirmPendingTransaction(transactionId, session.workspaceId);
-    revalidatePath('/'); // Revalidates the page to show updated balance and status
-    return { success: true };
-  } catch (error) {
-    console.error('[Action: confirmEtransfer]', error);
-    return { success: false, error: error instanceof Error ? error.message : 'Failed to confirm transaction.' };
-  }
-}
-
 export async function purchaseMicroApp(appId: string) {
   const session = await getServerActionSession();
   if (!session?.userId || !session?.workspaceId) {
@@ -164,74 +140,21 @@ export async function purchaseMicroApp(appId: string) {
     return { success: false, error: 'Micro-App not found.' };
   }
 
-  const { creditCost, name } = appManifest;
-  if (creditCost <= 0) {
+  if (appManifest.creditCost <= 0) {
     return { success: false, error: 'This app cannot be purchased.' };
   }
 
   try {
-    const workspace = await prisma.workspace.findUnique({
-      where: { id: session.workspaceId },
-    });
-
-    if (!workspace) {
-      return { success: false, error: 'Workspace not found.' };
-    }
-
-    if ((workspace.credits as unknown as number) < creditCost) {
-      return { success: false, error: 'Insufficient ΞCredits.' };
-    }
-    
-    if (workspace.unlockedAppIds.includes(appId)) {
-      return { success: false, error: 'App already unlocked.' };
-    }
-
-    await prisma.$transaction(async (tx) => {
-      // This is now handled by the ledger service, but let's keep a simple debit for now
-      // A more robust implementation would use the ledger-service
-       await tx.workspace.update({
-        where: { id: session.workspaceId },
-        data: {
-          credits: {
-            decrement: creditCost
-          },
-          unlockedAppIds: {
-            push: appId,
-          },
-        },
-      });
-
-      await tx.transaction.create({
-        data: {
-          workspaceId: session.workspaceId,
-          userId: session.userId,
-          type: TransactionType.DEBIT,
-          amount: creditCost,
-          description: `Micro-App Unlock: ${name}`,
-          instrumentId: appId,
-          status: 'COMPLETED'
-        }
-      });
-
-
-      const discovery = await tx.instrumentDiscovery.findFirst({
-          where: { userId: session.userId, instrumentId: appId, converted: false }
-      });
-      
-      if (discovery) {
-          const dtt = differenceInMinutes(new Date(), discovery.firstViewedAt);
-          await tx.instrumentDiscovery.update({
-              where: { id: discovery.id },
-              data: {
-                  converted: true,
-                  dtt: dtt > 0 ? dtt : 1, // Ensure dtt is at least 1 minute if conversion is immediate
-              }
-          });
-      }
-    });
+    await processMicroAppPurchase(
+        session.userId, 
+        session.workspaceId, 
+        appId, 
+        appManifest.name, 
+        appManifest.creditCost
+    );
 
     revalidatePath('/'); // Revalidate to reflect changes across the app
-    return { success: true, message: `Successfully unlocked ${name}!` };
+    return { success: true, message: `Successfully unlocked ${appManifest.name}!` };
 
   } catch (error) {
     console.error(`[Action: purchaseMicroApp] for app ${appId}:`, error);
@@ -251,86 +174,32 @@ export async function purchaseChaosCard(cardKey: string) {
   if (!cardManifest) {
     return { success: false, error: 'Chaos Card not found in manifest.' };
   }
-
-  const { cost, name } = cardManifest;
-
+  
   try {
-    const { outcome, boonAmount } = await calculateOutcome(
-        session.userId,
-        session.workspaceId,
-        cardKey,
-        cost
+    const { outcome, boonAmount } = await processChaosCardTribute(
+        session.userId, 
+        session.workspaceId, 
+        cardKey
     );
-
+    
+    revalidatePath('/');
+    
     if (outcome === 'win' || outcome === 'pity_boon') {
-        await prisma.$transaction(async (tx) => {
-            const cardInDb = await tx.chaosCard.findUnique({ where: { key: cardKey } });
-            if (!cardInDb) {
-              throw new Error('Card does not exist in the database.');
-            }
-
-            await tx.user.update({
-                where: { id: session.userId },
-                data: {
-                  ownedChaosCards: {
-                    connect: { id: cardInDb.id },
-                  },
-                },
-            });
-            
-            // Activate system effect if applicable
-            if (cardManifest.systemEffect && cardManifest.cardClass === 'AESTHETIC') {
-               await tx.activeSystemEffect.deleteMany({
-                  where: {
-                    workspaceId: session.workspaceId!,
-                    cardKey: { in: ['ACROPOLIS_MARBLE'] } // Add other exclusive themes here
-                  }
-               });
-               await tx.activeSystemEffect.create({
-                  data: {
-                    workspaceId: session.workspaceId!,
-                    cardKey: cardKey,
-                    expiresAt: new Date(Date.now() + 60 * 60 * 1000) // 1 hour
-                  }
-               });
-            }
-
-            const discovery = await tx.instrumentDiscovery.findFirst({
-                where: { userId: session.userId, instrumentId: cardKey, converted: false }
-            });
-            
-            if (discovery) {
-                const dtt = differenceInMinutes(new Date(), discovery.firstViewedAt);
-                await tx.instrumentDiscovery.update({
-                    where: { id: discovery.id },
-                    data: {
-                        converted: true,
-                        dtt: dtt > 0 ? dtt : 1,
-                    }
-                });
-            }
-        });
-
-        revalidatePath('/');
         return { 
             success: true, 
             outcome, 
-            message: `Tribute successful! Acquired ${name}. You were granted a boon of ${boonAmount.toFixed(2)} Ξ.` 
+            message: `Tribute successful! Acquired ${cardManifest.name}. You were granted a boon of ${boonAmount.toFixed(2)} Ξ.` 
         };
-    } else { // Outcome is a loss
-        revalidatePath('/');
+    } else { // loss
         return {
             success: true,
             outcome,
-            message: `The tribute was not enough. ${name} slips through your fingers.`
+            message: `The tribute was not enough. ${cardManifest.name} slips through your fingers.`
         };
     }
 
   } catch (error) {
     console.error(`[Action: purchaseChaosCard] for card ${cardKey}:`, error);
-    if (error instanceof InsufficientCreditsError) {
-        return { success: false, error: "Insufficient ΞCredits for tribute." };
-    }
     const errorMessage = error instanceof Error ? error.message : 'Failed to complete tribute.';
     return { success: false, error: errorMessage };
   }
@@ -409,32 +278,6 @@ export async function getNudges() {
   });
 
   return nudges;
-}
-
-export async function makeFollyTribute(instrumentId: string, tributeAmount: number) {
-  const session = await getServerActionSession();
-  if (!session?.userId || !session?.workspaceId) {
-    return { success: false, error: 'Unauthorized' };
-  }
-
-  try {
-    const result = await calculateOutcome(
-      session.userId,
-      session.workspaceId,
-      instrumentId,
-      tributeAmount
-    );
-    
-    revalidatePath('/'); // Revalidate to update credit balance everywhere
-    return { success: true, ...result };
-  } catch (error) {
-    console.error(`[Action: makeFollyTribute] for instrument ${instrumentId}:`, error);
-    if (error instanceof InsufficientCreditsError) {
-        return { success: false, error: "Insufficient ΞCredits for tribute." };
-    }
-    const errorMessage = error instanceof Error ? error.message : 'Tribute failed.';
-    return { success: false, error: errorMessage };
-  }
 }
 
 export async function handleAcceptReclamationGift(): Promise<{ success: boolean; error?: string }> {

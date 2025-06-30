@@ -8,7 +8,9 @@
 
 import prisma from '@/lib/prisma';
 import { pulseEngineConfig } from '@/config/pulse-engine-config';
-import { PulseProfile, PulsePhase } from '@prisma/client';
+import { PulseProfile, PulsePhase, Prisma } from '@prisma/client';
+
+type PrismaTransactionClient = Omit<Prisma.PrismaClient, "$connect" | "$disconnect" | "$on" | "$transaction" | "$use" | "$extends">;
 
 /**
  * Retrieves a user's Pulse Profile, creating a default one if it doesn't exist.
@@ -82,14 +84,17 @@ export async function isInCrestPhase(userId: string): Promise<boolean> {
 
 /**
  * Records a "win" for the user, resetting the time component and consecutive losses.
+ * Can be used within a larger Prisma transaction.
  * @param userId The ID of the user who won.
+ * @param tx An optional Prisma transaction client.
  */
-export async function recordWin(userId: string): Promise<void> {
+export async function recordWin(userId: string, tx?: PrismaTransactionClient): Promise<void> {
+    const prismaClient = tx || prisma;
     const profile = await getPulseProfile(userId);
     const pulseValue = await getCurrentPulseValue(userId);
     const currentPhase = getPhaseFromValue(pulseValue, profile);
 
-    await prisma.pulseProfile.update({
+    await prismaClient.pulseProfile.update({
         where: { id: profile.id },
         data: {
             lastEventTimestamp: new Date(),
@@ -101,14 +106,17 @@ export async function recordWin(userId: string): Promise<void> {
 
 /**
  * Records a "loss" for the user, incrementing the consecutive loss counter.
+ * Can be used within a larger Prisma transaction.
  * @param userId The ID of the user who lost.
+ * @param tx An optional Prisma transaction client.
  */
-export async function recordLoss(userId: string): Promise<void> {
+export async function recordLoss(userId: string, tx?: PrismaTransactionClient): Promise<void> {
+    const prismaClient = tx || prisma;
     const profile = await getPulseProfile(userId);
     const pulseValue = await getCurrentPulseValue(userId);
     const currentPhase = getPhaseFromValue(pulseValue, profile);
 
-    await prisma.pulseProfile.update({
+    await prismaClient.pulseProfile.update({
         where: { id: profile.id },
         data: {
             lastEventTimestamp: new Date(),
