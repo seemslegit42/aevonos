@@ -1,6 +1,6 @@
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getUsageDetails } from '@/ai/tools/billing-tools';
+import { getUsageDetails } from '@/services/billing-service';
 import { getSession } from '@/lib/auth';
 
 // GET /api/billing/usage/agent-actions

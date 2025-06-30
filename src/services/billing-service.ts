@@ -3,16 +3,13 @@
 /**
  * @fileOverview Service for handling billing and usage tracking.
  */
-import { z } from 'zod';
-import { ai } from '@/ai/genkit';
-import { BillingUsageSchema, RequestCreditTopUpInputSchema, RequestCreditTopUpOutputSchema, type BillingUsage, type RequestCreditTopUpInput, type RequestCreditTopUpOutput } from '@/ai/tools/billing-schemas';
 import prisma from '@/lib/prisma';
-import { TransactionStatus, TransactionType } from '@prisma/client';
+import { Prisma, TransactionStatus, TransactionType } from '@prisma/client';
 import { aegisAnomalyScan } from '@/ai/agents/aegis';
 import { createSecurityAlertInDb } from '@/ai/tools/security-tools';
 import { PLAN_LIMITS } from '@/config/billing';
 import { InsufficientCreditsError } from '@/lib/errors';
-import { Prisma } from '@prisma/client';
+import type { BillingUsage, RequestCreditTopUpInput, RequestCreditTopUpOutput } from '@/ai/tools/billing-schemas';
 
 /**
  * Checks if a workspace can afford an action, then atomically decrements
@@ -121,92 +118,82 @@ export async function authorizeAndDebitAgentActions(workspaceId: string, amount:
 }
 
 
-// This flow now requires a workspaceId to fetch the correct data.
-const getUsageDetailsFlow = ai.defineFlow(
-  {
-    name: 'getUsageDetailsFlow',
-    inputSchema: z.object({ workspaceId: z.string() }),
-    outputSchema: BillingUsageSchema,
-  },
-  async ({ workspaceId }) => {
-    // This is an agent action and should be billed.
-    // The userId is not strictly needed here as we are just reading data, not checking grace period for a debit.
-    await authorizeAndDebitAgentActions(workspaceId, 1);
-    
-    const workspace = await prisma.workspace.findUnique({
-        where: { id: workspaceId }
-    });
-
-    if (!workspace) {
-        throw new Error(`Workspace with ID ${workspaceId} not found.`);
-    }
-    
-    const planTier = workspace.planTier as keyof typeof PLAN_LIMITS;
-    const planLimit = PLAN_LIMITS[planTier] || 0;
-
-    return {
-      currentPeriod: new Date().toISOString().split('T')[0],
-      totalActionsUsed: workspace.agentActionsUsed,
-      planLimit: planLimit,
-      planTier: workspace.planTier,
-      overageEnabled: workspace.overageEnabled,
-    };
-  }
-);
-
+/**
+ * Retrieves the usage details for a given workspace.
+ * This is a service function that can be called by APIs or agent tools.
+ * @param workspaceId The ID of the workspace.
+ * @returns The billing usage details.
+ */
 export async function getUsageDetails(workspaceId: string): Promise<BillingUsage> {
-    return getUsageDetailsFlow({ workspaceId });
+  // Reading usage data is a billable agent action.
+  await authorizeAndDebitAgentActions(workspaceId, 1);
+  
+  const workspace = await prisma.workspace.findUnique({
+    where: { id: workspaceId }
+  });
+
+  if (!workspace) {
+    throw new Error(`Workspace with ID ${workspaceId} not found.`);
+  }
+  
+  const planTier = workspace.planTier as keyof typeof PLAN_LIMITS;
+  const planLimit = PLAN_LIMITS[planTier] || 0;
+
+  return {
+    currentPeriod: new Date().toISOString().split('T')[0],
+    totalActionsUsed: workspace.agentActionsUsed,
+    planLimit: planLimit,
+    planTier: workspace.planTier,
+    overageEnabled: workspace.overageEnabled,
+  };
 }
 
 
-const requestCreditTopUpFlow = ai.defineFlow(
-  {
-    name: 'requestCreditTopUpFlow',
-    inputSchema: RequestCreditTopUpInputSchema.extend({ userId: z.string(), workspaceId: z.string() }),
-    outputSchema: RequestCreditTopUpOutputSchema,
-  },
-  async ({ amount, userId, workspaceId }) => {
-    // This is a free action for the user, but we can still run a security check.
-    // It is not billed as it facilitates revenue.
-    try {
-      const anomalyReport = await aegisAnomalyScan({
-        activityDescription: `User initiated a credit top-up request of ${amount.toLocaleString()} ΞCredits.`,
-        workspaceId,
-        userId, // Pass userId for context
-      });
-
-      if (anomalyReport.isAnomalous) {
-        await createSecurityAlertInDb({
-          type: anomalyReport.anomalyType || 'Suspicious Transaction',
-          explanation: `Aegis flagged a credit top-up request as anomalous. Reason: ${anomalyReport.anomalyExplanation}`,
-          riskLevel: anomalyReport.riskLevel || 'medium',
-        }, workspaceId);
-      }
-
-      await prisma.transaction.create({
-        data: {
-          workspaceId,
-          userId,
-          type: TransactionType.CREDIT,
-          status: TransactionStatus.PENDING,
-          amount,
-          description: `User-initiated e-Transfer top-up request for ${amount.toLocaleString()} credits.`,
-        },
-      });
-
-      let message = `Your request for ${amount.toLocaleString()} credits has been logged. Credits will be applied upon payment confirmation.`;
-      if (anomalyReport.isAnomalous) {
-        message += ' Note: This transaction has been flagged for administrative review due to unusual activity.';
-      }
-
-      return { success: true, message };
-    } catch (e) {
-      console.error('[Tool: requestCreditTopUp]', e);
-      return { success: false, message: 'Failed to log your top-up request.' };
-    }
-  }
-);
-
+/**
+ * Logs a user's request to top up their credit balance.
+ * This is a service function called by the UI (via server action) and agent tools.
+ * @param input The top-up request details.
+ * @param userId The ID of the user making the request.
+ * @param workspaceId The ID of the workspace.
+ * @returns A confirmation message.
+ */
 export async function requestCreditTopUpInDb(input: RequestCreditTopUpInput, userId: string, workspaceId: string): Promise<RequestCreditTopUpOutput> {
-  return requestCreditTopUpFlow({ ...input, userId, workspaceId });
+  const { amount } = input;
+  // This is a free action for the user, but we can still run a security check.
+  try {
+    const anomalyReport = await aegisAnomalyScan({
+      activityDescription: `User initiated a credit top-up request of ${amount.toLocaleString()} ΞCredits.`,
+      workspaceId,
+      userId,
+    });
+
+    if (anomalyReport.isAnomalous) {
+      await createSecurityAlertInDb({
+        type: anomalyReport.anomalyType || 'Suspicious Transaction',
+        explanation: `Aegis flagged a credit top-up request as anomalous. Reason: ${anomalyReport.anomalyExplanation}`,
+        riskLevel: anomalyReport.riskLevel || 'medium',
+      }, workspaceId);
+    }
+
+    await prisma.transaction.create({
+      data: {
+        workspaceId,
+        userId,
+        type: TransactionType.CREDIT,
+        status: TransactionStatus.PENDING,
+        amount,
+        description: `User-initiated e-Transfer top-up request for ${amount.toLocaleString()} credits.`,
+      },
+    });
+
+    let message = `Your request for ${amount.toLocaleString()} credits has been logged. Credits will be applied upon payment confirmation.`;
+    if (anomalyReport.isAnomalous) {
+      message += ' Note: This transaction has been flagged for administrative review due to unusual activity.';
+    }
+
+    return { success: true, message };
+  } catch (e) {
+    console.error('[Service: requestCreditTopUpInDb]', e);
+    return { success: false, message: 'Failed to log your top-up request.' };
+  }
 }
