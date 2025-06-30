@@ -11,17 +11,17 @@ export default function AdminConsole() {
     <div className="p-2 h-full">
       <Tabs defaultValue="dashboard" className="h-full flex flex-col">
         <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
-          <TabsTrigger value="users">User Management</TabsTrigger>
-          <TabsTrigger value="monitoring">System Monitoring</TabsTrigger>
+          <TabsTrigger value="dashboard">Overlook</TabsTrigger>
+          <TabsTrigger value="pantheon">Pantheon</TabsTrigger>
+          <TabsTrigger value="muster">Agent Muster</TabsTrigger>
         </TabsList>
         <TabsContent value="dashboard" className="flex-grow mt-2 overflow-y-auto">
           <AdminDashboardTab />
         </TabsContent>
-        <TabsContent value="users" className="flex-grow mt-2 overflow-y-auto">
+        <TabsContent value="pantheon" className="flex-grow mt-2 overflow-y-auto">
           <UserManagementTab />
         </TabsContent>
-        <TabsContent value="monitoring" className="flex-grow mt-2 overflow-y-auto">
+        <TabsContent value="muster" className="flex-grow mt-2 overflow-y-auto">
           <SystemMonitoringTab />
         </TabsContent>
       </Tabs>

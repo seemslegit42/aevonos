@@ -184,7 +184,7 @@ export default function SystemMonitoringTab() {
   return (
     <div className="p-2">
       <div className="flex justify-end mb-4">
-        <Button disabled><Bot className="mr-2" />Deploy Agent</Button>
+        <Button disabled><Bot className="mr-2" />Commission Daemon</Button>
       </div>
       <div className="border rounded-lg">
         <Table>

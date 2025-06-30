@@ -47,10 +47,10 @@ export default function UserCard({ user, currentUserId, onActionComplete }: User
         startTransition(async () => {
             const result = await updateUserRole(formData);
             if (result.success) {
-                toast({ title: "Success", description: result.message });
+                toast({ title: "Decree Enacted", description: result.message });
                 setIsEditRoleOpen(false);
             } else {
-                toast({ variant: 'destructive', title: "Error", description: result.error });
+                toast({ variant: 'destructive', title: "Decree Failed", description: result.error });
             }
             onActionComplete();
         });
@@ -62,10 +62,10 @@ export default function UserCard({ user, currentUserId, onActionComplete }: User
         startTransition(async () => {
             const result = await removeUserFromWorkspace(formData);
             if (result.success) {
-                toast({ title: "Success", description: result.message });
+                toast({ title: "Soul Exiled", description: result.message });
                 setIsRemoveUserOpen(false);
             } else {
-                toast({ variant: 'destructive', title: "Error", description: result.error });
+                toast({ variant: 'destructive', title: "Exile Failed", description: result.error });
             }
             onActionComplete();
         });
@@ -90,10 +90,10 @@ export default function UserCard({ user, currentUserId, onActionComplete }: User
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0"><MoreHorizontal /></Button></DropdownMenuTrigger>
                             <DropdownMenuContent>
-                                <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                <DropdownMenuItem onSelect={() => setIsEditRoleOpen(true)}><Edit className="mr-2" />Edit Role</DropdownMenuItem>
+                                <DropdownMenuLabel>Architect's Decrees</DropdownMenuLabel>
+                                <DropdownMenuItem onSelect={() => setIsEditRoleOpen(true)}><Edit className="mr-2" />Bestow Rank</DropdownMenuItem>
                                 <DropdownMenuSeparator />
-                                <DropdownMenuItem onSelect={() => setIsRemoveUserOpen(true)} className="text-destructive"><Trash2 className="mr-2" />Remove User</DropdownMenuItem>
+                                <DropdownMenuItem onSelect={() => setIsRemoveUserOpen(true)} className="text-destructive"><Trash2 className="mr-2" />Exile Soul</DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
                     )}
@@ -107,7 +107,7 @@ export default function UserCard({ user, currentUserId, onActionComplete }: User
                     </div>
                 </CardContent>
                 <CardFooter className="p-4 pt-0 mt-auto text-xs text-muted-foreground">
-                    Last login: {user.lastLoginAt ? `${formatDistanceToNow(new Date(user.lastLoginAt))} ago` : 'Never'}
+                    Last active: {user.lastLoginAt ? `${formatDistanceToNow(new Date(user.lastLoginAt))} ago` : 'Never'}
                 </CardFooter>
             </Card>
 
@@ -115,8 +115,8 @@ export default function UserCard({ user, currentUserId, onActionComplete }: User
             <Dialog open={isEditRoleOpen} onOpenChange={setIsEditRoleOpen}>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>Edit Role for {user.email}</DialogTitle>
-                        <DialogDescription>Change the user's permissions within the workspace.</DialogDescription>
+                        <DialogTitle>Bestow Rank upon {user.email}</DialogTitle>
+                        <DialogDescription>Change the soul's permissions within the Pantheon.</DialogDescription>
                     </DialogHeader>
                     <form action={handleUpdateRole}>
                         <input type="hidden" name="userId" value={user.id} />
@@ -130,7 +130,7 @@ export default function UserCard({ user, currentUserId, onActionComplete }: User
                         </Select>
                         <DialogFooter className="mt-4">
                             <DialogClose asChild><Button type="button" variant="secondary">Cancel</Button></DialogClose>
-                            <Button type="submit" disabled={isPending}>{isPending && <Loader2 className="mr-2 animate-spin"/>}Save Changes</Button>
+                            <Button type="submit" disabled={isPending}>{isPending && <Loader2 className="mr-2 animate-spin"/>}Enact Decree</Button>
                         </DialogFooter>
                     </form>
                 </DialogContent>
@@ -139,15 +139,15 @@ export default function UserCard({ user, currentUserId, onActionComplete }: User
             <AlertDialog open={isRemoveUserOpen} onOpenChange={setIsRemoveUserOpen}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
-                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                        <AlertDialogTitle>Exile Soul from Pantheon?</AlertDialogTitle>
                         <AlertDialogDescription>
-                            This will permanently remove <strong className="text-foreground">{user.email}</strong> from the workspace. They will lose all access. This action cannot be undone.
+                            This will permanently exile <strong className="text-foreground">{user.email}</strong> from the workspace. They will lose all access. This action cannot be undone.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
                         <AlertDialogAction onClick={handleRemoveUser} className="bg-destructive hover:bg-destructive/90" disabled={isPending}>
-                            {isPending ? <Loader2 className="animate-spin" /> : 'Remove User'}
+                            {isPending ? <Loader2 className="animate-spin" /> : 'Exile Soul'}
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
