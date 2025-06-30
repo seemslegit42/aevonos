@@ -72,7 +72,8 @@ export type MicroAppType =
   | 'oracle-of-delphi-valley'
   | 'admin-console'
   | 'validator'
-  | 'reno-mode';
+  | 'reno-mode'
+  | 'patrickt-app';
 
 // Define the shape of a MicroApp instance
 export interface MicroApp {
@@ -370,6 +371,11 @@ export const useAppStore = create<AppState>((set, get) => {
         
         case 'reno-mode':
             launchApp('reno-mode', { contentProps: report.report as RenoModeAnalysisOutput });
+            break;
+        
+        case 'patrickt-app':
+            // Logic for handling Patrickt reports would go here
+            console.log("Received Patrickt report:", report.report);
             break;
       }
     }

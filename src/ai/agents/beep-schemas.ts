@@ -31,6 +31,8 @@ import { LucilleBluthOutputSchema } from './lucille-bluth-schemas';
 import { PamAudioOutputSchema } from './pam-poovey-schemas';
 import { TransactionSchema } from '@/ai/tools/ledger-schemas';
 import { StonksBotOutputSchema } from './stonks-bot-schemas';
+import { RenoModeAnalysisOutputSchema } from './reno-mode-schemas';
+import { PatricktAgentOutputSchema } from './patrickt-agent-schemas';
 
 
 // Schemas from the original BEEP agent, preserved for the public contract.
@@ -69,6 +71,8 @@ const LaunchableAppTypeSchema = z.enum([
   'top-up',
   'admin-console',
   'validator',
+  'reno-mode',
+  'patrickt-app',
 ]);
 
 export const AppToLaunchSchema = z.object({
@@ -269,6 +273,14 @@ export const AgentReportSchema = z.discriminatedUnion('agent', [
   z.object({
     agent: z.literal('stonks'),
     report: StonksBotOutputSchema.describe('The full report from the Stonks Bot.'),
+  }),
+  z.object({
+    agent: z.literal('reno-mode'),
+    report: RenoModeAnalysisOutputSchema.describe('The report from the Reno Mode™ agent.'),
+  }),
+  z.object({
+    agent: z.literal('patrickt-app'),
+    report: PatricktAgentOutputSchema.describe('The report from the Patrickt™ agent.'),
   }),
 ]);
 

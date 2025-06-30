@@ -1,4 +1,5 @@
 
+
 /**
  * @fileOverview This file defines the central tool registry for the BEEP agent.
  * It uses a factory pattern to create context-aware tool instances.
@@ -40,6 +41,7 @@ import { analyzeExpense } from '@/ai/agents/lucille-bluth';
 import { generatePamRant } from './pam-poovey';
 import { getStonksAdvice } from './stonks-bot';
 import { analyzeCarShame } from '@/ai/agents/reno-mode';
+import { processPatricktAction } from './patrickt-agent';
 
 
 // Tool Imports
@@ -81,6 +83,7 @@ import { PamScriptInputSchema } from './pam-poovey-schemas';
 import { CreateManualTransactionInputSchema } from '@/ai/tools/ledger-schemas';
 import { StonksBotInputSchema } from './stonks-bot-schemas';
 import { RenoModeAnalysisInputSchema } from './reno-mode-schemas';
+import { PatricktAgentInputSchema } from './patrickt-agent-schemas';
 
 
 // Context for multi-tenancy and personalization
@@ -428,6 +431,14 @@ export function getTools(context: AgentContext): Tool[] {
             schema: RenoModeAnalysisInputSchema.omit({ workspaceId: true }),
             agentName: 'reno-mode',
             agentFunc: (toolInput) => analyzeCarShame({ ...toolInput, workspaceId }),
+        }),
+
+        createAgentTool({
+            name: 'managePatricktSaga',
+            description: 'Logs events, gets roasts, or analyzes drama related to the "Patrickt" saga. Action can be LOG_EVENT, ANALYZE_DRAMA, or GENERATE_ROAST.',
+            schema: PatricktAgentInputSchema.omit({ workspaceId: true }),
+            agentName: 'patrickt-app',
+            agentFunc: (toolInput) => processPatricktAction({ ...toolInput, workspaceId }),
         }),
     ];
 }
