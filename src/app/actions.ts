@@ -7,7 +7,6 @@ import { revalidatePath } from 'next/cache';
 import { scanEvidence as scanEvidenceFlow, type PaperTrailScanInput, type PaperTrailScanOutput } from '@/ai/agents/paper-trail';
 import { getServerActionSession } from '@/lib/auth';
 import { confirmPendingTransaction } from '@/services/ledger-service';
-import { TransactionType } from '@prisma/client';
 import { z } from 'zod';
 import { requestCreditTopUpInDb } from '@/services/billing-service';
 import { microAppManifests } from '@/config/micro-apps';
@@ -16,6 +15,8 @@ import prisma from '@/lib/prisma';
 import { differenceInMinutes } from 'date-fns';
 import { calculateOutcome } from '@/services/klepsydra-service';
 import { InsufficientCreditsError } from '@/lib/errors';
+import { TransactionType } from '@prisma/client';
+import { acceptReclamationGift } from './auth/actions';
 
 
 export async function handleCommand(command: string): Promise<UserCommandOutput> {
@@ -434,4 +435,8 @@ export async function makeFollyTribute(instrumentId: string, tributeAmount: numb
     const errorMessage = error instanceof Error ? error.message : 'Tribute failed.';
     return { success: false, error: errorMessage };
   }
+}
+
+export async function handleAcceptReclamationGift(): Promise<{ success: boolean; error?: string }> {
+  return acceptReclamationGift();
 }

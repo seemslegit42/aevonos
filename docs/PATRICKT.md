@@ -38,4 +38,4 @@ The UI is a single, self-contained React component that provides the core user e
 - **Agentic Control**: BEEP can directly use the `managePatricktSaga` tool to interact with the `patrickt-agent`. For example, a user can command: `log a new Patrickt moment in the Friend Betrayals category: he ate my fucking leftovers`.
 - **The Armory**: As a high-affinity utility, the Patrickt™ app is listed in The Armory as a featured, one-time purchase, driving engagement with the ΞCredit economy.
 
-The Patrickt™ Micro-App is a testament to the ΛΞVON OS philosophy of building tools that solve hyper-specific, deeply personal problems, even if those problems are, in fact, just one person.
+The Patrickt™ Micro-App is a testament to the ΛΞVON OS philosophy of building hyper-specific, deeply personal problems, even if those problems are, in fact, just one person.
