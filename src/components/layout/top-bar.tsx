@@ -86,7 +86,6 @@ export default function TopBar({ user, workspace }: TopBarProps) {
             placeholder={placeholderText}
             className={cn(
               "w-full h-10",
-              "focus-visible:ring-1 focus-visible:ring-roman-aqua",
               isLoading && "ring-1 ring-inset ring-roman-aqua animate-pulse"
             )}
             disabled={isLoading}
