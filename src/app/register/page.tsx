@@ -11,10 +11,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { UserPsyche } from '@prisma/client';
 import { FlowerOfLifeIcon } from '@/components/icons/FlowerOfLifeIcon';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 const formSchema = z.object({
   workspaceName: z.string().trim().min(1),
@@ -166,17 +167,42 @@ const PhaseThree = ({ nextPhase, methods }: { nextPhase: () => void, methods: an
                     “ΛΞVON is listening. But to act, it must be named.”
                 </h2>
                 <div className="space-y-4">
-                    <Input 
-                        {...register('workspaceName')}
-                        className="bg-transparent border-foreground/30 text-center text-lg h-14 focus-visible:ring-primary"
-                        placeholder="Name Your Canvas..."
-                    />
-                     {errors.workspaceName && <p className="text-destructive text-sm">{errors.workspaceName.message as string}</p>}
-                    <Input 
-                        {...register('agentAlias')}
-                        className="bg-transparent border-foreground/30 text-center text-lg h-14 focus-visible:ring-primary"
-                        placeholder="Name Your Voice (Optional, default: BEEP)"
-                    />
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger asChild className="w-full">
+                                <div className="relative">
+                                    <Input 
+                                        {...register('workspaceName')}
+                                        className="bg-transparent border-foreground/30 text-center text-lg h-14 focus-visible:ring-primary pr-10"
+                                        placeholder="Name Your Canvas..."
+                                    />
+                                    <Info className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none" />
+                                </div>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                                <p>The Canvas is your main workspace—the dynamic, persistent<br/>environment where you compose and interact with Micro-Apps.</p>
+                            </TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
+                    {errors.workspaceName && <p className="text-destructive text-sm">{errors.workspaceName.message as string}</p>}
+                    
+                     <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger asChild className="w-full">
+                                <div className="relative">
+                                    <Input 
+                                        {...register('agentAlias')}
+                                        className="bg-transparent border-foreground/30 text-center text-lg h-14 focus-visible:ring-primary pr-10"
+                                        placeholder="Name Your Voice (Optional, default: BEEP)"
+                                    />
+                                    <Info className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none" />
+                                </div>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                                <p>The Voice is your primary agentic interface, BEEP. It understands<br/>commands, orchestrates workflows, and is the soul of the OS.</p>
+                            </TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
                 </div>
                  <Button onClick={nextPhase} disabled={!workspaceName} variant="ghost" className="text-muted-foreground hover:text-primary transition-colors">Continue</Button>
             </motion.div>
