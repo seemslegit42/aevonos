@@ -90,7 +90,7 @@ async function main() {
       name: 'Primary Canvas',
       ownerId: adminUser.id,
       planTier: PlanTier.Artisan,
-      credits: new Prisma.Decimal(0.0),
+      credits: 1000.0,
       members: {
         connect: [
           { id: adminUser.id },
@@ -103,24 +103,18 @@ async function main() {
   })
   console.log(`Created workspace with id: ${newWorkspace.id}`)
 
-  // Seed the genesis transaction for the initial credits
+  // Seed the genesis transaction for the initial credits, which were granted at workspace creation.
   await prisma.transaction.create({
     data: {
         workspaceId: newWorkspace.id,
         type: TransactionType.CREDIT,
         amount: new Prisma.Decimal(1000.0),
-        description: "Initial workspace credit grant.",
+        description: "Initial workspace credit grant for Artisan plan.",
         userId: adminUser.id,
         status: 'COMPLETED'
     }
   });
-
-  // Since transactions don't auto-update balances in seeds, do it manually.
-  await prisma.workspace.update({
-      where: { id: newWorkspace.id },
-      data: { credits: new Prisma.Decimal(1000.0) }
-  });
-  console.log('Seeded genesis credit transaction and updated workspace balance.');
+  console.log('Seeded genesis credit transaction log.');
 
 
   const statuses: AgentStatus[] = [AgentStatus.active, AgentStatus.idle, AgentStatus.processing, AgentStatus.paused, AgentStatus.error];

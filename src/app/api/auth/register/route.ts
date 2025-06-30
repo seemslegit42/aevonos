@@ -60,28 +60,23 @@ export async function POST(request: Request) {
                 name: workspaceName,
                 ownerId: newUser.id,
                 planTier: PlanTier.Apprentice, // All new signups start on the free Apprentice plan
+                credits: new Prisma.Decimal(100.0), // Grant initial credits directly.
                 members: {
                     connect: { id: newUser.id }
                 }
             }
         });
         
-        // Seed the genesis transaction for the initial credits
+        // Log the genesis transaction for the initial credits. This is for the audit trail.
         await tx.transaction.create({
             data: {
                 workspaceId: newWorkspace.id,
                 type: TransactionType.CREDIT,
-                amount: new Prisma.Decimal(100.0), // Apprentice plan starts with 100 credits
+                amount: new Prisma.Decimal(100.0),
                 description: "Initial Apprentice credit grant.",
                 userId: newUser.id,
                 status: TransactionStatus.COMPLETED
             }
-        });
-
-        // Manually update the workspace credit balance within the same transaction
-        await tx.workspace.update({
-            where: { id: newWorkspace.id },
-            data: { credits: new Prisma.Decimal(100.0) }
         });
 
         return { user: newUser, workspace: newWorkspace };
