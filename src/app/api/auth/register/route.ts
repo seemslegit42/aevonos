@@ -6,7 +6,7 @@ import { z } from 'zod';
 import { encrypt } from '@/lib/auth';
 import prisma from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
-import { UserPsyche, PlanTier, TransactionType, TransactionStatus, UserRole } from '@prisma/client';
+import { UserPsyche, PlanTier, TransactionType, TransactionStatus, UserRole, Prisma } from '@prisma/client';
 
 // Updated schema to reflect the new Rite of Invocation flow
 const RegisterRequestSchema = z.object({
@@ -71,7 +71,7 @@ export async function POST(request: Request) {
             data: {
                 workspaceId: newWorkspace.id,
                 type: TransactionType.CREDIT,
-                amount: 100.0, // Apprentice plan starts with 100 credits
+                amount: new Prisma.Decimal(100.0), // Apprentice plan starts with 100 credits
                 description: "Initial Apprentice credit grant.",
                 userId: newUser.id,
                 status: TransactionStatus.COMPLETED
@@ -81,7 +81,7 @@ export async function POST(request: Request) {
         // Manually update the workspace credit balance within the same transaction
         await tx.workspace.update({
             where: { id: newWorkspace.id },
-            data: { credits: 100.0 }
+            data: { credits: new Prisma.Decimal(100.0) }
         });
 
         return { user: newUser, workspace: newWorkspace };
