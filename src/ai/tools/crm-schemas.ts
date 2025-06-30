@@ -30,7 +30,7 @@ export type DeleteContactOutput = z.infer<typeof DeleteContactOutputSchema>;
 
 export const ContactSchema = z.object({
     id: z.string(),
-    email: z.string().nullable(),
+    email: z.string().nullable().describe('The contact\'s email address.'),
     firstName: z.string().nullable(),
     lastName: z.string().nullable(),
     phone: z.string().nullable(),
