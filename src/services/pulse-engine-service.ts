@@ -30,6 +30,8 @@ async function getPulseProfile(userId: string): Promise<PulseProfile> {
         userId,
         phaseOffset,
         baselineLuck: pulseEngineConfig.BASE_LUCK,
+        amplitude: 0.15, // Default amplitude for luck oscillation
+        frequency: 0.01, // Default frequency for a slow, subtle pulse
       },
     });
   }
