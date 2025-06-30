@@ -161,6 +161,7 @@ This document provides the formal OpenAPI 3.0 specification for the ΛΞVON OS P
         "tags": ["BEEP"],
         "summary": "Send a natural language command to BEEP for processing.",
         "operationId": "sendBeepCommand",
+        "description": "All agentic tools (e.g., Stonks Bot, Dr. Syntax) are accessed through this central command endpoint.",
         "requestBody": {
           "required": true,
           "content": {
@@ -294,30 +295,6 @@ This document provides the formal OpenAPI 3.0 specification for the ΛΞVON OS P
           "400": { "description": "Bad request (e.g., missing password for encryption)." }
         }
       }
-    },
-    "/agents/stonks/advice": {
-      "post": {
-        "tags": ["Agents"],
-        "summary": "Get unhinged financial advice from the Stonks Bot.",
-        "operationId": "getStonksBotAdvice",
-        "description": "Submits a stock ticker to the Stonks Bot agent and returns its 'analysis'. This is not financial advice.",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": { "$ref": "#/components/schemas/StonksBotRequest" }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "The Stonks Bot's advice.",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/StonksBotResponse" } } }
-          },
-          "400": { "description": "Invalid ticker symbol." },
-          "402": { "description": "Insufficient credits for agent action." }
-        }
-      }
     }
   },
   "components": {
@@ -363,6 +340,8 @@ This document provides the formal OpenAPI 3.0 specification for the ΛΞVON OS P
           "firstName": { "type": "string", "nullable": true },
           "lastName": { "type": "string", "nullable": true },
           "role": { "type": "string", "enum": ["ADMIN", "MANAGER", "OPERATOR", "AUDITOR"] },
+          "agentAlias": { "type": "string", "nullable": true, "description": "The user's personalized name for BEEP." },
+          "psyche": { "$ref": "#/components/schemas/UserPsyche", "nullable": true },
           "lastLoginAt": { "type": "string", "format": "date-time", "nullable": true }
         }
       },
@@ -410,7 +389,7 @@ This document provides the formal OpenAPI 3.0 specification for the ΛΞVON OS P
           "workspaceId": { "type": "string" },
           "userId": { "type": "string", "nullable": true },
           "type": { "type": "string", "enum": ["CREDIT", "DEBIT", "TRIBUTE"] },
-          "amount": { "type": "number", "format": "decimal", "description": "The net amount of the transaction. For tributes, this is boonAmount - tributeAmount." },
+          "amount": { "type": "number", "format": "decimal", "description": "The net change to the balance. For tributes, this is boonAmount - tributeAmount." },
           "description": { "type": "string" },
           "status": { "type": "string", "enum": ["PENDING", "COMPLETED", "FAILED"] },
           "createdAt": { "type": "string", "format": "date-time" },
@@ -495,34 +474,6 @@ This document provides the formal OpenAPI 3.0 specification for the ΛΞVON OS P
             "decoyResult": { "type": "object", "nullable": true }
         },
         "required": ["targetName"]
-      },
-      "StonksBotRequest": {
-        "type": "object",
-        "properties": {
-          "ticker": { "type": "string", "example": "GME", "description": "The stock ticker symbol." },
-          "mode": { "type": "string", "enum": ["Meme-Lord", "MBAcore", "Oracle Mode"], "description": "The personality mode for the bot's response." }
-        },
-        "required": ["ticker", "mode"]
-      },
-      "StonksBotResponse": {
-        "type": "object",
-        "properties": {
-          "ticker": { "type": "string" },
-          "priceInfo": { "$ref": "#/components/schemas/StockPrice" },
-          "advice": { "type": "string", "description": "The unhinged, extremely bullish, and financially irresponsible advice from the Stonks Bot." },
-          "confidence": { "type": "string", "enum": ["To the moon!", "Diamond hands!", "Ape strong together!", "The prophecy is clear.", "Metrics align.", "Vibes are immaculate."] },
-          "rating": { "type": "string", "enum": ["HODL", "BUY THE DIP", "ALL IN", "Consider a diversified position", "The runes are unclear", "Sell to the fools"] },
-          "horoscope": { "type": "string", "description": "A financial astrology-based horoscope for the stock." }
-        }
-      },
-      "StockPrice": {
-        "type": "object",
-        "properties": {
-          "symbol": { "type": "string" },
-          "price": { "type": "string" },
-          "change": { "type": "string" },
-          "changePercent": { "type": "string" }
-        }
       }
     }
   }
