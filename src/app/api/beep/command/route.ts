@@ -3,6 +3,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { processUserCommand } from '@/ai/agents/beep';
 import { getSession } from '@/lib/auth';
 import { z } from 'zod';
+import prisma from '@/lib/prisma';
+import { UserPsyche } from '@prisma/client';
 
 const BeepCommandRequestSchema = z.object({
   command: z.string(),
@@ -15,6 +17,15 @@ export async function POST(request: NextRequest) {
     const session = await getSession(request);
     if (!session?.userId || !session?.workspaceId) {
         return NextResponse.json({ error: 'Unauthorized. A valid session token is required.' }, { status: 401 });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: session.userId },
+      select: { psyche: true }
+    });
+
+    if (!user) {
+        return NextResponse.json({ error: 'User not found.' }, { status: 404 });
     }
 
     const body = await request.json();
@@ -30,6 +41,7 @@ export async function POST(request: NextRequest) {
         userCommand: command,
         userId: session.userId,
         workspaceId: session.workspaceId,
+        psyche: user.psyche,
     });
 
     // Adapt the internal UserCommandOutput to the public API response schema from api-spec.md.

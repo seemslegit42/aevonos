@@ -1,7 +1,3 @@
-// This component has been deprecated.
-// Its functionality has been migrated to the ContactEditor Micro-App
-// in src/components/micro-apps/contact-editor.tsx to adhere to
-// the "No Modal Chaos" UX law. This file can be safely removed.
-export default function ContactForm() {
-    return null;
-}
+// This file has been decommissioned as part of a comprehensive project cleanup.
+// It was an obsolete component, replaced by the Contact Editor Micro-App.
+// This file can be safely removed in a future refactor.

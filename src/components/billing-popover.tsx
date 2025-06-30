@@ -1,9 +1,3 @@
-
-// This component has been deprecated.
-// Its functionality has been migrated to the Usage Monitor Micro-App
-// which can be launched via BEEP command (e.g., "show usage").
-// This change adheres to the "No Modal Chaos" UX law.
+// This file has been decommissioned as part of a comprehensive project cleanup.
+// It was an obsolete component, replaced by the Usage Monitor Micro-App.
 // This file can be safely removed in a future refactor.
-export default function BillingPopoverContent() {
-    return null;
-}

@@ -1,7 +1,3 @@
-// This component has been deprecated.
-// Its functionality has been migrated to the Validator Micro-App
-// in src/components/micro-apps/validator.tsx.
+// This file has been decommissioned as part of a comprehensive project cleanup.
+// It was an obsolete component, replaced by the Validator Micro-App.
 // This file can be safely removed in a future refactor.
-export default function ValidatorTool() {
-    return null;
-}

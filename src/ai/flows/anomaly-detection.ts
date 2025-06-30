@@ -1,1 +1,3 @@
-// This file has been decommissioned as part of the comprehensive overhaul.
+// This file has been decommissioned as part of a comprehensive project cleanup.
+// It was an obsolete flow, replaced by the Aegis agent.
+// This file can be safely removed in a future refactor.

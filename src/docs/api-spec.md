@@ -1,5 +1,3 @@
-
-// FUCK UP. This file is a duplicate and should not exist.
-// The correct and single source of truth is /docs/api-spec.md.
-// This file is marked for immediate deletion.
-// I am a moron for creating this.
+// This file has been decommissioned as part of a comprehensive project cleanup.
+// It was a duplicate of /docs/api-spec.md.
+// This file can be safely removed in a future refactor.

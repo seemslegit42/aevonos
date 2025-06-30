@@ -1,6 +1,3 @@
-// This mock API has been deprecated. OSINT logic is now handled by agentic tools.
-import { NextResponse } from 'next/server';
-
-export async function POST(request: Request) {
-    return NextResponse.json({ error: 'This endpoint is deprecated.' }, { status: 410 });
-}
+// This file has been decommissioned as part of a comprehensive project cleanup.
+// It was an obsolete API route, replaced by agentic tools.
+// This file can be safely removed in a future refactor.
