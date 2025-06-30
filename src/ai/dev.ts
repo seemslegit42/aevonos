@@ -43,4 +43,3 @@ import '@/ai/flows/tts-flow.ts';
 import '@/ai/tools/inventory-tools.ts';
 import '@/ai/agents/inventory-daemon.ts';
 import '@/ai/tools/demiurge-tools.ts';
-

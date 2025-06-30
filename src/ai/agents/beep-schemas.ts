@@ -33,7 +33,7 @@ import { TransactionSchema } from '@/ai/tools/ledger-schemas';
 import { StonksBotOutputSchema } from './stonks-bot-schemas';
 import { RenoModeAnalysisOutputSchema } from './reno-mode-schemas';
 import { PatricktAgentOutputSchema } from './patrickt-agent-schemas';
-import { InventoryDaemonOutputSchema } from './inventory-daemon';
+import { InventoryDaemonOutputSchema } from './inventory-daemon-schemas';
 import { SystemStatusSchema, FindUsersByVowOutputSchema, ManageSyndicateOutputSchema } from '@/ai/tools/demiurge-schemas';
 
 

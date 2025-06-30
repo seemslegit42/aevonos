@@ -43,7 +43,7 @@ import { generatePamRant } from './pam-poovey';
 import { getStonksAdvice } from './stonks-bot';
 import { analyzeCarShame } from '@/ai/agents/reno-mode';
 import { processPatricktAction } from './patrickt-agent';
-import { consultInventoryDaemon } from '@/ai/agents/inventory-daemon';
+import { consultInventoryDaemon } from './inventory-daemon';
 
 
 // Tool Imports
@@ -87,7 +87,7 @@ import { CreateManualTransactionInputSchema } from '@/ai/tools/ledger-schemas';
 import { StonksBotInputSchema } from './stonks-bot-schemas';
 import { RenoModeAnalysisInputSchema } from './reno-mode-schemas';
 import { PatricktAgentInputSchema } from './patrickt-agent-schemas';
-import { InventoryDaemonInputSchema } from './inventory-daemon';
+import { InventoryDaemonInputSchema } from './inventory-daemon-schemas';
 import { FindUsersByVowInputSchema, ManageSyndicateInputSchema } from '@/ai/tools/demiurge-schemas';
 
 

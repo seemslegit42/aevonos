@@ -71,7 +71,7 @@ Aegis is our "always-on bodyguard," integrated at multiple points in the CI/CD p
 
 -   **SAST (Static Analysis)**: In the CI stage, identifying vulnerabilities in code.
 -   **Dependency Scanning**: Using tools like `npm audit` or GitHub's Dependabot to check for known vulnerabilities in third-party libraries.
--   **Secrets Management**: Securely handling API keys and credentials using environment variables (e.g., Vercel Environment Variables), preventing hardcoding.
+-   **Secrets Management**: Securely handling API keys and credentials using environment variables, preventing hardcoding.
 -   **Audit Trails**: Comprehensive logging of all pipeline activities for traceability and compliance.
 
 ## 6. Rollback Strategy

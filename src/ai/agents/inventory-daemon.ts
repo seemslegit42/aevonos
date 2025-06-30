@@ -17,6 +17,7 @@ import { zodToJsonSchema } from 'zod-to-json-schema';
 import { langchainGroq } from '@/ai/genkit';
 import { getStockLevels, placePurchaseOrder } from '@/ai/tools/inventory-tools';
 import { z } from 'zod';
+import { InventoryDaemonInputSchema, InventoryDaemonOutputSchema, type InventoryDaemonInput, type InventoryDaemonOutput } from './inventory-daemon-schemas';
 
 const inventoryTools = [getStockLevels, placePurchaseOrder];
 const modelWithTools = langchainGroq.bind({
@@ -80,16 +81,6 @@ workflow.addEdge('tools', 'agent');
 const inventoryApp = workflow.compile();
 
 // 5. Create the exported flow for BEEP to call
-export const InventoryDaemonInputSchema = z.object({
-  query: z.string().describe("The user's inventory-related query or command."),
-});
-export type InventoryDaemonInput = z.infer<typeof InventoryDaemonInputSchema>;
-
-export const InventoryDaemonOutputSchema = z.object({
-  response: z.string().describe("The final, synthesized response from the Inventory Daemon."),
-});
-export type InventoryDaemonOutput = z.infer<typeof InventoryDaemonOutputSchema>;
-
 export async function consultInventoryDaemon(input: InventoryDaemonInput): Promise<InventoryDaemonOutput> {
     const systemMessage = new HumanMessage(
         `You are the Daemon of Inventory. Your purpose is to provide precise, accurate, and actionable information about inventory levels and supply chain logistics. You are efficient and focused. You must use your available tools to answer the user's query. When you have a final answer, state it clearly.
