@@ -18,7 +18,7 @@ The CI/CD strategy for ΛΞVON OS is designed to support our monolithic Next.js 
 -   **Cloud Provider**: Vercel (for frontend and serverless functions) and Google Cloud Platform (GCP) for database hosting.
 -   **CI/CD Orchestrator**: GitHub Actions for automated testing and deployments.
 -   **Frontend Deployment**: Vercel (for Next.js frontend and API Routes/Edge Functions).
--   **Database**: Serverless PostgreSQL (e.g., Neon, Supabase, or Vercel Postgres).
+-   **Database**: Serverless PostgreSQL (e.g., Neon, Supabase, or Vercel Postgres) with Prisma as the ORM.
 -   **Package Manager**: `pnpm` for efficient package management.
 -   **Testing Frameworks**: `jest` or `vitest` for unit/integration testing, `playwright` for E2E testing.
 -   **Code Quality**: ESLint for TypeScript/React, Prettier for formatting.
@@ -55,10 +55,13 @@ The CI/CD pipeline for ΛΞVON OS is structured into distinct, automated stages 
     1.  **Deployment to Vercel**:
         -   **Action**: GitHub Actions trigger a Vercel deployment.
         -   **Outcome**: Updates the application in the target environment.
-    2.  **Post-Deployment Health Checks**:
+    2.  **Database Migration**:
+        -   **Action**: `prisma migrate deploy` is run as part of the Vercel build process.
+        -   **Outcome**: The production database schema is updated to match the latest version.
+    3.  **Post-Deployment Health Checks**:
         -   **Action**: Automated checks to ensure the deployed application is running and accessible.
         -   **Outcome**: Verifies basic deployment success.
-    3.  **End-to-End (E2E) Tests**:
+    4.  **End-to-End (E2E) Tests**:
         -   **Action**: Execute Playwright tests against the deployed preview or production environment to validate critical user flows.
         -   **Outcome**: Confirms end-to-end functionality and user experience.
 
