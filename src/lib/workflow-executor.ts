@@ -91,7 +91,7 @@ async function executeNode(node: Node, payload: any, context: ExecutionContext):
  * @param workflow The workflow object from the database.
  * @param payload The trigger payload for the workflow run.
  * @param context The execution context (e.g., workspaceId).
- * @returns The result of the final node in the execution path.
+ * @returns An object containing both the final payload and the detailed execution log.
  */
 export async function executeWorkflow(
     workflow: PrismaWorkflow, 

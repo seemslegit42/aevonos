@@ -1,5 +1,5 @@
 
-import { PrismaClient, AgentStatus, SecurityRiskLevel, TransactionType, PlanTier, UserRole, UserPsyche, ChaosCardClass } from '@prisma/client'
+import { PrismaClient, AgentStatus, SecurityRiskLevel, TransactionType, PlanTier, UserRole, UserPsyche, ChaosCardClass, Prisma } from '@prisma/client'
 import bcrypt from 'bcryptjs'
 import { chaosCardManifest } from '../src/config/chaos-cards';
 
@@ -90,7 +90,7 @@ async function main() {
       name: 'Primary Canvas',
       ownerId: adminUser.id,
       planTier: PlanTier.Artisan,
-      credits: 0.0,
+      credits: new Prisma.Decimal(0.0),
       members: {
         connect: [
           { id: adminUser.id },
@@ -108,7 +108,7 @@ async function main() {
     data: {
         workspaceId: newWorkspace.id,
         type: TransactionType.CREDIT,
-        amount: 1000.0,
+        amount: new Prisma.Decimal(1000.0),
         description: "Initial workspace credit grant.",
         userId: adminUser.id,
         status: 'COMPLETED'
@@ -118,7 +118,7 @@ async function main() {
   // Since transactions don't auto-update balances in seeds, do it manually.
   await prisma.workspace.update({
       where: { id: newWorkspace.id },
-      data: { credits: 1000 }
+      data: { credits: new Prisma.Decimal(1000.0) }
   });
   console.log('Seeded genesis credit transaction and updated workspace balance.');
 

@@ -85,7 +85,7 @@ export default function BottomNavBar() {
             transition={{ type: "spring", stiffness: 100, damping: 20, delay: 0.2 }}
             className="fixed bottom-4 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-sm h-16 md:hidden z-50"
         >
-            <div className="relative w-full h-full flex items-center justify-around rounded-2xl border border-[rgba(245,255,250,0.3)] bg-[rgba(245,255,250,0.15)] text-card-foreground shadow-[0_8px_32px_0_rgba(28,25,52,0.1)] backdrop-blur-[20px]">
+            <div className="relative w-full h-full flex items-center justify-around rounded-2xl border border-[rgba(245,255,250,0.3)] bg-[rgba(245,255,250,0.15)] shadow-[0_8px_32px_0_rgba(28,25,52,0.1)] backdrop-blur-[20px]">
                 {leftNavItems.map((item) => <NavButton key={item.label} item={item} />)}
 
                 <div className="relative -top-5">

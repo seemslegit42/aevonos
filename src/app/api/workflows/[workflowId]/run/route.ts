@@ -54,7 +54,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
                 data: { status: WorkflowRunStatus.running }
             });
 
-            // The executor will now return both the result and the log
+            // The executor now returns both the result and the log
             const { finalPayload, executionLog } = await executeWorkflow(
                 workflow, 
                 trigger_payload, 

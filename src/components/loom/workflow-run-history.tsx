@@ -112,7 +112,7 @@ function RunDetails({ runId }: { runId: string }) {
         <div className="space-y-4">
             {details.triggerPayload && renderJsonPayload("Trigger Payload", details.triggerPayload)}
 
-            {details.log && details.log.length > 0 && (
+            {details.log && Array.isArray(details.log) && details.log.length > 0 && (
                 <div>
                     <h4 className="font-semibold text-sm mb-1">Execution Log</h4>
                     <Accordion type="single" collapsible className="w-full">

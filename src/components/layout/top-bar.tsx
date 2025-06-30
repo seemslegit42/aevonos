@@ -99,7 +99,7 @@ export default function TopBar({ user, workspace }: TopBarProps) {
            <div className="h-6 w-px bg-border/30" />
           <Button variant="ghost" className="p-0 h-auto hover:bg-transparent text-foreground" onClick={handleBillingClick}>
             <span>
-              Ξ <span className="text-gilded-accent font-bold">{workspace?.credits?.toFixed(2) ?? '0.00'}</span>
+              Ξ <span className="text-gilded-accent font-bold">{workspace?.credits ? Number(workspace.credits).toFixed(2) : '0.00'}</span>
             </span>
           </Button>
         </div>
