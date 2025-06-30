@@ -6,6 +6,7 @@ import { AgentStatus, UserRole } from '@prisma/client';
 import { getServerActionSession } from '@/lib/auth';
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
+import { confirmPendingTransaction } from '@/services/ledger-service';
 
 const UpdateUserRoleSchema = z.object({
   userId: z.string(),
@@ -205,4 +206,30 @@ export async function deleteAgent(formData: FormData) {
         console.error('deleteAgent error:', error);
         return { success: false, error: 'Database operation failed.' };
     }
+}
+
+export async function confirmPendingTransactionAction(transactionId: string): Promise<{ success: boolean; error?: string }> {
+  const session = await getServerActionSession();
+  if (!session?.userId || !session?.workspaceId) {
+    return { success: false, error: 'Unauthorized' };
+  }
+
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: session.userId },
+      select: { role: true }
+    });
+    
+    if (user?.role !== UserRole.ADMIN) {
+        return { success: false, error: 'Forbidden: Administrator access required.' };
+    }
+
+    await confirmPendingTransaction(transactionId, session.workspaceId);
+    revalidatePath('/'); // Revalidate to update UI across the app
+    return { success: true };
+
+  } catch (error) {
+    console.error(`[Action: confirmPendingTransaction] for tx ${transactionId}:`, error);
+    return { success: false, error: error instanceof Error ? error.message : 'Confirmation failed.' };
+  }
 }

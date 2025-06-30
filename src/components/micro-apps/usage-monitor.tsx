@@ -16,7 +16,7 @@ import { Transaction, TransactionStatus, TransactionType, User, UserRole, Worksp
 import { useAppStore } from '@/store/app-store';
 import { Separator } from '../ui/separator';
 import { chaosCardManifest } from '@/config/chaos-cards';
-import { confirmPendingTransactionAction } from '@/app/actions';
+import { confirmPendingTransactionAction } from '@/app/admin/actions';
 
 type UserProp = Pick<User, 'id' | 'email' | 'firstName' | 'lastName' | 'role'> | null;
 

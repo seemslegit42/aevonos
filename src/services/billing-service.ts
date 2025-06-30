@@ -79,7 +79,7 @@ export async function authorizeAndDebitAgentActions(workspaceId: string, amount:
             }
 
             // 3. If in overage (or partially in overage), check credit balance and debit.
-            const currentCredits = (workspace.credits as unknown as number);
+            const currentCredits = Number(workspace.credits);
             if (currentCredits < amount) {
                 throw new InsufficientCreditsError(`Insufficient credits for overage. Required: ${amount}, Available: ${currentCredits ?? 0}.`);
             }

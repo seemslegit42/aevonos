@@ -41,7 +41,7 @@ async function createTransaction(input: CreateTransactionInput) {
                     where: { id: workspaceId },
                     select: { credits: true },
                 });
-                if (!workspace || (workspace.credits as unknown as number) < amount) {
+                if (!workspace || (Number(workspace.credits)) < amount) {
                     throw new InsufficientCreditsError('Insufficient credits for this transaction.');
                 }
             }
@@ -122,7 +122,7 @@ export async function processMicroAppPurchase(
     });
 
     if (!workspace) throw new Error('Workspace not found.');
-    if ((workspace.credits as unknown as number) < creditCost) {
+    if (Number(workspace.credits) < creditCost) {
       throw new InsufficientCreditsError('Insufficient ΞCredits to acquire this Micro-App.');
     }
     if (workspace.unlockedAppIds.includes(appId)) {
