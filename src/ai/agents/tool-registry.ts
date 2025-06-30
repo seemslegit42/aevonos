@@ -41,6 +41,7 @@ import { generatePamRant } from './pam-poovey';
 import { getStonksAdvice } from './stonks-bot';
 import { analyzeCarShame } from '@/ai/agents/reno-mode';
 import { processPatricktAction } from './patrickt-agent';
+import { consultInventoryDaemon } from '@/ai/agents/inventory-daemon';
 
 
 // Tool Imports
@@ -83,6 +84,7 @@ import { CreateManualTransactionInputSchema } from '@/ai/tools/ledger-schemas';
 import { StonksBotInputSchema } from './stonks-bot-schemas';
 import { RenoModeAnalysisInputSchema } from './reno-mode-schemas';
 import { PatricktAgentInputSchema } from './patrickt-agent-schemas';
+import { InventoryDaemonInputSchema } from './inventory-daemon';
 
 
 // Context for multi-tenancy and personalization
@@ -438,6 +440,14 @@ export function getTools(context: AgentContext): Tool[] {
             schema: PatricktAgentInputSchema.omit({ workspaceId: true }),
             agentName: 'patrickt-app',
             agentFunc: (toolInput) => processPatricktAction({ ...toolInput, workspaceId }),
+        }),
+        
+        createAgentTool({
+            name: 'consultInventoryDaemon',
+            description: "Consults the specialist Inventory Daemon for any questions related to stock levels, purchase orders, or supply chain. Use for queries like 'How many Product X do we have?' or 'Reorder Product Y'.",
+            schema: InventoryDaemonInputSchema,
+            agentName: 'inventory-daemon',
+            agentFunc: (toolInput) => consultInventoryDaemon(toolInput),
         }),
     ];
 }

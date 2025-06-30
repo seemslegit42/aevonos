@@ -33,6 +33,7 @@ import { TransactionSchema } from '@/ai/tools/ledger-schemas';
 import { StonksBotOutputSchema } from './stonks-bot-schemas';
 import { RenoModeAnalysisOutputSchema } from './reno-mode-schemas';
 import { PatricktAgentOutputSchema } from './patrickt-agent-schemas';
+import { InventoryDaemonOutputSchema } from './inventory-daemon';
 
 
 // Schemas from the original BEEP agent, preserved for the public contract.
@@ -282,6 +283,10 @@ export const AgentReportSchema = z.discriminatedUnion('agent', [
   z.object({
     agent: z.literal('patrickt-app'),
     report: PatricktAgentOutputSchema.describe('The report from the Patrickt™ agent.'),
+  }),
+  z.object({
+    agent: z.literal('inventory-daemon'),
+    report: InventoryDaemonOutputSchema.describe('The report from the Inventory Daemon.'),
   }),
 ]);
 
