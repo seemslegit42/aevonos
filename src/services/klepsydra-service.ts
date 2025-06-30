@@ -32,6 +32,11 @@ const PSYCHE_MODIFIERS: Record<UserPsyche, { oddsFactor: number; boonFactor: num
     [UserPsyche.RISK_AVERSE_ARTISAN]: { oddsFactor: 1.15, boonFactor: 0.8 }, // Lower risk, lower reward
 };
 
+// Create a list of all card keys that are purely for aesthetic system effects.
+const aestheticEffectCardKeys = chaosCardManifest
+    .filter(card => card.cardClass === 'AESTHETIC' && card.systemEffect.includes('UI theme'))
+    .map(card => card.key);
+
 /**
  * Atomically processes a tribute for a Chaos Card. This function handles all logic:
  * outcome calculation, credit validation, database updates, and transaction logging.
@@ -49,7 +54,7 @@ export async function processChaosCardTribute(
     if (!cardManifest) {
         throw new Error('Chaos Card not found in manifest.');
     }
-    const { cost: tributeAmount, name: cardName, systemEffect, cardClass } = cardManifest;
+    const { cost: tributeAmount, name: cardName, systemEffect } = cardManifest;
 
     return prisma.$transaction(async (tx) => {
         // --- 1. PRE-CHECK AND OUTCOME CALCULATION ---
@@ -120,9 +125,11 @@ export async function processChaosCardTribute(
                 data: { ownedChaosCards: { connect: { id: cardInDb.id } } },
             });
             
-            if (systemEffect && cardClass === 'AESTHETIC') {
+            // If the card is an aesthetic effect, clear any other active aesthetic effects first.
+            // This is now dynamic and scalable for any new theme cards.
+            if (systemEffect && aestheticEffectCardKeys.includes(cardKey)) {
                await tx.activeSystemEffect.deleteMany({
-                  where: { workspaceId: workspaceId, cardKey: { in: ['ACROPOLIS_MARBLE'] } }
+                  where: { workspaceId: workspaceId, cardKey: { in: aestheticEffectCardKeys } }
                });
                await tx.activeSystemEffect.create({
                   data: {
