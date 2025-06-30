@@ -39,6 +39,7 @@ import { analyzeInvite } from '@/ai/agents/lumbergh';
 import { analyzeExpense } from '@/ai/agents/lucille-bluth';
 import { generatePamRant } from './pam-poovey';
 import { getStonksAdvice } from './stonks-bot';
+import { analyzeCarShame } from '@/ai/agents/reno-mode';
 
 
 // Tool Imports
@@ -79,6 +80,7 @@ import { LucilleBluthInputSchema } from './lucille-bluth-schemas';
 import { PamScriptInputSchema } from './pam-poovey-schemas';
 import { CreateManualTransactionInputSchema } from '@/ai/tools/ledger-schemas';
 import { StonksBotInputSchema } from './stonks-bot-schemas';
+import { RenoModeAnalysisInputSchema } from './reno-mode-schemas';
 
 
 // Context for multi-tenancy and personalization
@@ -418,6 +420,14 @@ export function getTools(context: AgentContext): Tool[] {
             schema: StonksBotInputSchema.omit({ workspaceId: true }),
             agentName: 'stonks',
             agentFunc: (toolInput) => getStonksAdvice({ ...toolInput, workspaceId }),
+        }),
+
+        createAgentTool({
+            name: 'analyzeCarShame',
+            description: "Analyzes a photo of a user's messy car to provide a shame rating, a roast, and a detailing recommendation.",
+            schema: RenoModeAnalysisInputSchema.omit({ workspaceId: true }),
+            agentName: 'reno-mode',
+            agentFunc: (toolInput) => analyzeCarShame({ ...toolInput, workspaceId }),
         }),
     ];
 }

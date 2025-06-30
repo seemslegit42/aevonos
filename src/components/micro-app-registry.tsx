@@ -35,6 +35,7 @@ import { StonksIcon } from './icons/StonksIcon';
 import { OracleOfDelphiValleyIcon } from './icons/OracleOfDelphiValleyIcon';
 import { AdminConsoleIcon } from './icons/AdminConsoleIcon';
 import { ValidatorIcon } from './icons/ValidatorIcon';
+import { RenoModeIcon } from './icons/RenoModeIcon';
 
 import { type MicroAppType } from '@/store/app-store';
 import ContactList from './micro-apps/contact-list';
@@ -71,6 +72,7 @@ import StonksBot from './micro-apps/stonks-bot';
 import OracleOfDelphiValley from './micro-apps/oracle-of-delphi-valley';
 import AdminConsole from './micro-apps/admin-console';
 import Validator from './micro-apps/validator';
+import RenoMode from './micro-apps/reno-mode';
 
 type ComponentRegistry = {
     icon: React.ComponentType<any>;
@@ -222,6 +224,10 @@ export const microAppRegistry: Record<MicroAppType, ComponentRegistry> = {
   'validator': {
     icon: ValidatorIcon,
     content: Validator,
+  },
+  'reno-mode': {
+    icon: RenoModeIcon,
+    content: RenoMode,
   },
 };
 

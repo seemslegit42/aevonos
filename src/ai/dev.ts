@@ -35,3 +35,4 @@ import '@/ai/agents/plan-advisor.ts';
 import '@/services/ledger-service.ts';
 import '@/ai/agents/stonks-bot.ts';
 import '@/ai/tools/finance-tools.ts';
+import '@/ai/agents/reno-mode.ts';

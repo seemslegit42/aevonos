@@ -31,6 +31,7 @@ import { type OrpheanOracleOutput } from '@/ai/agents/orphean-oracle-schemas';
 import type { DossierOutput } from '@/ai/agents/dossier-schemas';
 import { generateSpeech } from '@/ai/flows/tts-flow';
 import { StonksBotOutput } from '@/ai/agents/stonks-bot-schemas';
+import { RenoModeAnalysisOutput } from '@/ai/agents/reno-mode-schemas';
 
 // Define the types of MicroApps available in the OS
 export type MicroAppType = 
@@ -70,7 +71,8 @@ export type MicroAppType =
   | 'top-up'
   | 'oracle-of-delphi-valley'
   | 'admin-console'
-  | 'validator';
+  | 'validator'
+  | 'reno-mode';
 
 // Define the shape of a MicroApp instance
 export interface MicroApp {
@@ -364,6 +366,10 @@ export const useAppStore = create<AppState>((set, get) => {
         
         case 'stonks':
             upsertApp('stonks-bot', { id: 'singleton-stonks-bot', contentProps: report.report });
+            break;
+        
+        case 'reno-mode':
+            launchApp('reno-mode', { contentProps: report.report as RenoModeAnalysisOutput });
             break;
       }
     }
