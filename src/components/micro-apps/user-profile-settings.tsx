@@ -37,10 +37,11 @@ import {
 const profileFormSchema = z.object({
   firstName: z.string().optional(),
   lastName: z.string().optional(),
+  agentAlias: z.string().optional(),
 });
 
 type ProfileFormData = z.infer<typeof profileFormSchema>;
-type UserProp = Pick<User, 'id' | 'email' | 'firstName' | 'lastName'> | null;
+type UserProp = Pick<User, 'id' | 'email' | 'firstName' | 'lastName' | 'agentAlias'> | null;
 
 interface UserProfileSettingsProps {
   id: string; // App instance ID
@@ -59,6 +60,7 @@ export default function UserProfileSettings({ id, user }: UserProfileSettingsPro
     defaultValues: {
       firstName: user?.firstName || '',
       lastName: user?.lastName || '',
+      agentAlias: user?.agentAlias || '',
     },
   });
 
@@ -141,6 +143,19 @@ export default function UserProfileSettings({ id, user }: UserProfileSettingsPro
                                 <FormLabel>Last Name</FormLabel>
                                 <FormControl>
                                     <Input placeholder="Architect" {...field} disabled={isSubmitting} className="bg-background/80" />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                     <FormField
+                        control={form.control}
+                        name="agentAlias"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Agent Alias</FormLabel>
+                                <FormControl>
+                                    <Input placeholder="BEEP" {...field} disabled={isSubmitting} className="bg-background/80" />
                                 </FormControl>
                                 <FormMessage />
                             </FormItem>

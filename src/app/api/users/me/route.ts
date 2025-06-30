@@ -9,6 +9,7 @@ const UserUpdateRequestSchema = z.object({
   firstName: z.string().optional().nullable(),
   lastName: z.string().optional().nullable(),
   email: z.string().email().optional().nullable(),
+  agentAlias: z.string().optional().nullable(),
 });
 
 // Corresponds to operationId `getCurrentUser`
@@ -27,6 +28,7 @@ export async function GET(request: NextRequest) {
       firstName: true,
       lastName: true,
       role: true,
+      agentAlias: true,
       lastLoginAt: true,
     },
   });
@@ -66,6 +68,7 @@ export async function PUT(request: NextRequest) {
         email: updatedUser.email,
         firstName: updatedUser.firstName,
         lastName: updatedUser.lastName,
+        agentAlias: updatedUser.agentAlias,
         role: updatedUser.role,
         lastLoginAt: updatedUser.lastLoginAt,
     };
