@@ -2,7 +2,7 @@
 'use server';
 
 import type { Workflow as PrismaWorkflow } from '@prisma/client';
-import type { Workflow, Node } from '@/components/loom/types';
+import type { Workflow, Node, NodeType } from '@/components/loom/types';
 import { createContactInDb, listContactsFromDb, updateContactInDb, deleteContactInDb } from '@/ai/tools/crm-tools';
 import { drSyntaxCritique } from '@/ai/agents/dr-syntax';
 import { generateSolution } from '@/ai/agents/winston-wolfe';
@@ -14,34 +14,57 @@ import { generateBusinessKit } from '@/ai/agents/jroc';
 import { analyzeLaheyLog } from '@/ai/agents/lahey';
 import { processDailyLog } from '@/ai/agents/foremanator';
 import { analyzeCompliance } from '@/ai/agents/sterileish';
+import { processDocument } from '@/ai/agents/barbara';
 
 interface ExecutionContext {
     workspaceId: string;
 }
+
+// A map of node types to their corresponding agent/tool functions.
+// This makes the executor dynamic and easy to extend.
+const nodeExecutorMap: Record<string, (input: any) => Promise<any>> = {
+    'tool-winston-wolfe': generateSolution,
+    'tool-kif-kroker': analyzeComms,
+    'tool-vandelay': createVandelayAlibi,
+    'tool-rolodex': analyzeCandidate,
+    'tool-dr-syntax': drSyntaxCritique,
+    'tool-jroc': generateBusinessKit,
+    'tool-lahey': analyzeLaheyLog,
+    'tool-foremanator': processDailyLog,
+    'tool-sterileish': analyzeCompliance,
+    'tool-barbara': processDocument,
+    'tool-paper-trail': scanEvidence,
+    // Note: 'tool-crm' is handled separately due to its internal 'action' property.
+};
+
 
 async function executeNode(node: Node, payload: any, context: ExecutionContext): Promise<any> {
     const { type, data } = node;
     // The input to a node is a combination of the current payload and its own static configuration.
     const input = { ...payload, ...data, workspaceId: context.workspaceId };
 
-    console.log(`Executing node type: ${type} with label: ${data.label}`);
+    console.log(`[Executor] Executing node type: ${type} with label: ${data.label}`);
 
-    // Billing is now handled by the individual tools/agents being called, not the executor.
-
+    // Dynamic executor for most tools
+    const executor = nodeExecutorMap[type];
+    if (executor) {
+        return executor(input);
+    }
+    
+    // Special handling for specific node types
     switch (type) {
         case 'trigger':
             return { status: 'triggered', initialPayload: payload };
 
         case 'tool-final-answer':
-            console.log(`Reached Final Answer node.`);
+            console.log(`[Executor] Reached Final Answer node.`);
             return { finalOutput: payload };
 
         case 'tool-crm':
             const { action, ...crmData } = input;
-            console.log(`Executing CRM action: ${action} with input:`, crmData);
+            console.log(`[Executor] Executing CRM action: ${action} with input:`, crmData);
             switch (action) {
                 case 'list':
-                    // Note: listContactsFromDb will handle its own billing
                     return { contacts: await listContactsFromDb(context.workspaceId) }; 
                 case 'create':
                     return { newContact: await createContactInDb(crmData, context.workspaceId) };
@@ -55,39 +78,8 @@ async function executeNode(node: Node, payload: any, context: ExecutionContext):
                     throw new Error(`Unsupported CRM action in workflow: ${action}`);
             }
 
-        case 'tool-dr-syntax':
-            return await drSyntaxCritique(input);
-        
-        case 'tool-winston-wolfe':
-            return await generateSolution(input);
-
-        case 'tool-kif-kroker':
-             return await analyzeComms(input);
-        
-        case 'tool-vandelay':
-            return await createVandelayAlibi(input);
-
-        case 'tool-rolodex':
-            return await analyzeCandidate(input);
-
-        case 'tool-paper-trail':
-            if (!input.receiptPhotoUri) throw new Error("Paper Trail node requires a receiptPhotoUri in its payload.");
-            return await scanEvidence(input);
-        
-        case 'tool-jroc':
-            return await generateBusinessKit(input);
-
-        case 'tool-lahey':
-            return await analyzeLaheyLog(input);
-
-        case 'tool-foremanator':
-            return await processDailyLog(input);
-        
-        case 'tool-sterileish':
-            return await analyzeCompliance(input);
-            
         default:
-            console.log(`Node type '${type}' is not implemented for execution. Skipping.`);
+            console.warn(`[Executor] Node type '${type}' is not implemented for execution. Skipping.`);
             return { status: 'skipped', reason: `Node type '${type}' not implemented` };
     }
 }
@@ -145,7 +137,7 @@ export async function executeWorkflow(
         }
 
         if (step >= MAX_STEPS) {
-            console.warn(`Workflow execution stopped after ${MAX_STEPS} steps to prevent infinite loop.`);
+            console.warn(`[Executor] Workflow execution stopped after ${MAX_STEPS} steps to prevent infinite loop.`);
         }
     } catch (e) {
         // When an error occurs during execution, attach the log and re-throw
@@ -155,7 +147,7 @@ export async function executeWorkflow(
     }
 
 
-    console.log("Workflow execution complete. Final payload:", currentPayload);
+    console.log("[Executor] Workflow execution complete. Final payload:", currentPayload);
     // Return both the final payload and the execution log.
     return { finalPayload: currentPayload, executionLog };
 }

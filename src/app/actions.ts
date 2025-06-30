@@ -16,7 +16,6 @@ import prisma from '@/lib/prisma';
 import { differenceInMinutes } from 'date-fns';
 import { calculateOutcome } from '@/services/klepsydra-service';
 import { InsufficientCreditsError } from '@/lib/errors';
-import { logout, deleteAccount, acceptReclamationGift } from '@/app/auth/actions';
 
 
 export async function handleCommand(command: string): Promise<UserCommandOutput> {
@@ -436,5 +435,3 @@ export async function makeFollyTribute(instrumentId: string, tributeAmount: numb
     return { success: false, error: errorMessage };
   }
 }
-    
-

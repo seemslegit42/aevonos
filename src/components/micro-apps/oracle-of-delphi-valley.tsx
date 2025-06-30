@@ -1,17 +1,16 @@
 
 'use client';
 
-import React, 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Loader2, Zap, Gem, Flame, Handshake, ScrollText, GitBranchSlash } from 'lucide-react';
+import { Loader2, Zap, Gem, Flame } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Input } from '../ui/input';
 import { makeFollyTribute } from '@/app/actions';
 import { cn } from '@/lib/utils';
-import { useAppStore } from '@/store/app-store';
 
 const SYMBOL_CONFIG = {
     ROCKS: { icon: '🪨', label: 'Seed Round', color: 'text-gray-400' },
@@ -42,7 +41,6 @@ const Reel = ({ symbols, duration }: { symbols: SymbolKey[], duration: number })
 );
 
 export default function OracleOfDelphiValley() {
-    const { closeApp } = useAppStore();
     const [isLoading, setIsLoading] = useState(false);
     const [tributeAmount, setTributeAmount] = useState('25');
     const [reels, setReels] = useState<SymbolKey[][]>([['ROCKS'], ['ROCKS'], ['ROCKS']]);

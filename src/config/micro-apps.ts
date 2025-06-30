@@ -218,6 +218,21 @@ export const microAppManifests: MicroAppManifest[] = [
     routingPath: '/validator',
     contextAwareCapabilities: [],
   },
+  {
+    id: 'oracle-of-delphi-valley',
+    name: 'Oracle of Delphi (Valley)',
+    author: 'Klepsydra Engine',
+    description: 'The Folly of Venture Capital, gamified. Make your tribute to the Oracle.',
+    creditCost: 0,
+    priceModel: 'included',
+    imageUrl: 'https://placehold.co/600x400.png',
+    imageHint: 'temple oracle valley',
+    defaultSize: { width: 360, height: 520 },
+    permissionsRequired: ['write:billing'],
+    routingPath: '/oracle-of-delphi-valley',
+    contextAwareCapabilities: ['tribute_hook'],
+    isFeatured: true,
+  },
   
   // --- Acquirable Apps (One-Time Cost) ---
   {
@@ -534,19 +549,4 @@ export const microAppManifests: MicroAppManifest[] = [
     contextAwareCapabilities: [],
     isFeatured: true,
   },
-  {
-    id: 'oracle-of-delphi-valley',
-    name: 'Oracle of Delphi (Valley)',
-    author: 'Klepsydra Engine',
-    description: 'The Folly of Venture Capital, gamified. Make your tribute to the Oracle.',
-    creditCost: 0,
-    priceModel: 'included',
-    imageUrl: 'https://placehold.co/600x400.png',
-    imageHint: 'temple oracle valley',
-    defaultSize: { width: 360, height: 520 },
-    permissionsRequired: ['write:billing'],
-    routingPath: '/oracle-of-delphi-valley',
-    contextAwareCapabilities: ['tribute_hook'],
-    isFeatured: true,
-  }
 ];
