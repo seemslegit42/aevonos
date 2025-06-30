@@ -3,6 +3,7 @@ import { z } from 'zod';
 
 export const VinDieselInputSchema = z.object({
   vin: z.string().describe('The 17-character Vehicle Identification Number.'),
+  workspaceId: z.string().describe('The ID of the workspace performing the action.'),
 });
 export type VinDieselInput = z.infer<typeof VinDieselInputSchema>;
 

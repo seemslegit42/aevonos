@@ -13,6 +13,7 @@ import {
     type VinDieselOutput 
 } from './vin-diesel-schemas';
 import { z } from 'zod';
+import { authorizeAndDebitAgentActions } from '@/services/billing-service';
 
 const vinDieselValidationFlow = ai.defineFlow(
   {
@@ -20,7 +21,10 @@ const vinDieselValidationFlow = ai.defineFlow(
     inputSchema: VinDieselInputSchema,
     outputSchema: VinDieselOutputSchema,
   },
-  async ({ vin }) => {
+  async ({ vin, workspaceId }) => {
+    // This is a billable agent action.
+    await authorizeAndDebitAgentActions(workspaceId);
+
     // In a real app, this would call an external VIN decoding API.
     // For now, we mock the logic with specific test cases.
     if (vin === 'TESTVIN1234567890') {

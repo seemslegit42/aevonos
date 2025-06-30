@@ -328,7 +328,7 @@ export function getTools(context: AgentContext): Tool[] {
             agentName: 'auditor',
             agentFunc: (toolInput) => auditFinances({ ...toolInput, workspaceId }),
         }),
-
+        
         createAgentTool({
             name: 'generateWingmanMessage',
             description: 'Crafts the perfect message for a tricky social situation. The user must provide the situation context and a desired message mode (e.g., \'Charming AF\', \'Help Me Say No\').',
