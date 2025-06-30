@@ -21,6 +21,11 @@ const psycheToCovenantClass: Record<UserPsyche, string> = {
   [UserPsyche.ZEN_ARCHITECT]: 'theme-covenant-silence',
 }
 
+const themeCardMap: Record<string, string> = {
+  'ACROPOLIS_MARBLE': 'theme-acropolis-marble',
+  'NOCTUAS_GAZE': 'theme-covenant-silence', // Re-using the silence theme for its pure black feel
+};
+
 export default async function RootLayout({
   children,
 }: Readonly<{
@@ -64,11 +69,13 @@ export default async function RootLayout({
         user = fetchedUser;
         workspace = fetchedWorkspace;
         
-        // Prioritize the active system effect theme over the base covenant theme.
-        if (activeEffect?.cardKey === 'ACROPOLIS_MARBLE') {
-          themeClass = 'theme-acropolis-marble';
-        } else if (fetchedUser?.psyche) {
-          themeClass = psycheToCovenantClass[fetchedUser.psyche] || '';
+        // Determine theme class, prioritizing the active system effect over the base covenant theme.
+        const activeTheme = activeEffect ? themeCardMap[activeEffect.cardKey] : undefined;
+
+        if (activeTheme) {
+          themeClass = activeTheme;
+        } else if (user?.psyche) {
+          themeClass = psycheToCovenantClass[user.psyche] || '';
         }
 
     }
