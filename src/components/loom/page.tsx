@@ -13,7 +13,7 @@ import WorkflowRunHistory from '@/components/loom/workflow-run-history';
 import { useToast } from '@/hooks/use-toast';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import type { User, UserRole } from '@prisma/client';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { useIsMobile } from '@/hooks/use-is-mobile';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import type { Node, Edge, Workflow, NodeType } from '@/components/loom/types';
 import LoomMobileToolbar from '@/components/loom/loom-mobile-toolbar';
