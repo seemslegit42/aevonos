@@ -95,7 +95,7 @@ export default function LoginPage() {
                 
                 <div className="relative">
                     <Image
-                      src="/logo-neutral.svg"
+                      src="/logo.png"
                       alt="Aevon OS Logo"
                       width={60}
                       height={60}
