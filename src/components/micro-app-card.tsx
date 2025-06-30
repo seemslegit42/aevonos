@@ -74,7 +74,7 @@ export default function MicroAppCard({ app }: MicroAppCardProps) {
         >
             <Card
                 className={cn(
-                    "bg-[rgba(245,255,250,0.15)] backdrop-blur-[20px] border border-[rgba(245,255,250,0.3)] shadow-[0_8px_32px_0_rgba(28,25,52,0.1)] hover:border-primary transition-all duration-300 flex flex-col w-full h-full",
+                    "hover:border-primary transition-all duration-300 flex flex-col w-full h-full",
                     isActionable && "cursor-pointer"
                 )}
                 onClick={handleCardClick}

@@ -5,7 +5,7 @@ import React, { useRef, useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Input } from '@/components/ui/input';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { useIsMobile } from '@/hooks/use-is-mobile';
 import type { User, Workspace } from '@prisma/client';
 import { useAppStore } from '@/store/app-store';
 import { cn } from '@/lib/utils';
@@ -67,7 +67,7 @@ export default function TopBar({ user, workspace }: TopBarProps) {
   const placeholderText = isMobile ? `${agentName} Command...` : `Ask ${agentName} to...`;
 
   return (
-    <header className="flex items-center justify-between w-full px-2 sm:px-4 py-2 bg-[rgba(245,255,250,0.10)] backdrop-blur-[25px] rounded-lg border border-[rgba(245,255,250,0.25)] shadow-[0_4px_24px_0_rgba(28,25,52,0.1)] gap-2 sm:gap-4">
+    <header className="flex items-center justify-between w-full px-2 sm:px-4 py-2 rounded-lg border border-[rgba(245,255,250,0.3)] bg-[rgba(245,255,250,0.15)] shadow-[0_8px_32px_0_rgba(28,25,52,0.1)] backdrop-blur-[20px] gap-2 sm:gap-4">
       <div className="flex items-center gap-3">
         <Link href="/">
             <Image src="/logo-neutral.svg" alt="Aevon OS Logo" width={32} height={32} />
@@ -81,8 +81,7 @@ export default function TopBar({ user, workspace }: TopBarProps) {
             type="text"
             placeholder={placeholderText}
             className={cn(
-              "w-full bg-[rgba(245,255,250,0.2)] text-foreground placeholder:text-muted-foreground border-0 h-10",
-              "focus-visible:ring-1 focus-visible:ring-roman-aqua",
+              "w-full h-10",
               isLoading && "ring-1 ring-inset ring-roman-aqua animate-pulse"
             )}
             disabled={isLoading}
@@ -93,11 +92,11 @@ export default function TopBar({ user, workspace }: TopBarProps) {
       <div className="flex items-center gap-2 sm:gap-4 text-sm text-foreground">
         <div className="hidden md:flex items-center gap-4 text-sm font-lexend">
           <CurrentTime />
-          <div className="h-6 w-px bg-[rgba(245,255,250,0.25)]" />
+          <div className="h-6 w-px bg-border/30" />
           <Button variant="ghost" className="p-0 h-auto hover:bg-transparent text-foreground" onClick={handleProfileClick}>
             <span>{displayName} | {roleText}</span>
           </Button>
-           <div className="h-6 w-px bg-[rgba(245,255,250,0.25)]" />
+           <div className="h-6 w-px bg-border/30" />
           <Button variant="ghost" className="p-0 h-auto hover:bg-transparent text-foreground" onClick={handleBillingClick}>
             <span>
               Ξ <span className="text-gilded-accent font-bold">{workspace?.credits?.toFixed(2) ?? '0.00'}</span>
