@@ -42,6 +42,16 @@ export async function updateUserRole(formData: FormData) {
   if (userId === session.userId) {
       return { success: false, error: 'Cannot change your own role.'};
   }
+  
+  // Protect the workspace owner from being modified by other admins
+  const workspace = await prisma.workspace.findUnique({
+    where: { id: session.workspaceId },
+    select: { ownerId: true }
+  });
+
+  if (userId === workspace?.ownerId) {
+    return { success: false, error: 'The workspace owner\'s role cannot be changed.' };
+  }
 
   try {
     await prisma.user.update({
@@ -87,6 +97,16 @@ export async function removeUserFromWorkspace(formData: FormData) {
 
     if (userId === session.userId) {
         return { success: false, error: 'Cannot remove yourself from the workspace.' };
+    }
+
+    // Protect the workspace owner from being removed by other admins
+    const workspace = await prisma.workspace.findUnique({
+      where: { id: session.workspaceId },
+      select: { ownerId: true }
+    });
+
+    if (userId === workspace?.ownerId) {
+        return { success: false, error: 'The workspace owner cannot be removed.' };
     }
 
     try {
