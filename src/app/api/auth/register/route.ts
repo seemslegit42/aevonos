@@ -6,7 +6,7 @@ import { z } from 'zod';
 import { encrypt } from '@/lib/auth';
 import prisma from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
-import { UserPsyche, PlanTier, TransactionType, TransactionStatus } from '@prisma/client';
+import { UserPsyche, PlanTier, TransactionType, TransactionStatus, UserRole } from '@prisma/client';
 
 // Updated schema to reflect the new Rite of Invocation flow
 const RegisterRequestSchema = z.object({
@@ -51,6 +51,7 @@ export async function POST(request: Request) {
                 psyche: psyche || UserPsyche.ZEN_ARCHITECT, // Default to ZEN_ARCHITECT
                 foundingVow: whatMustEnd,
                 foundingGoal: goal,
+                role: UserRole.ADMIN, // A user who creates a workspace is its Administrator.
             }
         });
         
