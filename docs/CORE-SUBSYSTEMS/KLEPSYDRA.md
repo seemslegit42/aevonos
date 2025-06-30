@@ -1,3 +1,4 @@
+
 # The Klepsydra Engine: The Profit Pulse
 
 > “Time is not a river. It is a tide. And we are the moon.”
@@ -29,7 +30,7 @@ Every user is silently and automatically assigned a `PulseProfile`. This is not 
 - **`phaseOffset`**: A unique value assigned at creation to ensure user pulses are not synchronized, creating a more organic and unpredictable system-wide rhythm.
 - **`lastResolvedPhase`**: The user's phase (Crest, Trough, Equilibrium) at the end of their last interaction.
 
-### 3.2. Instruments of Folly (Micro-Apps)
+### 3.2. Instruments of Folly (Micro-Apps & Chaos Cards)
 These are the designated points of interaction with the Klepsydra Engine. They are the only places where a user can make a "tribute" and test their fate.
 - **Chaos Cards**: Purchasable from The Armory, each card is a Folly Instrument with its own base odds and reward multipliers.
 - **The Oracle of Delphi (Valley)**: A dedicated Micro-App for making variable tributes.
@@ -37,13 +38,13 @@ These are the designated points of interaction with the Klepsydra Engine. They a
 
 ### 3.3. The Algorithm of Fate (`klepsydra-service.ts`)
 This is the server-side logic that determines the outcome of every tribute. It is a black box to the user, but its logic is transparent to the Architect:
-1.  **Retrieves** the user's `PulseProfile`.
-2.  **Calculates** the current `luckWeight` based on a sinusoidal pulse wave, incorporating time decay and the user's unique phase offset.
-3.  **Applies Psyche Modifiers**: The user's chosen `psyche` (Zen Architect, etc.) applies a multiplier to the base odds and potential boon amount, tuning the risk/reward profile.
-4.  **Checks for Pity Boon**: If `consecutiveLosses` exceeds the `PITY_THRESHOLD`, it overrides the odds and forces a small win to prevent user burnout and maintain engagement.
-5.  **Determines Outcome**: A random roll against the final, modulated odds determines a `win` or `loss`.
-6.  **Records Result**: Records the outcome back to the `PulseProfile`, resetting the loss counter on a win.
-7.  **Logs Transaction via Obelisk Pay**: Triggers an atomic `logTributeEvent` in the `ledger-service`, ensuring the economic state of the OS remains perfectly consistent.
+1.  **Invokes `processFollyTribute`**: This is the single, unified function that orchestrates the entire tribute process.
+2.  **Retrieves** the user's `PulseProfile`.
+3.  **Calculates** the current `luckWeight` based on a sinusoidal pulse wave, incorporating time decay and the user's unique phase offset.
+4.  **Applies Psyche Modifiers**: The user's chosen `psyche` (Zen Architect, etc.) applies a multiplier to the base odds and potential boon amount, tuning the risk/reward profile.
+5.  **Checks for Pity Boon**: If `consecutiveLosses` exceeds the `PITY_THRESHOLD`, it overrides the odds and forces a small win to prevent user burnout and maintain engagement.
+6.  **Determines Outcome**: A random roll against the final, modulated odds determines a `win` or `loss`.
+7.  **Executes Atomic Transaction**: All database changes—updating the user's pulse profile, debiting the tribute, crediting any boon, and logging the immutable `TRIBUTE` transaction—are performed in a single, atomic database transaction to ensure perfect ledger consistency.
 
 ---
 

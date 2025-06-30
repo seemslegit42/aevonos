@@ -10,10 +10,9 @@ import { processMicroAppPurchase } from '@/services/ledger-service';
 import { z } from 'zod';
 import { requestCreditTopUpInDb } from '@/services/billing-service';
 import { microAppManifests } from '@/config/micro-apps';
-import { chaosCardManifest } from '@/config/chaos-cards';
-import { processChaosCardTribute } from '@/services/klepsydra-service';
 import { InsufficientCreditsError } from '@/lib/errors';
 import { acceptReclamationGift } from './auth/actions';
+import { processFollyTribute } from '@/services/klepsydra-service';
 
 
 export async function handleCommand(command: string): Promise<UserCommandOutput> {
@@ -163,23 +162,18 @@ export async function purchaseMicroApp(appId: string) {
   }
 }
 
-
-export async function purchaseChaosCard(cardKey: string) {
+export async function makeFollyTribute(instrumentId: string, tributeAmount?: number) {
   const session = await getServerActionSession();
   if (!session?.userId || !session?.workspaceId) {
     return { success: false, error: 'Unauthorized' };
   }
-
-  const cardManifest = chaosCardManifest.find(card => card.key === cardKey);
-  if (!cardManifest) {
-    return { success: false, error: 'Chaos Card not found in manifest.' };
-  }
   
   try {
-    const { outcome, boonAmount } = await processChaosCardTribute(
+    const { outcome, boonAmount } = await processFollyTribute(
         session.userId, 
         session.workspaceId, 
-        cardKey
+        instrumentId,
+        tributeAmount,
     );
     
     revalidatePath('/');
@@ -188,22 +182,25 @@ export async function purchaseChaosCard(cardKey: string) {
         return { 
             success: true, 
             outcome, 
-            message: `Tribute successful! Acquired ${cardManifest.name}. You were granted a boon of ${boonAmount.toFixed(2)} Ξ.` 
+            boonAmount,
+            message: `Tribute successful! You were granted a boon of ${boonAmount.toFixed(2)} Ξ.` 
         };
     } else { // loss
         return {
             success: true,
             outcome,
-            message: `The tribute was not enough. ${cardManifest.name} slips through your fingers.`
+            boonAmount: 0,
+            message: `The tribute was not enough.`
         };
     }
 
   } catch (error) {
-    console.error(`[Action: purchaseChaosCard] for card ${cardKey}:`, error);
+    console.error(`[Action: makeFollyTribute] for instrument ${instrumentId}:`, error);
     const errorMessage = error instanceof Error ? error.message : 'Failed to complete tribute.';
     return { success: false, error: errorMessage };
   }
 }
+
 
 export async function logInstrumentDiscovery(instrumentId: string) {
   const session = await getServerActionSession();

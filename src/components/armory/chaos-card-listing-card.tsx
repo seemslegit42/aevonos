@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { ShoppingCart, Check, Loader2 } from 'lucide-react';
 import type { ChaosCardManifest } from '@/config/chaos-cards';
 import { useToast } from '@/hooks/use-toast';
-import { purchaseChaosCard, logInstrumentDiscovery } from '@/app/actions';
+import { makeFollyTribute, logInstrumentDiscovery } from '@/app/actions';
 import { Badge } from '../ui/badge';
 import { cn } from '@/lib/utils';
 
@@ -55,7 +55,7 @@ export function ChaosCardListingCard({ card, ownedCardKeys, onAcquire }: ChaosCa
   const handleAcquire = async () => {
     if (isOwned || isAcquiring) return;
     setIsAcquiring(true);
-    const result = await purchaseChaosCard(card.key);
+    const result = await makeFollyTribute(card.key);
     
     if (result.success) {
       if (result.outcome === 'win' || result.outcome === 'pity_boon') {

@@ -19,12 +19,18 @@ import { differenceInMinutes } from 'date-fns';
 
 const INSTRUMENT_CONFIG: Record<string, { baseOdds: number; winMultiplier: number }> =
   chaosCardManifest.reduce((acc, card) => {
+    // A simple inverse relation to cost for odds, and a direct relation for rewards.
+    // These can be tuned for balance.
     acc[card.key] = {
-      baseOdds: Math.max(0.05, 1 - card.cost / 2000), // Simple inverse relation to cost
-      winMultiplier: 1.5 + card.cost / 500, // Higher cost, higher reward
+      baseOdds: Math.max(0.05, 1 - card.cost / 2000), 
+      winMultiplier: 1.5 + card.cost / 500,
     };
     return acc;
   }, {} as Record<string, { baseOdds: number; winMultiplier: number }>);
+
+// Add specific config for the Oracle, since its cost is variable.
+INSTRUMENT_CONFIG['ORACLE_OF_DELPHI_VALLEY'] = { baseOdds: 0.4, winMultiplier: 2.5 };
+
 
 const PSYCHE_MODIFIERS: Record<UserPsyche, { oddsFactor: number; boonFactor: number }> = {
     [UserPsyche.ZEN_ARCHITECT]: { oddsFactor: 1.0, boonFactor: 1.0 }, // The baseline experience
@@ -37,43 +43,48 @@ const aestheticEffectCardKeys = chaosCardManifest
     .filter(card => card.cardClass === 'AESTHETIC' && card.systemEffect.includes('UI theme'))
     .map(card => card.key);
 
+// List of instruments that are pure gambles and should not be "owned".
+const PURE_FOLLY_INSTRUMENTS = ['ORACLE_OF_DELPHI_VALLEY', 'SISYPHUSS_ASCENT', 'MERCHANT_OF_CABBAGE'];
+
+
 /**
- * Atomically processes a tribute for a Chaos Card. This function handles all logic:
- * outcome calculation, credit validation, database updates, and transaction logging.
+ * Atomically processes a tribute for a Folly Instrument (e.g., Chaos Card, Oracle). 
+ * This function handles all logic: outcome calculation, credit validation, database updates, and transaction logging.
  * @param userId The user making the tribute.
  * @param workspaceId The user's workspace.
- * @param cardKey The key of the Chaos Card being used.
+ * @param instrumentId The key of the instrument being used.
+ * @param tributeAmountOverride The amount of the tribute, which overrides the manifest cost.
  * @returns An object with the final outcome and boon amount.
  */
-export async function processChaosCardTribute(
+export async function processFollyTribute(
   userId: string,
   workspaceId: string,
-  cardKey: string,
+  instrumentId: string,
+  tributeAmountOverride?: number
 ) {
-    const cardManifest = chaosCardManifest.find(card => card.key === cardKey);
-    if (!cardManifest) {
-        throw new Error('Chaos Card not found in manifest.');
+    const instrumentManifest = chaosCardManifest.find(card => card.key === instrumentId);
+    if (!instrumentManifest) {
+        throw new Error('Instrument not found in manifest.');
     }
-    const { cost: tributeAmount, name: cardName, systemEffect } = cardManifest;
+    
+    const tributeAmount = tributeAmountOverride ?? instrumentManifest.cost;
 
     return prisma.$transaction(async (tx) => {
         // --- 1. PRE-CHECK AND OUTCOME CALCULATION ---
-        const [user, workspace, cardInDb] = await Promise.all([
+        const [user, workspace] = await Promise.all([
             tx.user.findUniqueOrThrow({ where: { id: userId }, select: { psyche: true } }),
             tx.workspace.findUniqueOrThrow({ where: { id: workspaceId }, select: { credits: true } }),
-            tx.chaosCard.findUniqueOrThrow({ where: { key: cardKey } }),
         ]);
 
         if ((workspace.credits as unknown as number) < tributeAmount) {
             throw new InsufficientCreditsError('Cannot make tribute. Insufficient credits.');
         }
         
-        const instrument = INSTRUMENT_CONFIG[cardKey] || { baseOdds: 0.5, winMultiplier: 2 };
+        const instrument = INSTRUMENT_CONFIG[instrumentId] || { baseOdds: 0.5, winMultiplier: 2 };
         const modifiers = PSYCHE_MODIFIERS[user.psyche] || PSYCHE_MODIFIERS.ZEN_ARCHITECT;
         const modifiedBaseOdds = instrument.baseOdds * modifiers.oddsFactor;
         const modifiedWinMultiplier = instrument.winMultiplier * modifiers.boonFactor;
 
-        // These pulse engine functions are safe to call as they only read data.
         const luckWeight = await getCurrentPulseValue(userId);
         const isPity = await shouldTriggerPityBoon(userId);
         
@@ -93,57 +104,54 @@ export async function processChaosCardTribute(
         const netAmount = boonAmount - tributeAmount;
 
         // --- 2. ATOMIC DATABASE WRITES ---
-        // Update user's pulse profile, passing the transaction client.
         if (outcome === 'loss') {
             await recordLoss(userId, tx);
         } else {
             await recordWin(userId, tx);
         }
 
-        // Update workspace balance
         await tx.workspace.update({
             where: { id: workspaceId },
             data: { credits: { increment: new Prisma.Decimal(netAmount) } },
         });
 
-        // Log the TRIBUTE transaction
         await tx.transaction.create({
             data: {
-                workspaceId, userId, instrumentId: cardKey,
+                workspaceId, userId, instrumentId: instrumentId,
                 type: TransactionType.TRIBUTE,
                 amount: new Prisma.Decimal(netAmount),
-                description: `Tribute: ${cardName} - ${outcome}`,
+                description: `Tribute: ${instrumentManifest.name} - ${outcome}`,
                 luckWeight, outcome, boonAmount: new Prisma.Decimal(boonAmount),
                 userPsyche: user.psyche, status: 'COMPLETED',
             }
         });
 
-        // If it's a win, award the card and handle effects
-        if (outcome === 'win' || outcome === 'pity_boon') {
-            await tx.user.update({
-                where: { id: userId },
-                data: { ownedChaosCards: { connect: { id: cardInDb.id } } },
-            });
+        // If it's a win, and the instrument is ownable, award it.
+        if ((outcome === 'win' || outcome === 'pity_boon') && !PURE_FOLLY_INSTRUMENTS.includes(instrumentId)) {
+            const cardInDb = await tx.chaosCard.findUnique({ where: { key: instrumentId } });
+            if (cardInDb) {
+                 await tx.user.update({
+                    where: { id: userId },
+                    data: { ownedChaosCards: { connect: { id: cardInDb.id } } },
+                });
+            }
             
-            // If the card is an aesthetic effect, clear any other active aesthetic effects first.
-            // This is now dynamic and scalable for any new theme cards.
-            if (systemEffect && aestheticEffectCardKeys.includes(cardKey)) {
+            if (instrumentManifest.systemEffect && aestheticEffectCardKeys.includes(instrumentId)) {
                await tx.activeSystemEffect.deleteMany({
                   where: { workspaceId: workspaceId, cardKey: { in: aestheticEffectCardKeys } }
                });
                await tx.activeSystemEffect.create({
                   data: {
                     workspaceId: workspaceId,
-                    cardKey: cardKey,
+                    cardKey: instrumentId,
                     expiresAt: new Date(Date.now() + 60 * 60 * 1000)
                   }
                });
             }
         }
         
-        // Update instrument discovery log
         const discovery = await tx.instrumentDiscovery.findFirst({
-            where: { userId, instrumentId: cardKey, converted: false }
+            where: { userId, instrumentId: instrumentId, converted: false }
         });
         
         if (discovery) {
@@ -154,6 +162,6 @@ export async function processChaosCardTribute(
             });
         }
         
-        return { outcome, boonAmount };
+        return { outcome, boonAmount: Number(boonAmount) };
     });
 }

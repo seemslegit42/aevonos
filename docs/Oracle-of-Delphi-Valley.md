@@ -1,3 +1,4 @@
+
 # The Oracle of Delphi (Valley): A Folly Instrument - Technical Specification
 
 > "Make your offering. Learn your fate."
@@ -22,11 +23,11 @@ The UI is an interactive, animated "slot machine" that represents the user's ven
 
 ### 2.2. The `makeFollyTribute` Server Action (`app/actions.ts`)
 - **Purpose**: This action serves as the bridge between the UI and the backend economic services.
-- **Logic**: It calls the `calculateOutcome` function from the `klepsydra-service`, passing the user's ID, workspace ID, the instrument ID (`ORACLE_OF_DELPHI_VALLEY`), and the `tributeAmount`. It then returns the result to the client.
+- **Logic**: It calls the `processFollyTribute` function from the `klepsydra-service`, passing the user's ID, workspace ID, the instrument ID (`ORACLE_OF_DELPHI_VALLEY`), and the `tributeAmount`. It then returns the result to the client.
 
 ### 2.3. The `klepsydra-service` (`services/klepsydra-service.ts`)
 - **Outcome Calculation**: This is where the core logic resides. The service retrieves the user's `PulseProfile` and `psyche`, calculates their current `luckWeight`, determines the final odds of a win, and rolls to determine the outcome (`win`, `loss`, or `pity_boon`).
-- **Ledger Integration**: After determining the outcome, it calls the `logTributeEvent` function in the `ledger-service` to atomically record the transaction, ensuring the user's credit balance is updated correctly and an immutable record is created.
+- **Ledger Integration**: The `processFollyTribute` function atomically records the transaction, ensuring the user's credit balance is updated correctly and an immutable record is created.
 
 ---
 
