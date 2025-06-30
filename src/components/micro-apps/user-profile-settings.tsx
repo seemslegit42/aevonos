@@ -20,7 +20,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import type { User } from '@prisma/client';
 import { useAppStore } from '@/store/app-store';
-import { logout, deleteAccount, acceptReclamationGift } from '@/app/auth/actions';
+import { handleLogout, handleDeleteAccount, acceptReclamationGift } from '@/app/actions';
 import { Separator } from '../ui/separator';
 import {
   AlertDialog,
@@ -98,7 +98,7 @@ export default function UserProfileSettings({ id, user }: UserProfileSettingsPro
 
   const handleWalkAway = async () => {
     setIsProcessing(true);
-    await deleteAccount(); // This will log the user out and redirect
+    await handleDeleteAccount(); // This will log the user out and redirect
     setIsProcessing(false);
   }
 
@@ -175,7 +175,7 @@ export default function UserProfileSettings({ id, user }: UserProfileSettingsPro
         <div>
             <Separator className="my-4" />
              <div className="space-y-2">
-                <Button variant="outline" onClick={() => logout()} className="w-full">
+                <Button variant="outline" onClick={() => handleLogout()} className="w-full">
                     Logout
                 </Button>
                 <Button variant="destructive" onClick={() => setIsReclamationOpen(true)} className="w-full">

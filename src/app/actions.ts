@@ -11,7 +11,7 @@ import { z } from 'zod';
 import { requestCreditTopUpInDb } from '@/services/billing-service';
 import { microAppManifests } from '@/config/micro-apps';
 import { InsufficientCreditsError } from '@/lib/errors';
-import { acceptReclamationGift } from './auth/actions';
+import { acceptReclamationGift, deleteAccount, logout } from './auth/actions';
 import { processFollyTribute } from '@/services/klepsydra-service';
 
 
@@ -279,4 +279,12 @@ export async function getNudges() {
 
 export async function handleAcceptReclamationGift(): Promise<{ success: boolean; error?: string }> {
   return acceptReclamationGift();
+}
+
+export async function handleLogout() {
+  await logout();
+}
+
+export async function handleDeleteAccount() {
+  await deleteAccount();
 }
