@@ -34,7 +34,12 @@ const nodeExecutorMap: Record<string, (input: any) => Promise<any>> = {
     'tool-sterileish': analyzeCompliance,
     'tool-barbara': processDocument,
     'tool-paper-trail': scanEvidence,
-    // Note: 'tool-crm' is handled separately due to its internal 'action' property.
+    // Note: 'tool-crm' and 'logic' are handled separately due to their internal logic.
+};
+
+// Safely gets a nested property from an object using a dot-notation string.
+const getValueFromPath = (obj: any, path: string): any => {
+    return path.split('.').reduce((o, k) => (o && o[k] !== undefined ? o[k] : undefined), obj);
 };
 
 
@@ -59,8 +64,26 @@ async function executeNode(node: Node, payload: any, context: ExecutionContext):
         case 'tool-final-answer':
             console.log(`[Executor] Reached Final Answer node.`);
             return { finalOutput: payload };
+            
+        case 'logic': {
+            const { variable, operator, value: comparisonValue } = data;
+            const actualValue = getValueFromPath(payload, variable);
+            let result = false;
 
-        case 'tool-crm':
+            switch (operator) {
+                case 'exists': result = actualValue !== undefined && actualValue !== null; break;
+                case 'not_exists': result = actualValue === undefined || actualValue === null; break;
+                case 'eq': result = actualValue == comparisonValue; break; // Use loose equality for flexibility
+                case 'neq': result = actualValue != comparisonValue; break;
+                case 'gt': result = Number(actualValue) > Number(comparisonValue); break;
+                case 'lt': result = Number(actualValue) < Number(comparisonValue); break;
+                case 'contains': result = String(actualValue).includes(comparisonValue); break;
+                default: console.warn(`[Executor] Unknown logic operator: ${operator}`);
+            }
+            return { conditionMet: result };
+        }
+
+        case 'tool-crm': {
             const { action, ...crmData } = input;
             console.log(`[Executor] Executing CRM action: ${action} with input:`, crmData);
             switch (action) {
@@ -77,6 +100,7 @@ async function executeNode(node: Node, payload: any, context: ExecutionContext):
                 default:
                     throw new Error(`Unsupported CRM action in workflow: ${action}`);
             }
+        }
 
         default:
             console.warn(`[Executor] Node type '${type}' is not implemented for execution. Skipping.`);
@@ -86,8 +110,7 @@ async function executeNode(node: Node, payload: any, context: ExecutionContext):
 
 
 /**
- * A simple, linear workflow executor that traverses the graph based on edges.
- * It passes the output of one node as the input to the next.
+ * A workflow executor that traverses the graph based on edges, now with conditional branching.
  * @param workflow The workflow object from the database.
  * @param payload The trigger payload for the workflow run.
  * @param context The execution context (e.g., workspaceId).
@@ -116,7 +139,7 @@ export async function executeWorkflow(
 
     let currentPayload = { ...payload };
     const executionLog: {nodeId: string, type: string, label: string, result: any}[] = [];
-    const MAX_STEPS = 10; // Prevent infinite loops
+    const MAX_STEPS = 20; // Increased steps for branching
     let step = 0;
 
     try {
@@ -127,7 +150,19 @@ export async function executeWorkflow(
             // The result of the previous node is merged into the payload for the next one.
             currentPayload = { ...currentPayload, ...result };
             
-            const nextEdge = edges.find(e => e.source === currentNode?.id);
+            let nextEdge;
+            if (currentNode.type === 'logic' && currentPayload.conditionMet !== undefined) {
+                // If it's a logic node, find the edge matching the condition result.
+                const condition = String(currentPayload.conditionMet);
+                nextEdge = edges.find(e => e.source === currentNode?.id && e.condition === condition);
+                if (!nextEdge) {
+                    console.warn(`[Executor] No path found for condition '${condition}' from node ${currentNode.id}. Ending workflow.`);
+                }
+            } else {
+                // For all other nodes, find the unconditional outgoing edge.
+                nextEdge = edges.find(e => e.source === currentNode?.id && !e.condition);
+            }
+            
             if (nextEdge) {
                 currentNode = nodeMap.get(nextEdge.target);
             } else {

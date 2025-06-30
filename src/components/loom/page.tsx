@@ -19,16 +19,20 @@ import type { Node, Edge, Workflow, NodeType } from '@/components/loom/types';
 import LoomMobileToolbar from '@/components/loom/loom-mobile-toolbar';
 
 const BLANK_WORKFLOW: Workflow = {
-  name: 'Untitled Workflow',
+  name: 'New Contact Follow-up',
   definition: {
     nodes: [
         { id: 'trigger-1', type: 'trigger', position: { x: 50, y: 150 }, data: { label: 'BEEP Command Received' } },
-        { id: 'tool-crm', type: 'tool-crm', position: { x: 350, y: 150 }, data: { label: 'CRM: List Contacts', action: 'list' } },
-        { id: 'tool-final-answer', type: 'tool-final-answer', position: { x: 650, y: 150 }, data: { label: 'Final Answer' } },
+        { id: 'tool-crm-1', type: 'tool-crm', position: { x: 250, y: 50 }, data: { label: 'CRM: Create Contact', action: 'create', firstName: 'Jane', lastName: 'Doe', email: 'jane.doe@aevonos.com' }},
+        { id: 'logic-1', type: 'logic', position: { x: 480, y: 150 }, data: { label: 'Check for Email', variable: 'newContact.email', operator: 'exists', value: '' }},
+        { id: 'tool-final-answer-true', type: 'tool-final-answer', position: { x: 700, y: 50 }, data: { label: 'Final Answer: Success' } },
+        { id: 'tool-final-answer-false', type: 'tool-final-answer', position: { x: 700, y: 250 }, data: { label: 'Final Answer: Needs Info' } },
     ],
     edges: [
-        { id: 'e-trigger-agent', source: 'trigger-1', target: 'tool-crm' },
-        { id: 'e-agent-final', source: 'tool-crm', target: 'tool-final-answer' },
+        { id: 'e-trigger-crm', source: 'trigger-1', target: 'tool-crm-1' },
+        { id: 'e-crm-logic', source: 'tool-crm-1', target: 'logic-1' },
+        { id: 'e-logic-true', source: 'logic-1', target: 'tool-final-answer-true', condition: 'true' },
+        { id: 'e-logic-false', source: 'logic-1', target: 'tool-final-answer-false', condition: 'false' },
     ],
   },
 };
@@ -242,6 +246,11 @@ export default function LoomPage() {
                 newNodeData.action = 'list';
                 newNodeData.label = 'CRM: List Contacts';
             }
+            if (type === 'logic') {
+                newNodeData.variable = 'payload.field';
+                newNodeData.operator = 'exists';
+                newNodeData.value = '';
+            }
 
             const newNode: Node = { id: `${type}-${new Date().getTime()}`, type, position, data: newNodeData };
             setNodes((nds) => [...nds, newNode]);
@@ -270,13 +279,27 @@ export default function LoomPage() {
             setConnection(null);
             return;
         }
-
-        const newEdge: Edge = { id: `e-${connection.sourceId}-${targetId}`, source: connection.sourceId, target: targetId };
-        if (!edges.some(e => e.id === newEdge.id)) {
-            setEdges((eds) => [...eds, newEdge]);
+        
+        const sourceNode = nodes.find(n => n.id === connection.sourceId);
+        
+        // For logic nodes, prompt for condition
+        if (sourceNode?.type === 'logic') {
+            const condition = window.prompt("Enter condition for this branch ('true' or 'false'):");
+            if (condition === 'true' || condition === 'false') {
+                 const newEdge: Edge = { id: `e-${connection.sourceId}-${targetId}`, source: connection.sourceId, target: targetId, condition };
+                 if (!edges.some(e => e.id === newEdge.id)) {
+                     setEdges((eds) => [...eds, newEdge]);
+                 }
+            }
+        } else {
+             const newEdge: Edge = { id: `e-${connection.sourceId}-${targetId}`, source: connection.sourceId, target: targetId };
+             if (!edges.some(e => e.id === newEdge.id)) {
+                 setEdges((eds) => [...eds, newEdge]);
+             }
         }
+
         setConnection(null);
-    }, [connection, edges]);
+    }, [connection, edges, nodes]);
 
   return (
     <DndContext sensors={sensors} onDragEnd={handleDragEnd}>

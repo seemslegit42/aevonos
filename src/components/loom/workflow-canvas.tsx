@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import React, { useRef, useState, useMemo, forwardRef } from 'react';
@@ -80,7 +79,7 @@ function WorkflowNodeItem({ node, onClick, isSelected, onConnectStart, onConnect
 }
 
 const getEdgePath = (sourceNode: Node, targetNode: Node | {position: {x:number, y:number}} ) => {
-    if (!sourceNode || !targetNode) return '';
+    if (!sourceNode || !targetNode) return { path: '', midX: 0, midY: 0 };
     const nodeWidth = 192; // w-48
     const nodeHeight = 68; // approximate height
 
@@ -89,10 +88,14 @@ const getEdgePath = (sourceNode: Node, targetNode: Node | {position: {x:number, 
     const targetX = targetNode.position.x;
     const targetY = targetNode.position.y + ('id' in targetNode ? nodeHeight / 2 : 0);
 
+    const midX = (sourceX + targetX) / 2;
+    const midY = (sourceY + targetY) / 2;
+
     const dx = targetX - sourceX;
     const curve = Math.abs(dx) * 0.5;
 
-    return `M ${sourceX} ${sourceY} C ${sourceX + curve} ${sourceY}, ${targetX - curve} ${targetY}, ${targetX} ${targetY}`;
+    const path = `M ${sourceX} ${sourceY} C ${sourceX + curve} ${sourceY}, ${targetX - curve} ${targetY}, ${targetX} ${targetY}`;
+    return { path, midX, midY };
 }
 
 
@@ -152,11 +155,20 @@ const WorkflowCanvas = forwardRef<HTMLDivElement, WorkflowCanvasProps>(({
                         const source = nodeMap.get(edge.source);
                         const target = nodeMap.get(edge.target);
                         if (!source || !target) return null;
-                        const path = getEdgePath(source, target);
-                        return <path key={edge.id} d={path} stroke="hsl(var(--foreground) / 0.5)" strokeWidth="2" fill="none" />;
+                        const { path, midX, midY } = getEdgePath(source, target);
+                        return (
+                            <g key={edge.id}>
+                                <path d={path} stroke="hsl(var(--foreground) / 0.5)" strokeWidth="2" fill="none" />
+                                {edge.condition && (
+                                    <text x={midX} y={midY - 5} fill="hsl(var(--foreground))" fontSize="10" textAnchor="middle" className="font-mono">
+                                        {edge.condition === 'true' ? 'T' : 'F'}
+                                    </text>
+                                )}
+                            </g>
+                        );
                     })}
                     {sourceNode && pointerPos && (
-                        <path d={getEdgePath(sourceNode, {position: pointerPos})} stroke="hsl(var(--primary) / 0.8)" strokeWidth="2" strokeDasharray="5,5" fill="none" />
+                        <path d={getEdgePath(sourceNode, {position: pointerPos}).path} stroke="hsl(var(--primary) / 0.8)" strokeWidth="2" strokeDasharray="5,5" fill="none" />
                     )}
                 </g>
             </svg>

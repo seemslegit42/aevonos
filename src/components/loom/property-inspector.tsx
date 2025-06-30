@@ -16,13 +16,59 @@ interface PropertyInspectorProps {
     onUpdate: (nodeId: string, data: any) => void;
 }
 
+const LogicProperties = ({ node, onUpdate }: { node: Node, onUpdate: (data: any) => void }) => {
+    return (
+        <div className="space-y-3">
+            <div>
+                <Label>Variable Path</Label>
+                <Input
+                    value={node.data.variable || ''}
+                    onChange={(e) => onUpdate({ ...node.data, variable: e.target.value })}
+                    className="bg-background/80 font-mono"
+                    placeholder="e.g., newContact.email"
+                />
+            </div>
+            <div>
+                <Label>Operator</Label>
+                <Select value={node.data.operator || 'exists'} onValueChange={(value) => onUpdate({ ...node.data, operator: value })}>
+                    <SelectTrigger className="bg-background/80"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="exists">exists</SelectItem>
+                        <SelectItem value="not_exists">does not exist</SelectItem>
+                        <SelectItem value="eq">===</SelectItem>
+                        <SelectItem value="neq">!==</SelectItem>
+                        <SelectItem value="gt">&gt;</SelectItem>
+                        <SelectItem value="lt">&lt;</SelectItem>
+                        <SelectItem value="contains">contains</SelectItem>
+                    </SelectContent>
+                </Select>
+            </div>
+            <div>
+                <Label>Comparison Value</Label>
+                <Input
+                    value={node.data.value || ''}
+                    onChange={(e) => onUpdate({ ...node.data, value: e.target.value })}
+                    className="bg-background/80"
+                    placeholder="e.g., true, 'text', 123"
+                />
+            </div>
+        </div>
+    )
+};
+
 const CRMProperties = ({ node, onUpdate }: { node: Node, onUpdate: (data: any) => void }) => {
     const action = node.data.action || 'list';
     
     const handleFieldChange = (field: string, value: string) => {
         const newData = { ...node.data, [field]: value };
         if (field === 'action') {
-            newData.label = value === 'create' ? 'CRM: Create Contact' : 'CRM: List Contacts';
+            const labelMap = {
+                list: 'CRM: List Contacts',
+                create: 'CRM: Create Contact',
+                update: 'CRM: Update Contact',
+                delete: 'CRM: Delete Contact',
+            };
+            newData.label = labelMap[value as keyof typeof labelMap] || `CRM: ${value}`;
         }
         onUpdate(newData);
     };
@@ -36,6 +82,8 @@ const CRMProperties = ({ node, onUpdate }: { node: Node, onUpdate: (data: any) =
                     <SelectContent>
                         <SelectItem value="list">List Contacts</SelectItem>
                         <SelectItem value="create">Create Contact</SelectItem>
+                        <SelectItem value="update">Update Contact</SelectItem>
+                        <SelectItem value="delete">Delete Contact</SelectItem>
                     </SelectContent>
                 </Select>
             </div>
@@ -58,6 +106,12 @@ const CRMProperties = ({ node, onUpdate }: { node: Node, onUpdate: (data: any) =
                         <Input id="phone" value={node.data.phone || ''} onChange={(e) => handleFieldChange('phone', e.target.value)} className="bg-background/80" placeholder="555-1234"/>
                     </div>
                 </>
+            )}
+             {(action === 'update' || action === 'delete') && (
+                 <div>
+                    <Label htmlFor="id">Contact ID</Label>
+                    <Input id="id" value={node.data.id || ''} onChange={(e) => handleFieldChange('id', e.target.value)} className="bg-background/80" placeholder="Variable e.g., {payload.contactId}" />
+                </div>
             )}
         </div>
     )
@@ -271,6 +325,8 @@ export default function PropertyInspector({ node, onUpdate }: PropertyInspectorP
 
   const renderContent = () => {
       switch(node.type) {
+          case 'logic':
+              return <LogicProperties node={node} onUpdate={handleDataUpdate} />;
           case 'tool-crm':
               return <CRMProperties node={node} onUpdate={handleDataUpdate} />;
           case 'tool-winston-wolfe':

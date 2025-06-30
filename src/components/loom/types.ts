@@ -29,6 +29,7 @@ export interface Edge {
   id: string;
   source: string;
   target: string;
+  condition?: 'true' | 'false';
 }
 
 export interface Workflow {

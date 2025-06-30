@@ -14,8 +14,6 @@ import { chaosCardManifest } from '@/config/chaos-cards';
 import { processChaosCardTribute } from '@/services/klepsydra-service';
 import { InsufficientCreditsError } from '@/lib/errors';
 import { acceptReclamationGift } from './auth/actions';
-import { confirmPendingTransaction as confirmPendingTransactionInDb } from '@/services/ledger-service';
-import { UserRole } from '@prisma/client';
 
 
 export async function handleCommand(command: string): Promise<UserCommandOutput> {
@@ -284,30 +282,4 @@ export async function getNudges() {
 
 export async function handleAcceptReclamationGift(): Promise<{ success: boolean; error?: string }> {
   return acceptReclamationGift();
-}
-
-export async function confirmPendingTransactionAction(transactionId: string): Promise<{ success: boolean; error?: string }> {
-  const session = await getServerActionSession();
-  if (!session?.userId || !session?.workspaceId) {
-    return { success: false, error: 'Unauthorized' };
-  }
-
-  try {
-    const user = await prisma.user.findUnique({
-      where: { id: session.userId },
-      select: { role: true }
-    });
-    
-    if (user?.role !== UserRole.ADMIN) {
-        return { success: false, error: 'Forbidden: Administrator access required.' };
-    }
-
-    await confirmPendingTransactionInDb(transactionId, session.workspaceId);
-    revalidatePath('/'); // Revalidate to update UI across the app
-    return { success: true };
-
-  } catch (error) {
-    console.error(`[Action: confirmPendingTransaction] for tx ${transactionId}:`, error);
-    return { success: false, error: error instanceof Error ? error.message : 'Confirmation failed.' };
-  }
 }
