@@ -17,6 +17,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import type { Node, Edge, Workflow, NodeType } from '@/components/loom/types';
 import LoomMobileToolbar from '@/components/loom/loom-mobile-toolbar';
+import ArchitectView from '@/components/loom/ArchitectView';
 
 const BLANK_WORKFLOW: Workflow = {
   name: 'New Contact Follow-up',
@@ -52,6 +53,8 @@ export default function LoomPage() {
     const [isRunning, setIsRunning] = useState(false);
     const [listRefreshTrigger, setListRefreshTrigger] = useState(0);
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+    const [conditionEdgeInfo, setConditionEdgeInfo] = useState<{ sourceId: string; targetId: string } | null>(null);
+    const [isArchitectView, setIsArchitectView] = useState(false);
     
     // Mobile Sheet States
     const [isNodesSheetOpen, setIsNodesSheetOpen] = useState(false);
@@ -282,15 +285,8 @@ export default function LoomPage() {
         
         const sourceNode = nodes.find(n => n.id === connection.sourceId);
         
-        // For logic nodes, prompt for condition
         if (sourceNode?.type === 'logic') {
-            const condition = window.prompt("Enter condition for this branch ('true' or 'false'):");
-            if (condition === 'true' || condition === 'false') {
-                 const newEdge: Edge = { id: `e-${connection.sourceId}-${targetId}`, source: connection.sourceId, target: targetId, condition };
-                 if (!edges.some(e => e.id === newEdge.id)) {
-                     setEdges((eds) => [...eds, newEdge]);
-                 }
-            }
+            setConditionEdgeInfo({ sourceId: connection.sourceId, targetId });
         } else {
              const newEdge: Edge = { id: `e-${connection.sourceId}-${targetId}`, source: connection.sourceId, target: targetId };
              if (!edges.some(e => e.id === newEdge.id)) {
@@ -300,6 +296,16 @@ export default function LoomPage() {
 
         setConnection(null);
     }, [connection, edges, nodes]);
+
+    const handleAddConditionalEdge = (condition: 'true' | 'false') => {
+        if (!conditionEdgeInfo) return;
+        const { sourceId, targetId } = conditionEdgeInfo;
+        const newEdge: Edge = { id: `e-${sourceId}-${targetId}-${condition}`, source: sourceId, target: targetId, condition };
+        if (!edges.some(e => e.id === newEdge.id)) {
+            setEdges((eds) => [...eds, newEdge]);
+        }
+        setConditionEdgeInfo(null);
+    }
 
   return (
     <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
@@ -314,42 +320,49 @@ export default function LoomPage() {
                 isRunning={isRunning}
                 userRole={userRole}
                 isLoadingUser={isLoadingUser}
+                isArchitectView={isArchitectView}
+                onToggleArchitectView={() => setIsArchitectView(prev => !prev)}
             />
             
-            <div className="flex-grow flex flex-row min-h-0">
-                {/* Desktop Left Panel */}
-                <div className="w-64 flex-shrink-0 flex-col min-h-0 border-r border-foreground/20 hidden md:flex">
-                    <div className="h-[60%] min-h-0 border-b border-foreground/20">
-                        <WorkflowList onSelectWorkflow={handleSelectWorkflow} activeWorkflowId={activeWorkflowId} triggerRefresh={listRefreshTrigger}/>
+             {isArchitectView ? (
+                <ArchitectView />
+            ) : (
+                 <div className="flex-grow flex flex-row min-h-0">
+                    {/* Desktop Left Panel */}
+                    <div className="w-64 flex-shrink-0 flex-col min-h-0 border-r border-foreground/20 hidden md:flex">
+                        <div className="h-[60%] min-h-0 border-b border-foreground/20">
+                            <WorkflowList onSelectWorkflow={handleSelectWorkflow} activeWorkflowId={activeWorkflowId} triggerRefresh={listRefreshTrigger}/>
+                        </div>
+                        <div className="h-[40%] min-h-0">
+                            <WorkflowRunHistory activeWorkflowId={activeWorkflowId} triggerRefresh={listRefreshTrigger}/>
+                        </div>
                     </div>
-                    <div className="h-[40%] min-h-0">
-                        <WorkflowRunHistory activeWorkflowId={activeWorkflowId} triggerRefresh={listRefreshTrigger}/>
-                    </div>
-                </div>
 
-                {/* Main Content Area (Canvas and sidebars) */}
-                <div className="flex-grow flex gap-4 p-4 min-h-0">
-                     <div className="hidden md:block">
-                        <NodesSidebar />
-                    </div>
-                    <WorkflowCanvas 
-                        ref={canvasRef}
-                        nodes={nodes} 
-                        edges={edges} 
-                        onNodeClick={setSelectedNode} 
-                        selectedNodeId={selectedNode?.id}
-                        onConnectStart={onConnectStart}
-                        onConnectEnd={onConnectEnd}
-                        connectionSourceId={connection?.sourceId}
-                    />
-                    <div className="hidden lg:block">
-                        <PropertyInspector node={selectedNode} onUpdate={updateNodeData} />
+                    {/* Main Content Area (Canvas and sidebars) */}
+                    <div className="flex-grow flex gap-4 p-4 min-h-0">
+                        <div className="hidden md:block">
+                            <NodesSidebar />
+                        </div>
+                        <WorkflowCanvas 
+                            ref={canvasRef}
+                            nodes={nodes} 
+                            edges={edges} 
+                            onNodeClick={setSelectedNode} 
+                            selectedNodeId={selectedNode?.id}
+                            onConnectStart={onConnectStart}
+                            onConnectEnd={onConnectEnd}
+                            connectionSourceId={connection?.sourceId}
+                        />
+                        <div className="hidden lg:block">
+                            <PropertyInspector node={selectedNode} onUpdate={updateNodeData} />
+                        </div>
                     </div>
                 </div>
-            </div>
+            )}
+
 
             {/* Mobile Toolbar */}
-            {isMobile && (
+            {isMobile && !isArchitectView && (
                 <LoomMobileToolbar 
                     onAddNodeClick={() => setIsNodesSheetOpen(true)}
                     onWorkflowsClick={() => setIsWorkflowsSheetOpen(true)}
@@ -378,6 +391,27 @@ export default function LoomPage() {
                     <WorkflowRunHistory activeWorkflowId={activeWorkflowId} triggerRefresh={listRefreshTrigger}/>
                 </SheetContent>
             </Sheet>
+
+            {/* Condition Dialog */}
+            <AlertDialog open={!!conditionEdgeInfo} onOpenChange={() => setConditionEdgeInfo(null)}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                    <AlertDialogTitle>Set Branch Condition</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        Select the condition for this path. The workflow will follow this branch if the logic node's evaluation is...
+                    </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                    <AlertDialogAction onClick={() => handleAddConditionalEdge('true')}>
+                        True
+                    </AlertDialogAction>
+                    <AlertDialogAction onClick={() => handleAddConditionalEdge('false')}>
+                        False
+                    </AlertDialogAction>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
 
             {/* Delete Confirmation Dialog */}
             <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
