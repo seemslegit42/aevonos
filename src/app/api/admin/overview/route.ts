@@ -2,7 +2,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { getSession } from '@/lib/auth';
-import { UserRole } from '@prisma/client';
 
 export async function GET(request: NextRequest) {
   const session = await getSession(request);
@@ -10,29 +9,28 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const user = await prisma.user.findUnique({
-    where: { id: session.userId },
-    select: { role: true },
-  });
-
-  if (user?.role !== UserRole.ADMIN) {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-  }
-
   try {
-    const [userCount, agentCount, activeAgentCount, workspace] = await prisma.$transaction([
+    const workspace = await prisma.workspace.findUnique({
+        where: { id: session.workspaceId },
+        select: { ownerId: true, credits: true, planTier: true },
+    });
+
+    if (!workspace || workspace.ownerId !== session.userId) {
+        return NextResponse.json({ error: 'Forbidden. Architect access required.' }, { status: 403 });
+    }
+
+    const [userCount, agentCount, activeAgentCount] = await prisma.$transaction([
       prisma.user.count({ where: { workspaces: { some: { id: session.workspaceId } } } }),
       prisma.agent.count({ where: { workspaceId: session.workspaceId } }),
       prisma.agent.count({ where: { workspaceId: session.workspaceId, status: 'active' } }),
-      prisma.workspace.findUnique({ where: { id: session.workspaceId }, select: { credits: true, planTier: true } }),
     ]);
 
     const overview = {
       userCount,
       agentCount,
       activeAgentCount,
-      creditBalance: workspace?.credits,
-      planTier: workspace?.planTier,
+      creditBalance: workspace.credits,
+      planTier: workspace.planTier,
     };
 
     return NextResponse.json(overview);

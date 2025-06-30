@@ -2,21 +2,20 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { getSession } from '@/lib/auth';
-import { UserRole } from '@prisma/client';
 
 export async function GET(request: NextRequest) {
   const session = await getSession(request);
   if (!session?.workspaceId || !session.userId) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
-
-  const user = await prisma.user.findUnique({
-    where: { id: session.userId },
-    select: { role: true },
+  
+  const workspace = await prisma.workspace.findUnique({
+    where: { id: session.workspaceId },
+    select: { ownerId: true },
   });
 
-  if (user?.role !== UserRole.ADMIN) {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  if (!workspace || workspace.ownerId !== session.userId) {
+    return NextResponse.json({ error: 'Forbidden. Architect access required.' }, { status: 403 });
   }
 
   try {

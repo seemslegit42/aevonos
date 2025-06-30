@@ -8,6 +8,7 @@
 import { Tool, DynamicTool } from '@langchain/core/tools';
 import { z } from 'zod';
 import { UserPsyche, UserRole } from '@prisma/client';
+import prisma from '@/lib/prisma';
 
 import {
     AgentReportSchema,
@@ -117,7 +118,7 @@ class FinalAnswerTool extends Tool {
  * @param context The current agent execution context.
  * @returns An array of LangChain Tool instances.
  */
-export function getTools(context: AgentContext): Tool[] {
+export async function getTools(context: AgentContext): Promise<Tool[]> {
     const { userId, workspaceId, psyche, role } = context;
 
     const createAgentTool = ({
@@ -455,7 +456,13 @@ export function getTools(context: AgentContext): Tool[] {
         }),
     ];
 
-    if (role === UserRole.ADMIN) {
+    const workspace = await prisma.workspace.findUnique({
+        where: { id: workspaceId },
+        select: { ownerId: true }
+    });
+    const isOwner = workspace?.ownerId === userId;
+
+    if (isOwner) {
         allTools.push(
             createAgentTool({
                 name: 'getSystemStatus',

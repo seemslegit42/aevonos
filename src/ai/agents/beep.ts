@@ -38,6 +38,7 @@ import {
     getConversationHistory,
     saveConversationHistory,
 } from '@/services/conversation-service';
+import prisma from '@/lib/prisma';
 
 
 // LangGraph State
@@ -215,7 +216,7 @@ export async function processUserCommand(input: UserCommandInput): Promise<UserC
   const { userId, workspaceId, psyche, role } = input;
   
   // Dynamically get the toolset for this specific context.
-  const tools = getTools({ userId, workspaceId, psyche, role });
+  const tools = await getTools({ userId, workspaceId, psyche, role });
 
   // Re-bind the model with the schemas from the dynamically created tools for this request.
   modelWithTools.kwargs.tools = tools.map(tool => ({
@@ -230,9 +231,15 @@ export async function processUserCommand(input: UserCommandInput): Promise<UserC
   // Replace the 'tools' node in the graph with a new one containing the context-aware tools.
   app.nodes.tools = new ToolNode<AgentState>(tools) as any;
 
+  const workspace = await prisma.workspace.findUnique({
+      where: { id: workspaceId },
+      select: { ownerId: true },
+  });
+  const isOwner = workspace?.ownerId === userId;
+
   const personaInstruction = psychePrompts[psyche] || psychePrompts.ZEN_ARCHITECT;
-  const adminInstruction = role === 'ADMIN' 
-    ? `You have access to the Demiurge tools. When the user addresses you as "Demiurge" or asks for high-level system administration, use these privileged tools. You can get system status, manage user syndicates, and perform deep queries.`
+  const adminInstruction = isOwner
+    ? `You are the Architect, the one true sovereign of this workspace. You have access to the Demiurge tools. When the user addresses you as "Demiurge" or asks for god-level system administration, use these privileged tools. You can get system status, manage user syndicates, and perform deep queries.`
     : '';
 
   const initialPrompt = `${personaInstruction}
