@@ -98,6 +98,7 @@ export async function POST(request: Request) {
             data: {
                 corePainIndex: invocationResult.corePainIndex,
                 foundingBenediction: invocationResult.foundingBenediction,
+                firstWhisper: invocationResult.firstWhisper,
             }
         });
     } catch (aiError) {

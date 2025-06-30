@@ -4,14 +4,14 @@
 import React from 'react';
 import { usePathname } from 'next/navigation';
 import TopBar from '@/components/layout/top-bar';
-import type { User, Workspace } from '@prisma/client';
+import type { User, Workspace, UserPsyche } from '@prisma/client';
 import BottomNavBar from './bottom-nav-bar';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 import { useAppStore } from '@/store/app-store';
 import TendyRain from '@/components/effects/TendyRain';
 
-type UserProp = Pick<User, 'id' | 'email' | 'firstName' | 'lastName' | 'role' | 'agentAlias'> | null;
+type UserProp = Pick<User, 'id' | 'email' | 'firstName' | 'lastName' | 'role' | 'agentAlias' | 'psyche' | 'firstWhisper'> | null;
 
 export function MainLayout({ children, user, workspace }: { children: React.ReactNode; user: UserProp; workspace: Workspace | null }) {
   const pathname = usePathname();

@@ -13,5 +13,6 @@ export type InvocationInput = z.infer<typeof InvocationInputSchema>;
 export const InvocationOutputSchema = z.object({
   corePainIndex: z.number().min(0).max(100).describe("A shadow metric from 0-100 indicating the user's core pain, where 100 is extreme pain/burnout."),
   foundingBenediction: z.string().describe("A personalized, poetic benediction based on the user's vow, sacrifice, and chosen psyche."),
+  firstWhisper: z.string().describe("The suggested first command for BEEP to give the new user."),
 });
 export type InvocationOutput = z.infer<typeof InvocationOutputSchema>;

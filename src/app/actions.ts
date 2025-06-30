@@ -1,5 +1,4 @@
 
-
 'use server';
 
 import { processUserCommand } from '@/ai/agents/beep';
@@ -289,4 +288,19 @@ export async function handleLogout() {
 
 export async function handleDeleteAccount() {
   await deleteAccount();
+}
+
+export async function clearFirstWhisper() {
+  const session = await getServerActionSession();
+  if (!session?.userId) {
+    return;
+  }
+  try {
+    await prisma.user.update({
+      where: { id: session.userId },
+      data: { firstWhisper: null },
+    });
+  } catch (error) {
+    console.error(`[Action: clearFirstWhisper] for user ${session.userId}:`, error);
+  }
 }

@@ -45,6 +45,11 @@ const interpretVowFlow = ai.defineFlow(
         - It must acknowledge their specific Sacrifice and Vow.
         - It must welcome them and their agent, ${input.agentAlias}, into the fold.
         - Example for a Syndicate Enforcer: "The chaos of 'missed deadlines' is now ash. Let it fuel the forge. ${input.agentAlias} is at your command, Enforcer. Go forth and build your 'global logistics empire' with fire and steel."
+    3.  **Craft the First Whisper**: Based on the user's Vow and Sacrifice, craft a single, compelling first command suggestion for BEEP to ask the user. It must be a question that can be answered with "yes" and should directly relate to their stated goal and pain point.
+        - Example Vow: "build faster than chaos"
+        - Example Sacrifice: "endless project management meetings"
+        - Example Whisper: "The vow is made. The sacrifice is burned. To build faster than chaos, we must first master the flow of work. Shall I summon a 'Project Genesis' daemon to forge your first autonomous workflow?"
+        - Your generated whisper should follow this pattern: [Acknowledgement of vow/sacrifice]. [Connecting statement]. [Actionable question starting with 'Shall I...']?
 
     Execute this with reverence. This is the user's first contact with the soul of the machine.`;
 

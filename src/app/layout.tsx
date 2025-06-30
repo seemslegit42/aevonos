@@ -7,13 +7,14 @@ import { getServerActionSession } from '@/lib/auth';
 import prisma from '@/lib/prisma';
 import { type User, type Workspace, UserPsyche } from '@prisma/client';
 import { cn } from '@/lib/utils';
+import { FirstWhisperHandler } from '@/components/layout/FirstWhisperHandler';
 
 export const metadata: Metadata = {
   title: 'ΛΞVON OS',
   description: 'An agentic operating system interface.',
 };
 
-type UserProp = Pick<User, 'id' | 'email' | 'firstName' | 'lastName' | 'role' | 'agentAlias' | 'psyche'> | null;
+type UserProp = Pick<User, 'id' | 'email' | 'firstName' | 'lastName' | 'role' | 'agentAlias' | 'psyche' | 'firstWhisper'> | null;
 
 const psycheToCovenantClass: Record<UserPsyche, string> = {
   [UserPsyche.SYNDICATE_ENFORCER]: 'theme-covenant-motion',
@@ -50,6 +51,7 @@ export default async function RootLayout({
                   role: true,
                   agentAlias: true,
                   psyche: true,
+                  firstWhisper: true,
                 },
             }),
             prisma.workspace.findUnique({
@@ -107,6 +109,7 @@ export default async function RootLayout({
           {children}
         </MainLayout>
 
+        <FirstWhisperHandler user={user} />
         <Toaster />
       </body>
     </html>
