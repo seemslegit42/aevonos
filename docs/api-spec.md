@@ -43,7 +43,8 @@ This document provides the formal OpenAPI 3.0 specification for the ΛΞVON OS P
     { "name": "Billing", "description": "Management of plans, subscriptions, and usage." },
     { "name": "MicroApps", "description": "Discovery and interaction with modular Micro-Apps." },
     { "name": "Integrations", "description": "Management of third-party service connections." },
-    { "name": "Export", "description": "Endpoints for exporting system data." }
+    { "name": "Export", "description": "Endpoints for exporting system data." },
+    { "name": "Admin", "description": "Privileged endpoints for workspace administration." }
   ],
   "paths": {
     "/auth/login": {
@@ -295,6 +296,38 @@ This document provides the formal OpenAPI 3.0 specification for the ΛΞVON OS P
           "400": { "description": "Bad request (e.g., missing password for encryption)." }
         }
       }
+    },
+    "/admin/overview": {
+      "get": {
+        "tags": ["Admin"],
+        "summary": "Get an overview of workspace statistics.",
+        "operationId": "getAdminOverview",
+        "description": "Retrieves high-level statistics for the current workspace. Requires ADMIN role.",
+        "responses": {
+          "200": {
+            "description": "Workspace overview statistics.",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AdminOverview" } } }
+          },
+          "401": { "description": "Unauthorized." },
+          "403": { "description": "Forbidden." }
+        }
+      }
+    },
+    "/admin/users": {
+      "get": {
+        "tags": ["Admin"],
+        "summary": "List all users in the workspace.",
+        "operationId": "listWorkspaceUsers",
+        "description": "Retrieves a list of all users associated with the current workspace. Requires ADMIN role.",
+        "responses": {
+          "200": {
+            "description": "A list of users.",
+            "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/User" } } } }
+          },
+          "401": { "description": "Unauthorized." },
+          "403": { "description": "Forbidden." }
+        }
+      }
     }
   },
   "components": {
@@ -474,6 +507,16 @@ This document provides the formal OpenAPI 3.0 specification for the ΛΞVON OS P
             "decoyResult": { "type": "object", "nullable": true }
         },
         "required": ["targetName"]
+      },
+      "AdminOverview": {
+        "type": "object",
+        "properties": {
+          "userCount": { "type": "integer" },
+          "agentCount": { "type": "integer" },
+          "activeAgentCount": { "type": "integer" },
+          "creditBalance": { "type": "number" },
+          "planTier": { "type": "string" }
+        }
       }
     }
   }

@@ -1,3 +1,4 @@
+
 # The Admin Console: System Primus - Technical Specification
 
 > "The first duty of a ruler is to know their own domain."
