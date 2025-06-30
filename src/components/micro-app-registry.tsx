@@ -37,6 +37,7 @@ import { AdminConsoleIcon } from './icons/AdminConsoleIcon';
 import { ValidatorIcon } from './icons/ValidatorIcon';
 import { RenoModeIcon } from './icons/RenoModeIcon';
 import { PatricktIcon } from './icons/PatricktIcon';
+import { HowardsSidekickIcon } from './icons/HowardsSidekickIcon';
 
 import { type MicroAppType } from '@/store/app-store';
 import ContactList from './micro-apps/contact-list';
@@ -75,6 +76,7 @@ import AdminConsole from './micro-apps/admin-console';
 import Validator from './micro-apps/validator';
 import RenoMode from './micro-apps/reno-mode';
 import PatricktApp from './micro-apps/patrickt';
+import HowardsSidekick from './micro-apps/howards-sidekick';
 
 type ComponentRegistry = {
     icon: React.ComponentType<any>;
@@ -234,6 +236,10 @@ export const microAppRegistry: Record<MicroAppType, ComponentRegistry> = {
   'patrickt-app': {
     icon: PatricktIcon,
     content: PatricktApp,
+  },
+  'howards-sidekick': {
+    icon: HowardsSidekickIcon,
+    content: HowardsSidekick,
   },
 };
 

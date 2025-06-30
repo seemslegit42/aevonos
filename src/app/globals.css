@@ -56,7 +56,10 @@
     --iridescent-two: 159 50% 48%; /* Patina Green */
     --iridescent-three: 178 68% 41%; /* Roman Aqua */
     
-    /* Themed app colors */
+    /* Thematic colors */
+    --sidekick-brown: 30 25% 30%; /* A warm, dark brown */
+    --sidekick-gold: 45 60% 55%; /* A warm, not-too-bright gold/yellow */
+    --sidekick-gold-foreground: 45 20% 95%; /* An off-white for text on brown backgrounds */
     --gilded-accent: 51 100% 50%;
     --military-green: 82 20% 30%;
     --ledger-cream: 45 33% 95%;

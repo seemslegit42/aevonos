@@ -233,6 +233,21 @@ export const microAppManifests: MicroAppManifest[] = [
     contextAwareCapabilities: ['tribute_hook'],
     isFeatured: true,
   },
+  {
+    id: 'howards-sidekick',
+    name: "Howard's Sidekick",
+    author: "For Dustin",
+    description: "A loyal electrician's sidekick for reminders, notes, and tools. Inspired by the best boy, Howard.",
+    creditCost: 0,
+    priceModel: 'included',
+    imageUrl: 'https://placehold.co/600x400.png',
+    imageHint: 'dog electrician tools',
+    defaultSize: { width: 380, height: 600 },
+    permissionsRequired: [],
+    routingPath: '/howards-sidekick',
+    contextAwareCapabilities: ['local_notifications'],
+    isFeatured: true,
+  },
   
   // --- Acquirable Apps (One-Time Cost) ---
   {
