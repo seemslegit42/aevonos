@@ -10,7 +10,7 @@ import {ai} from '@/ai/genkit';
 import { DrSyntaxInputSchema, DrSyntaxOutputSchema, type DrSyntaxInput, type DrSyntaxOutput } from './dr-syntax-schemas';
 import { authorizeAndDebitAgentActions } from '@/services/billing-service';
 import { UserPsyche } from '@prisma/client';
-import { langchainGroq } from '@/ai/genkit';
+import { langchainGroqComplex } from '@/ai/genkit';
 
 
 export async function drSyntaxCritique(
@@ -51,7 +51,7 @@ const drSyntaxCritiqueFlow = ai.defineFlow(
     \`\`\`
     `;
 
-    const structuredGroq = langchainGroq.withStructuredOutput(DrSyntaxOutputSchema);
+    const structuredGroq = langchainGroqComplex.withStructuredOutput(DrSyntaxOutputSchema);
     const output = await structuredGroq.invoke(promptText);
 
     return output;

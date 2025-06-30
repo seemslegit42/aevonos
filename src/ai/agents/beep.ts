@@ -23,7 +23,7 @@ import {
 import { zodToJsonSchema } from 'zod-to-json-schema';
 import { UserPsyche, UserRole } from '@prisma/client';
 
-import { langchainGroq } from '@/ai/genkit';
+import { langchainGroqFast, langchainGroqComplex } from '@/ai/genkit';
 import { aegisAnomalyScan } from '@/ai/agents/aegis';
 import { getTools } from '@/ai/agents/tool-registry';
 import { AegisAnomalyScanOutputSchema, type AegisAnomalyScanOutput } from './aegis-schemas';
@@ -74,9 +74,30 @@ const callAegis = async (state: AgentState) => {
     };
 }
 
+const fastModelWithTools = langchainGroqFast.bind({ tools: [] });
+const complexModelWithTools = langchainGroqComplex.bind({ tools: [] });
+
+// The agent node now has routing logic inside it.
 const callModel = async (state: AgentState) => {
   const { messages } = state;
-  const response = await modelWithTools.invoke(messages);
+  const lastMessage = messages[messages.length - 1];
+
+  let modelToUse = fastModelWithTools; // Default to the fast model
+  
+  // Only check for complexity on human messages, not tool responses.
+  if (lastMessage instanceof HumanMessage) {
+    const commandText = lastMessage.content as string;
+    const complexKeywords = ['analyze', 'summarize', 'create a plan', 'generate', 'critique', 'investigate', 'audit', 'explain', 'dossier', 'roast', 'write a', 'what is', 'how to'];
+    
+    if (complexKeywords.some(kw => commandText.toLowerCase().includes(kw))) {
+        console.log('[BEEP] Routing to Complex model for reasoning.');
+        modelToUse = complexModelWithTools;
+    } else {
+        console.log('[BEEP] Routing to Fast model for dispatch.');
+    }
+  }
+
+  const response = await modelToUse.invoke(messages);
   return { messages: [response] };
 };
 
@@ -159,7 +180,6 @@ const shouldContinue = (state: AgentState) => {
 };
 
 // We create a single instance of the model and the graph to be reused.
-const modelWithTools = langchainGroq.bind({ tools: [] }); // Tools will be bound dynamically
 const workflow = new StateGraph<AgentState>({
   channels: {
     messages: {
@@ -218,8 +238,8 @@ export async function processUserCommand(input: UserCommandInput): Promise<UserC
   // Dynamically get the toolset for this specific context.
   const tools = await getTools({ userId, workspaceId, psyche, role });
 
-  // Re-bind the model with the schemas from the dynamically created tools for this request.
-  modelWithTools.kwargs.tools = tools.map(tool => ({
+  // Re-bind the models with the schemas from the dynamically created tools for this request.
+  const toolSchemas = tools.map(tool => ({
       type: 'function',
       function: {
         name: tool.name,
@@ -227,6 +247,9 @@ export async function processUserCommand(input: UserCommandInput): Promise<UserC
         parameters: zodToJsonSchema(tool.schema),
       },
   }));
+  
+  fastModelWithTools.kwargs.tools = toolSchemas;
+  complexModelWithTools.kwargs.tools = toolSchemas;
   
   // Replace the 'tools' node in the graph with a new one containing the context-aware tools.
   app.nodes.tools = new ToolNode<AgentState>(tools) as any;

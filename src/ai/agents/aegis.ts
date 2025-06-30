@@ -16,7 +16,7 @@ import {
     type AegisAnomalyScanOutput
 } from './aegis-schemas';
 import { authorizeAndDebitAgentActions } from '@/services/billing-service';
-import { langchainGroq } from '@/ai/genkit';
+import { langchainGroqFast } from '@/ai/genkit';
 
 
 export async function aegisAnomalyScan(input: AegisAnomalyScanInput): Promise<AegisAnomalyScanOutput> {
@@ -56,7 +56,7 @@ Based on this, you must deliver a proclamation:
 4.  **anomalyExplanation**: Deliver your proclamation. If a violation is found, explain the transgression with the gravity it deserves. If not, provide reassurance that all is well within the digital empire.
 `;
 
-    const structuredGroq = langchainGroq.withStructuredOutput(AegisAnomalyScanOutputSchema);
+    const structuredGroq = langchainGroqFast.withStructuredOutput(AegisAnomalyScanOutputSchema);
     const output = await structuredGroq.invoke(promptText);
     
     return output;

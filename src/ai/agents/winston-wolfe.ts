@@ -12,7 +12,7 @@ import {
     type WinstonWolfeOutput
 } from './winston-wolfe-schemas';
 import { authorizeAndDebitAgentActions } from '@/services/billing-service';
-import { langchainGroq } from '@/ai/genkit';
+import { langchainGroqFast } from '@/ai/genkit';
 
 const generateSolutionFlow = ai.defineFlow(
   {
@@ -34,7 +34,7 @@ const generateSolutionFlow = ai.defineFlow(
 
     Generate the one response that solves this. Only output the response text.`;
     
-    const structuredGroq = langchainGroq.withStructuredOutput(WinstonWolfeOutputSchema);
+    const structuredGroq = langchainGroqFast.withStructuredOutput(WinstonWolfeOutputSchema);
     const output = await structuredGroq.invoke(promptText);
 
     return output;

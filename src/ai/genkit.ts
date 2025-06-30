@@ -29,7 +29,7 @@ export const langchainGemini = new ChatGoogleGenerativeAI({
   apiKey: googleApiKey,
 });
 
-// The LangChain model for Groq, used for high-speed text generation.
+// --- Groq Model Swarm ---
 const groqApiKey = (process.env.GROQ_API_KEY && process.env.GROQ_API_KEY.trim() !== '')
     ? process.env.GROQ_API_KEY
     : 'YOUR_GROQ_API_KEY_HERE';
@@ -41,7 +41,14 @@ if (groqApiKey === 'YOUR_GROQ_API_KEY_HERE') {
     );
 }
 
-export const langchainGroq = new ChatGroq({
+// The fast model for simple commands and routing.
+export const langchainGroqFast = new ChatGroq({
     apiKey: groqApiKey === 'YOUR_GROQ_API_KEY_HERE' ? undefined : groqApiKey,
-    model: "llama3-8b-8192", // Fast and capable model
+    model: "llama3-8b-8192", 
+});
+
+// The complex model for reasoning, analysis, and generation.
+export const langchainGroqComplex = new ChatGroq({
+    apiKey: groqApiKey === 'YOUR_GROQ_API_KEY_HERE' ? undefined : groqApiKey,
+    model: "mixtral-8x7b-32768",
 });
