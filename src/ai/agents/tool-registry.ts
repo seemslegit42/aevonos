@@ -1,4 +1,5 @@
 
+
 /**
  * @fileOverview This file defines the central tool registry for the BEEP agent.
  * It uses a factory pattern to create context-aware tool instances.
@@ -6,7 +7,7 @@
 
 import { Tool, DynamicTool } from '@langchain/core/tools';
 import { z } from 'zod';
-import { UserPsyche } from '@prisma/client';
+import { UserPsyche, UserRole } from '@prisma/client';
 
 import {
     AgentReportSchema,
@@ -50,6 +51,7 @@ import { getUsageDetailsForAgent, requestCreditTopUpInDb } from '@/services/bill
 import { getDatingProfile } from '@/ai/tools/dating-tools';
 import { createSecurityAlertInDb } from '@/ai/tools/security-tools';
 import { createManualTransaction } from '@/services/ledger-service';
+import { getSystemStatus, findUsersByVow, manageSyndicateAccess } from '@/ai/tools/demiurge-tools';
 
 
 // Schema Imports
@@ -85,6 +87,7 @@ import { StonksBotInputSchema } from './stonks-bot-schemas';
 import { RenoModeAnalysisInputSchema } from './reno-mode-schemas';
 import { PatricktAgentInputSchema } from './patrickt-agent-schemas';
 import { InventoryDaemonInputSchema } from './inventory-daemon';
+import { FindUsersByVowInputSchema, ManageSyndicateInputSchema } from '@/ai/tools/demiurge-schemas';
 
 
 // Context for multi-tenancy and personalization
@@ -92,6 +95,7 @@ interface AgentContext {
     userId: string;
     workspaceId: string;
     psyche: UserPsyche;
+    role: UserRole;
 }
 
 // This tool is a container for the final structured output.
@@ -114,7 +118,7 @@ class FinalAnswerTool extends Tool {
  * @returns An array of LangChain Tool instances.
  */
 export function getTools(context: AgentContext): Tool[] {
-    const { userId, workspaceId, psyche } = context;
+    const { userId, workspaceId, psyche, role } = context;
 
     const createAgentTool = ({
         name,
@@ -147,7 +151,7 @@ export function getTools(context: AgentContext): Tool[] {
         });
     };
     
-    return [
+    const allTools: Tool[] = [
         new FinalAnswerTool(),
 
         createAgentTool({
@@ -450,5 +454,36 @@ export function getTools(context: AgentContext): Tool[] {
             agentFunc: (toolInput) => consultInventoryDaemon(toolInput),
         }),
     ];
+
+    if (role === UserRole.ADMIN) {
+        allTools.push(
+            createAgentTool({
+                name: 'getSystemStatus',
+                description: "Retrieves the current operational status of the entire ΛΞVON OS, including system load and agent performance. Only for the Architect.",
+                schema: z.object({}),
+                agentName: 'demiurge',
+                reportAction: 'get_system_status',
+                agentFunc: getSystemStatus,
+            }),
+            createAgentTool({
+                name: 'findUsersByVow',
+                description: "Finds users based on a keyword from their 'founding vow' or 'sacrifice' made during the Rite of Invocation. Only for the Architect.",
+                schema: FindUsersByVowInputSchema,
+                agentName: 'demiurge',
+                reportAction: 'find_users_by_vow',
+                agentFunc: findUsersByVow,
+            }),
+             createAgentTool({
+                name: 'manageSyndicateAccess',
+                description: "Performs high-level administrative actions on a group of users (a 'Syndicate' or 'Covenant'). Only for the Architect.",
+                schema: ManageSyndicateInputSchema,
+                agentName: 'demiurge',
+                reportAction: 'manage_syndicate_access',
+                agentFunc: manageSyndicateAccess,
+            })
+        );
+    }
+    
+    return allTools;
 }
     

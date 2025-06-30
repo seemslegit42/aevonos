@@ -1,4 +1,5 @@
 
+
 'use server';
 
 import { processUserCommand } from '@/ai/agents/beep';
@@ -37,7 +38,7 @@ export async function handleCommand(command: string): Promise<UserCommandOutput>
 
   const user = await prisma.user.findUnique({
     where: { id: session.userId },
-    select: { psyche: true }
+    select: { psyche: true, role: true }
   });
 
   if (!user) {
@@ -55,6 +56,7 @@ export async function handleCommand(command: string): Promise<UserCommandOutput>
         userId: session.userId,
         workspaceId: session.workspaceId,
         psyche: user.psyche,
+        role: user.role,
     });
     revalidatePath('/');
     return result;

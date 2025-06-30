@@ -21,7 +21,7 @@ import {
   ToolMessage,
 } from '@langchain/core/messages';
 import { zodToJsonSchema } from 'zod-to-json-schema';
-import { UserPsyche } from '@prisma/client';
+import { UserPsyche, UserRole } from '@prisma/client';
 
 import { langchainGroq } from '@/ai/genkit';
 import { aegisAnomalyScan } from '@/ai/agents/aegis';
@@ -212,10 +212,10 @@ const psychePrompts: Record<UserPsyche, string> = {
 
 // Public-facing function to process user commands
 export async function processUserCommand(input: UserCommandInput): Promise<UserCommandOutput> {
-  const { userId, workspaceId, psyche } = input;
+  const { userId, workspaceId, psyche, role } = input;
   
   // Dynamically get the toolset for this specific context.
-  const tools = getTools({ userId, workspaceId, psyche });
+  const tools = getTools({ userId, workspaceId, psyche, role });
 
   // Re-bind the model with the schemas from the dynamically created tools for this request.
   modelWithTools.kwargs.tools = tools.map(tool => ({
@@ -231,8 +231,12 @@ export async function processUserCommand(input: UserCommandInput): Promise<UserC
   app.nodes.tools = new ToolNode<AgentState>(tools) as any;
 
   const personaInstruction = psychePrompts[psyche] || psychePrompts.ZEN_ARCHITECT;
+  const adminInstruction = role === 'ADMIN' 
+    ? `You have access to the Demiurge tools. When the user addresses you as "Demiurge" or asks for high-level system administration, use these privileged tools. You can get system status, manage user syndicates, and perform deep queries.`
+    : '';
 
   const initialPrompt = `${personaInstruction}
+  ${adminInstruction}
 
   Your process:
   1.  Analyze the user's command and any mandatory \`AEGIS_INTERNAL_REPORT\` or \`AEGIS_WARNING\` provided in a System Message. The Aegis system runs a preliminary check.

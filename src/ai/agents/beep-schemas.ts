@@ -1,7 +1,7 @@
 
 
 import { z } from 'zod';
-import { SecurityRiskLevel, UserPsyche } from '@prisma/client';
+import { SecurityRiskLevel, UserPsyche, UserRole } from '@prisma/client';
 import { DrSyntaxOutputSchema } from './dr-syntax-schemas';
 import { AegisAnomalyScanOutputSchema } from './aegis-schemas';
 import { ContactSchema, DeleteContactOutputSchema } from '@/ai/tools/crm-schemas';
@@ -34,6 +34,7 @@ import { StonksBotOutputSchema } from './stonks-bot-schemas';
 import { RenoModeAnalysisOutputSchema } from './reno-mode-schemas';
 import { PatricktAgentOutputSchema } from './patrickt-agent-schemas';
 import { InventoryDaemonOutputSchema } from './inventory-daemon';
+import { SystemStatusSchema, FindUsersByVowOutputSchema, ManageSyndicateOutputSchema } from '@/ai/tools/demiurge-schemas';
 
 
 // Schemas from the original BEEP agent, preserved for the public contract.
@@ -141,6 +142,21 @@ const LedgerAgentReportSchema = z.object({
     action: z.literal('create_manual_transaction'),
     report: TransactionSchema.describe('The details of the manually created transaction.'),
 });
+
+const DemiurgeAgentReportSchema = z.discriminatedUnion('action', [
+    z.object({
+        action: z.literal('get_system_status'),
+        report: SystemStatusSchema
+    }),
+    z.object({
+        action: z.literal('find_users_by_vow'),
+        report: FindUsersByVowOutputSchema
+    }),
+    z.object({
+        action: z.literal('manage_syndicate_access'),
+        report: ManageSyndicateOutputSchema
+    }),
+]);
 
 
 export const AgentReportSchema = z.discriminatedUnion('agent', [
@@ -288,6 +304,10 @@ export const AgentReportSchema = z.discriminatedUnion('agent', [
     agent: z.literal('inventory-daemon'),
     report: InventoryDaemonOutputSchema.describe('The report from the Inventory Daemon.'),
   }),
+  z.object({
+    agent: z.literal('demiurge'),
+    report: DemiurgeAgentReportSchema,
+  }),
 ]);
 
 export const UserCommandInputSchema = z.object({
@@ -295,6 +315,7 @@ export const UserCommandInputSchema = z.object({
   userId: z.string(),
   workspaceId: z.string(),
   psyche: z.nativeEnum(UserPsyche),
+  role: z.nativeEnum(UserRole),
 });
 export type UserCommandInput = z.infer<typeof UserCommandInputSchema>;
 
