@@ -73,6 +73,7 @@ const LaunchableAppTypeSchema = z.enum([
   'validator',
   'reno-mode',
   'patrickt-app',
+  'howards-sidekick',
 ]);
 
 export const AppToLaunchSchema = z.object({
