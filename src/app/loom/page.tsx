@@ -12,7 +12,7 @@ import WorkflowList from '@/components/loom/workflow-list';
 import WorkflowRunHistory from '@/components/loom/workflow-run-history';
 import { useToast } from '@/hooks/use-toast';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import type { User, UserRole } from '@prisma/client';
+import type { User, Workspace, UserRole } from '@prisma/client';
 import { useIsMobile } from '@/hooks/use-is-mobile';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import type { Node, Edge, Workflow, NodeType } from '@/components/loom/types';
@@ -64,26 +64,36 @@ export default function LoomPage() {
 
     const { toast } = useToast();
     const [userRole, setUserRole] = useState<UserRole | null>(null);
+    const [isOwner, setIsOwner] = useState(false);
     const [isLoadingUser, setIsLoadingUser] = useState(true);
     const isMobile = useIsMobile();
     
     const isInspectorSheetOpen = isMobile && !!selectedNode;
 
     useEffect(() => {
-        const fetchUserRole = async () => {
+        const fetchUserData = async () => {
             setIsLoadingUser(true);
             try {
-                const res = await fetch('/api/users/me');
-                if (!res.ok) throw new Error('Could not fetch user permissions');
-                const userData: User = await res.json();
+                const [userRes, workspaceRes] = await Promise.all([
+                    fetch('/api/users/me'),
+                    fetch('/api/workspaces/me'),
+                ]);
+                if (!userRes.ok) throw new Error('Could not fetch user permissions');
+                if (!workspaceRes.ok) throw new Error('Could not fetch workspace data');
+                
+                const userData: User = await userRes.json();
+                const workspaceData: Workspace = await workspaceRes.json();
+                
                 setUserRole(userData.role);
+                setIsOwner(userData.id === workspaceData.ownerId);
+
             } catch (e) {
                 toast({ variant: 'destructive', title: 'Error', description: (e as Error).message });
             } finally {
                 setIsLoadingUser(false);
             }
         };
-        fetchUserRole();
+        fetchUserData();
     }, [toast]);
 
     useEffect(() => {
@@ -308,7 +318,7 @@ export default function LoomPage() {
     }
 
     const handleToggleArchitectView = () => {
-        if (userRole === 'ADMIN') {
+        if (isOwner) {
             setIsArchitectView(prev => !prev);
         } else {
             toast({
@@ -330,6 +340,7 @@ export default function LoomPage() {
                 onDelete={() => setIsDeleteDialogOpen(true)}
                 isSaving={isSaving}
                 isRunning={isRunning}
+                isOwner={isOwner}
                 userRole={userRole}
                 isLoadingUser={isLoadingUser}
                 isArchitectView={isArchitectView}

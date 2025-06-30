@@ -19,6 +19,7 @@ interface LoomHeaderProps {
   onDelete: () => void;
   isSaving: boolean;
   isRunning: boolean;
+  isOwner: boolean;
   userRole: UserRole | null;
   isLoadingUser: boolean;
   isArchitectView: boolean;
@@ -33,6 +34,7 @@ export default function LoomHeader({
     onDelete,
     isSaving,
     isRunning,
+    isOwner,
     userRole,
     isLoadingUser,
     isArchitectView,
@@ -40,7 +42,6 @@ export default function LoomHeader({
 }: LoomHeaderProps) {
   const canEdit = userRole === 'ADMIN' || userRole === 'MANAGER';
   const canRun = userRole !== 'AUDITOR';
-  const isAdmin = userRole === 'ADMIN';
   const isActionDisabled = isSaving || isRunning || isLoadingUser;
 
   return (
@@ -69,7 +70,7 @@ export default function LoomHeader({
         />
       </div>
       <div className="flex items-center gap-2">
-        {isAdmin && (
+        {isOwner && (
            <TooltipProvider>
               <Tooltip>
                   <TooltipTrigger asChild>
@@ -78,7 +79,7 @@ export default function LoomHeader({
                       </Button>
                   </TooltipTrigger>
                   <TooltipContent>
-                      <p>{isArchitectView ? "Return to Workflow Editor" : "Enter Architect View (Loom of Fates)"}</p>
+                      <p>{isArchitectView ? "Return to Workflow Editor" : "Enter Architect View (Owner Only)"}</p>
                   </TooltipContent>
               </Tooltip>
            </TooltipProvider>

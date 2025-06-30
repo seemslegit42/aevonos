@@ -19,13 +19,13 @@ export async function updateUserRole(formData: FormData) {
     return { success: false, error: 'Unauthorized' };
   }
 
-  const adminUser = await prisma.user.findUnique({
-    where: { id: session.userId },
-    select: { role: true },
+  const workspace = await prisma.workspace.findUnique({
+    where: { id: session.workspaceId },
+    select: { ownerId: true }
   });
 
-  if (adminUser?.role !== UserRole.ADMIN) {
-    return { success: false, error: 'Forbidden' };
+  if (!workspace || session.userId !== workspace.ownerId) {
+    return { success: false, error: 'Forbidden: Only the workspace Architect can perform this action.' };
   }
 
   const validation = UpdateUserRoleSchema.safeParse({
@@ -44,11 +44,6 @@ export async function updateUserRole(formData: FormData) {
   }
   
   // Protect the workspace owner from being modified by other admins
-  const workspace = await prisma.workspace.findUnique({
-    where: { id: session.workspaceId },
-    select: { ownerId: true }
-  });
-
   if (userId === workspace?.ownerId) {
     return { success: false, error: 'The workspace owner\'s role cannot be changed.' };
   }
@@ -76,13 +71,13 @@ export async function removeUserFromWorkspace(formData: FormData) {
         return { success: false, error: 'Unauthorized' };
     }
     
-    const adminUser = await prisma.user.findUnique({
-        where: { id: session.userId },
-        select: { role: true },
+    const workspace = await prisma.workspace.findUnique({
+      where: { id: session.workspaceId },
+      select: { ownerId: true }
     });
 
-    if (adminUser?.role !== UserRole.ADMIN) {
-        return { success: false, error: 'Forbidden' };
+    if (!workspace || session.userId !== workspace.ownerId) {
+        return { success: false, error: 'Forbidden: Only the workspace Architect can perform this action.' };
     }
     
     const validation = RemoveUserSchema.safeParse({
@@ -100,11 +95,6 @@ export async function removeUserFromWorkspace(formData: FormData) {
     }
 
     // Protect the workspace owner from being removed by other admins
-    const workspace = await prisma.workspace.findUnique({
-      where: { id: session.workspaceId },
-      select: { ownerId: true }
-    });
-
     if (userId === workspace?.ownerId) {
         return { success: false, error: 'The workspace owner cannot be removed.' };
     }
@@ -137,13 +127,13 @@ export async function updateAgentStatus(formData: FormData) {
     return { success: false, error: 'Unauthorized' };
   }
 
-  const adminUser = await prisma.user.findUnique({
-    where: { id: session.userId },
-    select: { role: true },
+  const workspace = await prisma.workspace.findUnique({
+    where: { id: session.workspaceId },
+    select: { ownerId: true }
   });
 
-  if (adminUser?.role !== UserRole.ADMIN) {
-    return { success: false, error: 'Forbidden' };
+  if (!workspace || session.userId !== workspace.ownerId) {
+    return { success: false, error: 'Forbidden: Only the workspace Architect can perform this action.' };
   }
 
   const validation = UpdateAgentStatusSchema.safeParse({
@@ -188,13 +178,13 @@ export async function deleteAgent(formData: FormData) {
         return { success: false, error: 'Unauthorized' };
     }
     
-    const adminUser = await prisma.user.findUnique({
-        where: { id: session.userId },
-        select: { role: true },
+    const workspace = await prisma.workspace.findUnique({
+      where: { id: session.workspaceId },
+      select: { ownerId: true }
     });
 
-    if (adminUser?.role !== UserRole.ADMIN) {
-        return { success: false, error: 'Forbidden' };
+    if (!workspace || session.userId !== workspace.ownerId) {
+        return { success: false, error: 'Forbidden: Only the workspace Architect can perform this action.' };
     }
     
     const validation = DeleteAgentSchema.safeParse({
@@ -235,13 +225,13 @@ export async function confirmPendingTransactionAction(transactionId: string) {
         return { success: false, error: 'Unauthorized' };
     }
     
-    const adminUser = await prisma.user.findUnique({
-        where: { id: session.userId },
-        select: { role: true },
+    const workspace = await prisma.workspace.findUnique({
+      where: { id: session.workspaceId },
+      select: { ownerId: true }
     });
 
-    if (adminUser?.role !== UserRole.ADMIN) {
-        return { success: false, error: 'Forbidden' };
+    if (!workspace || session.userId !== workspace.ownerId) {
+        return { success: false, error: 'Forbidden: Only the workspace Architect can perform this action.' };
     }
 
     try {

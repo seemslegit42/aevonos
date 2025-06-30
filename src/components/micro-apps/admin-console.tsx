@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -5,31 +6,37 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AdminDashboardTab from './admin-console/AdminDashboardTab';
 import UserManagementTab from './admin-console/UserManagementTab';
 import SystemMonitoringTab from './admin-console/SystemMonitoringTab';
-import { type User, UserRole } from '@prisma/client';
+import { type User, type Workspace, UserRole } from '@prisma/client';
 import { Skeleton } from '../ui/skeleton';
 import { ShieldAlert } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 
 export default function AdminConsole() {
-  const [user, setUser] = useState<Pick<User, 'role'> | null>(null);
+  const [isOwner, setIsOwner] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    async function fetchUserRole() {
+    async function fetchPermissions() {
       try {
-        const res = await fetch('/api/users/me');
-        if (!res.ok) {
+        const [userRes, workspaceRes] = await Promise.all([
+            fetch('/api/users/me'),
+            fetch('/api/workspaces/me')
+        ]);
+        if (!userRes.ok || !workspaceRes.ok) {
           throw new Error('Could not fetch user permissions');
         }
-        const userData: Pick<User, 'role'> = await res.json();
-        setUser(userData);
+        const userData: User = await userRes.json();
+        const workspaceData: Workspace = await workspaceRes.json();
+        
+        setIsOwner(userData.id === workspaceData.ownerId);
+
       } catch (e) {
-        console.error("Failed to get user role for Admin Console", e);
+        console.error("Failed to get user permissions for Admin Console", e);
       } finally {
         setIsLoading(false);
       }
     }
-    fetchUserRole();
+    fetchPermissions();
   }, []);
 
   if (isLoading) {
@@ -41,7 +48,7 @@ export default function AdminConsole() {
     );
   }
 
-  if (user?.role !== UserRole.ADMIN) {
+  if (!isOwner) {
     return (
       <div className="p-4 h-full flex items-center justify-center">
         <Alert variant="destructive" className="max-w-md bg-destructive/10">
