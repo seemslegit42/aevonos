@@ -9,16 +9,17 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Mail, Lock } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
+import { FlowerOfLifeIcon } from '@/components/icons/FlowerOfLifeIcon';
+import { Separator } from '@/components/ui/separator';
 
 const loginSchema = z.object({
-  email: z.string().email({ message: 'Please enter a valid email address.' }),
-  password: z.string().min(1, { message: 'Password is required.' }),
+  email: z.string().email({ message: 'A valid sigil is required.' }),
+  password: z.string().min(1, { message: 'A vow must be spoken.' }),
 });
 
 type LoginFormValues = z.infer<typeof loginSchema>;
@@ -50,24 +51,26 @@ export default function LoginPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'An unexpected error occurred.');
+        throw new Error(data.error || 'The ritual was rejected. Check your sigil and vow.');
       }
-
+      
       router.push('/');
       router.refresh();
+
     } catch (err: any) {
-      setError(err.message);
+      const errorMessage = err.message || 'An unknown disturbance occurred.';
+      setError(errorMessage);
       toast({
         variant: 'destructive',
         title: 'Invocation Failed',
-        description: err.message,
+        description: errorMessage,
       });
     }
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center p-4">
-      <div className="absolute top-0 z-[-2] h-screen w-full bg-background">
+    <div className="flex min-h-screen items-center justify-center p-4 overflow-hidden">
+        <div className="absolute top-0 z-[-2] h-screen w-full bg-background">
           <div 
             className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-transparent"
           />
@@ -75,91 +78,90 @@ export default function LoginPage() {
             className="absolute inset-0 animate-aurora bg-[linear-gradient(135deg,hsl(var(--iridescent-one)/0.2),hsl(var(--iridescent-two)/0.2)_50%,hsl(var(--iridescent-three)/0.2)_100%)] bg-[length:600%_600%]"
           />
           <div className="absolute inset-0 grain-overlay" />
-      </div>
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.7, ease: 'easeOut' }}
-      >
-        <Card className="w-full max-w-sm">
-          <CardHeader className="text-center">
-            <Image
-              src="/logo-white.png"
-              alt="Aevon OS Logo"
-              width={120}
-              height={40}
-              className="mx-auto mb-4 h-10 w-auto"
-            />
-            <CardTitle className="font-headline text-2xl">Resume the Ritual</CardTitle>
-            <CardDescription>The Canvas awaits its Architect.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="sr-only">Email</FormLabel>
-                      <FormControl>
-                        <div className="relative">
-                          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                          <Input
-                            type="email"
-                            placeholder="Sigil (Email)"
-                            className="pl-10"
-                            disabled={isSubmitting}
-                            {...field}
-                          />
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="password"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="sr-only">Password</FormLabel>
-                      <FormControl>
-                        <div className="relative">
-                           <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+        </div>
+      
+        <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.7, ease: 'easeOut' }}
+            className="relative w-full max-w-sm"
+        >
+            <div className="absolute inset-0.5 -z-10 rounded-2xl bg-gradient-to-r from-primary via-accent to-roman-aqua blur-lg opacity-30 group-hover:opacity-50 transition duration-1000 animate-pulse" />
+            <div className="relative p-6 sm:p-8 rounded-2xl bg-background/80 backdrop-blur-xl border border-border/20 shadow-2xl text-center space-y-6">
+                
+                <div className="absolute inset-0 -z-10 flex items-center justify-center overflow-hidden rounded-2xl">
+                    <FlowerOfLifeIcon className="w-full h-full text-foreground/5 opacity-30 animate-subtle-pulse" />
+                </div>
+                
+                <div className="relative">
+                    <Image
+                      src="/logo-neutral.svg"
+                      alt="Aevon OS Logo"
+                      width={60}
+                      height={60}
+                      className="mx-auto"
+                    />
+                    <h1 className="text-2xl font-headline mt-4 text-foreground">Resume the Ritual</h1>
+                    <p className="text-sm text-muted-foreground mt-1">The Canvas awaits its Architect.</p>
+                </div>
+                
+                <Form {...form}>
+                  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                    <FormField
+                      control={form.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormControl>
+                            <Input
+                              type="email"
+                              placeholder="Enter Sigil..."
+                              className="bg-background/50 text-center h-12 text-base border-border/40 focus-visible:ring-primary"
+                              disabled={isSubmitting}
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="password"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormControl>
                            <Input
-                            type="password"
-                            placeholder="Vow (Password)"
-                            className="pl-10"
-                            disabled={isSubmitting}
-                            {...field}
-                          />
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <Button variant="summon" type="submit" className="w-full" disabled={isSubmitting}>
-                  {isSubmitting ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  ) : null}
-                  Summon the Canvas
-                </Button>
-              </form>
-            </Form>
-          </CardContent>
-          <CardFooter className="flex-col items-center justify-center text-center">
-             {error && <p className="text-destructive text-sm mb-4">{error}</p>}
-            <p className="text-xs text-muted-foreground">
-              New Operator?{' '}
-              <Link href="/register" className="font-medium text-primary hover:underline">
-                Begin the Rite of Invocation.
-              </Link>
-            </p>
-          </CardFooter>
-        </Card>
-      </motion.div>
+                                type="password"
+                                placeholder="Speak Vow..."
+                                className="bg-background/50 text-center h-12 text-base border-border/40 focus-visible:ring-primary"
+                                disabled={isSubmitting}
+                                {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <Button variant="summon" type="submit" className="w-full h-12 text-base" disabled={isSubmitting}>
+                      {isSubmitting ? (
+                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                      ) : null}
+                      Summon Canvas
+                    </Button>
+                  </form>
+                </Form>
+                
+                <div className="relative text-xs text-muted-foreground">
+                    <Separator className="my-4 bg-border/20"/>
+                    <p>New Operator?{' '}
+                      <Link href="/register" className="font-medium text-primary hover:text-primary/80 transition-colors">
+                        Perform the Rite of Invocation.
+                      </Link>
+                    </p>
+                </div>
+            </div>
+        </motion.div>
     </div>
   );
 }
