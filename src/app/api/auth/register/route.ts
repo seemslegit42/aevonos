@@ -7,6 +7,7 @@ import { encrypt } from '@/lib/auth';
 import prisma from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 import { UserPsyche, PlanTier, TransactionType, TransactionStatus, UserRole, Prisma } from '@prisma/client';
+import { interpretVow } from '@/ai/agents/invocation-rite-agent';
 
 // Updated schema to reflect the new Rite of Invocation flow
 const RegisterRequestSchema = z.object({
@@ -82,6 +83,26 @@ export async function POST(request: Request) {
         return { user: newUser, workspace: newWorkspace };
     });
 
+    // After successful registration, call the invocation agent to get the benediction.
+    // This is non-critical; if it fails, registration still succeeds.
+    try {
+        const invocationResult = await interpretVow({
+            whatMustEnd: whatMustEnd || 'the old ways',
+            goal: goal || 'a new beginning',
+            psyche: psyche,
+            agentAlias: agentAlias || 'BEEP',
+        });
+        // Update the user with the AI-generated data.
+        await prisma.user.update({
+            where: { id: user.id },
+            data: {
+                corePainIndex: invocationResult.corePainIndex,
+                foundingBenediction: invocationResult.foundingBenediction,
+            }
+        });
+    } catch (aiError) {
+        console.error('[Rite of Invocation AI Error]', aiError);
+    }
 
     const sessionPayload = {
         userId: user.id,

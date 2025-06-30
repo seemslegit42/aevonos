@@ -38,3 +38,4 @@ import '@/ai/agents/stonks-bot.ts';
 import '@/ai/tools/finance-tools.ts';
 import '@/ai/agents/reno-mode.ts';
 import '@/ai/agents/patrickt-agent.ts';
+import '@/ai/agents/invocation-rite-agent.ts';
