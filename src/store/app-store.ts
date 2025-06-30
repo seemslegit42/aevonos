@@ -403,10 +403,15 @@ export const useAppStore = create<AppState>((set, get) => {
     handleCommandSubmit: async (command: string) => {
       if (!command) return;
 
-      if (command.toLowerCase().trim() === 'the tendies are coming') {
+      const lowerCaseCommand = command.toLowerCase().trim();
+
+      if (lowerCaseCommand === 'the tendies are coming') {
         set({ tendyRainActive: true, screenShakeActive: true });
         setTimeout(() => set({ screenShakeActive: false }), 500); // shake for 0.5s
         setTimeout(() => set({ tendyRainActive: false }), 5000); // rain for 5s
+      } else if (lowerCaseCommand === 'show me the shitstorm') {
+        set({ screenShakeActive: true });
+        setTimeout(() => set({ screenShakeActive: false }), 700);
       }
       
       set({ isLoading: true, beepOutput: null });
