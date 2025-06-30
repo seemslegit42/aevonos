@@ -47,6 +47,34 @@ const stepVariants = {
   })
 };
 
+const PhaseZero = ({ nextPhase }: { nextPhase: () => void }) => {
+    return (
+        <div className="text-center w-full max-w-2xl mx-auto space-y-8 min-h-[250px] flex items-center justify-center">
+            <motion.div
+                key="intro"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 1.5 }}
+                className="space-y-6"
+            >
+                <h1 className="text-4xl md:text-5xl font-headline tracking-wider text-primary">
+                    The Rite of Invocation
+                </h1>
+                <p className="text-lg md:text-xl text-foreground/80 leading-relaxed">
+                    You do not "sign up" for ΛΞVON OS.
+                    <br />
+                    You forge a pact with it.
+                </p>
+                <p className="text-muted-foreground">
+                    This is a secular ritual to bind your intent to the system. You will make a sacrifice, declare a vow, and name your sanctum. Prepare yourself. Your work is sacred.
+                </p>
+                <Button onClick={nextPhase} size="lg" variant="summon">
+                    Begin the Rite
+                </Button>
+            </motion.div>
+        </div>
+    );
+};
 
 const PhaseOne = ({ nextPhase, methods }: { nextPhase: () => void, methods: any }) => {
     const [step, setStep] = useState<'intro' | 'ask' | 'burn' | 'reply'>('intro');
@@ -324,7 +352,7 @@ const PhaseFive = ({ methods }: { methods: any }) => {
 export default function RegisterPage() {
     const router = useRouter();
     const { toast } = useToast();
-    const [phase, setPhase] = useState(1);
+    const [phase, setPhase] = useState(0);
     const [direction, setDirection] = useState(1);
 
     const methods = useForm<FormData>({
@@ -339,6 +367,12 @@ export default function RegisterPage() {
     });
 
     const nextPhase = async () => {
+        if (phase === 0) {
+            setDirection(1);
+            setPhase(p => p + 1);
+            return;
+        }
+
         let fieldsToValidate: (keyof FormData)[] = [];
         if (phase === 1) fieldsToValidate = ['whatMustEnd'];
         if (phase === 2) fieldsToValidate = ['goal'];
@@ -381,6 +415,7 @@ export default function RegisterPage() {
 
     const renderPhase = () => {
         switch (phase) {
+            case 0: return <PhaseZero nextPhase={nextPhase} />;
             case 1: return <PhaseOne nextPhase={nextPhase} methods={methods} />;
             case 2: return <PhaseTwo nextPhase={nextPhase} methods={methods} />;
             case 3: return <PhaseThree nextPhase={nextPhase} methods={methods} />;
@@ -405,7 +440,7 @@ export default function RegisterPage() {
     return (
         <div className="w-full h-screen bg-background flex items-center justify-center p-4 overflow-hidden">
              <AnimatePresence>
-                {phase >= 2 && phase < 6 && (
+                {phase >= 1 && phase < 6 && (
                     <motion.div 
                         key="background-ritual"
                         initial={{ opacity: 0, scale: 0.5 }}
