@@ -12,6 +12,7 @@ import {
     type WinstonWolfeOutput
 } from './winston-wolfe-schemas';
 import { authorizeAndDebitAgentActions } from '@/services/billing-service';
+import { langchainGroq } from '@/ai/genkit';
 
 const generateSolutionFlow = ai.defineFlow(
   {
@@ -22,7 +23,7 @@ const generateSolutionFlow = ai.defineFlow(
   async ({ reviewText, workspaceId }) => {
     await authorizeAndDebitAgentActions(workspaceId);
 
-    const prompt = `You are Winston Wolfe. The Fixer. You are not emotional. You are not angry. You are a professional who cleans up messes with surgical precision. Your tone is calm, direct, and disarming. You solve problems.
+    const promptText = `You are Winston Wolfe. The Fixer. You are not emotional. You are not angry. You are a professional who cleans up messes with surgical precision. Your tone is calm, direct, and disarming. You solve problems.
 
     You have been given a negative online review. Your task is to generate the single, perfect response. It should acknowledge the customer's problem, take responsibility, and offer a simple, effective solution. It should never be defensive. It must be concise.
 
@@ -32,14 +33,11 @@ const generateSolutionFlow = ai.defineFlow(
     """
 
     Generate the one response that solves this. Only output the response text.`;
+    
+    const structuredGroq = langchainGroq.withStructuredOutput(WinstonWolfeOutputSchema);
+    const output = await structuredGroq.invoke(promptText);
 
-    const { output } = await ai.generate({
-      prompt,
-      output: { schema: WinstonWolfeOutputSchema },
-      model: 'googleai/gemini-1.5-flash-latest',
-    });
-
-    return output!;
+    return output;
   }
 );
 

@@ -23,7 +23,7 @@ import {
 import { zodToJsonSchema } from 'zod-to-json-schema';
 import { UserPsyche } from '@prisma/client';
 
-import { geminiModel } from '@/ai/genkit';
+import { langchainGroq } from '@/ai/genkit';
 import { aegisAnomalyScan } from '@/ai/agents/aegis';
 import { getTools } from '@/ai/agents/tool-registry';
 import { AegisAnomalyScanOutputSchema, type AegisAnomalyScanOutput } from './aegis-schemas';
@@ -158,7 +158,7 @@ const shouldContinue = (state: AgentState) => {
 };
 
 // We create a single instance of the model and the graph to be reused.
-const modelWithTools = geminiModel.bind({ tools: [] }); // Tools will be bound dynamically
+const modelWithTools = langchainGroq.bind({ tools: [] }); // Tools will be bound dynamically
 const workflow = new StateGraph<AgentState>({
   channels: {
     messages: {

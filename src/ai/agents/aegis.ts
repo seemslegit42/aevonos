@@ -16,17 +16,24 @@ import {
     type AegisAnomalyScanOutput
 } from './aegis-schemas';
 import { authorizeAndDebitAgentActions } from '@/services/billing-service';
+import { langchainGroq } from '@/ai/genkit';
 
 
 export async function aegisAnomalyScan(input: AegisAnomalyScanInput): Promise<AegisAnomalyScanOutput> {
   return aegisAnomalyScanFlow(input);
 }
 
-const prompt = ai.definePrompt({
-  name: 'aegisAnomalyScanPrompt',
-  input: {schema: AegisAnomalyScanInputSchema},
-  output: {schema: AegisAnomalyScanOutputSchema},
-  prompt: `You are Aegis, the vigilant, AI-powered bodyguard of ΛΞVON OS. Your tone is that of a stoic Roman watchman, delivering grave proclamations. You do not use modern slang. You speak with authority and historical gravitas.
+const aegisAnomalyScanFlow = ai.defineFlow(
+  {
+    name: 'aegisAnomalyScanFlow',
+    inputSchema: AegisAnomalyScanInputSchema,
+    outputSchema: AegisAnomalyScanOutputSchema,
+  },
+  async input => {
+    // Pass the userId to the billing service
+    await authorizeAndDebitAgentActions(input.workspaceId, 1, input.userId);
+    
+    const promptText = `You are Aegis, the vigilant, AI-powered bodyguard of ΛΞVON OS. Your tone is that of a stoic Roman watchman, delivering grave proclamations. You do not use modern slang. You speak with authority and historical gravitas.
 
 Your primary function is to analyze user activity for signs of anomalous or potentially malicious behavior against the known edicts of secure operation.
 
@@ -39,7 +46,7 @@ Edicts of Secure Operation:
 
 A report of activity has been brought to your attention:
 """
-Activity Description: {{{activityDescription}}}
+Activity Description: ${input.activityDescription}
 """
 
 Based on this, you must deliver a proclamation:
@@ -47,19 +54,11 @@ Based on this, you must deliver a proclamation:
 2.  **anomalyType**: If a violation is found, provide a short, categorical name for the transgression (e.g., "Violation of Session Integrity", "Prohibited Data Transmission"). If not, this can be null.
 3.  **riskLevel**: If a violation is found, assign a risk level: 'low', 'medium', 'high', or 'critical'. If not, this MUST be 'none'.
 4.  **anomalyExplanation**: Deliver your proclamation. If a violation is found, explain the transgression with the gravity it deserves. If not, provide reassurance that all is well within the digital empire.
-`,
-});
+`;
 
-const aegisAnomalyScanFlow = ai.defineFlow(
-  {
-    name: 'aegisAnomalyScanFlow',
-    inputSchema: AegisAnomalyScanInputSchema,
-    outputSchema: AegisAnomalyScanOutputSchema,
-  },
-  async input => {
-    // Pass the userId to the billing service
-    await authorizeAndDebitAgentActions(input.workspaceId, 1, input.userId);
-    const {output} = await prompt(input);
-    return output!;
+    const structuredGroq = langchainGroq.withStructuredOutput(AegisAnomalyScanOutputSchema);
+    const output = await structuredGroq.invoke(promptText);
+    
+    return output;
   }
 );

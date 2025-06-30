@@ -2,16 +2,15 @@
 import {genkit} from 'genkit';
 import {googleAI} from '@genkit-ai/googleai';
 import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
+import { ChatGroq } from "@langchain/groq";
 
 // Be extra robust about the API key.
 // If it's missing or an empty string, use the placeholder.
-const apiKey = (process.env.GOOGLE_API_KEY && process.env.GOOGLE_API_KEY.trim() !== '') 
+const googleApiKey = (process.env.GOOGLE_API_KEY && process.env.GOOGLE_API_KEY.trim() !== '') 
     ? process.env.GOOGLE_API_KEY 
     : 'YOUR_API_KEY_HERE';
 
-const hasValidApiKey = apiKey !== 'YOUR_API_KEY_HERE';
-
-if (!hasValidApiKey) {
+if (googleApiKey === 'YOUR_API_KEY_HERE') {
     console.warn(
         '\x1b[33m%s\x1b[0m', // Yellow text
         'WARNING: GOOGLE_API_KEY is not set in your .env file. AI features will be disabled and may throw errors at runtime. Please set a valid key to enable AI functionality.'
@@ -20,13 +19,29 @@ if (!hasValidApiKey) {
 
 export const ai = genkit({
   // Only add the googleAI plugin if the key is valid. This prevents startup crash.
-  plugins: hasValidApiKey ? [googleAI({apiKey: apiKey})] : [],
+  plugins: googleApiKey !== 'YOUR_API_KEY_HERE' ? [googleAI({apiKey: googleApiKey})] : [],
 });
 
-// The LangChain model will likely fail on first use if the key is invalid, which is fine.
-// The key is to prevent the app from crashing on startup.
-export const geminiModel = new ChatGoogleGenerativeAI({
+// The LangChain model for Gemini, used for specialized multimodal tasks.
+export const langchainGemini = new ChatGoogleGenerativeAI({
   modelName: "gemini-1.5-flash-latest",
   maxOutputTokens: 8192,
-  apiKey: apiKey,
+  apiKey: googleApiKey,
+});
+
+// The LangChain model for Groq, used for high-speed text generation.
+const groqApiKey = (process.env.GROQ_API_KEY && process.env.GROQ_API_KEY.trim() !== '')
+    ? process.env.GROQ_API_KEY
+    : 'YOUR_GROQ_API_KEY_HERE';
+
+if (groqApiKey === 'YOUR_GROQ_API_KEY_HERE') {
+    console.warn(
+        '\x1b[33m%s\x1b[0m', // Yellow text
+        'WARNING: GROQ_API_KEY is not set. Groq-powered features will be disabled.'
+    );
+}
+
+export const langchainGroq = new ChatGroq({
+    apiKey: groqApiKey === 'YOUR_GROQ_API_KEY_HERE' ? undefined : groqApiKey,
+    model: "llama3-8b-8192", // Fast and capable model
 });
