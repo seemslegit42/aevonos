@@ -11,29 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { Check, ArrowLeft, Loader2 } from 'lucide-react';
-
-const planDetails: { [key: string]: any } = {
-    apprentice: {
-        name: 'Apprentice',
-        price: 0,
-        priceDisplay: 'Free Forever',
-        features: [
-            "100 Agent Actions / month",
-            "Core Micro-App Access",
-            "Limited Loom Studio Features",
-        ],
-    },
-    artisan: {
-        name: 'Artisan',
-        price: 20,
-        priceDisplay: '$20 / user / month',
-        features: [
-            "2,000 Agent Actions / month",
-            "Full Armory Marketplace Access",
-            "Unlimited Loom Workflows",
-        ],
-    },
-};
+import { planDetails } from '@/config/plans';
 
 export default function SubscribePage({ params }: { params: { plan: string } }) {
     const router = useRouter();
@@ -153,4 +131,3 @@ export default function SubscribePage({ params }: { params: { plan: string } }) 
         </div>
     );
 }
-
