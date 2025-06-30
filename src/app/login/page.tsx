@@ -67,6 +67,15 @@ export default function LoginPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center p-4">
+      <div className="absolute top-0 z-[-2] h-screen w-full bg-background">
+          <div 
+            className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-transparent"
+          />
+          <div 
+            className="absolute inset-0 animate-aurora bg-[linear-gradient(135deg,hsl(var(--iridescent-one)/0.2),hsl(var(--iridescent-two)/0.2)_50%,hsl(var(--iridescent-three)/0.2)_100%)] bg-[length:600%_600%]"
+          />
+          <div className="absolute inset-0 grain-overlay" />
+      </div>
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}

@@ -438,7 +438,16 @@ export default function RegisterPage() {
     }
 
     return (
-        <div className="w-full h-screen bg-background flex items-center justify-center p-4 overflow-hidden">
+        <div className="w-full h-screen relative flex items-center justify-center p-4 overflow-hidden">
+             <div className="absolute top-0 z-[-2] h-screen w-full bg-background">
+                <div 
+                    className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-transparent"
+                />
+                <div 
+                    className="absolute inset-0 animate-aurora bg-[linear-gradient(135deg,hsl(var(--iridescent-one)/0.2),hsl(var(--iridescent-two)/0.2)_50%,hsl(var(--iridescent-three)/0.2)_100%)] bg-[length:600%_600%]"
+                />
+                <div className="absolute inset-0 grain-overlay" />
+            </div>
              <AnimatePresence>
                 {phase >= 1 && phase < 6 && (
                     <motion.div 
