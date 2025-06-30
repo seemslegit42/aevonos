@@ -28,8 +28,7 @@ export default async function RootLayout({
 }>) {
   let user: UserProp = null;
   let workspace: Workspace | null = null;
-  let activeThemeClass = '';
-  let covenantClass = '';
+  let themeClass = '';
 
   try {
     const session = await getServerActionSession();
@@ -64,13 +63,12 @@ export default async function RootLayout({
         
         user = fetchedUser;
         workspace = fetchedWorkspace;
-
+        
+        // Prioritize the active system effect theme over the base covenant theme.
         if (activeEffect?.cardKey === 'ACROPOLIS_MARBLE') {
-          activeThemeClass = 'theme-acropolis-marble';
-        }
-
-        if (fetchedUser?.psyche) {
-          covenantClass = psycheToCovenantClass[fetchedUser.psyche] || '';
+          themeClass = 'theme-acropolis-marble';
+        } else if (fetchedUser?.psyche) {
+          themeClass = psycheToCovenantClass[fetchedUser.psyche] || '';
         }
 
     }
@@ -81,7 +79,7 @@ export default async function RootLayout({
 
 
   return (
-    <html lang="en" className={cn("dark", activeThemeClass, covenantClass)}>
+    <html lang="en" className={cn("dark", themeClass)}>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
