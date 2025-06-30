@@ -63,8 +63,10 @@ export default function UsageMonitor({ workspace: initialWorkspace, user: initia
     }, [toast]);
     
     useEffect(() => {
-        fetchAllData();
-    }, [fetchAllData]);
+        if (!initialWorkspace) {
+            fetchAllData();
+        }
+    }, [fetchAllData, initialWorkspace]);
 
     const handleConfirm = async (transactionId: string) => {
         setConfirmingId(transactionId);
