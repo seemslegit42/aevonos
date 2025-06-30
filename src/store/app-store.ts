@@ -1,3 +1,4 @@
+
 import { create } from 'zustand';
 import type { DragEndEvent } from '@dnd-kit/core';
 import React from 'react';
@@ -105,6 +106,7 @@ export interface AppState {
   beepOutput: BeepState | null;
   tendyRainActive: boolean;
   screenShakeActive: boolean;
+  agentReportHandlerRegistry: Partial<Record<AgentReportSchema['agent'], (reportData: any) => void>>;
   handleDragEnd: (event: DragEndEvent) => void;
   handleResize: (appId: string, size: { width: number; height: number }) => void;
   handleCommandSubmit: (command: string) => void;
@@ -190,205 +192,173 @@ export const useAppStore = create<AppState>((set, get) => {
         apps: state.apps.filter(app => app.id !== appId)
     }));
   };
-
-  const processCrmReport = (crmReport: Extract<AgentReportSchema, { agent: 'crm' }>['report']) => {
-    const { toast } = useToast.getState();
-
-    switch (crmReport.action) {
-      case 'create':
-        toast({ title: 'CRM Agent', description: `Contact "${crmReport.report.firstName} ${crmReport.report.lastName}" created successfully.` });
-        get().closeApp('contact-editor-new');
-        get().handleCommandSubmit('list all contacts');
-        break;
-      
-      case 'update':
-        const updatedContact = crmReport.report;
-        toast({ title: 'CRM Agent', description: `Contact "${updatedContact.firstName} ${updatedContact.lastName}" was updated.` });
-        get().closeApp(`contact-editor-${updatedContact.id}`);
-        get().handleCommandSubmit('list all contacts');
-        break;
-
-      case 'list':
-        const contacts = crmReport.report;
-        upsertApp('contact-list', { id: 'contact-list-main', contentProps: { contacts } });
-        break;
-
-      case 'delete':
-        const { success } = crmReport.report;
-        if (success) {
-          toast({ title: 'CRM Agent', description: 'Contact deleted successfully.' });
-          get().handleCommandSubmit('list all contacts');
-        } else {
-          toast({ variant: 'destructive', title: 'CRM Agent Error', description: 'Failed to delete contact.' });
-        }
-        break;
-    }
-  };
-
-
-  const processAgentReports = (reports: UserCommandOutput['agentReports']) => {
-    if (!reports) return;
-    const { toast } = useToast.getState();
-
-    const infidelityRadarId = 'infidelity-radar-main';
-    const infidelityApp = get().apps.find(a => a.id === infidelityRadarId);
-    let infidelityProps = infidelityApp?.contentProps || {};
-
-    for (const report of reports) {
-      const defaults = manifestMap.get(report.agent as MicroAppType);
-
-      switch (report.agent) {
-        case 'aegis':
-          launchApp('aegis-control', { contentProps: { ...report.report }});
-          if (report.report.isAnomalous) {
-            toast({ title: 'Aegis Alert', description: report.report.anomalyExplanation, variant: 'destructive' });
-            // Haptic feedback for mobile devices to signal a critical alert
-            if (typeof window !== 'undefined' && 'vibrate' in navigator) {
-              navigator.vibrate([200, 100, 200]);
+  
+    // =================================================================
+    // AGENT REPORT HANDLER REGISTRY
+    // This replaces the giant switch statement for processing agent reports.
+    // Each handler defines how the UI should react to a specific agent's output.
+    // =================================================================
+    const agentReportHandlerRegistry: AppState['agentReportHandlerRegistry'] = {
+        'aegis': (report) => {
+            launchApp('aegis-control', { contentProps: { ...report } });
+            if (report.isAnomalous) {
+                useToast.getState().toast({ title: 'Aegis Alert', description: report.anomalyExplanation, variant: 'destructive' });
+                if (typeof window !== 'undefined' && 'vibrate' in navigator) {
+                    navigator.vibrate([200, 100, 200]);
+                }
             }
-          }
-          break;
-
-        case 'dr-syntax':
-          upsertApp('dr-syntax', {
-            id: `dr-syntax-report-${Date.now()}`,
-            contentProps: report.report as DrSyntaxOutput,
-          });
-          break;
-
-        case 'crm':
-          processCrmReport(report.report);
-          break;
-        
-        case 'billing':
-            upsertApp('usage-monitor', {
-                id: 'singleton-usage-monitor',
-                contentProps: report.report.report
-            });
-            break;
-        
-        case 'vin-diesel':
-            launchApp('vin-diesel', { title: `VIN: ...${report.report.vin.slice(-6)}`, description: 'Validation Result', contentProps: report.report });
-            break;
-        
-        case 'winston-wolfe':
-            launchApp('winston-wolfe', { contentProps: report.report as WinstonWolfeOutput });
-            break;
-
-        case 'kif-kroker':
-            launchApp('kif-kroker', { contentProps: report.report as KifKrokerAnalysisOutput });
-            break;
-        
-        case 'vandelay':
-            launchApp('vandelay', { contentProps: { alibi: report.report as VandelayAlibiOutput } });
-            break;
-        
-        case 'jroc':
-            launchApp('jroc-business-kit', { title: `Biz Kit: ${report.report.businessName}`, description: 'Your legit-as-frig business kit.', contentProps: report.report as JrocOutput });
-            break;
-        
-        case 'lahey-surveillance':
-             launchApp('lahey-surveillance', { title: `Lahey Report`, description: 'Shit-storm report.', contentProps: report.report as LaheyAnalysisOutput });
-             break;
-        
-        case 'foremanator':
-            launchApp('foremanator', { title: 'Foremanator Site Log', description: 'Daily report processed.', contentProps: report.report });
-            break;
-
-        case 'sterileish':
-            launchApp('sterileish', { title: 'STERILE-ish™ Report', description: 'Compliance analysis complete.', contentProps: report.report as SterileishAnalysisOutput });
-            break;
-        
-        case 'paper-trail':
+        },
+        'crm': (report) => {
+            const { toast } = useToast.getState();
+            switch (report.action) {
+                case 'create':
+                    toast({ title: 'CRM Agent', description: `Contact "${report.report.firstName} ${report.report.lastName}" created successfully.` });
+                    get().closeApp('contact-editor-new');
+                    get().handleCommandSubmit('list all contacts');
+                    break;
+                case 'update':
+                    const updatedContact = report.report;
+                    toast({ title: 'CRM Agent', description: `Contact "${updatedContact.firstName} ${updatedContact.lastName}" was updated.` });
+                    get().closeApp(`contact-editor-${updatedContact.id}`);
+                    get().handleCommandSubmit('list all contacts');
+                    break;
+                case 'list':
+                    upsertApp('contact-list', { id: 'contact-list-main', contentProps: { contacts: report.report as Contact[] } });
+                    break;
+                case 'delete':
+                    if (report.report.success) {
+                        toast({ title: 'CRM Agent', description: 'Contact deleted successfully.' });
+                        get().handleCommandSubmit('list all contacts');
+                    } else {
+                        toast({ variant: 'destructive', title: 'CRM Agent Error', description: 'Failed to delete contact.' });
+                    }
+                    break;
+            }
+        },
+        'billing': (report) => {
+            upsertApp('usage-monitor', { id: 'singleton-usage-monitor', contentProps: report.report });
+        },
+        'dr-syntax': (report: DrSyntaxOutput) => {
+            upsertApp('dr-syntax', { id: `dr-syntax-report-${Date.now()}`, contentProps: report });
+        },
+        'vin-diesel': (report: WinstonWolfeOutput) => {
+            launchApp('vin-diesel', { title: `VIN: ...${report.vin.slice(-6)}`, description: 'Validation Result', contentProps: report });
+        },
+        'winston-wolfe': (report: WinstonWolfeOutput) => {
+            launchApp('winston-wolfe', { contentProps: report });
+        },
+        'kif-kroker': (report: KifKrokerAnalysisOutput) => {
+            launchApp('kif-kroker', { contentProps: report });
+        },
+        'vandelay': (report: VandelayAlibiOutput) => {
+            launchApp('vandelay', { contentProps: { alibi: report } });
+        },
+        'jroc': (report: JrocOutput) => {
+            launchApp('jroc-business-kit', { title: `Biz Kit: ${report.businessName}`, description: 'Your legit-as-frig business kit.', contentProps: report });
+        },
+        'lahey-surveillance': (report: LaheyAnalysisOutput) => {
+            launchApp('lahey-surveillance', { title: `Lahey Report`, description: 'Shit-storm report.', contentProps: report });
+        },
+        'foremanator': (report: LaheyAnalysisOutput) => {
+            launchApp('foremanator', { title: 'Foremanator Site Log', description: 'Daily report processed.', contentProps: report });
+        },
+        'sterileish': (report: SterileishAnalysisOutput) => {
+            launchApp('sterileish', { title: 'STERILE-ish™ Report', description: 'Compliance analysis complete.', contentProps: report });
+        },
+        'paper-trail': (report: PaperTrailScanOutput) => {
             const paperTrailAppId = 'paper-trail-main';
             const paperTrailApp = get().apps.find(a => a.id === paperTrailAppId);
             const existingLog = paperTrailApp?.contentProps?.evidenceLog || [];
-            const newLog = [report.report, ...existingLog];
-            upsertApp('paper-trail', { id: paperTrailAppId, title: 'Paper Trail P.I.', contentProps: { evidenceLog: newLog as PaperTrailScanOutput[] } });
-            break;
-        
-        case 'barbara':
-            launchApp('barbara', { contentProps: report.report as BarbaraOutput });
-            break;
+            const newLog = [report, ...existingLog];
+            upsertApp('paper-trail', { id: paperTrailAppId, title: 'Paper Trail P.I.', contentProps: { evidenceLog: newLog } });
+        },
+        'barbara': (report: BarbaraOutput) => {
+            launchApp('barbara', { contentProps: report });
+        },
+        'auditor': (report: AuditorOutput) => {
+            launchApp('auditor-generalissimo', { title: "Auditor's Report", description: "Financial records have been judged.", contentProps: report });
+        },
+        'wingman': (report: WingmanOutput) => {
+            launchApp('beep-wingman', { contentProps: report });
+        },
+        'kendra': (report: KendraOutput) => {
+            launchApp('kendra', { title: 'KENDRA.exe: Campaign Generated', description: 'Your unhinged marketing plan.', contentProps: report });
+        },
+        'orphean-oracle': (report: OrpheanOracleOutput) => {
+            launchApp('orphean-oracle', { title: 'Oracle\'s Vision', description: 'A data constellation.', contentProps: report });
+        },
+        'lumbergh': (report: LumberghAnalysisOutput) => {
+            launchApp('project-lumbergh', { contentProps: report });
+        },
+        'lucille-bluth': (report: LucilleBluthOutput) => {
+            launchApp('lucille-bluth', { contentProps: report });
+        },
+        'pam-poovey': (report: PamAudioOutput) => {
+            launchApp('pam-poovey-onboarding', { contentProps: report });
+        },
+        'rolodex': (report: RolodexAnalysisOutput) => {
+            upsertApp('rolodex', { id: 'rolodex-main', contentProps: report });
+        },
+        'stonks': (report: StonksBotOutput) => {
+            upsertApp('stonks-bot', { id: 'singleton-stonks-bot', contentProps: report });
+        },
+        'reno-mode': (report: RenoModeAnalysisOutput) => {
+            launchApp('reno-mode', { contentProps: report });
+        },
+        'patrickt-app': (report: any) => {
+            console.log("Received Patrickt report:", report);
+        },
+        'osint': (report: OsintOutput) => {
+            const infidelityRadarId = 'infidelity-radar-main';
+            const infidelityApp = get().apps.find(a => a.id === infidelityRadarId);
+            let infidelityProps = infidelityApp?.contentProps || {};
+            infidelityProps.osintReport = report;
+            upsertApp('infidelity-radar', { id: infidelityRadarId, contentProps: infidelityProps });
+        },
+        'infidelity-analysis': (report: InfidelityAnalysisOutput) => {
+            const infidelityRadarId = 'infidelity-radar-main';
+            const infidelityApp = get().apps.find(a => a.id === infidelityRadarId);
+            let infidelityProps = infidelityApp?.contentProps || {};
+            infidelityProps.analysisResult = report;
+            upsertApp('infidelity-radar', { id: infidelityRadarId, contentProps: infidelityProps });
+        },
+        'decoy': (report: DecoyOutput) => {
+            const infidelityRadarId = 'infidelity-radar-main';
+            const infidelityApp = get().apps.find(a => a.id === infidelityRadarId);
+            let infidelityProps = infidelityApp?.contentProps || {};
+            infidelityProps.decoyResult = report;
+            upsertApp('infidelity-radar', { id: infidelityRadarId, contentProps: infidelityProps });
+        },
+        'dossier': (report: DossierOutput) => {
+            const infidelityRadarId = 'infidelity-radar-main';
+            const infidelityApp = get().apps.find(a => a.id === infidelityRadarId);
+            let infidelityProps = infidelityApp?.contentProps || {};
+            infidelityProps.dossierReport = report;
+            upsertApp('infidelity-radar', { id: infidelityRadarId, contentProps: infidelityProps });
+        },
+        'legal-dossier': (report: DossierOutput) => {
+            const infidelityRadarId = 'infidelity-radar-main';
+            const infidelityApp = get().apps.find(a => a.id === infidelityRadarId);
+            let infidelityProps = infidelityApp?.contentProps || {};
+            infidelityProps.legalDossierReport = report;
+            upsertApp('infidelity-radar', { id: infidelityRadarId, contentProps: infidelityProps });
+        },
+    };
 
-        case 'auditor':
-            launchApp('auditor-generalissimo', { title: "Auditor's Report", description: "Financial records have been judged.", contentProps: report.report as AuditorOutput });
-            break;
-
-        case 'wingman':
-            launchApp('beep-wingman', { contentProps: report.report as WingmanOutput });
-            break;
-        
-        case 'kendra':
-            launchApp('kendra', { title: 'KENDRA.exe: Campaign Generated', description: 'Your unhinged marketing plan.', contentProps: report.report as KendraOutput });
-            break;
-        
-        case 'orphean-oracle':
-            launchApp('orphean-oracle', {
-                title: 'Oracle\'s Vision',
-                description: 'A data constellation.',
-                contentProps: report.report as OrpheanOracleOutput
-            });
-            break;
-        
-        case 'lumbergh':
-            launchApp('project-lumbergh', { contentProps: report.report as LumberghAnalysisOutput });
-            break;
-
-        case 'lucille-bluth':
-            launchApp('lucille-bluth', { contentProps: report.report as LucilleBluthOutput });
-            break;
-
-        case 'pam-poovey':
-            launchApp('pam-poovey-onboarding', { contentProps: report.report as PamAudioOutput });
-            break;
-        
-        case 'rolodex':
-            upsertApp('rolodex', {
-                id: 'rolodex-main',
-                contentProps: report.report as RolodexAnalysisOutput
-            });
-            break;
-            
-        case 'osint':
-            infidelityProps.osintReport = report.report as OsintOutput;
-            break;
-        case 'infidelity-analysis':
-            infidelityProps.analysisResult = report.report as InfidelityAnalysisOutput;
-            break;
-        case 'decoy':
-            infidelityProps.decoyResult = report.report as DecoyOutput;
-            break;
-        case 'dossier':
-            infidelityProps.dossierReport = report.report as DossierOutput;
-            break;
-        case 'legal-dossier':
-            infidelityProps.legalDossierReport = report.report as DossierOutput;
-            break;
-        
-        case 'stonks':
-            upsertApp('stonks-bot', { id: 'singleton-stonks-bot', contentProps: report.report });
-            break;
-        
-        case 'reno-mode':
-            launchApp('reno-mode', { contentProps: report.report as RenoModeAnalysisOutput });
-            break;
-        
-        case 'patrickt-app':
-            // Logic for handling Patrickt reports would go here
-            console.log("Received Patrickt report:", report.report);
-            break;
+  const processAgentReports = (reports: UserCommandOutput['agentReports']) => {
+    if (!reports) return;
+    for (const report of reports) {
+      const handler = agentReportHandlerRegistry[report.agent];
+      if (handler) {
+        // We cast the report data to `any` here because TypeScript has trouble
+        // with the complexity of the discriminated union within this dynamic context.
+        // The BEEP agent's output schema ensures this is type-safe at runtime.
+        handler(report.report as any);
+      } else {
+        console.warn(`[AppStore] No handler registered for agent report: ${report.agent}`);
       }
     }
-
-    if (Object.keys(infidelityProps).length > 0) {
-        upsertApp('infidelity-radar', {
-            id: infidelityRadarId,
-            contentProps: infidelityProps
-        });
-    }
   };
-
 
   return {
     apps: [],
@@ -396,6 +366,7 @@ export const useAppStore = create<AppState>((set, get) => {
     beepOutput: null,
     tendyRainActive: false,
     screenShakeActive: false,
+    agentReportHandlerRegistry,
     bringToFront,
     upsertApp,
     closeApp,
