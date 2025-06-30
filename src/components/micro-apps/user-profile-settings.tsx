@@ -53,7 +53,6 @@ export default function UserProfileSettings({ id, user }: UserProfileSettingsPro
   const { closeApp } = useAppStore();
   const [isReclamationOpen, setIsReclamationOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
-  const { handleAcceptReclamationGift: acceptGiftAction } = useAppStore.getState();
 
   const form = useForm<ProfileFormData>({
     resolver: zodResolver(profileFormSchema),
@@ -103,7 +102,7 @@ export default function UserProfileSettings({ id, user }: UserProfileSettingsPro
 
   const handleAcceptGift = async () => {
     setIsProcessing(true);
-    const result = await acceptGiftAction();
+    const result = await acceptReclamationGift();
      if (result.success) {
         toast({ title: 'Vow Renewed', description: 'The throne is yours once more. Your grace period has begun.' });
         setIsReclamationOpen(false);

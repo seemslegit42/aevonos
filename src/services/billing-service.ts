@@ -124,9 +124,9 @@ export async function authorizeAndDebitAgentActions(workspaceId: string, amount:
  * @param workspaceId The ID of the workspace.
  * @returns The billing usage details.
  */
-export async function getUsageDetails(workspaceId: string): Promise<BillingUsage> {
+export async function getUsageDetails(workspaceId: string, userId: string): Promise<BillingUsage> {
   // Reading usage data is a billable agent action.
-  await authorizeAndDebitAgentActions(workspaceId, 1);
+  await authorizeAndDebitAgentActions(workspaceId, 1, userId);
   
   const workspace = await prisma.workspace.findUnique({
     where: { id: workspaceId }
