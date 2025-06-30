@@ -1,5 +1,4 @@
 
-
 /**
  * @fileOverview This file defines the central tool registry for the BEEP agent.
  * It uses a factory pattern to create context-aware tool instances.
@@ -46,7 +45,7 @@ import { processPatricktAction } from './patrickt-agent';
 
 // Tool Imports
 import { createContactInDb, listContactsFromDb, deleteContactInDb, updateContactInDb } from '@/ai/tools/crm-tools';
-import { getUsageDetails, requestCreditTopUpInDb } from '@/services/billing-service';
+import { getUsageDetailsForAgent, requestCreditTopUpInDb } from '@/services/billing-service';
 import { getDatingProfile } from '@/ai/tools/dating-tools';
 import { createSecurityAlertInDb } from '@/ai/tools/security-tools';
 import { createManualTransaction } from '@/services/ledger-service';
@@ -199,7 +198,7 @@ export function getTools(context: AgentContext): Tool[] {
             schema: z.object({}),
             agentName: 'billing',
             reportAction: 'get_usage',
-            agentFunc: () => getUsageDetails(workspaceId),
+            agentFunc: () => getUsageDetailsForAgent(workspaceId, userId),
         }),
         
         createAgentTool({

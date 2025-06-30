@@ -1,10 +1,11 @@
 
+'use server';
+
 import { NextRequest, NextResponse } from 'next/server';
 import { getUsageDetails } from '@/services/billing-service';
 import { getSession } from '@/lib/auth';
 
 // GET /api/billing/usage/agent-actions
-// Corresponds to the operationId `getAgentActionsUsage` in api-spec.md
 export async function GET(request: NextRequest) {
   try {
     const session = await getSession(request);
@@ -12,6 +13,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // Call the non-billable version for UI display
     const usageDetails = await getUsageDetails(session.workspaceId);
     
     return NextResponse.json(usageDetails);

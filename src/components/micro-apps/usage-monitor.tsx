@@ -16,6 +16,7 @@ import { Transaction, TransactionStatus, TransactionType, User, UserRole, Worksp
 import { useAppStore } from '@/store/app-store';
 import { Separator } from '../ui/separator';
 import { chaosCardManifest } from '@/config/chaos-cards';
+import { confirmPendingTransactionAction } from '@/app/actions';
 
 type UserProp = Pick<User, 'id' | 'email' | 'firstName' | 'lastName' | 'role'> | null;
 
@@ -63,12 +64,11 @@ export default function UsageMonitor(props: Partial<BillingUsage>) {
 
     const handleConfirm = async (transactionId: string) => {
         setConfirmingId(transactionId);
-        const { confirmEtransfer } = await import('@/app/actions'); // Lazy import for client component
-        const result = await confirmEtransfer(transactionId);
+        const result = await confirmPendingTransactionAction(transactionId);
 
         if (result.success) {
             toast({ title: 'Transaction Confirmed', description: 'The workspace balance has been updated.' });
-            await fetchAllData(); // Re-fetch all data to ensure UI consistency
+            await fetchAllData();
         } else {
             toast({ variant: 'destructive', title: 'Confirmation Failed', description: result.error });
         }

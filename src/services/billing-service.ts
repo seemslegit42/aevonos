@@ -119,15 +119,12 @@ export async function authorizeAndDebitAgentActions(workspaceId: string, amount:
 
 
 /**
- * Retrieves the usage details for a given workspace.
- * This is a service function that can be called by APIs or agent tools.
+ * Retrieves the usage details for a given workspace for UI display.
+ * This is NOT a billable agent action.
  * @param workspaceId The ID of the workspace.
  * @returns The billing usage details.
  */
-export async function getUsageDetails(workspaceId: string, userId: string): Promise<BillingUsage> {
-  // Reading usage data is a billable agent action.
-  await authorizeAndDebitAgentActions(workspaceId, 1, userId);
-  
+export async function getUsageDetails(workspaceId: string): Promise<BillingUsage> {
   const workspace = await prisma.workspace.findUnique({
     where: { id: workspaceId }
   });
@@ -146,6 +143,19 @@ export async function getUsageDetails(workspaceId: string, userId: string): Prom
     planTier: workspace.planTier,
     overageEnabled: workspace.overageEnabled,
   };
+}
+
+/**
+ * Retrieves the usage details for a given workspace via an agent tool.
+ * This IS a billable agent action.
+ * @param workspaceId The ID of the workspace.
+ * @param userId The ID of the user triggering the tool.
+ * @returns The billing usage details.
+ */
+export async function getUsageDetailsForAgent(workspaceId: string, userId: string): Promise<BillingUsage> {
+  // Reading usage data via an agent is a billable action.
+  await authorizeAndDebitAgentActions(workspaceId, 1, userId);
+  return getUsageDetails(workspaceId);
 }
 
 
