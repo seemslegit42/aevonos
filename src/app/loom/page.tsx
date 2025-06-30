@@ -15,6 +15,7 @@ import type { User, UserRole } from '@prisma/client';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import type { Node, Edge, Workflow, NodeType } from '@/components/loom/types';
+import LoomMobileToolbar from '@/components/loom/loom-mobile-toolbar';
 
 const BLANK_WORKFLOW: Workflow = {
   name: 'Untitled Workflow',
@@ -289,9 +290,6 @@ export default function LoomPage() {
                 isRunning={isRunning}
                 userRole={userRole}
                 isLoadingUser={isLoadingUser}
-                onAddNodeClick={() => setIsNodesSheetOpen(true)}
-                onWorkflowsClick={() => setIsWorkflowsSheetOpen(true)}
-                onHistoryClick={() => setIsHistorySheetOpen(true)}
             />
             
             <div className="flex-grow flex flex-row min-h-0">
@@ -325,6 +323,15 @@ export default function LoomPage() {
                     </div>
                 </div>
             </div>
+
+            {/* Mobile Toolbar */}
+            {isMobile && (
+                <LoomMobileToolbar 
+                    onAddNodeClick={() => setIsNodesSheetOpen(true)}
+                    onWorkflowsClick={() => setIsWorkflowsSheetOpen(true)}
+                    onHistoryClick={() => setIsHistorySheetOpen(true)}
+                />
+            )}
 
             {/* Mobile Sheets */}
             <Sheet open={isNodesSheetOpen} onOpenChange={setIsNodesSheetOpen}>
