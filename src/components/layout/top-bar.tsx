@@ -3,7 +3,6 @@
 
 import React, { useRef, useState, useEffect } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { Input } from '@/components/ui/input';
 import { useIsMobile } from '@/hooks/use-mobile';
 import type { User, Workspace } from '@prisma/client';
@@ -74,7 +73,7 @@ export default function TopBar({ user, workspace }: TopBarProps) {
     <header className="flex items-center justify-between w-full px-2 sm:px-4 py-2 bg-background/70 backdrop-blur-xl border border-border/20 shadow-lg rounded-lg gap-2 sm:gap-4">
       <div className="flex items-center gap-3">
         <Link href="/">
-            <Image src="/logo.png" alt="ΛΞVON OS Logo" width={32} height={32} />
+            <img src="/logo.png" alt="ΛΞVON OS Logo" width={32} height={32} />
         </Link>
       </div>
 
