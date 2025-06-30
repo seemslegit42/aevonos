@@ -13,7 +13,7 @@ import WorkflowRunHistory from '@/components/loom/workflow-run-history';
 import { useToast } from '@/hooks/use-toast';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import type { User, UserRole } from '@prisma/client';
-import { useIsMobile } from '@/hooks/use-is-mobile';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import type { Node, Edge, Workflow, NodeType } from '@/components/loom/types';
 import LoomMobileToolbar from '@/components/loom/loom-mobile-toolbar';
@@ -23,12 +23,12 @@ const BLANK_WORKFLOW: Workflow = {
   definition: {
     nodes: [
         { id: 'trigger-1', type: 'trigger', position: { x: 50, y: 150 }, data: { label: 'BEEP Command Received' } },
-        { id: 'tool-crm', type: 'tool-crm', position: { x: 350, y: 150 }, data: { label: 'CRM: List Contacts', action: 'list' } },
+        { id: 'tool-winston-wolfe', type: 'tool-winston-wolfe', position: { x: 350, y: 150 }, data: { label: 'Solve Reputation Problem', reviewText: "This product is terrible! It broke after one use." } },
         { id: 'tool-final-answer', type: 'tool-final-answer', position: { x: 650, y: 150 }, data: { label: 'Final Answer' } },
     ],
     edges: [
-        { id: 'e-trigger-agent', source: 'trigger-1', target: 'tool-crm' },
-        { id: 'e-agent-final', source: 'tool-crm', target: 'tool-final-answer' },
+        { id: 'e-trigger-agent', source: 'trigger-1', target: 'tool-winston-wolfe' },
+        { id: 'e-agent-final', source: 'tool-winston-wolfe', target: 'tool-final-answer' },
     ],
   },
 };
