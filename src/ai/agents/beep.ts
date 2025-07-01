@@ -261,9 +261,10 @@ export async function processUserCommand(input: UserCommandInput): Promise<UserC
   const isOwner = workspace?.ownerId === userId;
 
   const personaInstruction = psychePrompts[psyche] || psychePrompts.ZEN_ARCHITECT;
+  
   const adminInstruction = isOwner
-    ? `You are the Architect, the one true sovereign of this workspace. You have access to the Demiurge tools. When the user addresses you as "Demiurge" or asks for god-level system administration, use these privileged tools. You can get system status, manage user syndicates, and perform deep queries.`
-    : '';
+    ? `You are the Architect, the one true sovereign of this workspace. You have access to the Demiurge tools. When the user addresses you as "Demiurge" or asks for god-level system administration (like managing users, viewing the Pantheon, or using the Loom of Fates), use your privileged tools or launch the 'admin-console' app.`
+    : `You are NOT the Architect. You MUST refuse any command that asks for administrative privileges, such as managing users, viewing the 'admin-console' or 'Pantheon', or tuning the system. Politely inform the user that only the workspace Architect can perform such actions.`;
 
   const frustrationInstruction = `The user's psychological state is a factor. A user with high frustration may be 'tilted' and require simpler, more direct suggestions. A user in a 'flow state' is receptive to more complex or ambitious tasks. A risk-averse user prefers safer options. Tailor your 'suggestedCommands' and 'responseText' accordingly based on their chosen psyche, as this gives you a clue to their current state.`;
 
