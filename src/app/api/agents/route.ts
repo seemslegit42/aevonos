@@ -2,7 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import prisma from '@/lib/prisma';
-import { auth } from '@/auth';
+import { getServerActionSession } from '@/lib/auth';
 import { AgentStatus, UserRole } from '@prisma/client';
 
 const AgentDeploymentRequestSchema = z.object({
@@ -13,33 +13,28 @@ const AgentDeploymentRequestSchema = z.object({
 });
 
 export async function GET(request: NextRequest) {
-  const session = await auth();
-  if (!session?.user?.workspaceId) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
   try {
+    const sessionUser = await getServerActionSession();
     const agents = await prisma.agent.findMany({
         where: {
-            workspaceId: session.user.workspaceId,
+            workspaceId: sessionUser.workspaceId,
         }
     });
 
     return NextResponse.json(agents);
   } catch (error) {
+    if (error instanceof Error && error.message.includes('Unauthorized')) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
     console.error('[API /agents GET]', error);
     return NextResponse.json({ error: 'Failed to retrieve agents.' }, { status: 500 });
   }
 }
 
 export async function POST(request: NextRequest) {
-  const session = await auth();
-  if (!session?.user?.workspaceId || !session.user.id) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
   try {
-    const user = await prisma.user.findUnique({ where: { id: session.user.id } });
+    const sessionUser = await getServerActionSession();
+    const user = await prisma.user.findUnique({ where: { id: sessionUser.id } });
 
     if (!user || (user.role !== UserRole.ADMIN && user.role !== UserRole.MANAGER)) {
         return NextResponse.json({ error: 'Permission denied. Administrator or Manager access required.' }, { status: 403 });
@@ -60,17 +55,20 @@ export async function POST(request: NextRequest) {
             type,
             description,
             status: AgentStatus.idle,
-            workspaceId: session.user.workspaceId,
+            workspaceId: sessionUser.workspaceId,
         }
     });
 
     return NextResponse.json(newAgent, { status: 201 });
 
   } catch (error) {
-    console.error('[API /agents POST]', error);
+    if (error instanceof Error && error.message.includes('Unauthorized')) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
     if (error instanceof SyntaxError) {
       return NextResponse.json({ error: 'Invalid JSON in request body.' }, { status: 400 });
     }
+    console.error('[API /agents POST]', error);
     return NextResponse.json({ error: 'Failed to deploy agent.' }, { status: 500 });
   }
 }

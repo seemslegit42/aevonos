@@ -14,17 +14,14 @@ const UpdateUserRoleSchema = z.object({
 });
 
 export async function updateUserRole(formData: FormData) {
-  const session = await getServerActionSession();
-  if (!session?.workspaceId || !session.userId) {
-    return { success: false, error: 'Unauthorized' };
-  }
+  const sessionUser = await getServerActionSession();
 
   const workspace = await prisma.workspace.findUnique({
-    where: { id: session.workspaceId },
+    where: { id: sessionUser.workspaceId },
     select: { ownerId: true }
   });
 
-  if (!workspace || session.userId !== workspace.ownerId) {
+  if (!workspace || sessionUser.id !== workspace.ownerId) {
     return { success: false, error: 'Forbidden: Only the workspace Architect can perform this action.' };
   }
 
@@ -39,7 +36,7 @@ export async function updateUserRole(formData: FormData) {
 
   const { userId, role } = validation.data;
   
-  if (userId === session.userId) {
+  if (userId === sessionUser.id) {
       return { success: false, error: 'Cannot change your own role.'};
   }
   
@@ -66,17 +63,14 @@ const RemoveUserSchema = z.object({
 });
 
 export async function removeUserFromWorkspace(formData: FormData) {
-    const session = await getServerActionSession();
-    if (!session?.workspaceId || !session.userId) {
-        return { success: false, error: 'Unauthorized' };
-    }
+    const sessionUser = await getServerActionSession();
     
     const workspace = await prisma.workspace.findUnique({
-      where: { id: session.workspaceId },
+      where: { id: sessionUser.workspaceId },
       select: { ownerId: true }
     });
 
-    if (!workspace || session.userId !== workspace.ownerId) {
+    if (!workspace || sessionUser.id !== workspace.ownerId) {
         return { success: false, error: 'Forbidden: Only the workspace Architect can perform this action.' };
     }
     
@@ -90,7 +84,7 @@ export async function removeUserFromWorkspace(formData: FormData) {
 
     const { userId } = validation.data;
 
-    if (userId === session.userId) {
+    if (userId === sessionUser.id) {
         return { success: false, error: 'Cannot remove yourself from the workspace.' };
     }
 
@@ -101,7 +95,7 @@ export async function removeUserFromWorkspace(formData: FormData) {
 
     try {
         await prisma.workspace.update({
-            where: { id: session.workspaceId },
+            where: { id: sessionUser.workspaceId },
             data: {
                 members: {
                     disconnect: { id: userId },
@@ -122,17 +116,14 @@ const UpdateAgentStatusSchema = z.object({
 });
 
 export async function updateAgentStatus(formData: FormData) {
-  const session = await getServerActionSession();
-  if (!session?.workspaceId || !session.userId) {
-    return { success: false, error: 'Unauthorized' };
-  }
+  const sessionUser = await getServerActionSession();
 
   const workspace = await prisma.workspace.findUnique({
-    where: { id: session.workspaceId },
+    where: { id: sessionUser.workspaceId },
     select: { ownerId: true }
   });
 
-  if (!workspace || session.userId !== workspace.ownerId) {
+  if (!workspace || sessionUser.id !== workspace.ownerId) {
     return { success: false, error: 'Forbidden: Only the workspace Architect can perform this action.' };
   }
 
@@ -149,7 +140,7 @@ export async function updateAgentStatus(formData: FormData) {
 
   try {
     const agent = await prisma.agent.findFirst({
-        where: { id: agentId, workspaceId: session.workspaceId },
+        where: { id: agentId, workspaceId: sessionUser.workspaceId },
     });
 
     if (!agent) {
@@ -173,17 +164,14 @@ const DeleteAgentSchema = z.object({
 });
 
 export async function deleteAgent(formData: FormData) {
-    const session = await getServerActionSession();
-    if (!session?.workspaceId || !session.userId) {
-        return { success: false, error: 'Unauthorized' };
-    }
+    const sessionUser = await getServerActionSession();
     
     const workspace = await prisma.workspace.findUnique({
-      where: { id: session.workspaceId },
+      where: { id: sessionUser.workspaceId },
       select: { ownerId: true }
     });
 
-    if (!workspace || session.userId !== workspace.ownerId) {
+    if (!workspace || sessionUser.id !== workspace.ownerId) {
         return { success: false, error: 'Forbidden: Only the workspace Architect can perform this action.' };
     }
     
@@ -199,7 +187,7 @@ export async function deleteAgent(formData: FormData) {
 
     try {
         const agent = await prisma.agent.findFirst({
-            where: { id: agentId, workspaceId: session.workspaceId },
+            where: { id: agentId, workspaceId: sessionUser.workspaceId },
         });
 
         if (!agent) {
@@ -220,15 +208,12 @@ export async function deleteAgent(formData: FormData) {
 
 
 export async function confirmPendingTransactionAction(transactionId: string) {
-    const session = await getServerActionSession();
-    if (!session?.workspaceId || !session.userId) {
-        return { success: false, error: 'Unauthorized' };
-    }
+    const sessionUser = await getServerActionSession();
     
     const user = await prisma.user.findFirst({
         where: {
-            id: session.userId,
-            workspaces: { some: { id: session.workspaceId }}
+            id: sessionUser.id,
+            workspaces: { some: { id: sessionUser.workspaceId }}
         },
         select: { role: true }
     });
@@ -238,7 +223,7 @@ export async function confirmPendingTransactionAction(transactionId: string) {
     }
 
     try {
-        await confirmTxService(transactionId, session.workspaceId);
+        await confirmTxService(transactionId, sessionUser.workspaceId);
         revalidatePath('/');
         return { success: true, message: 'Transaction confirmed.' };
     } catch (e) {

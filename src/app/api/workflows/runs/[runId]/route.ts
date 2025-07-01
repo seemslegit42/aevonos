@@ -1,7 +1,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { getSession } from '@/lib/auth';
+import { getServerActionSession } from '@/lib/auth';
 
 interface RouteParams {
   params: {
@@ -11,18 +11,14 @@ interface RouteParams {
 
 // GET /api/workflows/runs/{runId}
 export async function GET(request: NextRequest, { params }: RouteParams) {
-  const session = await getSession(request);
-  if (!session?.workspaceId) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
   try {
+    const sessionUser = await getServerActionSession();
     const { runId } = params;
 
     const workflowRun = await prisma.workflowRun.findFirst({
       where: {
         id: runId,
-        workspaceId: session.workspaceId,
+        workspaceId: sessionUser.workspaceId,
       },
       include: {
         workflow: {
@@ -39,6 +35,9 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     return NextResponse.json(workflowRun);
   } catch (error) {
+    if (error instanceof Error && error.message.includes('Unauthorized')) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
     console.error(`[API /workflows/runs/{runId} GET]`, error);
     return NextResponse.json({ error: 'Failed to retrieve workflow run.' }, { status: 500 });
   }

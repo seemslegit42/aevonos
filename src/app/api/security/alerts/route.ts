@@ -1,19 +1,15 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { auth } from '@/auth';
+import { getServerActionSession } from '@/lib/auth';
 import { SecurityRiskLevel } from '@prisma/client';
 
 export async function GET(request: NextRequest) {
-  const session = await auth();
-  if (!session?.user?.workspaceId) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-  
   try {
+    const sessionUser = await getServerActionSession();
     const alerts = await prisma.securityAlert.findMany({
         where: {
-            workspaceId: session.user.workspaceId
+            workspaceId: sessionUser.workspaceId
         },
         orderBy: {
             timestamp: 'desc'
@@ -22,6 +18,9 @@ export async function GET(request: NextRequest) {
     
     return NextResponse.json(alerts);
   } catch (error) {
+    if (error instanceof Error && error.message.includes('Unauthorized')) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
     console.error('[API /security/alerts GET]', error);
     return NextResponse.json({ error: 'Failed to retrieve security alerts.' }, { status: 500 });
   }

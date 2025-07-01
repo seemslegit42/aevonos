@@ -5,7 +5,7 @@ import { generateDossier } from '@/ai/agents/dossier-agent';
 import { DossierInputSchema } from '@/ai/agents/dossier-schemas';
 import { pdf } from 'md-to-pdf';
 import CryptoJS from 'crypto-js';
-import { auth } from '@/auth';
+import { getServerActionSession } from '@/lib/auth';
 
 const ExportRequestSchema = z.object({
   format: z.enum(['pdf', 'json']),
@@ -17,11 +17,7 @@ const ExportRequestSchema = z.object({
 
 export async function POST(request: NextRequest) {
     try {
-        const session = await auth();
-        if (!session?.user?.workspaceId || !session.user.id) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-        }
-
+        const sessionUser = await getServerActionSession();
         const body = await request.json();
         const validation = ExportRequestSchema.safeParse(body);
 
@@ -37,8 +33,8 @@ export async function POST(request: NextRequest) {
         
         const fullDossierInput = {
             ...dossierInput,
-            workspaceId: session.user.workspaceId,
-            userId: session.user.id,
+            workspaceId: sessionUser.workspaceId,
+            userId: sessionUser.id,
         };
         
         const { markdownContent, fileName } = await generateDossier(fullDossierInput);
@@ -86,6 +82,9 @@ export async function POST(request: NextRequest) {
         });
 
     } catch (error) {
+        if (error instanceof Error && error.message.includes('Unauthorized')) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
         console.error('[API /export/dossier POST]', error);
         return NextResponse.json({ error: 'Failed to export dossier.' }, { status: 500 });
     }

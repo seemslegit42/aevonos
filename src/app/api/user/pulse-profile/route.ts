@@ -1,17 +1,13 @@
 
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/auth';
+import { getServerActionSession } from '@/lib/auth';
 import prisma from '@/lib/prisma';
 
 export async function GET(request: NextRequest) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-  
   try {
+    const sessionUser = await getServerActionSession();
     const pulseProfile = await prisma.pulseProfile.findUnique({
-        where: { userId: session.user.id }
+        where: { userId: sessionUser.id }
     });
     
     if (!pulseProfile) {
@@ -22,6 +18,9 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(pulseProfile);
   } catch (error) {
+    if (error instanceof Error && error.message.includes('Unauthorized')) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
     console.error(`[API /user/pulse-profile GET]`, error);
     return NextResponse.json({ error: 'Failed to retrieve pulse profile.' }, { status: 500 });
   }

@@ -1,7 +1,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { processUserCommand } from '@/ai/agents/beep';
-import { auth } from '@/auth';
+import { getServerActionSession } from '@/lib/auth';
 import { z } from 'zod';
 
 const BeepCommandRequestSchema = z.object({
@@ -12,10 +12,7 @@ const BeepCommandRequestSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await auth();
-    if (!session?.user?.id || !session?.user?.workspaceId) {
-        return NextResponse.json({ error: 'Unauthorized. A valid session token is required.' }, { status: 401 });
-    }
+    const sessionUser = await getServerActionSession();
 
     const body = await request.json();
     const validation = BeepCommandRequestSchema.safeParse(body);
@@ -28,10 +25,10 @@ export async function POST(request: NextRequest) {
 
     const beepResult = await processUserCommand({ 
         userCommand: command,
-        userId: session.user.id,
-        workspaceId: session.user.workspaceId,
-        psyche: session.user.psyche,
-        role: session.user.role,
+        userId: sessionUser.id,
+        workspaceId: sessionUser.workspaceId,
+        psyche: sessionUser.psyche,
+        role: sessionUser.role,
     });
 
     // Adapt the internal UserCommandOutput to the public API response schema from api-spec.md.
@@ -50,10 +47,13 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(apiResponse, { status: 200 });
 
   } catch (error) {
-    console.error('[BEEP API Error]', error);
+    if (error instanceof Error && error.message.includes('Unauthorized')) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
     if (error instanceof SyntaxError) {
         return NextResponse.json({ error: 'Invalid JSON in request body.' }, { status: 400 });
     }
+    console.error('[BEEP API Error]', error);
     return NextResponse.json({ error: 'An internal server error occurred.' }, { status: 500 });
   }
 }

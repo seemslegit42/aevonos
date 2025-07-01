@@ -2,7 +2,7 @@
 import { NextResponse, NextRequest } from 'next/server';
 import prisma from '@/lib/prisma';
 import { z } from 'zod';
-import { auth } from '@/auth';
+import { getServerActionSession } from '@/lib/auth';
 import { WorkflowRunStatus } from '@prisma/client';
 
 
@@ -12,12 +12,8 @@ const FilterSchema = z.object({
 });
 
 export async function GET(request: NextRequest) {
-  const session = await auth();
-  if (!session?.user?.workspaceId) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
   try {
+    const sessionUser = await getServerActionSession();
     const { searchParams } = new URL(request.url);
     const queryParams = Object.fromEntries(searchParams.entries());
     
@@ -28,7 +24,7 @@ export async function GET(request: NextRequest) {
     
     const { status, workflowId } = validation.data;
     const whereClause: any = {
-        workspaceId: session.user.workspaceId
+        workspaceId: sessionUser.workspaceId
     };
 
     if (status) {
@@ -57,6 +53,9 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(workflowRuns);
 
   } catch (error) {
+    if (error instanceof Error && error.message.includes('Unauthorized')) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
     console.error('[API /workflows/runs GET]', error);
     return NextResponse.json({ error: 'Failed to retrieve workflow runs.' }, { status: 500 });
   }

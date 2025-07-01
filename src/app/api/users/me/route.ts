@@ -1,7 +1,7 @@
 
 import { NextResponse, NextRequest } from 'next/server';
 import { z } from 'zod';
-import { auth } from '@/auth';
+import { getServerActionSession } from '@/lib/auth';
 import prisma from '@/lib/prisma';
 
 // Schema from api-spec.md for updating a user
@@ -14,40 +14,40 @@ const UserUpdateRequestSchema = z.object({
 
 // Corresponds to operationId `getCurrentUser`
 export async function GET(request: NextRequest) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 });
+  try {
+    const sessionUser = await getServerActionSession();
+    const user = await prisma.user.findUnique({
+      where: { id: sessionUser.id },
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        role: true,
+        agentAlias: true,
+        lastLoginAt: true,
+      },
+    });
+
+    if (!user) {
+      return NextResponse.json({ error: 'User not found.' }, { status: 404 });
+    }
+
+    // The 'select' clause ensures we only get public fields, so this is safe.
+    return NextResponse.json(user);
+  } catch (error) {
+     if (error instanceof Error && error.message.includes('Unauthorized')) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    console.error('[API /users/me GET]', error);
+    return NextResponse.json({ error: 'Failed to retrieve user.' }, { status: 500 });
   }
-
-  const user = await prisma.user.findUnique({
-    where: { id: session.user.id },
-    select: {
-      id: true,
-      email: true,
-      firstName: true,
-      lastName: true,
-      role: true,
-      agentAlias: true,
-      lastLoginAt: true,
-    },
-  });
-
-  if (!user) {
-    return NextResponse.json({ error: 'User not found.' }, { status: 404 });
-  }
-
-  // The 'select' clause ensures we only get public fields, so this is safe.
-  return NextResponse.json(user);
 }
 
 // Corresponds to operationId `updateCurrentUser`
 export async function PUT(request: NextRequest) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 });
-  }
-
   try {
+    const sessionUser = await getServerActionSession();
     const body = await request.json();
     const validation = UserUpdateRequestSchema.safeParse(body);
 
@@ -56,7 +56,7 @@ export async function PUT(request: NextRequest) {
     }
 
     const updatedUser = await prisma.user.update({
-        where: { id: session.user.id },
+        where: { id: sessionUser.id },
         data: validation.data
     });
     
@@ -73,10 +73,13 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json(userResponse);
 
   } catch (error) {
-    console.error('[API /users/me PUT]', error);
-     if (error instanceof SyntaxError) {
+     if (error instanceof Error && error.message.includes('Unauthorized')) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    if (error instanceof SyntaxError) {
       return NextResponse.json({ error: 'Invalid JSON in request body.' }, { status: 400 });
     }
+    console.error('[API /users/me PUT]', error);
     return NextResponse.json({ error: 'Failed to update user profile.' }, { status: 500 });
   }
 }

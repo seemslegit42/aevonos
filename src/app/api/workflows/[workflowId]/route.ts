@@ -2,7 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { z } from 'zod';
-import { auth } from '@/auth';
+import { getServerActionSession } from '@/lib/auth';
 import { UserRole } from '@prisma/client';
 
 const WorkflowUpdateSchema = z.object({
@@ -18,15 +18,11 @@ interface RouteParams {
 }
 
 export async function GET(request: NextRequest, { params }: RouteParams) {
-  const session = await auth();
-  if (!session?.user?.workspaceId) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-  
   try {
+    const sessionUser = await getServerActionSession();
     const { workflowId } = params;
     const workflow = await prisma.workflow.findFirst({
-      where: { id: workflowId, workspaceId: session.user.workspaceId },
+      where: { id: workflowId, workspaceId: sessionUser.workspaceId },
     });
 
     if (!workflow) {
@@ -35,23 +31,22 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     return NextResponse.json(workflow);
   } catch (error) {
+    if (error instanceof Error && error.message.includes('Unauthorized')) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
     console.error(`[API /workflows/{id} GET]`, error);
     return NextResponse.json({ error: 'Failed to retrieve workflow.' }, { status: 500 });
   }
 }
 
 export async function PUT(request: NextRequest, { params }: RouteParams) {
-  const session = await auth();
-  if (!session?.user?.workspaceId || !session.user.id) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
-  const user = await prisma.user.findUnique({ where: { id: session.user.id } });
-  if (!user || (user.role !== UserRole.ADMIN && user.role !== UserRole.MANAGER)) {
-      return NextResponse.json({ error: 'Permission denied. Administrator or Manager access required.' }, { status: 403 });
-  }
-  
   try {
+    const sessionUser = await getServerActionSession();
+    const user = await prisma.user.findUnique({ where: { id: sessionUser.id } });
+    if (!user || (user.role !== UserRole.ADMIN && user.role !== UserRole.MANAGER)) {
+        return NextResponse.json({ error: 'Permission denied. Administrator or Manager access required.' }, { status: 403 });
+    }
+    
     const { workflowId } = params;
     const body = await request.json();
     const validation = WorkflowUpdateSchema.safeParse(body);
@@ -61,7 +56,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     }
 
     const updatedWorkflow = await prisma.workflow.updateMany({
-      where: { id: workflowId, workspaceId: session.user.workspaceId },
+      where: { id: workflowId, workspaceId: sessionUser.workspaceId },
       data: validation.data,
     });
     
@@ -73,27 +68,26 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 
     return NextResponse.json(returnedWorkflow);
   } catch (error) {
+    if (error instanceof Error && error.message.includes('Unauthorized')) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
     console.error(`[API /workflows/{id} PUT]`, error);
     return NextResponse.json({ error: 'Failed to update workflow.' }, { status: 500 });
   }
 }
 
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
-  const session = await auth();
-  if (!session?.user?.workspaceId || !session.user.id) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
-  const user = await prisma.user.findUnique({ where: { id: session.user.id } });
-  if (!user || (user.role !== UserRole.ADMIN && user.role !== UserRole.MANAGER)) {
-      return NextResponse.json({ error: 'Permission denied. Administrator or Manager access required.' }, { status: 403 });
-  }
-  
   try {
+    const sessionUser = await getServerActionSession();
+    const user = await prisma.user.findUnique({ where: { id: sessionUser.id } });
+    if (!user || (user.role !== UserRole.ADMIN && user.role !== UserRole.MANAGER)) {
+        return NextResponse.json({ error: 'Permission denied. Administrator or Manager access required.' }, { status: 403 });
+    }
+    
     const { workflowId } = params;
     
     const result = await prisma.workflow.deleteMany({
-      where: { id: workflowId, workspaceId: session.user.workspaceId },
+      where: { id: workflowId, workspaceId: sessionUser.workspaceId },
     });
 
     if (result.count === 0) {
@@ -102,6 +96,9 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
 
     return new NextResponse(null, { status: 204 });
   } catch (error) {
+    if (error instanceof Error && error.message.includes('Unauthorized')) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
     console.error(`[API /workflows/{id} DELETE]`, error);
     return NextResponse.json({ error: 'Failed to delete workflow.' }, { status: 500 });
   }

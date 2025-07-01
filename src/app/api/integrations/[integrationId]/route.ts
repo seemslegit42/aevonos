@@ -2,7 +2,7 @@
 import { NextResponse, NextRequest } from 'next/server';
 import { z } from 'zod';
 import prisma from '@/lib/prisma';
-import { auth } from '@/auth';
+import { getServerActionSession } from '@/lib/auth';
 import { IntegrationStatus } from '@prisma/client';
 
 
@@ -21,15 +21,11 @@ const IntegrationUpdateRequestSchema = z.object({
 
 // Corresponds to operationId `getIntegration`
 export async function GET(request: NextRequest, { params }: RouteParams) {
-    const session = await auth();
-    if (!session?.user?.workspaceId) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
     try {
+        const sessionUser = await getServerActionSession();
         const { integrationId } = params;
         const integration = await prisma.integration.findFirst({
-            where: { id: integrationId, workspaceId: session.user.workspaceId },
+            where: { id: integrationId, workspaceId: sessionUser.workspaceId },
         });
 
         if (!integration) {
@@ -38,6 +34,9 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
         return NextResponse.json(integration);
     } catch (error) {
+        if (error instanceof Error && error.message.includes('Unauthorized')) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
         console.error(`[API /integrations/{id} GET]`, error);
         return NextResponse.json({ error: 'Failed to retrieve integration.' }, { status: 500 });
     }
@@ -45,11 +44,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
 // Corresponds to operationId `updateIntegration`
 export async function PUT(request: NextRequest, { params }: RouteParams) {
-    const session = await auth();
-    if (!session?.user?.workspaceId) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
     try {
+        const sessionUser = await getServerActionSession();
         const { integrationId } = params;
         const body = await request.json();
         const validation = IntegrationUpdateRequestSchema.safeParse(body);
@@ -59,7 +55,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
         }
 
         const updatedIntegration = await prisma.integration.updateMany({
-            where: { id: integrationId, workspaceId: session.user.workspaceId },
+            where: { id: integrationId, workspaceId: sessionUser.workspaceId },
             data: validation.data,
         });
 
@@ -71,26 +67,25 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
         return NextResponse.json(returnedIntegration);
 
     } catch (error) {
-        console.error('[API /integrations/{id} PUT]', error);
-        if (error instanceof SyntaxError) {
-        return NextResponse.json({ error: 'Invalid JSON in request body.' }, { status: 400 });
+        if (error instanceof Error && error.message.includes('Unauthorized')) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
+        if (error instanceof SyntaxError) {
+            return NextResponse.json({ error: 'Invalid JSON in request body.' }, { status: 400 });
+        }
+        console.error('[API /integrations/{id} PUT]', error);
         return NextResponse.json({ error: 'Failed to update integration.' }, { status: 500 });
     }
 }
 
 // Corresponds to operationId `deleteIntegration`
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
-    const session = await auth();
-    if (!session?.user?.workspaceId) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
     try {
+        const sessionUser = await getServerActionSession();
         const { integrationId } = params;
         
         const result = await prisma.integration.deleteMany({
-          where: { id: integrationId, workspaceId: session.user.workspaceId },
+          where: { id: integrationId, workspaceId: sessionUser.workspaceId },
         });
     
         if (result.count === 0) {
@@ -100,6 +95,9 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
         return new NextResponse(null, { status: 204 });
 
     } catch (error) {
+        if (error instanceof Error && error.message.includes('Unauthorized')) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
         console.error(`[API /integrations/{id} DELETE]`, error);
         return NextResponse.json({ error: 'Failed to delete integration.' }, { status: 500 });
     }

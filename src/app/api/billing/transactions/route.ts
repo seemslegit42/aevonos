@@ -1,6 +1,6 @@
 
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/auth';
+import { getServerActionSession } from '@/lib/auth';
 import { getWorkspaceTransactions } from '@/services/ledger-service';
 import { z } from 'zod';
 
@@ -11,10 +11,7 @@ const QuerySchema = z.object({
 // GET /api/billing/transactions
 export async function GET(request: NextRequest) {
   try {
-    const session = await auth();
-    if (!session?.user?.workspaceId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const sessionUser = await getServerActionSession();
 
     const { searchParams } = new URL(request.url);
     const queryParams = Object.fromEntries(searchParams.entries());
@@ -26,11 +23,14 @@ export async function GET(request: NextRequest) {
 
     const { limit } = validation.data;
 
-    const transactions = await getWorkspaceTransactions(session.user.workspaceId, limit);
+    const transactions = await getWorkspaceTransactions(sessionUser.workspaceId, limit);
     
     return NextResponse.json(transactions);
 
   } catch (error) {
+    if (error instanceof Error && error.message.includes('Unauthorized')) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
     console.error('[API /billing/transactions GET]', error);
     return NextResponse.json({ error: 'Failed to retrieve transaction history.' }, { status: 500 });
   }

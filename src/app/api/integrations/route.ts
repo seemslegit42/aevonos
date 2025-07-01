@@ -2,7 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import prisma from '@/lib/prisma';
-import { auth } from '@/auth';
+import { getServerActionSession } from '@/lib/auth';
 import { integrationManifests } from '@/config/integration-manifests';
 import { IntegrationStatus } from '@prisma/client';
 
@@ -26,12 +26,8 @@ export async function GET(request: NextRequest) {
 
 // Corresponds to operationId `createIntegration`
 export async function POST(request: NextRequest) {
-  const session = await auth();
-  if (!session?.user?.workspaceId) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
   try {
+    const sessionUser = await getServerActionSession();
     const body = await request.json();
     const validation = IntegrationConfigurationRequestSchema.safeParse(body);
 
@@ -48,7 +44,7 @@ export async function POST(request: NextRequest) {
 
     const newInstance = await prisma.integration.create({
         data: {
-            workspaceId: session.user.workspaceId,
+            workspaceId: sessionUser.workspaceId,
             integrationManifestId: integrationTypeId,
             name: name,
             status: IntegrationStatus.active,
@@ -59,10 +55,13 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(newInstance, { status: 201 });
 
   } catch (error) {
-    console.error('[API /integrations POST]', error);
+    if (error instanceof Error && error.message.includes('Unauthorized')) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
     if (error instanceof SyntaxError) {
       return NextResponse.json({ error: 'Invalid JSON in request body.' }, { status: 400 });
     }
+    console.error('[API /integrations POST]', error);
     return NextResponse.json({ error: 'Failed to create integration.' }, { status: 500 });
   }
 }
