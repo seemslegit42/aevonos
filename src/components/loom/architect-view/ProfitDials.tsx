@@ -60,13 +60,6 @@ export default function ProfitDials() {
             </CardHeader>
             <CardContent className="space-y-6">
                 <Dial 
-                    label="Baseline Luck"
-                    description="The raw, unadjusted probability of a 'win' event in any Folly Instrument."
-                    value={config.BASE_LUCK}
-                    onValueChange={(val) => handleConfigChange('BASE_LUCK', val)}
-                    min={0.1} max={0.9} step={0.01}
-                />
-                <Dial 
                     label="Pity Threshold"
                     description="The number of consecutive losses a user can experience before the system grants a small, merciful boon."
                     value={config.PITY_THRESHOLD}
@@ -74,11 +67,18 @@ export default function ProfitDials() {
                     min={2} max={10} step={1}
                 />
                  <Dial 
-                    label="Crash Guard Threshold (%)"
+                    label="Festival Trigger Threshold (%)"
                     description="The percentage drop in system-wide tribute velocity that triggers a global 'Festival of Fortune' event to re-engage users."
-                    value={config.CRASH_GUARD_PERCENT}
-                    onValueChange={(val) => handleConfigChange('CRASH_GUARD_PERCENT', val)}
+                    value={config.FESTIVAL_TRIGGER_PERCENT}
+                    onValueChange={(val) => handleConfigChange('FESTIVAL_TRIGGER_PERCENT', val)}
                     min={5} max={50} step={1}
+                />
+                 <Dial 
+                    label="Transmutation Tithe (%)"
+                    description="The commission fee Obelisk Pay takes on every real-world transmutation via the Proxy.Agent."
+                    value={config.TRANSMUTATION_TITHE * 100}
+                    onValueChange={(val) => handleConfigChange('TRANSMUTATION_TITHE', val / 100)}
+                    min={1} max={50} step={1}
                 />
             </CardContent>
         </Card>
