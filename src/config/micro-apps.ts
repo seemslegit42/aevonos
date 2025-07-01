@@ -236,7 +236,7 @@ export const microAppManifests: MicroAppManifest[] = [
   },
   {
     id: 'sisyphus-ascent',
-    name: 'Sisyphus\'s Ascent',
+    name: "Sisyphus's Ascent",
     author: 'Klepsydra Engine',
     description: 'Defy existential dread for a chance at a moment of reprieve.',
     creditCost: 0,
