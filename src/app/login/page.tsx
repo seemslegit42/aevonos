@@ -96,8 +96,8 @@ export default function LoginPage() {
                     <Image
                       src="/logo.png"
                       alt="ΛΞVON OS Logo"
-                      width={60}
-                      height={60}
+                      width={80}
+                      height={80}
                       className="mx-auto"
                     />
                     <h1 className="text-2xl font-headline mt-4 text-foreground">Resume the Ritual</h1>
