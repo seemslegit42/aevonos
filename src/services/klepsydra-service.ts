@@ -168,14 +168,10 @@ export async function processFollyTribute(
             tx.workspace.findUniqueOrThrow({ where: { id: workspaceId }, select: { credits: true } }),
             getPulseProfile(userId, tx)
         ]);
-
-        const { flowState } = profile;
-        let boonFactor = 1.0;
         
         // 2. Apply any active one-time buffs
         if (profile.hadesBargainActive) {
             tributeAmount *= 2;
-            boonFactor = 2.0;
             await tx.pulseProfile.update({ where: { userId }, data: { hadesBargainActive: false } });
         }
 
@@ -216,12 +212,11 @@ export async function processFollyTribute(
         // 4. Determine the specific boon from the selected tier
         const selectedBoon = selectWeightedRandom(selectedTier.boons, boon => boon.weight);
         let boonAmount = 0;
-        let potentialChange = 0;
         let awardedCardId: string | undefined = undefined;
         let systemEffect: string | undefined = undefined;
         
         if (selectedBoon.type === 'credits') {
-            const calculatedBoon = tributeAmount * (selectedBoon.value as number) * psycheModifiers.boonFactor * boonFactor;
+            const calculatedBoon = tributeAmount * (selectedBoon.value as number) * psycheModifiers.boonFactor;
             boonAmount = calculatedBoon;
         } else if (selectedBoon.type === 'chaos_card') {
             awardedCardId = selectedBoon.value as string;
@@ -236,6 +231,7 @@ export async function processFollyTribute(
         // --- Judas Algorithm ---
         let judasFactor = null;
         const isWin = outcome !== 'loss' && outcome !== 'common';
+        const { flowState } = profile;
         // At high confidence (flowState), introduce a chance of a "hollow win".
         if (isWin && flowState > 0.75 && Math.random() < 0.33) { // 33% chance on high flow
             judasFactor = 1 - (Math.random() * 0.15 + 0.05); // Reduce boon by 5-20%
@@ -261,7 +257,6 @@ export async function processFollyTribute(
                 workspaceId, userId, instrumentId: instrumentId,
                 type: TransactionType.TRIBUTE,
                 amount: new Prisma.Decimal(netCreditChange),
-                potentialChange: new Prisma.Decimal(potentialChange),
                 description: `Tribute: ${instrumentManifest?.name || instrumentId} - ${outcome}`,
                 luckWeight, outcome, 
                 tributeAmount: new Prisma.Decimal(tributeAmount),
@@ -282,7 +277,14 @@ export async function processFollyTribute(
         }
         
         if (systemEffect) {
-            // ... (existing system effect logic) ...
+            const fiveMinutes = 5 * 60 * 1000;
+            await tx.activeSystemEffect.create({
+              data: {
+                workspaceId: workspaceId,
+                cardKey: systemEffect,
+                expiresAt: new Date(Date.now() + fiveMinutes),
+              },
+            });
         }
         
         const discovery = await tx.instrumentDiscovery.findFirst({
