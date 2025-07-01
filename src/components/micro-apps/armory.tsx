@@ -8,7 +8,7 @@ import { ChaosCardListingCard } from '@/components/armory/chaos-card-listing-car
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '../ui/skeleton';
-import { Workspace, ChaosCard as PrismaChaosCard, UserRole } from '@prisma/client';
+import { Workspace, UserRole } from '@prisma/client';
 import type { User } from '@prisma/client';
 import { useToast } from '@/hooks/use-toast';
 import { getNudges } from '@/app/actions';
@@ -17,7 +17,7 @@ import { Search } from 'lucide-react';
 import { Button } from '../ui/button';
 
 interface FullUser extends User {
-    ownedChaosCards: PrismaChaosCard[];
+    unlockedChaosCardKeys: string[];
 }
 
 export default function Armory() {
@@ -95,7 +95,7 @@ export default function Armory() {
   }, [microApps, searchTerm, selectedTag]);
 
   const unlockedAppIds = workspace?.unlockedAppIds || [];
-  const ownedCardKeys = user?.ownedChaosCards.map(c => c.key) || [];
+  const ownedCardKeys = user?.unlockedChaosCardKeys || [];
 
   return (
     <div className="h-full p-2">
