@@ -1,9 +1,11 @@
 
-import { auth } from '@/auth';
+import NextAuth from 'next-auth';
+import { authConfig } from './auth.config';
 
-// Export the middleware with a refined matcher to protect all routes by default
-// while allowing access to public and essential API routes.
-export default auth;
+// Initialize NextAuth with the edge-compatible config.
+// The `auth` function from this initialization is what the middleware will use.
+// It relies only on the JWT for session data, not the database adapter.
+export default NextAuth(authConfig).auth;
 
 export const config = {
   // Match all routes except for specific public paths and internal Next.js assets
