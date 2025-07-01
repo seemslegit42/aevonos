@@ -1,4 +1,5 @@
 
+
 /**
  * @fileOverview This file defines the central tool registry for the BEEP agent.
  * It uses a factory pattern to create context-aware tool instances.
@@ -87,7 +88,7 @@ import { StonksBotInputSchema } from '../stonks-bot-schemas';
 import { RenoModeAnalysisInputSchema } from '../reno-mode-schemas';
 import { PatricktAgentInputSchema } from '../patrickt-agent-schemas';
 import { InventoryDaemonInputSchema } from '../inventory-daemon-schemas';
-import { FindUsersByVowInputSchema, ManageSyndicateInputSchema } from '@/ai/tools/demiurge-schemas';
+import { FindUsersByVowInputSchema, ManageSyndicateInputSchema } from '@/ai/tools/demiurge-tools';
 
 
 // Context for multi-tenancy and personalization
