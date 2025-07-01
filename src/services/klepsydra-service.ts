@@ -17,7 +17,7 @@ import { InsufficientCreditsError } from '@/lib/errors';
 import { UserPsyche, TransactionType, Prisma, PulseProfile } from '@prisma/client';
 import { differenceInMinutes } from 'date-fns';
 
-const AGE_OF_ASCENSION_ACTIVE = true;
+const AGE_OF_ASCENSION_ACTIVE = false;
 
 const PSYCHE_MODIFIERS: Record<UserPsyche, { oddsFactor: number; boonFactor: number }> = {
     [UserPsyche.ZEN_ARCHITECT]: { oddsFactor: 1.0, boonFactor: 1.0 }, // The baseline experience

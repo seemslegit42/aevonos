@@ -167,21 +167,23 @@ export async function makeFollyTribute(instrumentId: string, tributeAmount?: num
     
     revalidatePath('/');
     
-    if (outcome === 'win' || outcome === 'pity_boon') {
-        return { 
-            success: true, 
-            outcome, 
-            boonAmount,
-            message: `Tribute successful! You were granted a boon of ${boonAmount.toFixed(2)} Ξ.` 
-        };
-    } else { // loss
-        return {
-            success: true,
-            outcome,
-            boonAmount: 0,
-            message: `The tribute was not enough.`
-        };
+    let message: string;
+    const isLoss = outcome === 'common' || outcome === 'loss';
+
+    if (outcome === 'pity_boon') {
+        message = `The Obelisk acknowledges your persistence. A minor alignment of fate has granted you a boon of ${boonAmount.toFixed(2)} Ξ.`;
+    } else if (!isLoss) {
+        message = `The tribute was accepted. You have been granted a boon of ${boonAmount.toFixed(2)} Ξ.`;
+    } else {
+        message = `The tribute was not enough. The threads of fate were not in your favor.`;
     }
+
+    return {
+        success: true,
+        outcome,
+        boonAmount,
+        message,
+    };
 
   } catch (error) {
     console.error(`[Action: makeFollyTribute] for instrument ${instrumentId}:`, error);
