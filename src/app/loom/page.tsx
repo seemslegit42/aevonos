@@ -20,7 +20,7 @@ import LoomMobileToolbar from '@/components/loom/loom-mobile-toolbar';
 import ArchitectView from '@/components/loom/ArchitectView';
 
 const BLANK_WORKFLOW: Workflow = {
-  name: 'New Contact Follow-up Lambda',
+  name: 'New Lambda',
   definition: {
     nodes: [
         { id: 'trigger-1', type: 'trigger', position: { x: 50, y: 150 }, data: { label: 'BEEP Command Received' } },
