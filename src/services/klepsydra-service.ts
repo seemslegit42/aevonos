@@ -277,12 +277,13 @@ export async function processFollyTribute(
         }
         
         if (systemEffect) {
-            const fiveMinutes = 5 * 60 * 1000;
+            const cardManifest = artifactManifests.find(c => c.id === systemEffect);
+            const durationMs = (cardManifest?.durationMinutes || 5) * 60 * 1000;
             await tx.activeSystemEffect.create({
               data: {
                 workspaceId: workspaceId,
                 cardKey: systemEffect,
-                expiresAt: new Date(Date.now() + fiveMinutes),
+                expiresAt: new Date(Date.now() + durationMs),
               },
             });
         }

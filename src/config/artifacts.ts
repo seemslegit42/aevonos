@@ -30,6 +30,7 @@ export type ArtifactManifest = {
   cardClass?: 'AESTHETIC' | 'AGENTIC' | 'SYSTEMIC' | 'SYNDICATE';
   rarity?: 'COMMON' | 'UNCOMMON' | 'RARE' | 'MYTHIC';
   systemEffect?: string;
+  durationMinutes?: number;
 };
 
 
@@ -213,7 +214,7 @@ export const artifactManifests: ArtifactManifest[] = [
     id: 'spectre-intelligence-suite',
     type: 'MICRO_APP',
     name: 'Spectre Intelligence Suite',
-    author: 'Bloodhound Protocol',
+    author: 'Bloodhound Protocol // Forged by ΛΞVON OS',
     description: 'A multi-agent digital investigation console. Execute full-spectrum intelligence gathering via LangGraph daemons, OSINT reconnaissance, and synthesized dossier generation. Deploy the Burn Bridge Protocol to unleash an automated swarm of data extraction tools. Results are rendered as secure, exportable artifacts—ready for legal review or shadow operations.',
     creditCost: 999,
     priceModel: 'one-time',
@@ -550,6 +551,7 @@ export const artifactManifests: ArtifactManifest[] = [
     systemEffect: 'Applies a marble and gold UI theme for one hour.',
     imageUrl: 'https://placehold.co/400x560.png',
     imageHint: 'marble statue',
+    durationMinutes: 60,
   },
   {
     id: 'NOCTUAS_GAZE',
@@ -563,6 +565,7 @@ export const artifactManifests: ArtifactManifest[] = [
     systemEffect: "Activates a pure black 'dark mode' with silver text.",
     imageUrl: 'https://placehold.co/400x560.png',
     imageHint: 'owl eyes',
+    durationMinutes: 60,
   },
   {
     id: 'FRACTAL_BLOOM',

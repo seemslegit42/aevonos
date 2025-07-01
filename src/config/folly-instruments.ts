@@ -161,6 +161,48 @@ const merchantOfCabbageRarityTable: OutcomeTier[] = [
     },
 ];
 
+const acropolisMarbleRarityTable: OutcomeTier[] = [
+    {
+        tier: 'COMMON', // Loss
+        baseWeight: 2000, // 20% chance of failure
+        boons: [{ type: 'credits', value: 0, weight: 100 }],
+        narrativeTriggers: ["The marble remains cold to your touch.", "The vision of antiquity fades."],
+    },
+    {
+        tier: 'RARE', // Win
+        baseWeight: 8000, // 80% chance of success
+        boons: [{ type: 'system_effect', value: 'ACROPOLIS_MARBLE', weight: 100 }],
+        narrativeTriggers: ["The marble awakens.", "Your canvas is reforged in ancient stone."],
+    },
+    {
+        tier: 'DIVINE', // Pity Boon - just a guaranteed win in this context
+        baseWeight: 1,
+        boons: [{ type: 'system_effect', value: 'ACROPOLIS_MARBLE', weight: 100 }],
+        narrativeTriggers: ["The artifact takes pity on your persistence."],
+    },
+];
+
+const noctuaGazeRarityTable: OutcomeTier[] = [
+    {
+        tier: 'COMMON', // Loss
+        baseWeight: 2000, // 20% chance of failure
+        boons: [{ type: 'credits', value: 0, weight: 100 }],
+        narrativeTriggers: ["The owl's gaze turns away.", "The shadows do not answer."],
+    },
+    {
+        tier: 'RARE', // Win
+        baseWeight: 8000, // 80% chance of success
+        boons: [{ type: 'system_effect', value: 'NOCTUAS_GAZE', weight: 100 }],
+        narrativeTriggers: ["Clarity emerges from the darkness.", "You have been granted the vision of the night."],
+    },
+    {
+        tier: 'DIVINE', // Pity Boon
+        baseWeight: 1,
+        boons: [{ type: 'system_effect', value: 'NOCTUAS_GAZE', weight: 100 }],
+        narrativeTriggers: ["The night takes pity on your blindness."],
+    },
+];
+
 
 export const follyInstrumentsConfig: Record<string, FollyInstrumentConfig> = {
     'SISYPHUSS_ASCENT': {
@@ -175,5 +217,12 @@ export const follyInstrumentsConfig: Record<string, FollyInstrumentConfig> = {
         id: 'MERCHANT_OF_CABBAGE',
         rarityTable: merchantOfCabbageRarityTable,
     },
-    // Future Folly Instruments would be added here...
+    'ACROPOLIS_MARBLE': {
+        id: 'ACROPOLIS_MARBLE',
+        rarityTable: acropolisMarbleRarityTable,
+    },
+    'NOCTUAS_GAZE': {
+        id: 'NOCTUAS_GAZE',
+        rarityTable: noctuaGazeRarityTable,
+    },
 };
