@@ -1,49 +1,88 @@
-# The Proxy.Agent: The Principle of Transmuted Value
+# Proxy.Agent: The Transmutation Layer
 
-## The New Doctrine: Transmuted Value
+This document outlines the architecture and principles of the Proxy.Agent, a Tier-4 agentic system that allows trusted users to transmute ΞCredits into real-world value, while upholding the closed-loop economic doctrine of ΛΞVON OS.
 
-We maintain the law: a user can never "withdraw" ΞCredits to their bank account. The flow of value out of our direct control is forbidden.
+---
 
-However, we will grant our most trusted Sovereigns the ability to command us—ΛΞVON, the organization—to spend real-world currency on their behalf, using their ΞCredit balance as the authorization.
+### 🧱 Summary: What We've Invented
 
-## The Solution: The Proxy.Agent and the ΛΞVON Black Card
+The Proxy.Transmutation Layer is a unified economic interface where:
 
-We will forge a new, Tier-4 Agent, accessible only to users who have proven their commitment and reached a high Sovereignty Class. This agent is the Proxy. It is the user's personal concierge, their fixer, their bridge to the mundane world.
+* **Ξ is not money.**
+  It is *power*, measured in how much reality you can bend.
 
-Here is how it satisfies the Mercenary sitting on the patio:
+* **Users don’t “cash out.”**
+  They *summon tribute*, and it’s ΛΞVON who pays it—on their behalf, in real-time.
 
-### The Victory
-The Mercenary, using our OS on their device, hits a massive jackpot on "Sisyphus's Ascent." Their Treasury swells with 2,000,000 Ξ.
+* **The closed-loop doctrine is maintained.**
+  The system stays pure. No money laundering, no licenses, no regulatory overexposure.
 
-### The Invocation
-The bill for their table arrives. It's $175 CAD. The Mercenary does not reach for their wallet. They speak a quiet command:
+* **The oracle is controlled.**
+  The exchange rate, the tithe, the access class—we write the law of transmutation.
 
-> "BEEP, summon the Proxy."
+---
 
-### The Command
-The Proxy.Agent interface materializes, silent and discreet.
+## 🔮 Systems Architecture: The Proxy.Agent Transmutation Stack
 
-**Proxy:** "At your command. What tribute is to be made real?"
-**User:** "Settle this tribute. $175."
+| Layer                      | Component                         | Purpose                                             |
+| -------------------------- | --------------------------------- | --------------------------------------------------- |
+| 🧠 **User-Level**          | **Proxy.Agent Micro-App**         | Tier-4 app interface for tribute requests           |
+| 🕯️ **Invocation Layer**   | `BEEP > Proxy.Agent Interface`    | Natural language invocation → structured payload    |
+| 📊 **ΞCredit Engine**      | `Transmutation Tithe Calculator`  | Dynamic exchange rate + markup enforcement          |
+| 🧾 **Payment Executor**    | `ΛΞVON.Pay API`                   | Backend payment via Stripe, Apple Pay, or Interac   |
+| 🔐 **Security Layer**      | NFC Tap Auth via ΛΞVON Black Card | Triggers Proxy with real-time payload prefill       |
+| 🛡️ **Doctrine Preserver** | Ξ Destruction Ledger              | Ξ is *burned*, not converted. Obelisk logs the act. |
 
-### The Transmutation (The Backend Magic)
-1. The Proxy consults the Obelisk's internal exchange rate, a rate we control completely. Let's say we value 10,000 Ξ at $1 CAD for this purpose.
-2. It calculates the cost: 1,750,000 Ξ.
-3. It adds our mandatory "Transmutation Tithe" of 15%: an additional 262,500 Ξ.
-4. The total cost is 2,012,500 Ξ. The agent confirms this with the user. Upon approval, it debits the user's ΞCredit balance.
+---
 
-### The Real-World Manifestation
-The Proxy agent instantly executes a real-world payment for $175 CAD from our ΛΞVON corporate account using a payment API (e.g., Apple Pay, Interac).
+## 🧠 Core Features of the ΛΞVON Black Card
 
-To the bartender, it looks like a simple tap-to-pay transaction. To the user, it is a seamless act of will.
+* **Not a financial instrument**
+  No numbers, no name—just a silent, glowing symbol of command
 
-## The ΛΞVON Black Card
-To make this tangible, we will issue a physical (or digital) NFC-enabled card to qualifying Sovereigns. It is a matte, obsidian black card with no numbers, only a softly glowing Ξ symbol. It is not a credit card. It is a Command Card. Tapping it at a payment terminal automatically invokes the Proxy.Agent on their device, pre-filled with the vendor and amount, awaiting their silent authorization.
+* **Taps = Summons**
+  Tapping autofills terminal, invokes Proxy.Agent with contextual payload (merchant + amount)
 
-## Why This Is the Final Solution
-- **It Satisfies the Mercenary**: It provides the instant, real-world gratification that competes directly with a real slot machine. A win tonight pays for the entire table tonight.
-- **It Upholds the Doctrine**: The user never touches the cash. The ΞCredits are deleted from their account, and the real-world payment flows from us to the vendor. We are a service provider, not a bank. The Closed Loop remains intact.
-- **It Is Our Most Profitable Engine**: We control the exchange rate. We set the Transmutation Tithe. We can make a significant margin on every single real-world transaction our users conduct, turning their lifestyle into our profit center.
-- **It Is Powerfully On-Brand**: The user isn't "paying a bill." They are commanding a powerful, invisible organization to settle tributes on their behalf. It is the ultimate power fantasy—the very definition of a Sovereign Operator.
+* **ΞCredit Balance = Authorization**
+  No PIN, no login—just Agentic Verification from the Sovereign Device
 
-They come for the thrill of the slot machine. They stay because we have given them something money cannot buy: the power to command the world with a whisper to an invisible servant.
+* **ΨTransaction Narrative**
+  Every successful transmutation echoes in the Obelisk:
+  *“Sovereign 7AC2 commanded tribute from ΛΞVON. A tithe of 2.1M Ξ was offered.”*
+
+---
+
+## 💰 Revenue Implications
+
+A dual-sided monetization layer is created:
+
+1. **Transmutation Tithe (\~15–30%)**
+   On every spend, the OS eats its margin.
+
+2. **Ξ Obsolescence Pressure**
+   Users with growing Ξ balances are incentivized to either:
+
+   * **Buy status** (sigils, daemons, upgrades)
+   * **Buy power** (Proxy-spend in meatspace)
+
+Every Ξ burned *feeds the Obelisk*.
+Every tithe taken *feeds the company*.
+
+---
+
+## 🌐 Narrative Hooks (For Launch Comms)
+
+* “You don’t *spend* money. You *command* reality.”
+* “ΞCredits can’t be withdrawn—only transmuted into action.”
+* “The world responds to your will. That’s the ΛΞVON difference.”
+
+---
+
+The Mercenary now has **no reason to leave.**
+Every other gambling platform gives them adrenaline.
+ΛΞVON gives them **dominion.**
+
+From digital compulsion to social prestige to material manifestation—**without ever losing control.**
+
+⚔️ The Proxy has been summoned.
+📡 The world awaits your command.

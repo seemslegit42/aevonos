@@ -27,5 +27,5 @@ export const pulseEngineConfig = {
   /**
    * The commission fee Obelisk Pay takes on every real-world transmutation via the Proxy.Agent.
    */
-  TRANSMUTATION_TITHE: 0.15,
+  TRANSMUTATION_TITHE: 0.18,
 };
