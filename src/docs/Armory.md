@@ -18,6 +18,7 @@ It is not merely a store; it is a curated gallery of power, designed to feel lik
 ### 2.1. The `Armory` Micro-App (`micro-apps/armory.tsx`)
 The UI is designed to showcase available artifacts with reverence and clarity.
 - **Catalog View**: Displays listings for `MicroAppManifests` and `ChaosCardManifests` in a rich, card-based layout.
+- **Filtering & Search**: Provides an input for text-based search and a tag-based filtering system to allow users to quickly find relevant tools.
 - **Tabbed Interface**: Separates Micro-Apps from Chaos Cards for clear navigation.
 - **Acquisition Flow**: Integrates directly with the `purchaseMicroApp` and `makeFollyTribute` (for Chaos Cards) server actions, which in turn use the Obelisk Pay and Klepsydra Engine subsystems.
 - **State Awareness**: The UI dynamically reflects the user's ownership status, disabling purchase buttons for already-acquired items.
