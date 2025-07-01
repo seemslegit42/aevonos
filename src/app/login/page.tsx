@@ -130,8 +130,9 @@ export default function LoginPage() {
                 <Image 
                     src="/logo.png" 
                     alt="Aevon OS Watermark"
-                    layout="fill"
-                    objectFit="contain"
+                    fill
+                    priority
+                    className="object-contain"
                 />
               </motion.div>
           </div>
