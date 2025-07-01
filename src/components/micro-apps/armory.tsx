@@ -8,7 +8,7 @@ import { ChaosCardListingCard } from '@/components/armory/chaos-card-listing-car
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '../ui/skeleton';
-import { Workspace, ChaosCard as PrismaChaosCard } from '@prisma/client';
+import { Workspace, ChaosCard as PrismaChaosCard, UserRole } from '@prisma/client';
 import type { User } from '@prisma/client';
 import { useToast } from '@/hooks/use-toast';
 import { getNudges } from '@/app/actions';
@@ -39,12 +39,29 @@ export default function Armory() {
         if (!workspaceResponse.ok) throw new Error('Failed to fetch workspace data');
         if (!userResponse.ok) throw new Error('Failed to fetch user data');
         
-        const appsData = await appsResponse.json();
-        const workspaceData = await workspaceResponse.json();
-        const userData = await userResponse.json();
+        const allAppsData: MicroAppManifest[] = await appsResponse.json();
+        const workspaceData: Workspace = await workspaceResponse.json();
+        const userData: FullUser = await userResponse.json();
+
+        const isOwner = userData.id === workspaceData.ownerId;
+        
+        // Filter apps based on user permissions
+        const filteredApps = allAppsData.filter(app => {
+            if (app.permissionsRequired.length === 0) {
+                return true; // No permissions required
+            }
+            if (app.permissionsRequired.includes('OWNER_ONLY') && !isOwner) {
+                return false; // Owner-only app, user is not owner
+            }
+            if (app.permissionsRequired.includes('ADMIN') && userData.role !== UserRole.ADMIN) {
+                return false; // Admin-only app, user is not admin
+            }
+            // Add other role checks here if needed...
+            return true;
+        });
 
         // The Armory is for acquisitions. Filter to only show purchasable apps.
-        setApps(appsData.filter((app: MicroAppManifest) => app.creditCost > 0));
+        setApps(filteredApps.filter((app: MicroAppManifest) => app.creditCost > 0));
         setCards(chaosCardManifest);
         setWorkspace(workspaceData);
         setUser(userData);
