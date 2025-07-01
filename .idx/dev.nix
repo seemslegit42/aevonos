@@ -28,6 +28,9 @@
     ANTHROPIC_API_KEY = "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";
     AUTH_API_KEY = "db2c355d6e31407698fc6ec535472e08b4b4a2235903e4dc96febdde31c818b1";
     SLACK_API_KEY = "xoxb-8956017572677-8982036303072-lLtci47IQqavo7Op5wA6KeKX";
+    AUTH_URL="http://localhost:3000";
+    FINNHUB_API_KEY="d1i3rj9r01qhsrhd67a0d1i3rj9r01qhsrhd67ag";
+    ABSTRACT_API_KEY="74072bd4569540e9a679647613e26ce6";
   };
   # This adds a file watcher to startup the firebase emulators. The emulators will only start if
   # a firebase.json file is written into the user's directory

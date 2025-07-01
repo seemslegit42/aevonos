@@ -19,8 +19,8 @@ import {
     checkEmailBreaches,
     checkBurnerPhoneNumber,
     searchIntelX,
-    runFirecrawlerScan,
 } from '../tools/osint-tools';
+import { runFirecrawlerScan } from '../tools/firecrawler-tools';
 import { authorizeAndDebitAgentActions } from '@/services/billing-service';
 import { langchainGroqComplex } from '@/ai/genkit';
 

@@ -31,6 +31,10 @@ import { scanEvidence as scanEvidenceFlow } from '@/ai/agents/paper-trail';
 import { processDocument } from '@/ai/agents/barbara';
 import { auditFinances } from '@/ai/agents/auditor-generalissimo';
 import { generateWingmanMessage } from '@/ai/agents/wingman';
+import { performOsintScan } from '@/ai/agents/osint';
+import { performInfidelityAnalysis } from '@/ai/agents/infidelity-analysis';
+import { deployDecoy } from '@/ai/agents/decoy';
+import { generateDossier } from '@/ai/agents/dossier-agent';
 import { getKendraTake } from '@/ai/agents/kendra';
 import { invokeOracle } from '@/ai/agents/orphean-oracle-flow';
 import { analyzeInvite } from '@/ai/agents/lumbergh';
@@ -81,8 +85,8 @@ import { StonksBotInputSchema } from './stonks-bot-schemas';
 import { RenoModeAnalysisInputSchema } from './reno-mode-schemas';
 import { PatricktAgentInputSchema } from './patrickt-agent-schemas';
 import { InventoryDaemonInputSchema } from './inventory-daemon-schemas';
-import { FindUsersByVowInputSchema, ManageSyndicateInputSchema } from '@/ai/tools/demiurge-tools';
 import { BurnBridgeInputSchema } from './burn-bridge-schemas';
+import { FindUsersByVowInputSchema, ManageSyndicateInputSchema } from '@/ai/tools/demiurge-schemas';
 
 
 // Context for multi-tenancy and personalization
@@ -344,7 +348,7 @@ export async function getTools(context: AgentContext): Promise<Tool[]> {
             agentName: 'wingman',
             agentFunc: (toolInput) => generateWingmanMessage({ ...toolInput, workspaceId }),
         }),
-        
+
         createAgentTool({
             name: 'executeBurnBridgeProtocol',
             description: 'Executes the "Burn Bridge Protocol". This is a high-level, multi-agent process for comprehensive intelligence gathering on a target. It runs OSINT, behavioral analysis, deploys a decoy, and compiles a final dossier. Requires a target name, a situation description, and optional context.',
@@ -396,9 +400,9 @@ export async function getTools(context: AgentContext): Promise<Tool[]> {
         createAgentTool({
             name: 'getStonksAdvice',
             description: 'Gets unhinged, bullish, and financially irresponsible advice for a stock ticker. This is not financial advice.',
-            schema: StonksBotInputSchema.omit({ workspaceId: true }),
+            schema: StonksBotInputSchema.omit({ workspaceId: true, userId: true }),
             agentName: 'stonks',
-            agentFunc: (toolInput) => getStonksAdvice({ ...toolInput, workspaceId }),
+            agentFunc: (toolInput) => getStonksAdvice({ ...toolInput, workspaceId, userId }),
         }),
 
         createAgentTool({
