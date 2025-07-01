@@ -64,6 +64,7 @@ export type MicroAppType =
   | 'kendra'
   | 'aegis-threatscope'
   | 'aegis-command'
+  | 'command-and-cauldron'
   | 'usage-monitor'
   | 'dr-syntax'
   | 'armory'
