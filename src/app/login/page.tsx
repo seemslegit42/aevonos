@@ -86,7 +86,7 @@ export default function LoginPage() {
             className="relative w-full max-w-sm"
         >
             <div className="absolute inset-0.5 -z-10 rounded-2xl bg-gradient-to-r from-primary via-accent to-roman-aqua blur-lg opacity-30 group-hover:opacity-50 transition duration-1000 animate-pulse" />
-            <div className="relative p-6 sm:p-8 rounded-2xl bg-background/80 backdrop-blur-xl border border-border/20 shadow-2xl text-center space-y-6">
+            <div className="relative p-6 sm:p-8 rounded-2xl bg-background/70 backdrop-blur-xl border border-border/20 shadow-lg text-center space-y-6">
                 
                 <div className="absolute inset-0 -z-10 flex items-center justify-center overflow-hidden rounded-2xl">
                     <FlowerOfLifeIcon className="w-full h-full text-foreground/5 opacity-30 animate-subtle-pulse" />

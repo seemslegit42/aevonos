@@ -9,6 +9,7 @@ interface PricingCardProps {
     tierId: string;
     tierName: string;
     price: string;
+    priceValue: number;
     priceSubtext: string;
     description: string;
     features: string[];
@@ -19,7 +20,7 @@ export default function PricingCard({ tierId, tierName, price, priceSubtext, des
     const link = tierName === "Priesthood" ? "/register" : `/subscribe/${tierId}`;
 
     return (
-        <Card className={cn("flex flex-col", isFeatured ? "border-primary ring-2 ring-primary bg-primary/5 shadow-2xl shadow-primary/10" : "bg-background/80")}>
+        <Card className={cn("flex flex-col", isFeatured && "border-primary ring-2 ring-primary bg-primary/5 shadow-2xl shadow-primary/10")}>
             <CardHeader className="p-6">
                 <CardTitle className="font-headline text-2xl">{tierName}</CardTitle>
                 <div className="flex items-baseline gap-2">
