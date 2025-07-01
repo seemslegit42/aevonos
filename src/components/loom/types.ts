@@ -25,6 +25,7 @@ export type NodeType =
     | 'tool-reno-mode'
     | 'tool-patrickt-app'
     | 'tool-vin-diesel'
+    | 'tool-inventory-daemon'
     | 'tool-final-answer';
 
 

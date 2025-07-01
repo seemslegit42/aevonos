@@ -4,7 +4,7 @@
 import React, { useRef, useState, useMemo, forwardRef } from 'react';
 import { useDroppable, useDraggable } from '@dnd-kit/core';
 import type { Node, Edge } from './types';
-import { Bot, PlayCircle, GitBranch } from 'lucide-react';
+import { Bot, PlayCircle, GitBranch, HardHat } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { WinstonWolfeIcon } from '../icons/WinstonWolfeIcon';
 import { KifKrokerIcon } from '../icons/KifKrokerIcon';
@@ -58,6 +58,7 @@ const nodeIcons: Record<string, React.ComponentType<any>> = {
     'tool-reno-mode': RenoModeIcon,
     'tool-patrickt-app': PatricktIcon,
     'tool-vin-diesel': VinDieselIcon,
+    'tool-inventory-daemon': HardHat,
 };
 
 function WorkflowNodeItem({ node, onClick, isSelected, onConnectStart, onConnectEnd }: { 

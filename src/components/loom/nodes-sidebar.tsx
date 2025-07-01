@@ -28,6 +28,7 @@ import { StonksIcon } from '../icons/StonksIcon';
 import { RenoModeIcon } from '../icons/RenoModeIcon';
 import { PatricktIcon } from '../icons/PatricktIcon';
 import { VinDieselIcon } from '../icons/VinDieselIcon';
+import { HardHat } from 'lucide-react'; // Placeholder for Inventory
 import type { NodeType } from './types';
 import { ScrollArea } from '../ui/scroll-area';
 
@@ -52,6 +53,7 @@ const nodeTypes: NodeInfo[] = [
     { type: 'tool-crm', label: 'CRM Tool', description: 'Manages contacts', icon: AddressBookIcon },
     { type: 'tool-dr-syntax', label: 'Dr. Syntax', description: 'Critiques content harshly', icon: DrSyntaxIcon },
     { type: 'tool-foremanator', label: 'Foremanator', description: 'Processes site logs', icon: ForemanatorIcon },
+    { type: 'tool-inventory-daemon', label: 'Inventory Daemon', description: 'Manages stock & POs', icon: HardHat },
     { type: 'tool-jroc', label: 'J-ROC', description: 'Generates business kits', icon: JrocIcon },
     { type: 'tool-kendra', label: 'KENDRA.exe', description: 'Generates marketing campaigns', icon: KendraIcon },
     { type: 'tool-kif-kroker', label: 'Kif Kroker', description: 'Analyzes team comms', icon: KifKrokerIcon },
