@@ -17,33 +17,40 @@ import { motion } from 'framer-motion';
 import { FlowerOfLifeIcon } from '@/components/icons/FlowerOfLifeIcon';
 import { Separator } from '@/components/ui/separator';
 import { signIn } from 'next-auth/react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
-const loginSchema = z.object({
+const credentialSchema = z.object({
   email: z.string().email({ message: 'A valid sigil is required.' }),
   password: z.string().min(1, { message: 'A vow must be spoken.' }),
 });
+type CredentialFormValues = z.infer<typeof credentialSchema>;
 
-type LoginFormValues = z.infer<typeof loginSchema>;
+const magicLinkSchema = z.object({
+    email: z.string().email({ message: 'A valid sigil is required for the invocation link.' }),
+});
+type MagicLinkFormValues = z.infer<typeof magicLinkSchema>;
+
 
 export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
   const [error, setError] = useState<string | null>(null);
-  const [isResendLoading, setIsResendLoading] = useState(false);
-  const [resendEmail, setResendEmail] = useState('');
+  const [isCredentialSubmitting, setIsCredentialSubmitting] = useState(false);
+  const [isMagicLinkSubmitting, setIsMagicLinkSubmitting] = useState(false);
 
-  const form = useForm<LoginFormValues>({
-    resolver: zodResolver(loginSchema),
-    defaultValues: {
-      email: '',
-      password: '',
-    },
+  const credentialForm = useForm<CredentialFormValues>({
+    resolver: zodResolver(credentialSchema),
+    defaultValues: { email: '', password: '' },
   });
 
-  const { isSubmitting } = form.formState;
+  const magicLinkForm = useForm<MagicLinkFormValues>({
+    resolver: zodResolver(magicLinkSchema),
+    defaultValues: { email: '' },
+  });
 
-  const onSubmit = async (values: LoginFormValues) => {
+  const onCredentialSubmit = async (values: CredentialFormValues) => {
     setError(null);
+    setIsCredentialSubmitting(true);
     try {
       const result = await signIn('credentials', {
         redirect: false,
@@ -66,17 +73,29 @@ export default function LoginPage() {
         title: 'Invocation Failed',
         description: errorMessage,
       });
+    } finally {
+        setIsCredentialSubmitting(false);
     }
   };
 
-  const handleResendSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (!resendEmail) return;
+  const onMagicLinkSubmit = async (values: MagicLinkFormValues) => {
     setError(null);
-    setIsResendLoading(true);
+    setIsMagicLinkSubmitting(true);
     try {
       // This will redirect to the default NextAuth verification page on success
-      await signIn('resend', { email: resendEmail });
+      const result = await signIn('resend', { email: values.email, redirect: false });
+
+       if (result?.error) {
+          throw new Error('Could not send invocation link. The aether is disturbed.');
+       }
+
+       toast({
+           title: "Invocation Link Sent",
+           description: "A temporary key has been sent to your Sigil. Check your inbox."
+       });
+       // In a real app, you'd show a "check your email" page here.
+       // For now, we just inform the user.
+
     } catch (err: any) {
       const errorMessage = err.message || 'Failed to send invocation link.';
       setError(errorMessage);
@@ -85,9 +104,12 @@ export default function LoginPage() {
           title: 'Invocation Failed',
           description: errorMessage,
       });
-      setIsResendLoading(false);
+    } finally {
+        setIsMagicLinkSubmitting(false);
     }
   };
+
+  const isSubmitting = isCredentialSubmitting || isMagicLinkSubmitting;
 
   return (
     <div className="flex min-h-screen items-center justify-center p-4 overflow-hidden">
@@ -126,76 +148,88 @@ export default function LoginPage() {
                     <p className="text-sm text-muted-foreground mt-1">The Canvas awaits its Architect.</p>
                 </div>
                 
-                <Form {...form}>
-                  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                    <FormField
-                      control={form.control}
-                      name="email"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormControl>
-                            <Input
-                              type="email"
-                              placeholder="Enter Sigil..."
-                              className="bg-background/50 text-center h-12 text-base border-border/40 focus-visible:ring-primary"
-                              disabled={isSubmitting || isResendLoading}
-                              {...field}
+                <Tabs defaultValue="vow" className="w-full">
+                    <TabsList className="grid w-full grid-cols-2">
+                        <TabsTrigger value="vow">Vow (Password)</TabsTrigger>
+                        <TabsTrigger value="magic">Magic Link</TabsTrigger>
+                    </TabsList>
+                    <TabsContent value="vow" className="pt-4">
+                        <Form {...credentialForm}>
+                        <form onSubmit={credentialForm.handleSubmit(onCredentialSubmit)} className="space-y-4">
+                            <FormField
+                            control={credentialForm.control}
+                            name="email"
+                            render={({ field }) => (
+                                <FormItem>
+                                <FormControl>
+                                    <Input
+                                    type="email"
+                                    placeholder="Enter Sigil..."
+                                    className="bg-background/50 text-center h-12 text-base border-border/40 focus-visible:ring-primary"
+                                    disabled={isSubmitting}
+                                    {...field}
+                                    />
+                                </FormControl>
+                                <FormMessage />
+                                </FormItem>
+                            )}
                             />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="password"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormControl>
-                           <Input
-                                type="password"
-                                placeholder="Speak Vow..."
-                                className="bg-background/50 text-center h-12 text-base border-border/40 focus-visible:ring-primary"
-                                disabled={isSubmitting || isResendLoading}
-                                {...field}
+                            <FormField
+                            control={credentialForm.control}
+                            name="password"
+                            render={({ field }) => (
+                                <FormItem>
+                                <FormControl>
+                                <Input
+                                        type="password"
+                                        placeholder="Speak Vow..."
+                                        className="bg-background/50 text-center h-12 text-base border-border/40 focus-visible:ring-primary"
+                                        disabled={isSubmitting}
+                                        {...field}
+                                    />
+                                </FormControl>
+                                <FormMessage />
+                                </FormItem>
+                            )}
                             />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <Button variant="summon" type="submit" className="w-full h-12 text-base" disabled={isSubmitting || isResendLoading}>
-                      {isSubmitting ? (
-                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                      ) : null}
-                      Summon Canvas
-                    </Button>
-                  </form>
-                </Form>
+                            <Button variant="summon" type="submit" className="w-full h-12 text-base" disabled={isSubmitting}>
+                            {isCredentialSubmitting ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : null}
+                            Summon Canvas
+                            </Button>
+                        </form>
+                        </Form>
+                    </TabsContent>
+                    <TabsContent value="magic" className="pt-4">
+                        <p className="text-xs text-muted-foreground pb-4">Receive a temporary key to the Canvas. For those who travel light.</p>
+                        <Form {...magicLinkForm}>
+                            <form onSubmit={magicLinkForm.handleSubmit(onMagicLinkSubmit)} className="space-y-4">
+                                <FormField
+                                    control={magicLinkForm.control}
+                                    name="email"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                        <FormControl>
+                                            <Input
+                                            type="email"
+                                            placeholder="Enter Sigil..."
+                                            className="bg-background/50 text-center h-12 text-base border-border/40 focus-visible:ring-primary"
+                                            disabled={isSubmitting}
+                                            {...field}
+                                            />
+                                        </FormControl>
+                                        <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                                <Button variant="outline" type="submit" className="w-full h-12 text-base" disabled={isSubmitting}>
+                                {isMagicLinkSubmitting ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : null}
+                                Send Invocation Link
+                                </Button>
+                            </form>
+                        </Form>
+                    </TabsContent>
+                </Tabs>
                 
-                <div className="relative flex items-center text-xs text-muted-foreground uppercase">
-                    <div className="flex-grow border-t border-border/20" />
-                    <span className="flex-shrink mx-4">Or</span>
-                    <div className="flex-grow border-t border-border/20" />
-                </div>
-
-                <form onSubmit={handleResendSubmit} className="space-y-4">
-                    <Input
-                      type="email"
-                      placeholder="Enter Sigil for a Magic Link"
-                      className="bg-background/50 text-center h-12 text-base border-border/40 focus-visible:ring-primary"
-                      disabled={isSubmitting || isResendLoading}
-                      value={resendEmail}
-                      onChange={(e) => setResendEmail(e.target.value)}
-                    />
-                    <Button variant="outline" type="submit" className="w-full h-12 text-base" disabled={isSubmitting || isResendLoading || !resendEmail}>
-                      {isResendLoading ? (
-                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                      ) : null}
-                      Send Invocation Link
-                    </Button>
-                </form>
-
                 <div className="relative text-xs text-muted-foreground">
                     <Separator className="my-4 bg-border/20"/>
                     <p>New Operator?{' '}
