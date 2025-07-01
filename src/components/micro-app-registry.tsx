@@ -39,6 +39,7 @@ import { ValidatorIcon } from './icons/ValidatorIcon';
 import { RenoModeIcon } from './icons/RenoModeIcon';
 import { PatricktIcon } from './icons/PatricktIcon';
 import { HowardsSidekickIcon } from './icons/HowardsSidekickIcon';
+import { SisyphusIcon } from './icons/SisyphusIcon';
 
 import { type MicroAppType } from '@/store/app-store';
 import ContactList from './micro-apps/contact-list';
@@ -73,6 +74,7 @@ import WorkspaceSettings from './micro-apps/workspace-settings';
 import TopUp from './micro-apps/top-up';
 import StonksBot from './micro-apps/stonks-bot';
 import OracleOfDelphiValley from './micro-apps/oracle-of-delphi-valley';
+import SisyphusAscent from './micro-apps/sisyphus-ascent';
 import AdminConsole from './micro-apps/admin-console';
 import Validator from './micro-apps/validator';
 import RenoMode from './micro-apps/reno-mode';
@@ -221,6 +223,10 @@ export const microAppRegistry: Record<MicroAppType, ComponentRegistry> = {
   'oracle-of-delphi-valley': {
     icon: OracleOfDelphiValleyIcon,
     content: OracleOfDelphiValley,
+  },
+  'sisyphus-ascent': {
+    icon: SisyphusIcon,
+    content: SisyphusAscent,
   },
   'admin-console': {
     icon: AdminConsoleIcon,

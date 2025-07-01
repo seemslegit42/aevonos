@@ -75,7 +75,8 @@ export type MicroAppType =
   | 'validator'
   | 'reno-mode'
   | 'patrickt-app'
-  | 'howards-sidekick';
+  | 'howards-sidekick'
+  | 'sisyphus-ascent';
 
 // Define the shape of a MicroApp instance
 export interface MicroApp {
