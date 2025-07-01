@@ -31,9 +31,9 @@ async function getPulseProfile(userId: string, tx?: PrismaTransactionClient): Pr
       data: {
         userId,
         phaseOffset,
-        baselineLuck: pulseEngineConfig.BASE_LUCK,
-        amplitude: 0.15, // Default amplitude for luck oscillation
-        frequency: 0.01, // Default frequency for a slow, subtle pulse
+        baselineLuck: 0.4,
+        amplitude: 0.15,
+        frequency: 0.01,
       },
     });
   }
@@ -137,8 +137,8 @@ export async function recordLoss(userId: string, tx?: PrismaTransactionClient): 
  * @param userId The ID of the user.
  * @returns True if a Pity Boon should be triggered.
  */
-export async function shouldTriggerPityBoon(userId: string): Promise<boolean> {
-    const profile = await getPulseProfile(userId);
+export async function shouldTriggerPityBoon(userId: string, tx?: PrismaTransactionClient): Promise<boolean> {
+    const profile = await getPulseProfile(userId, tx);
     return profile.consecutiveLosses >= pulseEngineConfig.PITY_THRESHOLD;
 }
 

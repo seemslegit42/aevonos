@@ -2,7 +2,7 @@
 'use server';
 
 /**
- * @fileOverview Defines the baseline probability weights and boons for all Instruments of Folly.
+ * @fileOverview Defines the baseline probability weights and potential boons for all Instruments of Folly.
  * This is the Abacus of Fates, the raw truth before the Sine-Rhythm Engine applies its modulations.
  */
 
@@ -64,9 +64,10 @@ const sisyphusAscentRarityTable: OutcomeTier[] = [
     },
     {
         tier: 'DIVINE',
-        baseWeight: 1, // This is not a random roll; it's a forced outcome pool for Pity Boons.
+        baseWeight: 1, // This is not a random roll; it's a forced outcome pool for Pity Boons and special events.
         boons: [
-            { type: 'credits', value: 1.5, weight: 100 },
+            { type: 'system_effect', value: 'SISYPHUS_REPRIEVE', weight: 50 },
+            { type: 'system_effect', value: 'PSYCHE_MATRIX_RESONANCE', weight: 50 },
         ],
         narrativeTriggers: ["The gods take notice.", "The cosmic balance shifts. A small favor has been granted, Sovereign."],
     },

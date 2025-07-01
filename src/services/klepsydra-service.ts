@@ -14,7 +14,7 @@ import { chaosCardManifest } from '@/config/chaos-cards';
 import { follyInstrumentsConfig, type OutcomeTier, type Boon } from '@/config/folly-instruments';
 import prisma from '@/lib/prisma';
 import { InsufficientCreditsError } from '@/lib/errors';
-import { UserPsyche, TransactionType, Prisma } from '@prisma/client';
+import { UserPsyche, TransactionType, Prisma, PulseProfile } from '@prisma/client';
 import { differenceInMinutes } from 'date-fns';
 
 const AGE_OF_ASCENSION_ACTIVE = true;
@@ -33,6 +33,36 @@ const aestheticEffectCardKeys = chaosCardManifest
 // List of instruments that are pure gambles and should not be "owned".
 // These don't award a Chaos Card on win.
 const PURE_FOLLY_INSTRUMENTS = ['ORACLE_OF_DELPHI_VALLEY', 'SISYPHUSS_ASCENT', 'MERCHANT_OF_CABBAGE'];
+
+type PrismaTransactionClient = Omit<Prisma.PrismaClient, "$connect" | "$disconnect" | "$on" | "$transaction" | "$use" | "$extends">;
+
+/**
+ * Retrieves a user's Pulse Profile, creating a default one if it doesn't exist.
+ * @param userId The ID of the user.
+ * @param tx An optional Prisma transaction client for atomicity.
+ * @returns The user's PulseProfile.
+ */
+async function getPulseProfile(userId: string, tx?: PrismaTransactionClient): Promise<PulseProfile> {
+  const prismaClient = tx || prisma;
+  let profile = await prismaClient.pulseProfile.findUnique({
+    where: { userId },
+  });
+
+  if (!profile) {
+    const phaseOffset = Math.random() * 2 * Math.PI;
+    profile = await prismaClient.pulseProfile.create({
+      data: {
+        userId,
+        phaseOffset,
+        baselineLuck: 0.4,
+        amplitude: 0.15,
+        frequency: 0.01,
+      },
+    });
+  }
+
+  return profile;
+}
 
 /**
  * A helper function to perform weighted random selection.
@@ -83,9 +113,10 @@ export async function processFollyTribute(
 
     return prisma.$transaction(async (tx) => {
         // --- 1. PRE-CHECK AND GET MODIFIERS ---
-        const [user, workspace] = await Promise.all([
+        const [user, workspace, profile] = await Promise.all([
             tx.user.findUniqueOrThrow({ where: { id: userId }, select: { psyche: true } }),
             tx.workspace.findUniqueOrThrow({ where: { id: workspaceId }, select: { credits: true } }),
+            getPulseProfile(userId, tx)
         ]);
 
         if ((workspace.credits as unknown as number) < tributeAmount) {
@@ -94,12 +125,20 @@ export async function processFollyTribute(
 
         const psycheModifiers = PSYCHE_MODIFIERS[user.psyche] || PSYCHE_MODIFIERS.ZEN_ARCHITECT;
         const luckWeight = await getCurrentPulseValue(userId, tx);
-        const isPity = await shouldTriggerPityBoon(userId);
+        const isPity = await shouldTriggerPityBoon(userId, tx);
+        const isGuaranteedWin = profile.nextTributeGuaranteedWin ?? false;
         
         // --- 2. DETERMINE OUTCOME TIER ---
         let selectedTier: OutcomeTier;
 
-        if (isPity) {
+        if (isGuaranteedWin) {
+            selectedTier = instrumentConfig.rarityTable.find(t => t.tier === 'RARE')!;
+            // Unset the flag now that it's been consumed
+            await tx.pulseProfile.update({
+                where: { userId },
+                data: { nextTributeGuaranteedWin: false }
+            });
+        } else if (isPity) {
             selectedTier = instrumentConfig.rarityTable.find(t => t.tier === 'DIVINE')!;
         } else {
             // Modulate weights based on luck and psyche
@@ -111,7 +150,7 @@ export async function processFollyTribute(
                 // Luck weight positively affects better outcomes
                 return tier.baseWeight * luckWeight * psycheModifiers.oddsFactor;
             };
-            selectedTier = selectWeightedRandom(instrumentConfig.rarityTable, getModulatedWeight);
+            selectedTier = selectWeightedRandom(instrumentConfig.rarityTable.filter(t => t.tier !== 'DIVINE'), getModulatedWeight);
         }
 
         if (!selectedTier) { // Fallback, should not happen
@@ -140,7 +179,7 @@ export async function processFollyTribute(
             systemEffect = selectedBoon.value as string;
         }
 
-        const outcome = isPity ? 'pity_boon' : selectedTier.tier.toLowerCase();
+        const outcome = isGuaranteedWin ? 'guaranteed_win' : isPity ? 'pity_boon' : selectedTier.tier.toLowerCase();
         const netCreditChange = boonAmount - tributeAmount;
 
         // --- 4. ATOMIC DATABASE WRITES ---
@@ -201,6 +240,11 @@ export async function processFollyTribute(
                     where: { userId },
                     data: { unlockedMatrixPatterns: { push: 'RESONANCE_BURST_01' }}
                 })
+            } else if (systemEffect === 'SISYPHUS_REPRIEVE') {
+                 await tx.pulseProfile.update({
+                    where: { userId },
+                    data: { nextTributeGuaranteedWin: true }
+                });
             }
         }
         
