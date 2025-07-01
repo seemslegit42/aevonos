@@ -78,7 +78,8 @@ export type MicroAppType =
   | 'howards-sidekick'
   | 'sisyphus-ascent'
   | 'merchant-of-cabbage'
-  | 'obelisk-marketplace';
+  | 'obelisk-marketplace'
+  | 'integration-nexus';
 
 // Define the shape of a MicroApp instance
 export interface MicroApp {
