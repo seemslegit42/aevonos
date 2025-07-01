@@ -2,7 +2,7 @@
 import { NextResponse, NextRequest } from 'next/server';
 import { z } from 'zod';
 import prisma from '@/lib/prisma';
-import { getSession } from '@/lib/auth';
+import { auth } from '@/auth';
 import { IntegrationStatus } from '@prisma/client';
 
 
@@ -21,15 +21,15 @@ const IntegrationUpdateRequestSchema = z.object({
 
 // Corresponds to operationId `getIntegration`
 export async function GET(request: NextRequest, { params }: RouteParams) {
-    const session = await getSession(request);
-    if (!session?.workspaceId) {
+    const session = await auth();
+    if (!session?.user?.workspaceId) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     try {
         const { integrationId } = params;
         const integration = await prisma.integration.findFirst({
-            where: { id: integrationId, workspaceId: session.workspaceId },
+            where: { id: integrationId, workspaceId: session.user.workspaceId },
         });
 
         if (!integration) {
@@ -45,8 +45,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
 // Corresponds to operationId `updateIntegration`
 export async function PUT(request: NextRequest, { params }: RouteParams) {
-    const session = await getSession(request);
-    if (!session?.workspaceId) {
+    const session = await auth();
+    if (!session?.user?.workspaceId) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     try {
@@ -59,7 +59,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
         }
 
         const updatedIntegration = await prisma.integration.updateMany({
-            where: { id: integrationId, workspaceId: session.workspaceId },
+            where: { id: integrationId, workspaceId: session.user.workspaceId },
             data: validation.data,
         });
 
@@ -81,8 +81,8 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 
 // Corresponds to operationId `deleteIntegration`
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
-    const session = await getSession(request);
-    if (!session?.workspaceId) {
+    const session = await auth();
+    if (!session?.user?.workspaceId) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -90,7 +90,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
         const { integrationId } = params;
         
         const result = await prisma.integration.deleteMany({
-          where: { id: integrationId, workspaceId: session.workspaceId },
+          where: { id: integrationId, workspaceId: session.user.workspaceId },
         });
     
         if (result.count === 0) {

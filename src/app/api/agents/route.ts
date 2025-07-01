@@ -2,7 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import prisma from '@/lib/prisma';
-import { getSession } from '@/lib/auth';
+import { auth } from '@/auth';
 import { AgentStatus, UserRole } from '@prisma/client';
 
 const AgentDeploymentRequestSchema = z.object({
@@ -13,15 +13,15 @@ const AgentDeploymentRequestSchema = z.object({
 });
 
 export async function GET(request: NextRequest) {
-  const session = await getSession(request);
-  if (!session?.workspaceId) {
+  const session = await auth();
+  if (!session?.user?.workspaceId) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   try {
     const agents = await prisma.agent.findMany({
         where: {
-            workspaceId: session.workspaceId,
+            workspaceId: session.user.workspaceId,
         }
     });
 
@@ -33,13 +33,13 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const session = await getSession(request);
-  if (!session?.workspaceId || !session.userId) {
+  const session = await auth();
+  if (!session?.user?.workspaceId || !session.user.id) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   try {
-    const user = await prisma.user.findUnique({ where: { id: session.userId } });
+    const user = await prisma.user.findUnique({ where: { id: session.user.id } });
 
     if (!user || (user.role !== UserRole.ADMIN && user.role !== UserRole.MANAGER)) {
         return NextResponse.json({ error: 'Permission denied. Administrator or Manager access required.' }, { status: 403 });
@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
             type,
             description,
             status: AgentStatus.idle,
-            workspaceId: session.workspaceId,
+            workspaceId: session.user.workspaceId,
         }
     });
 

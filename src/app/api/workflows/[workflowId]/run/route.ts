@@ -3,7 +3,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { getSession } from '@/lib/auth';
+import { auth } from '@/auth';
 import { UserRole, WorkflowRunStatus } from '@prisma/client';
 import { executeWorkflow } from '@/lib/workflow-executor';
 
@@ -14,12 +14,12 @@ interface RouteParams {
 }
 
 export async function POST(request: NextRequest, { params }: RouteParams) {
-  const session = await getSession(request);
-  if (!session?.workspaceId || !session.userId) {
+  const session = await auth();
+  if (!session?.user?.workspaceId || !session.user.id) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const user = await prisma.user.findUnique({ where: { id: session.userId } });
+  const user = await prisma.user.findUnique({ where: { id: session.user.id } });
   if (!user || user.role === UserRole.AUDITOR) {
       return NextResponse.json({ error: 'Permission denied. This action is not available for auditors.' }, { status: 403 });
   }
@@ -29,7 +29,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     const trigger_payload = await request.json();
 
     const workflow = await prisma.workflow.findFirst({
-      where: { id: workflowId, workspaceId: session.workspaceId },
+      where: { id: workflowId, workspaceId: session.user.workspaceId },
     });
 
     if (!workflow) {
@@ -39,7 +39,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     const workflowRun = await prisma.workflowRun.create({
       data: {
         workflowId: workflow.id,
-        workspaceId: session.workspaceId,
+        workspaceId: session.user.workspaceId,
         status: WorkflowRunStatus.pending,
         triggerPayload: trigger_payload,
         startedAt: new Date(),
@@ -58,7 +58,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
             const { finalPayload, executionLog } = await executeWorkflow(
                 workflow, 
                 trigger_payload, 
-                { workspaceId: session.workspaceId! }
+                { workspaceId: session.user.workspaceId! }
             );
 
             await prisma.workflowRun.update({

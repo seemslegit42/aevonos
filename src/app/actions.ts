@@ -64,14 +64,14 @@ export async function handleCommand(command: string): Promise<UserCommandOutput>
 
 // Keeping this as a specialized action due to the file upload requirement.
 // The BEEP agent's text-based command stream is not suitable for high-bandwidth data.
-export async function scanEvidence(input: Omit<PaperTrailScanInput, 'workspaceId'>): Promise<PaperTrailScanOutput> {
+export async function scanEvidence(input: Omit<PaperTrailScanInput, 'workspaceId' | 'userId'>): Promise<PaperTrailScanOutput> {
   const session = await auth();
-  if (!session?.user?.workspaceId) {
+  if (!session?.user?.workspaceId || !session?.user?.id) {
       throw new Error("Unauthorized: No active session found.");
   }
   
   try {
-    const result = await scanEvidenceFlow({...input, workspaceId: session.user.workspaceId });
+    const result = await scanEvidenceFlow({...input, workspaceId: session.user.workspaceId, userId: session.user.id });
     revalidatePath('/');
     return result;
   } catch (error) {

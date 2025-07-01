@@ -2,7 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { z } from 'zod';
-import { getSession } from '@/lib/auth';
+import { auth } from '@/auth';
 
 const ContactUpdateRequestSchema = z.object({
   email: z.string().email().optional().nullable(),
@@ -18,15 +18,15 @@ interface RouteParams {
 }
 
 export async function GET(request: NextRequest, { params }: RouteParams) {
-  const session = await getSession(request);
-  if (!session?.workspaceId) {
+  const session = await auth();
+  if (!session?.user?.workspaceId) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
   
   try {
     const { contactId } = params;
     const contact = await prisma.contact.findFirst({
-      where: { id: contactId, workspaceId: session.workspaceId },
+      where: { id: contactId, workspaceId: session.user.workspaceId },
     });
 
     if (!contact) {
@@ -41,8 +41,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 }
 
 export async function PUT(request: NextRequest, { params }: RouteParams) {
-  const session = await getSession(request);
-  if (!session?.workspaceId) {
+  const session = await auth();
+  if (!session?.user?.workspaceId) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
     
@@ -57,7 +57,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 
     // Verify the contact belongs to the user's workspace before updating
     const existingContact = await prisma.contact.findFirst({
-        where: { id: contactId, workspaceId: session.workspaceId }
+        where: { id: contactId, workspaceId: session.user.workspaceId }
     });
     if (!existingContact) {
         return NextResponse.json({ error: 'Contact not found.' }, { status: 404 });
@@ -79,8 +79,8 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 }
 
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
-    const session = await getSession(request);
-    if (!session?.workspaceId) {
+    const session = await auth();
+    if (!session?.user?.workspaceId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     
@@ -89,7 +89,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
 
         // Verify the contact belongs to the user's workspace before deleting
         const existingContact = await prisma.contact.findFirst({
-            where: { id: contactId, workspaceId: session.workspaceId }
+            where: { id: contactId, workspaceId: session.user.workspaceId }
         });
         if (!existingContact) {
             return NextResponse.json({ error: 'Contact not found.' }, { status: 404 });

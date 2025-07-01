@@ -13,12 +13,12 @@ import { authorizeAndDebitAgentActions } from '@/services/billing-service';
 const getDatingProfileFlow = ai.defineFlow(
   {
     name: 'getDatingProfileFlow',
-    inputSchema: DatingProfileInputSchema.extend({ workspaceId: z.string() }),
+    inputSchema: DatingProfileInputSchema.extend({ workspaceId: z.string(), userId: z.string() }),
     outputSchema: DatingProfileSchema,
   },
-  async ({ profileId, workspaceId }) => {
+  async ({ profileId, workspaceId, userId }) => {
     // This is an external data fetch, so it counts as one agent action.
-    await authorizeAndDebitAgentActions(workspaceId);
+    await authorizeAndDebitAgentActions(workspaceId, 1, userId);
 
     // In a real app, this would use an authenticated HTTP client.
     // For this environment, we'll use a relative fetch to our mock API endpoint.
@@ -40,6 +40,6 @@ const getDatingProfileFlow = ai.defineFlow(
   }
 );
 
-export async function getDatingProfile(input: DatingProfileInput, workspaceId: string): Promise<DatingProfile> {
-    return getDatingProfileFlow({ ...input, workspaceId });
+export async function getDatingProfile(input: DatingProfileInput, workspaceId: string, userId: string): Promise<DatingProfile> {
+    return getDatingProfileFlow({ ...input, workspaceId, userId });
 }

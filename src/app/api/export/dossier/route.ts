@@ -5,20 +5,20 @@ import { generateDossier } from '@/ai/agents/dossier-agent';
 import { DossierInputSchema } from '@/ai/agents/dossier-schemas';
 import { pdf } from 'md-to-pdf';
 import CryptoJS from 'crypto-js';
-import { getServerActionSession } from '@/lib/auth';
+import { auth } from '@/auth';
 
 const ExportRequestSchema = z.object({
   format: z.enum(['pdf', 'json']),
   encrypt: z.boolean().optional(),
   password: z.string().optional(),
-  dossierInput: DossierInputSchema.omit({ workspaceId: true }),
+  dossierInput: DossierInputSchema.omit({ workspaceId: true, userId: true }),
 });
 
 
 export async function POST(request: NextRequest) {
     try {
-        const session = await getServerActionSession();
-        if (!session?.workspaceId) {
+        const session = await auth();
+        if (!session?.user?.workspaceId || !session.user.id) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
@@ -37,7 +37,8 @@ export async function POST(request: NextRequest) {
         
         const fullDossierInput = {
             ...dossierInput,
-            workspaceId: session.workspaceId,
+            workspaceId: session.user.workspaceId,
+            userId: session.user.id,
         };
         
         const { markdownContent, fileName } = await generateDossier(fullDossierInput);

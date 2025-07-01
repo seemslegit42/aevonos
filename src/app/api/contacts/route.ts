@@ -2,7 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { z } from 'zod';
-import { getSession } from '@/lib/auth';
+import { auth } from '@/auth';
 
 const ContactCreationRequestSchema = z.object({
   email: z.string().email().optional().nullable(),
@@ -12,15 +12,15 @@ const ContactCreationRequestSchema = z.object({
 });
 
 export async function GET(request: NextRequest) {
-  const session = await getSession(request);
-  if (!session?.workspaceId) {
+  const session = await auth();
+  if (!session?.user?.workspaceId) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   try {
     const contacts = await prisma.contact.findMany({
       where: {
-        workspaceId: session.workspaceId,
+        workspaceId: session.user.workspaceId,
       },
       orderBy: {
         createdAt: 'desc',
@@ -34,8 +34,8 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const session = await getSession(request);
-  if (!session?.workspaceId) {
+  const session = await auth();
+  if (!session?.user?.workspaceId) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
       const existingContact = await prisma.contact.findFirst({
         where: { 
             email: validation.data.email,
-            workspaceId: session.workspaceId,
+            workspaceId: session.user.workspaceId,
         },
       });
       if (existingContact) {
@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
     const newContact = await prisma.contact.create({
       data: {
         ...validation.data,
-        workspaceId: session.workspaceId,
+        workspaceId: session.user.workspaceId,
       },
     });
 

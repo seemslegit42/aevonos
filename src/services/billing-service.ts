@@ -182,7 +182,7 @@ export async function requestCreditTopUpInDb(input: RequestCreditTopUpInput, use
         type: anomalyReport.anomalyType || 'Suspicious Transaction',
         explanation: `Aegis flagged a credit top-up request as anomalous. Reason: ${anomalyReport.anomalyExplanation}`,
         riskLevel: anomalyReport.riskLevel || 'medium',
-      }, workspaceId);
+      }, workspaceId, userId);
     }
 
     await prisma.transaction.create({

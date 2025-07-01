@@ -2,7 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import prisma from '@/lib/prisma';
-import { getSession } from '@/lib/auth';
+import { auth } from '@/auth';
 import { integrationManifests } from '@/config/integration-manifests';
 import { IntegrationStatus } from '@prisma/client';
 
@@ -26,8 +26,8 @@ export async function GET(request: NextRequest) {
 
 // Corresponds to operationId `createIntegration`
 export async function POST(request: NextRequest) {
-  const session = await getSession(request);
-  if (!session?.workspaceId) {
+  const session = await auth();
+  if (!session?.user?.workspaceId) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
 
     const newInstance = await prisma.integration.create({
         data: {
-            workspaceId: session.workspaceId,
+            workspaceId: session.user.workspaceId,
             integrationManifestId: integrationTypeId,
             name: name,
             status: IntegrationStatus.active,

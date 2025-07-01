@@ -27,13 +27,13 @@ import { authorizeAndDebitAgentActions } from '@/services/billing-service';
 const createContactFlow = ai.defineFlow(
   {
     name: 'createContactFlow',
-    inputSchema: CreateContactInputSchema.extend({ workspaceId: z.string() }),
+    inputSchema: CreateContactInputSchema.extend({ workspaceId: z.string(), userId: z.string() }),
     outputSchema: ContactSchema,
   },
   async (input) => {
-    await authorizeAndDebitAgentActions(input.workspaceId);
+    await authorizeAndDebitAgentActions(input.workspaceId, 1, input.userId);
     try {
-      const { workspaceId, ...contactData } = input;
+      const { workspaceId, userId, ...contactData } = input;
       const contact = await prisma.contact.create({
         data: {
           ...contactData,
@@ -51,13 +51,13 @@ const createContactFlow = ai.defineFlow(
 const updateContactFlow = ai.defineFlow(
     {
       name: 'updateContactFlow',
-      inputSchema: UpdateContactInputSchema.extend({ workspaceId: z.string() }),
+      inputSchema: UpdateContactInputSchema.extend({ workspaceId: z.string(), userId: z.string() }),
       outputSchema: ContactSchema,
     },
     async (input) => {
-        await authorizeAndDebitAgentActions(input.workspaceId);
+        await authorizeAndDebitAgentActions(input.workspaceId, 1, input.userId);
         try {
-            const { id, workspaceId, ...dataToUpdate } = input;
+            const { id, workspaceId, userId, ...dataToUpdate } = input;
             // Verify contact belongs to the workspace before updating
             const existingContact = await prisma.contact.findFirst({
                 where: { id, workspaceId }
@@ -81,12 +81,12 @@ const updateContactFlow = ai.defineFlow(
 const listContactsFlow = ai.defineFlow(
     {
       name: 'listContactsFlow',
-      inputSchema: z.object({ workspaceId: z.string() }),
+      inputSchema: z.object({ workspaceId: z.string(), userId: z.string() }),
       outputSchema: z.array(ContactSchema),
     },
-    async ({ workspaceId }) => {
+    async ({ workspaceId, userId }) => {
         // A read operation also counts as an agent action.
-        await authorizeAndDebitAgentActions(workspaceId);
+        await authorizeAndDebitAgentActions(workspaceId, 1, userId);
         try {
             const contacts = await prisma.contact.findMany({
                 where: {
@@ -107,11 +107,11 @@ const listContactsFlow = ai.defineFlow(
 const deleteContactFlow = ai.defineFlow(
     {
       name: 'deleteContactFlow',
-      inputSchema: DeleteContactInputSchema.extend({ workspaceId: z.string() }),
+      inputSchema: DeleteContactInputSchema.extend({ workspaceId: z.string(), userId: z.string() }),
       outputSchema: DeleteContactOutputSchema,
     },
     async (input) => {
-        await authorizeAndDebitAgentActions(input.workspaceId);
+        await authorizeAndDebitAgentActions(input.workspaceId, 1, input.userId);
         try {
             // Verify contact belongs to the workspace before deleting
             const existingContact = await prisma.contact.findFirst({
@@ -138,18 +138,18 @@ const deleteContactFlow = ai.defineFlow(
 // Exported functions that call the Genkit flows.
 // This maintains the original contract for the BEEP agent.
 
-export async function createContactInDb(input: CreateContactInput, workspaceId: string): Promise<Contact> {
-    return createContactFlow({ ...input, workspaceId });
+export async function createContactInDb(input: CreateContactInput, workspaceId: string, userId: string): Promise<Contact> {
+    return createContactFlow({ ...input, workspaceId, userId });
 }
 
-export async function updateContactInDb(input: UpdateContactInput, workspaceId: string): Promise<Contact> {
-    return updateContactFlow({ ...input, workspaceId });
+export async function updateContactInDb(input: UpdateContactInput, workspaceId: string, userId: string): Promise<Contact> {
+    return updateContactFlow({ ...input, workspaceId, userId });
 }
 
-export async function listContactsFromDb(workspaceId: string): Promise<Contact[]> {
-    return listContactsFlow({ workspaceId });
+export async function listContactsFromDb(workspaceId: string, userId: string): Promise<Contact[]> {
+    return listContactsFlow({ workspaceId, userId });
 }
 
-export async function deleteContactInDb(input: DeleteContactInput, workspaceId: string): Promise<DeleteContactOutput> {
-    return deleteContactFlow({ ...input, workspaceId });
+export async function deleteContactInDb(input: DeleteContactInput, workspaceId: string, userId: string): Promise<DeleteContactOutput> {
+    return deleteContactFlow({ ...input, workspaceId, userId });
 }

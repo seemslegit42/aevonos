@@ -17,12 +17,12 @@ import { authorizeAndDebitAgentActions } from '@/services/billing-service';
 const createSecurityAlertFlow = ai.defineFlow(
   {
     name: 'createSecurityAlertFlow',
-    inputSchema: CreateSecurityAlertInputSchema.extend({ workspaceId: z.string() }),
+    inputSchema: CreateSecurityAlertInputSchema.extend({ workspaceId: z.string(), userId: z.string() }),
     outputSchema: SecurityAlertSchema,
   },
   async (input) => {
     // Creating a security alert is a significant action.
-    await authorizeAndDebitAgentActions(input.workspaceId);
+    await authorizeAndDebitAgentActions(input.workspaceId, 1, input.userId);
     try {
       const { workspaceId, ...alertData } = input;
       const alert = await prisma.securityAlert.create({
@@ -40,6 +40,6 @@ const createSecurityAlertFlow = ai.defineFlow(
   }
 );
 
-export async function createSecurityAlertInDb(input: CreateSecurityAlertInput, workspaceId: string): Promise<SecurityAlert> {
-    return createSecurityAlertFlow({ ...input, workspaceId });
+export async function createSecurityAlertInDb(input: CreateSecurityAlertInput, workspaceId: string, userId: string): Promise<SecurityAlert> {
+    return createSecurityAlertFlow({ ...input, workspaceId, userId });
 }

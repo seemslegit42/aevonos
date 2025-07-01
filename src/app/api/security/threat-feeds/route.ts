@@ -1,7 +1,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { getSession } from '@/lib/auth';
+import { auth } from '@/auth';
 import prisma from '@/lib/prisma';
 import { UserRole } from '@prisma/client';
 
@@ -11,15 +11,15 @@ const ThreatFeedsSchema = z.object({
 
 // Corresponds to operationId `getThreatFeeds`
 export async function GET(request: NextRequest) {
-  const session = await getSession(request);
-  if (!session?.workspaceId) {
+  const session = await auth();
+  if (!session?.user?.workspaceId) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   try {
     const feeds = await prisma.threatFeed.findMany({
       where: {
-        workspaceId: session.workspaceId,
+        workspaceId: session.user.workspaceId,
       },
       select: {
         id: true,
@@ -35,12 +35,12 @@ export async function GET(request: NextRequest) {
 
 // Corresponds to operationId `configureThreatFeeds`
 export async function PUT(request: NextRequest) {
-  const session = await getSession(request);
-  if (!session?.workspaceId || !session.userId) {
+  const session = await auth();
+  if (!session?.user?.workspaceId || !session.user.id) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
   
-  const user = await prisma.user.findUnique({ where: { id: session.userId }});
+  const user = await prisma.user.findUnique({ where: { id: session.user.id }});
   if (!user || (user.role !== UserRole.ADMIN && user.role !== UserRole.MANAGER)) {
       return NextResponse.json({ error: 'Permission denied. Administrator or Manager access required.' }, { status: 403 });
   }
@@ -57,7 +57,7 @@ export async function PUT(request: NextRequest) {
     }
 
     const { feeds } = validation.data;
-    const { workspaceId } = session;
+    const { workspaceId } = session.user;
 
     // Use a transaction to ensure atomicity: delete old feeds and create new ones.
     await prisma.$transaction([

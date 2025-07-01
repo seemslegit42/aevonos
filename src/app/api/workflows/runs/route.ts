@@ -2,7 +2,7 @@
 import { NextResponse, NextRequest } from 'next/server';
 import prisma from '@/lib/prisma';
 import { z } from 'zod';
-import { getSession } from '@/lib/auth';
+import { auth } from '@/auth';
 import { WorkflowRunStatus } from '@prisma/client';
 
 
@@ -12,8 +12,8 @@ const FilterSchema = z.object({
 });
 
 export async function GET(request: NextRequest) {
-  const session = await getSession(request);
-  if (!session?.workspaceId) {
+  const session = await auth();
+  if (!session?.user?.workspaceId) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
     
     const { status, workflowId } = validation.data;
     const whereClause: any = {
-        workspaceId: session.workspaceId
+        workspaceId: session.user.workspaceId
     };
 
     if (status) {

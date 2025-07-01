@@ -3,18 +3,18 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getUsageDetails } from '@/services/billing-service';
-import { getSession } from '@/lib/auth';
+import { auth } from '@/auth';
 
 // GET /api/billing/usage/agent-actions
 export async function GET(request: NextRequest) {
   try {
-    const session = await getSession(request);
-    if (!session?.workspaceId) {
+    const session = await auth();
+    if (!session?.user?.workspaceId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     // Call the non-billable version for UI display
-    const usageDetails = await getUsageDetails(session.workspaceId);
+    const usageDetails = await getUsageDetails(session.user.workspaceId);
     
     return NextResponse.json(usageDetails);
 

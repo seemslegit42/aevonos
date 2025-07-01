@@ -2,7 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { z } from 'zod';
-import { getSession } from '@/lib/auth';
+import { auth } from '@/auth';
 import { AgentStatus, UserRole } from '@prisma/client';
 
 const AgentUpdateSchema = z.object({
@@ -18,15 +18,15 @@ interface RouteParams {
 }
 
 export async function GET(request: NextRequest, { params }: RouteParams) {
-  const session = await getSession(request);
-  if (!session?.workspaceId) {
+  const session = await auth();
+  if (!session?.user?.workspaceId) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
   
   try {
     const { agentId } = params;
     const agent = await prisma.agent.findFirst({
-      where: { id: agentId, workspaceId: session.workspaceId },
+      where: { id: agentId, workspaceId: session.user.workspaceId },
     });
 
     if (!agent) {
@@ -41,12 +41,12 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 }
 
 export async function PUT(request: NextRequest, { params }: RouteParams) {
-  const session = await getSession(request);
-  if (!session?.workspaceId || !session.userId) {
+  const session = await auth();
+  if (!session?.user?.workspaceId || !session.user.id) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const user = await prisma.user.findUnique({ where: { id: session.userId }});
+  const user = await prisma.user.findUnique({ where: { id: session.user.id }});
   if (!user || (user.role !== UserRole.ADMIN && user.role !== UserRole.MANAGER)) {
       return NextResponse.json({ error: 'Permission denied. Administrator or Manager access required.' }, { status: 403 });
   }
@@ -62,7 +62,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 
     // Verify the agent belongs to the user's workspace before updating
     const existingAgent = await prisma.agent.findFirst({
-        where: { id: agentId, workspaceId: session.workspaceId }
+        where: { id: agentId, workspaceId: session.user.workspaceId }
     });
     if (!existingAgent) {
         return NextResponse.json({ error: 'Agent not found.' }, { status: 404 });
@@ -84,12 +84,12 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 }
 
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
-    const session = await getSession(request);
-    if (!session?.workspaceId || !session.userId) {
+    const session = await auth();
+    if (!session?.user?.workspaceId || !session.user.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const user = await prisma.user.findUnique({ where: { id: session.userId }});
+    const user = await prisma.user.findUnique({ where: { id: session.user.id }});
     if (!user || (user.role !== UserRole.ADMIN && user.role !== UserRole.MANAGER)) {
         return NextResponse.json({ error: 'Permission denied. Administrator or Manager access required.' }, { status: 403 });
     }
@@ -99,7 +99,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
 
         // Verify the agent belongs to the user's workspace before deleting
         const existingAgent = await prisma.agent.findFirst({
-            where: { id: agentId, workspaceId: session.workspaceId }
+            where: { id: agentId, workspaceId: session.user.workspaceId }
         });
         if (!existingAgent) {
             return NextResponse.json({ error: 'Agent not found.' }, { status: 404 });

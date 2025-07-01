@@ -1,6 +1,6 @@
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getSession } from '@/lib/auth';
+import { auth } from '@/auth';
 import { getWorkspaceTransactions } from '@/services/ledger-service';
 import { z } from 'zod';
 
@@ -11,8 +11,8 @@ const QuerySchema = z.object({
 // GET /api/billing/transactions
 export async function GET(request: NextRequest) {
   try {
-    const session = await getSession(request);
-    if (!session?.workspaceId) {
+    const session = await auth();
+    if (!session?.user?.workspaceId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
 
     const { limit } = validation.data;
 
-    const transactions = await getWorkspaceTransactions(session.workspaceId, limit);
+    const transactions = await getWorkspaceTransactions(session.user.workspaceId, limit);
     
     return NextResponse.json(transactions);
 
