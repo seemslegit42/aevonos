@@ -1,9 +1,5 @@
 
-import NextAuth from 'next-auth';
-import { authConfig } from './auth.config';
-
-// Initialize NextAuth with the Edge-compatible configuration
-const { auth } = NextAuth(authConfig);
+import { auth } from '@/auth';
 
 // Export the middleware with a refined matcher to protect all routes by default
 // while allowing access to public and essential API routes.
