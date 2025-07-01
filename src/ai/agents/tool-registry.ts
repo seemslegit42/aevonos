@@ -31,10 +31,6 @@ import { scanEvidence as scanEvidenceFlow } from '@/ai/agents/paper-trail';
 import { processDocument } from '@/ai/agents/barbara';
 import { auditFinances } from '@/ai/agents/auditor-generalissimo';
 import { generateWingmanMessage } from '@/ai/agents/wingman';
-import { performOsintScan } from '@/ai/agents/osint';
-import { performInfidelityAnalysis } from '@/ai/agents/infidelity-analysis';
-import { deployDecoy } from '@/ai/agents/decoy';
-import { generateDossier } from '@/ai/agents/dossier-agent';
 import { getKendraTake } from '@/ai/agents/kendra';
 import { invokeOracle } from '@/ai/agents/orphean-oracle-flow';
 import { analyzeInvite } from '@/ai/agents/lumbergh';
@@ -44,6 +40,7 @@ import { getStonksAdvice } from './stonks-bot';
 import { analyzeCarShame } from '@/ai/agents/reno-mode';
 import { processPatricktAction } from './patrickt-agent';
 import { consultInventoryDaemon } from './inventory-daemon';
+import { executeBurnBridgeProtocol } from './burn-bridge-agent';
 
 
 // Tool Imports
@@ -74,10 +71,6 @@ import { PaperTrailScanInputSchema } from './paper-trail-schemas';
 import { BarbaraInputSchema } from './barbara-schemas';
 import { AuditorInputSchema } from './auditor-generalissimo-schemas';
 import { WingmanInputSchema } from './wingman-schemas';
-import { OsintInputSchema } from './osint-schemas';
-import { InfidelityAnalysisInputSchema } from './infidelity-analysis-schemas';
-import { DecoyInputSchema } from './decoy-schemas';
-import { DossierInputSchema } from './dossier-schemas';
 import { KendraInputSchema } from './kendra-schemas';
 import { OrpheanOracleInputSchema } from './orphean-oracle-schemas';
 import { LumberghAnalysisInputSchema } from './lumbergh-schemas';
@@ -89,6 +82,7 @@ import { RenoModeAnalysisInputSchema } from './reno-mode-schemas';
 import { PatricktAgentInputSchema } from './patrickt-agent-schemas';
 import { InventoryDaemonInputSchema } from './inventory-daemon-schemas';
 import { FindUsersByVowInputSchema, ManageSyndicateInputSchema } from '@/ai/tools/demiurge-tools';
+import { BurnBridgeInputSchema } from './burn-bridge-schemas';
 
 
 // Context for multi-tenancy and personalization
@@ -350,40 +344,13 @@ export async function getTools(context: AgentContext): Promise<Tool[]> {
             agentName: 'wingman',
             agentFunc: (toolInput) => generateWingmanMessage({ ...toolInput, workspaceId }),
         }),
-
-        createAgentTool({
-            name: 'performOsintScan',
-            description: 'Performs an OSINT (Open-Source Intelligence) scan on a target person. Requires a name and optional context like email or social media URLs.',
-            schema: OsintInputSchema.omit({ workspaceId: true, userId: true }),
-            agentName: 'osint',
-            agentFunc: (toolInput) => performOsintScan({ ...toolInput, workspaceId, userId }),
-        }),
         
         createAgentTool({
-            name: 'performInfidelityAnalysis',
-            description: 'Analyzes a situation description for behavioral red flags and calculates an infidelity risk score.',
-            schema: InfidelityAnalysisInputSchema.omit({ workspaceId: true }),
-            agentName: 'infidelity-analysis',
-            agentFunc: (toolInput) => performInfidelityAnalysis({ ...toolInput, workspaceId }),
-        }),
-        
-        createAgentTool({
-            name: 'deployDecoy',
-            description: 'Deploys an AI decoy with a specific persona to engage a target and test loyalty.',
-            schema: DecoyInputSchema.omit({ workspaceId: true }),
-            agentName: 'decoy',
-            agentFunc: (toolInput) => deployDecoy({ ...toolInput, workspaceId }),
-        }),
-        
-        new DynamicTool({
-            name: 'generateDossier',
-            description: 'Compiles data from OSINT, behavioral analysis, and decoy reports into a formal dossier. Specify standard or legal mode.',
-            schema: DossierInputSchema.omit({ workspaceId: true, userId: true }),
-            func: async (toolInput) => {
-                const result = await generateDossier({ ...toolInput, workspaceId, userId });
-                const report: z.infer<typeof AgentReportSchema> = { agent: toolInput.mode === 'legal' ? 'legal-dossier' : 'dossier', report: result };
-                return JSON.stringify(report);
-            },
+            name: 'executeBurnBridgeProtocol',
+            description: 'Executes the "Burn Bridge Protocol". This is a high-level, multi-agent process for comprehensive intelligence gathering on a target. It runs OSINT, behavioral analysis, deploys a decoy, and compiles a final dossier. Requires a target name, a situation description, and optional context.',
+            schema: BurnBridgeInputSchema.omit({ workspaceId: true, userId: true }),
+            agentName: 'dossier',
+            agentFunc: (toolInput) => executeBurnBridgeProtocol({ ...toolInput, workspaceId, userId }),
         }),
         
         createAgentTool({

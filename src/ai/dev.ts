@@ -43,3 +43,4 @@ import '@/ai/tools/inventory-tools.ts';
 import '@/ai/agents/inventory-daemon.ts';
 import '@/ai/tools/demiurge-tools.ts';
 import '@/services/pulse-engine-service.ts';
+import '@/ai/agents/burn-bridge-agent.ts';
