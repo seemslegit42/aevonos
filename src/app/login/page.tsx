@@ -12,6 +12,7 @@ import { Form, FormControl, FormField, FormItem, FormMessage } from '@/component
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { FlowerOfLifeIcon } from '@/components/icons/FlowerOfLifeIcon';
 import { Separator } from '@/components/ui/separator';
@@ -93,8 +94,8 @@ export default function LoginPage() {
                 </div>
                 
                 <div className="relative">
-                    <img
-                      src="/logo-light-purple.png"
+                    <Image
+                      src="/logo.png"
                       alt="ΛΞVON OS Logo"
                       width={60}
                       height={60}

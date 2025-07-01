@@ -16,6 +16,7 @@ import { cn } from '@/lib/utils';
 import { UserPsyche } from '@prisma/client';
 import { FlowerOfLifeIcon } from '@/components/icons/FlowerOfLifeIcon';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import Image from 'next/image';
 
 const formSchema = z.object({
   workspaceName: z.string().trim().min(1),
@@ -57,8 +58,8 @@ const PhaseZero = ({ nextPhase }: { nextPhase: () => void }) => {
                 transition={{ duration: 1.5 }}
                 className="space-y-6"
             >
-                <img
-                  src="/logo-light-purple.png"
+                <Image
+                  src="/logo.png"
                   alt="ΛΞVON OS Logo"
                   width={60}
                   height={60}
