@@ -13,19 +13,19 @@ import Resend from "next-auth/providers/resend";
 // These checks ensure that the authentication system is configured correctly,
 // preventing common deployment errors and providing clear warnings to developers.
 if (process.env.NODE_ENV === 'production' && !process.env.AUTH_SECRET) {
-  console.error('\x1b[31m%s\x1b[0m', 'FATAL: AUTH_SECRET is not set. This is required for production.');
+  console.error('[31m%s[0m', 'FATAL: AUTH_SECRET is not set. This is required for production.');
   throw new Error('Missing AUTH_SECRET environment variable. This is required for production.');
 }
 
 if (!process.env.AUTH_SECRET) {
     console.warn(
-        '\x1b[33m%s\x1b[0m',
+        '[33m%s[0m',
         'WARNING: AUTH_SECRET is not set. A temporary secret will be generated. Please set a permanent secret in your .env file.'
     );
 }
 if (!process.env.AUTH_RESEND_KEY || process.env.AUTH_RESEND_KEY === 'YOUR_API_KEY_HERE') {
     console.warn(
-        '\x1b[33m%s\x1b[0m',
+        '[33m%s[0m',
         'WARNING: AUTH_RESEND_KEY is not set. Magic link (Resend) login will not work.'
     );
 }
@@ -33,7 +33,7 @@ if (!process.env.AUTH_RESEND_KEY || process.env.AUTH_RESEND_KEY === 'YOUR_API_KE
 const resendFrom = process.env.AUTH_RESEND_FROM || 'noreply@aevonos.com';
 if (resendFrom === 'noreply@aevonos.com') {
      console.warn(
-        '\x1b[33m%s\x1b[0m',
+        '[33m%s[0m',
         'WARNING: AUTH_RESEND_FROM is not set. Using default "noreply@aevonos.com". This may fail if the domain is not verified on Resend.'
     );
 }
@@ -86,7 +86,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             role: user.role,
             psyche: user.psyche,
             agentAlias: user.agentAlias,
-            firstWhisper: user.firstWhisper
+            firstWhisper: user.firstWhisper,
+            unlockedChaosCardKeys: user.unlockedChaosCardKeys,
           };
         }
         return null;
@@ -104,6 +105,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         token.psyche = (user as User).psyche;
         token.agentAlias = (user as User).agentAlias;
         token.firstWhisper = (user as User).firstWhisper;
+        token.unlockedChaosCardKeys = (user as User).unlockedChaosCardKeys;
         
         const workspace = await prisma.workspace.findFirst({
           where: { members: { some: { id: user.id } } },
@@ -121,6 +123,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         session.user.agentAlias = token.agentAlias as string | null;
         session.user.workspaceId = token.workspaceId as string;
         session.user.firstWhisper = token.firstWhisper as string | null;
+        session.user.unlockedChaosCardKeys = token.unlockedChaosCardKeys as string[];
       }
       return session;
     },

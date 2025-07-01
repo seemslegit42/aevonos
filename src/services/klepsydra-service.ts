@@ -164,7 +164,7 @@ export async function processFollyTribute(
     return prisma.$transaction(async (tx) => {
         // 1. Get user, workspace, and profile data
         const [user, workspace, profile] = await Promise.all([
-            tx.user.findUniqueOrThrow({ where: { id: userId }, select: { psyche: true } }),
+            tx.user.findUniqueOrThrow({ where: { id: userId }, select: { psyche: true, unlockedChaosCardKeys: true } }),
             tx.workspace.findUniqueOrThrow({ where: { id: workspaceId }, select: { credits: true } }),
             getPulseProfile(userId, tx)
         ]);
@@ -212,15 +212,15 @@ export async function processFollyTribute(
         // 4. Determine the specific boon from the selected tier
         const selectedBoon = selectWeightedRandom(selectedTier.boons, boon => boon.weight);
         let boonAmount = 0;
-        let awardedCardId: string | undefined = undefined;
+        let awardedCardKey: string | undefined = undefined;
         let systemEffect: string | undefined = undefined;
         
         if (selectedBoon.type === 'credits') {
             const calculatedBoon = tributeAmount * (selectedBoon.value as number) * psycheModifiers.boonFactor;
             boonAmount = calculatedBoon;
         } else if (selectedBoon.type === 'chaos_card') {
-            awardedCardId = selectedBoon.value as string;
-            const wonCardManifest = artifactManifests.find(c => c.id === awardedCardId);
+            awardedCardKey = selectedBoon.value as string;
+            const wonCardManifest = artifactManifests.find(c => c.id === awardedCardKey);
             boonAmount = (wonCardManifest?.creditCost || 100) * 1.5;
         } else if (selectedBoon.type === 'system_effect') {
             systemEffect = selectedBoon.value as string;
@@ -265,13 +265,12 @@ export async function processFollyTribute(
                 userPsyche: user.psyche, status: 'COMPLETED',
             }
         });
-
-        if (awardedCardId && !PURE_FOLLY_INSTRUMENTS.includes(awardedCardId)) {
-            const cardInDb = await tx.chaosCard.findUnique({ where: { key: awardedCardId } });
-            if (cardInDb) {
+        
+        if (awardedCardKey && !PURE_FOLLY_INSTRUMENTS.includes(awardedCardKey)) {
+            if (!user.unlockedChaosCardKeys.includes(awardedCardKey)) {
                  await tx.user.update({
                     where: { id: userId },
-                    data: { ownedChaosCards: { connect: { id: cardInDb.id } } },
+                    data: { unlockedChaosCardKeys: { push: awardedCardKey } },
                 });
             }
         }

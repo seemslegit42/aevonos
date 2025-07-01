@@ -26,6 +26,7 @@ export async function GET(request: NextRequest) {
         role: true,
         agentAlias: true,
         lastLoginAt: true,
+        unlockedChaosCardKeys: true,
       },
     });
 
@@ -44,7 +45,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// Corresponds to operationId `updateCurrentUser`
+// Corresponds to an extension of `getCurrentWorkspace` for updates
 export async function PUT(request: NextRequest) {
   try {
     const sessionUser = await getServerActionSession();
@@ -69,6 +70,7 @@ export async function PUT(request: NextRequest) {
         agentAlias: updatedUser.agentAlias,
         role: updatedUser.role,
         lastLoginAt: updatedUser.lastLoginAt,
+        unlockedChaosCardKeys: updatedUser.unlockedChaosCardKeys,
     };
     return NextResponse.json(userResponse);
 

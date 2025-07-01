@@ -1,7 +1,7 @@
 
 import { PrismaClient, AgentStatus, SecurityRiskLevel, TransactionType, PlanTier, UserRole, UserPsyche, Prisma, ChaosCardClass } from '@prisma/client'
 import bcrypt from 'bcryptjs'
-import { chaosCardManifest } from '../src/config/chaos-cards';
+import { artifactManifests } from '../src/config/artifacts';
 import prisma from '../src/lib/prisma';
 
 async function main() {
@@ -154,14 +154,15 @@ async function main() {
   });
   console.log('Seeded contacts.');
 
+  const chaosCards = artifactManifests.filter(a => a.type === 'CHAOS_CARD');
   await prisma.chaosCard.createMany({
-      data: chaosCardManifest.map(card => ({
-          key: card.key,
+      data: chaosCards.map(card => ({
+          key: card.id,
           name: card.name,
           description: card.description,
           cardClass: card.cardClass as ChaosCardClass,
-          cost: card.cost,
-          systemEffect: card.systemEffect,
+          cost: card.creditCost,
+          systemEffect: card.systemEffect || '',
       })),
   });
   console.log('Seeded Chaos Cards.');

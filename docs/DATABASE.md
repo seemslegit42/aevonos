@@ -21,7 +21,8 @@ These models form the basis of the system's multi-tenant architecture.
     -   `role`: (`ADMIN`, `MANAGER`, `OPERATOR`, `AUDITOR`) - Governs user permissions within a workspace.
     -   `psyche`: (`ZEN_ARCHITECT`, `SYNDICATE_ENFORCER`, `RISK_AVERSE_ARTISAN`) - The user's chosen psychological archetype from the Rite of Invocation, used for personalization.
     -   `agentAlias`: The user's personalized name for BEEP.
--   **Relations**: A user can be a member of multiple `Workspace`s and can own multiple `ChaosCard`s.
+    -   `unlockedChaosCardKeys`: An array of strings containing the keys of purchased Chaos Cards.
+-   **Relations**: A user can be a member of multiple `Workspace`s.
 
 ### `Workspace`
 -   **Purpose**: The primary data container for a single tenant (an organization or an individual's "Canvas"). All other data is scoped to a workspace.
@@ -73,7 +74,7 @@ These models power the internal economy of ΛΞVON OS.
     -   `frustration`, `flowState`, `riskAversion`: Floating-point values (0-1) representing the user's current psychological state, which dynamically modulate economic outcomes.
 
 ### `ChaosCard` & `ActiveSystemEffect`
--   **Purpose**: `ChaosCard` is the manifest for acquirable Chaos Cards. `ActiveSystemEffect` tracks which temporary, system-wide effects (like theme changes from a card) are currently active for a workspace.
+-   **Purpose**: `ChaosCard` is the manifest for acquirable Chaos Cards. It is not tied to a specific user. The `User.unlockedChaosCardKeys` field tracks ownership. `ActiveSystemEffect` tracks which temporary, system-wide effects (like theme changes from a card) are currently active for a workspace.
 
 ## 5. Utility & Application Models
 
@@ -90,5 +91,3 @@ These models support various Micro-Apps and core utilities.
 
 ### `InstrumentDiscovery`
 -   **Purpose**: A crucial table for the Nudge Engine. It logs when a user first views an acquirable item in The Armory and tracks whether they eventually purchase it, allowing for the calculation of `Discovery-to-Tribute Time` (DTT).
-
-      
