@@ -56,7 +56,7 @@ export const FlowerOfLifeIcon = (props: React.SVGProps<SVGSVGElement>) => {
           </feMerge>
         </filter>
       </defs>
-      <g opacity="0.3" stroke="url(#aurora)" strokeWidth="1.5" filter="url(#subtle-glow)" className="animate-subtle-pulse">
+      <g opacity="0.5" stroke="url(#aurora)" strokeWidth="1.5" filter="url(#subtle-glow)" className="animate-subtle-pulse">
         {positions.map(([cx, cy], i) => (
           <circle key={i} cx={cx} cy={cy} r={r} />
         ))}

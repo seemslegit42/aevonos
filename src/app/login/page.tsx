@@ -17,6 +17,7 @@ import { FlowerOfLifeIcon } from '@/components/icons/FlowerOfLifeIcon';
 import { Separator } from '@/components/ui/separator';
 import { signIn } from 'next-auth/react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import Image from 'next/image';
 
 const credentialSchema = z.object({
   email: z.string().email({ message: 'A valid sigil is required.' }),
@@ -121,13 +122,18 @@ export default function LoginPage() {
           />
           <div className="absolute inset-0 grain-overlay" />
           <div className="absolute inset-0 flex items-center justify-center opacity-5 pointer-events-none -z-10">
-              <motion.img 
-                src="/logo-neutral.svg" 
-                alt="Aevon OS Watermark" 
-                className="w-1/2 h-1/2 max-w-lg"
+              <motion.div
                 animate={{ rotate: 360 }}
                 transition={{ duration: 180, repeat: Infinity, ease: 'linear' }}
-              />
+                className="relative w-1/2 h-1/2 max-w-lg"
+              >
+                <Image 
+                    src="/logo.png" 
+                    alt="Aevon OS Watermark"
+                    layout="fill"
+                    objectFit="contain"
+                />
+              </motion.div>
           </div>
         </div>
       
