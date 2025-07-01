@@ -1,6 +1,5 @@
 /**
  * @fileOverview A collection of discrete OSINT tools for agentic use.
- * These are functional harnesses that return mock data.
  */
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
