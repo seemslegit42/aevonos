@@ -104,14 +104,14 @@ export async function processFollyTribute(
   tributeAmountOverride?: number
 ) {
     const instrumentManifest = chaosCardManifest.find(card => card.key === instrumentId);
-    if (!instrumentManifest) {
-        throw new Error(`Instrument '${instrumentId}' not found in manifest.`);
+    if (!instrumentManifest && !follyInstrumentsConfig[instrumentId]) {
+        throw new Error(`Instrument '${instrumentId}' not found in manifest or folly config.`);
     }
 
     // --- HANDLE MERCENARY CARD PURCHASE ---
     if (MERCENARY_CARDS.includes(instrumentId)) {
         return prisma.$transaction(async (tx) => {
-            const cost = instrumentManifest.cost;
+            const cost = instrumentManifest!.cost;
             const workspace = await tx.workspace.findUniqueOrThrow({ where: { id: workspaceId }, select: { credits: true } });
 
             if ((workspace.credits as unknown as number) < cost) {
@@ -143,7 +143,7 @@ export async function processFollyTribute(
                     workspaceId, userId, instrumentId,
                     type: TransactionType.DEBIT,
                     amount: new Prisma.Decimal(cost),
-                    description: `Ritual Boon Acquired: ${instrumentManifest.name}`,
+                    description: `Ritual Boon Acquired: ${instrumentManifest!.name}`,
                     status: 'COMPLETED',
                 }
             });
@@ -159,7 +159,7 @@ export async function processFollyTribute(
         throw new Error(`Instrument '${instrumentId}' not found in Folly configuration.`);
     }
     
-    let tributeAmount = tributeAmountOverride ?? instrumentManifest.cost;
+    let tributeAmount = tributeAmountOverride ?? instrumentManifest?.cost ?? 0;
 
     return prisma.$transaction(async (tx) => {
         // 1. Get user, workspace, and profile data
@@ -221,11 +221,7 @@ export async function processFollyTribute(
         
         if (selectedBoon.type === 'credits') {
             const calculatedBoon = tributeAmount * (selectedBoon.value as number) * psycheModifiers.boonFactor * boonFactor;
-            if (AGE_OF_ASCENSION_ACTIVE) {
-                potentialChange = calculatedBoon;
-            } else {
-                boonAmount = calculatedBoon;
-            }
+            boonAmount = calculatedBoon;
         } else if (selectedBoon.type === 'chaos_card') {
             awardedCardId = selectedBoon.value as string;
             const wonCardManifest = chaosCardManifest.find(c => c.key === awardedCardId);
@@ -244,7 +240,6 @@ export async function processFollyTribute(
             where: { id: workspaceId },
             data: { 
                 credits: { increment: new Prisma.Decimal(netCreditChange) },
-                potential: { increment: new Prisma.Decimal(potentialChange) }
             },
         });
 
@@ -254,7 +249,7 @@ export async function processFollyTribute(
                 type: TransactionType.TRIBUTE,
                 amount: new Prisma.Decimal(netCreditChange),
                 potentialChange: new Prisma.Decimal(potentialChange),
-                description: `Tribute: ${instrumentManifest.name} - ${outcome}`,
+                description: `Tribute: ${instrumentManifest?.name || instrumentId} - ${outcome}`,
                 luckWeight, outcome, 
                 tributeAmount: new Prisma.Decimal(tributeAmount),
                 boonAmount: new Prisma.Decimal(boonAmount),

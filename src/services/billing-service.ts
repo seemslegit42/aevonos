@@ -54,7 +54,6 @@ export type AuthorizeAndDebitOutput = z.infer<typeof AuthorizeAndDebitOutputSche
  * the credit balance, increments the usage counter, and creates a DEBIT transaction.
  * This now respects the monthly plan limits before charging for overage.
  * It also respects the user-specific Reclamation Grace Period.
- * @param input The details of the action to authorize and debit.
  */
 export async function authorizeAndDebitAgentActions(input: AuthorizeAndDebitInput): Promise<AuthorizeAndDebitOutput> {
     const { workspaceId, userId, actionType, costMultiplier } = AuthorizeAndDebitInputSchema.parse(input);

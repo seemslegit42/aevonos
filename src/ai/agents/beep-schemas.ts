@@ -76,6 +76,8 @@ const LaunchableAppTypeSchema = z.enum([
   'reno-mode',
   'patrickt-app',
   'howards-sidekick',
+  'sisyphus-ascent',
+  'merchant-of-cabbage',
 ]);
 
 export const AppToLaunchSchema = z.object({
@@ -326,5 +328,3 @@ export const UserCommandOutputSchema = z.object({
   responseText: z.string().describe('A natural language response to the user confirming the action or asking for clarification.'),
 });
 export type UserCommandOutput = z.infer<typeof UserCommandOutputSchema>;
-
-    

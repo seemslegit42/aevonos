@@ -71,7 +71,7 @@ export async function scanEvidence(input: Omit<PaperTrailScanInput, 'workspaceId
   }
   
   try {
-    const result = await scanEvidenceFlow({...input, workspaceId: session.user.workspaceId, userId: session.user.id });
+    const result = await scanEvidenceFlow({...input, workspaceId: session.user.workspaceId });
     revalidatePath('/');
     return result;
   } catch (error) {
