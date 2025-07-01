@@ -1,6 +1,7 @@
 
 "use client"
 
+import * as React from "react"
 import { useToast } from "@/hooks/use-toast"
 import {
   Toast,
@@ -11,9 +12,26 @@ import {
   ToastViewport,
 } from "@/components/ui/toast"
 import { BeepAvatar } from "@/components/beep-avatar"
+import { playNotificationSound } from "@/lib/sounds"
 
 export function Toaster() {
   const { toasts } = useToast()
+  
+  // Use a ref to track IDs of toasts we've already played sounds for
+  const playedSoundFor = React.useRef(new Set());
+
+  React.useEffect(() => {
+    toasts.forEach(toast => {
+        if (!playedSoundFor.current.has(toast.id)) {
+            if (toast.variant === 'destructive') {
+                playNotificationSound('error');
+            } else if (toast.title?.toString().startsWith('BEEP')) {
+                playNotificationSound('beep');
+            }
+            playedSoundFor.current.add(toast.id);
+        }
+    });
+  }, [toasts]);
 
   return (
     <ToastProvider>
