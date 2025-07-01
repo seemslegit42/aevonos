@@ -4,12 +4,9 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Loader2, Zap, FileText, Slack } from 'lucide-react';
+import { Loader2, Zap, Slack } from 'lucide-react';
 import type { KifKrokerAnalysisOutput } from '@/ai/agents/kif-kroker-schemas';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
-import { Label } from '../ui/label';
-import { Switch } from '../ui/switch';
 import { cn } from '@/lib/utils';
 import { Input } from '../ui/input';
 import { useToast } from '@/hooks/use-toast';
@@ -25,7 +22,7 @@ const MoraleDisplay = ({ level, name }: { level: KifKrokerAnalysisOutput['morale
     return (
         <div className={cn("text-left p-2 rounded-lg border border-dashed", styles[level])}>
             <p className="font-headline text-lg font-bold">{level}</p>
-            <p className="text-xs font-medium">#{name}</p>
+            <p className="text-xs font-medium text-muted-foreground">Analysis for #{name}</p>
         </div>
     )
 }
@@ -101,26 +98,6 @@ export default function TheKifKroker(props: KifKrokerAnalysisOutput | {}) {
                         </CardContent>
                     </Card>
                 )}
-            </div>
-
-             {/* MonetizationHook */}
-            <div className="mt-auto pt-2 border-t border-border/50">
-                <TooltipProvider>
-                    <Tooltip>
-                        <TooltipTrigger asChild>
-                            <div className="flex items-center justify-between">
-                                <Label htmlFor="record-log-mode" className="text-sm flex items-center gap-2">
-                                    <FileText className="h-4 w-4" />
-                                    "For The Record" Log
-                                </Label>
-                                <Switch id="record-log-mode" disabled/>
-                            </div>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                            <p className="text-xs max-w-xs">Automatically save objective, anonymized logs of flagged conversations for HR review. Requires Priesthood plan.</p>
-                        </TooltipContent>
-                    </Tooltip>
-                </TooltipProvider>
             </div>
         </div>
     );
