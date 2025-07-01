@@ -1,9 +1,8 @@
 
-import { PrismaClient, AgentStatus, SecurityRiskLevel, TransactionType, PlanTier, UserRole, UserPsyche, ChaosCardClass, Prisma } from '@prisma/client'
+import { PrismaClient, AgentStatus, SecurityRiskLevel, TransactionType, PlanTier, UserRole, UserPsyche, Prisma } from '@prisma/client'
 import bcrypt from 'bcryptjs'
 import { chaosCardManifest } from '../src/config/chaos-cards';
-
-const prisma = new PrismaClient()
+import prisma from '../src/lib/prisma';
 
 async function main() {
   console.log(`Start seeding ...`)
