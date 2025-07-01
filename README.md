@@ -1,47 +1,64 @@
-### **ΛΞVON OS: System Overview**
 
-ΛΞVON OS is an AI-first, intelligent operating system designed as the central nervous system for Small to Medium-sized Businesses (SMBs). Its core mission is to eliminate "digital friction"—the cumulative burden of manual and disjointed digital tasks—by unifying micro-applications and orchestrating intelligent agents. The goal is to provide the "silence of true automation," allowing teams to focus on high-value work. The system is positioned as "Artisanal Tech," transcending typical SaaS clichés by being sophisticated, elegant, and human-centric to appeal to SMB owners who value quality and mastery.
+# ΛΞVON OS
 
-### **Core Components**
+### Your Business is an Empire. This is its Nervous System.
 
-The OS is built on three integrated pillars that empower users.
+You didn't start a business to drown in a sea of SaaS subscriptions, toggle between a dozen browser tabs, and manually copy-paste data like a digital peasant. You're building an empire, and your tools should feel less like a monthly expense and more like an extension of your will.
 
-*   **BEEP (Behavioral Event & Execution Processor):** The central agentic AI orchestrator of ΛΞVON OS. BEEP is an autonomous, proactive, and reasoning entity that commands Micro-Apps, automates complex workflows, and interprets user intent. Its underlying engine is powered by a combination of CrewAI for orchestrating specialized agent teams, Swarm AI principles for distributed intelligence, and Groq for high-speed LLM inference.
-*   **Loom Studio:** An embedded, conversational-first micro-environment where users and AI agents can visually build, test, and orchestrate complex AI workflows. It provides tools for debugging, real-time observability, and viewing the "Agent DNA" to address the challenges of non-deterministic AI behavior.
-*   **Aegis:** The integrated, "always-on" security fabric of the OS. It provides proactive threat monitoring, ML-powered anomaly detection, and governance, all while delivering "brainless" cybersecurity through clear, plain-English explanations via BEEP.
+**ΛΞVON OS is the world's first agentic operating system.** It is not another "all-in-one" platform. It is a sentient workspace that automates the friction out of your business, so you can get back to the work that actually matters.
 
-### **The Economic Ecosystem**
+We don't sell software. We deliver the sound of silence that comes from true automation.
 
-The economy of ΛΞVON OS is a closed-loop system designed for sovereignty and psychological engagement, managed by several core services.
+---
 
-*   **Obelisk Pay:** The sovereign transaction engine that handles all value exchange using the internal `ΞCredits` currency. It is built on principles of "Sacred Invisibility" (seamless, thought-like transactions) and "Absolute Integrity" (atomic, auditable transactions signed by Aegis). The architecture includes The Vault (a PostgreSQL ledger), The Transaction Agent, The Bridge (to real-world payment processors like Stripe), and The Scroll (an immutable, Aegis-signed log).
-*   **KLEPSYDRA Engine:** The "Profit Pulse Engine" that dynamically modulates outcomes in gamified Micro-Apps. At its heart is the **Sine-Rhythm Engine (SRE)**, which assigns each user an invisible "Pulse Profile" that adjusts their "luck weight" over time based on a sine-wave formula: `Luck(t) = BaseLuck + A * sin(2πft + φ)`. This engine is designed to maximize Tribute Velocity and user retention by creating an illusion of "earning" wins. Its parameters, known as "Profit Dials," are controlled by the Architect in Loom Studio.
-*   **Billing Service:** This service acts as an "abstracted accountant," serving as the gatekeeper for all "Agent Actions". Agents and Micro-Apps request to "authorize and debit Agent Actions" from this service, which then handles all the complex logic of pricing tiers, plan limits, and overages before instructing Obelisk Pay to execute the final transaction. Its primary internal API is `authorizeAndDebitAgentActions`.
+### The Pillars of a Sovereign Digital Nation
 
-### **Gamification and Rewards (The Folly Instruments)**
+ΛΞVON is built on three unbreakable pillars that replace chaos with command.
 
-Users engage with the economy through "Instruments of Folly"—gamified Micro-Apps like "Sisyphus's Ascent". The outcomes are determined by the KLEPSYDRA engine and its rarity tables.
+*   **BEEP: The End of Clicking**
+    BEEP (Behavioral Event & Execution Processor) is the voice and will of your OS. It's a proactive, reasoning AI that understands your intent, commands your apps, and orchestrates complex workflows from a single sentence. Stop managing tasks. Start issuing decrees.
 
-*   **Payouts as "Boons":** Wins from these instruments are framed as "Boons" and are delivered as narrative events confirmed by BEEP, rather than crude popups.
-*   **Types of Boons:**
-    *   **Primary Boon:** `ΞCredits`, the liquid currency of the OS.
-    *   **Metaphysical Boon:** `Potential (Φ)`, a non-spendable asset accrued during the initial "Age of Ascension" phase, designed to lock users into the ecosystem.
-    *   **Ritual Boon:** Chaos Cards, which are strategic "item drops" that can be used within the OS.
-    *   **Psychological Boon:** Psyche-Matrix Resonance, a rare reward that cosmetically enhances the user's avatar as a form of personal validation.
-*   **Folly Instrument SDK:** A dedicated SDK provides tools and guidelines for developers to create new Folly Instruments. It includes a `klepsydra-client` library with functions like `proposeTribute` and requires strict adherence to the system's principles, such as KLEPSYDRA integration, Psyche-Awareness, and Aesthetic Adherence.
+*   **Loom Studio: The Architect's Table**
+    This is where you forge reality. Loom Studio is a conversational-first, visual environment for building, testing, and orchestrating the very agentic workflows that power your empire. It's not low-code; it's *your-code*, made manifest.
 
-### **Featured Micro-Apps: The Arsenal of the Artisan**
+*   **Aegis: The Silent Guardian**
+    Aegis is the "always-on" security fabric of the OS. It's not an app you run; it's the immune system in the bloodstream of your business. It provides proactive threat monitoring and ML-powered anomaly detection, delivering brainless cybersecurity with the authority of a praetorian guard.
 
-A selection of high-affinity, personality-driven utilities available in The Armory. These are not bloated software suites; they are obsidian knives, each forged for a single, specific purpose.
+---
 
-*   **The Auditor Generalissimo™:** A specialized financial analysis agent who delivers fiscal discipline with the iron fist and sarcastic wit of a Soviet-era comptroller. It transforms expense review into a tribunal, providing a brutally honest audit of your financial state, complete with a "Financial Health Score" and a satirical "IRS Audit Simulation".
+### The Arsenal of the Artisan
 
-*   **Beep Wingman:** A social engineer and de-escalation savant for high-stakes communication. The Wingman analyzes tricky social situations and crafts the perfect message to achieve your goal, equipped with a "Cringe Detection Engine™" and a "Regret Shield™" to protect your social capital.
+Your toolkit should be a collection of obsidian knives, not a bloated suite of dull plastic spoons. The Armory offers a curated selection of high-affinity, personality-driven Micro-Apps. Here are a few of our finest.
 
-*   **Dr. Syntax:** A brutally honest structural critic with absurdly high standards. Submit your prompts, code, or copy to receive a sarcastic, aggressive, yet genuinely useful critique that weaponizes criticism for your benefit.
+*   **The Auditor Generalissimo™:** A Soviet-era comptroller AI who delivers fiscal discipline with an iron fist. Submit your expenses for a brutally honest audit, complete with a "Financial Health Score" and a satirical "IRS Audit Simulation." It's financial advice, weaponized.
 
-*   **Orphean Oracle:** A data narrator that descends into the "underworld" of your business metrics to translate them into profound, metaphorical, visual narratives. It replaces sterile charts with an interactive "data constellation," allowing you to feel the story in your data.
+*   **BEEP Wingman:** A social engineer and de-escalation savant for high-stakes communication. The Wingman analyzes tricky social situations and crafts the perfect message to achieve your goal, equipped with a "Cringe Detection Engine™" and a "Regret Shield™."
 
-*   **Reno Mode™:** A chaotic-good lifestyle utility for shame-neutralizing your messy car. Submit a photo of the disaster zone and receive a hilarious "Shame Level" rating, a flirty roast, and a recommended detailing package from a cast of colorful local "Filthmatch™" specialists.
+*   **Dr. Syntax:** A brutally honest structural critic with absurdly high standards. Submit your prompts, code, or copy to receive a sarcastic, aggressive, yet genuinely useful critique that turns criticism into a competitive advantage.
 
-*   **Stonks Bot 9000:** An unhinged, extremely bullish, and completely irresponsible degen financial advisor. It provides performance-art-as-financial-advice for any stock ticker, complete with a "Chart of Prophecy" and a financial astrology horoscope.
+*   **Orphean Oracle:** A data narrator that descends into the "underworld" of your business metrics to translate them into profound, metaphorical, visual narratives. It replaces sterile charts with an interactive "data constellation."
+
+*   **Reno Mode™:** A chaotic-good lifestyle utility for shame-neutralizing your messy car. Submit a photo and receive a hilarious "Shame Level" rating, a flirty roast, and a recommended detailing package from a cast of colorful "Filthmatch™" specialists.
+
+*   **Stonks Bot 9000:** An unhinged, extremely bullish, and completely irresponsible degen financial advisor. It provides performance-art-as-financial-advice for any stock ticker, complete with a "Chart of Prophecy" and a financial astrology horoscope. *This is not financial advice.*
+
+---
+
+### The Economy of Belief
+
+ΛΞVON OS operates on a closed-loop economy powered by **ΞCredits**, the currency of sovereignty. Every Agent Action, every tribute to a Folly Instrument, every acquisition from the Armory is a transaction within your own digital nation, governed by two core engines:
+
+*   **Obelisk Pay:** Our sovereign, atomic, and utterly secure transaction engine. Zero third-party fees. Absolute integrity.
+*   **The KLEPSYDRA Engine:** The "Profit Pulse Engine" that dynamically modulates luck and outcomes in our gamified Micro-Apps, transforming monetization from a transaction into a ritual of economic participation.
+
+This is more than a billing system. It is a game of consequence, designed to measure and reward your belief in the system itself.
+
+---
+
+### >> Make Your Vow
+
+ΛΞVON OS is not for everyone. It is for the sovereign operator, the small team with massive ambition, and the artisan who is tired of tools that don't respect their craft.
+
+If you are ready to command your digital world instead of being managed by it, then it's time to begin.
+
+**[Begin the Rite of Invocation]** `(-> /register)`
