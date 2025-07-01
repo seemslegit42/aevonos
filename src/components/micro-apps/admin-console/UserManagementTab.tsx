@@ -1,37 +1,72 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, Suspense } from 'react';
+import { User } from '@prisma/client';
+import { Canvas } from '@react-three/fiber';
+import { OrbitControls, Stars, Html } from '@react-three/drei';
+import * as THREE from 'three';
+
 import { Button } from '@/components/ui/button';
 import { UserPlus, AlertTriangle } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
-import { User } from '@prisma/client';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import UserCard from './UserCard';
-import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
+import UserStar from './UserStar';
 
 type UserData = Pick<User, 'id' | 'email' | 'firstName' | 'lastName' | 'role' | 'lastLoginAt' | 'psyche' | 'agentAlias'>;
 
-const UserCardSkeleton = () => (
-    <div className="bg-background/50 flex flex-col p-4 rounded-lg border border-foreground/20 space-y-3">
-        <div className="flex flex-row items-start gap-4">
-            <Skeleton className="h-10 w-10 rounded-full" />
-            <div className="flex-grow space-y-2">
-                <Skeleton className="h-4 w-3/4" />
-                <Skeleton className="h-3 w-full" />
-                <Skeleton className="h-5 w-20 rounded-full" />
-            </div>
-            <Skeleton className="h-8 w-8 rounded-md" />
-        </div>
-        <div className="space-y-2">
-            <Skeleton className="h-4 w-1/2" />
-            <Skeleton className="h-4 w-2/3" />
-        </div>
-        <div className="mt-auto">
-            <Skeleton className="h-3 w-1/3" />
-        </div>
-    </div>
-);
+const Scene = ({ users, onActionComplete, currentUserId }: { users: UserData[], onActionComplete: () => void, currentUserId: string }) => {
+    const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
 
+    const positions = useMemo(() => {
+        const temp: [number, number, number][] = [];
+        const numUsers = users.length;
+        if (numUsers === 0) return temp;
+        
+        for (let i = 0; i < numUsers; i++) {
+            const phi = Math.acos(-1 + (2 * i) / (numUsers-1));
+            const theta = Math.sqrt(numUsers * Math.PI) * phi;
+            const r = 5 + (i/numUsers) * 5;
+            temp.push([r * Math.cos(theta) * Math.sin(phi), r * Math.sin(theta) * Math.sin(phi), r * Math.cos(phi)]);
+        }
+        return temp;
+    }, [users]);
+    
+    const selectedUser = useMemo(() => users.find(u => u.id === selectedUserId), [users, selectedUserId]);
+    const selectedUserIndex = useMemo(() => users.findIndex(u => u.id === selectedUserId), [users, selectedUserId]);
+
+    return (
+        <Suspense fallback={null}>
+            <ambientLight intensity={0.2} />
+            <pointLight position={[0, 0, 0]} intensity={1} />
+            <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade />
+
+            {users.map((user, i) => (
+                <UserStar
+                    key={user.id}
+                    user={user}
+                    position={positions[i]}
+                    isSelected={selectedUserId === user.id}
+                    onClick={() => setSelectedUserId(user.id)}
+                />
+            ))}
+            
+            {selectedUser && selectedUserIndex !== -1 && (
+                <Html position={positions[selectedUserIndex]} center>
+                    <div className="w-80 -translate-x-1/2 translate-y-12">
+                         <UserCard user={selectedUser} currentUserId={currentUserId} onActionComplete={() => {
+                             setSelectedUserId(null); // Deselect on action
+                             onActionComplete();
+                         }} />
+                    </div>
+                </Html>
+            )}
+
+            <OrbitControls autoRotate autoRotateSpeed={0.2} enablePan={false} enableZoom={true} />
+        </Suspense>
+    );
+};
 
 export default function UserManagementTab() {
   const [users, setUsers] = useState<UserData[]>([]);
@@ -43,10 +78,11 @@ export default function UserManagementTab() {
   useEffect(() => {
     async function fetchUsersAndSession() {
       setIsLoading(true);
+      setError(null);
       try {
         const [usersResponse, sessionResponse] = await Promise.all([
            fetch('/api/admin/users'),
-           fetch('/api/users/me') // Fetch current user to get their ID
+           fetch('/api/users/me')
         ]);
 
         if (!usersResponse.ok) {
@@ -75,39 +111,47 @@ export default function UserManagementTab() {
   const handleActionComplete = () => {
     setRefreshKey(prev => prev + 1);
   };
-
+  
   const renderContent = () => {
     if (isLoading) {
       return (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {[...Array(3)].map((_, i) => <UserCardSkeleton key={i} />)}
+        <div className="w-full h-full flex items-center justify-center">
+            <Skeleton className="w-full h-full rounded-lg" />
         </div>
       );
     }
     
     if (error) {
-        return <Alert variant="destructive"><AlertTriangle className="h-4 w-4" /><AlertTitle>Error</AlertTitle><AlertDescription>{error}</AlertDescription></Alert>
-    }
-    
-    if (users.length === 0) {
-        return <p className="text-center text-muted-foreground">No users found in this Pantheon.</p>
+        return <div className="w-full h-full flex items-center justify-center p-4">
+            <Alert variant="destructive" className="max-w-md">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertTitle>Error</AlertTitle>
+                <AlertDescription>{error}</AlertDescription>
+            </Alert>
+        </div>;
     }
 
+    if (users.length === 0) {
+        return <div className="w-full h-full flex items-center justify-center p-4">
+            <p className="text-center text-muted-foreground">The Pantheon is empty.</p>
+        </div>;
+    }
+    
     return (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {users.map(user => (
-                <UserCard key={user.id} user={user} currentUserId={currentUserId!} onActionComplete={handleActionComplete} />
-            ))}
-        </div>
-    )
+       <Canvas camera={{ position: [0, 0, 15], fov: 75 }}>
+           <Scene users={users} onActionComplete={handleActionComplete} currentUserId={currentUserId!} />
+       </Canvas>
+    );
   }
 
   return (
-    <div className="p-2 space-y-4">
-      <div className="flex justify-end">
+    <div className="p-2 space-y-2 h-full flex flex-col">
+      <div className="flex justify-end flex-shrink-0">
         <Button disabled><UserPlus className="mr-2" />Invite Soul</Button>
       </div>
-      {renderContent()}
+      <div className="flex-grow rounded-lg overflow-hidden relative border">
+         {renderContent()}
+      </div>
     </div>
   );
 }
