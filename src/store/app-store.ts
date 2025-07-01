@@ -155,7 +155,7 @@ export const useAppStore = create<AppState>((set, get) => {
         description: overrides.description || defaults.description,
         contentProps: overrides.contentProps || {},
         position: overrides.position || { x: 40 + (existingAppsCount % 8) * 30, y: 40 + (existingAppsCount % 8) * 30 },
-        size: overrides.size || defaults.defaultSize,
+        size: overrides.size || defaults.defaultSize || { width: 360, height: 480 },
         zIndex: ++zIndexCounter,
     };
     
