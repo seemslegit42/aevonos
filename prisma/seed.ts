@@ -83,6 +83,17 @@ async function main() {
   });
   console.log(`Created AUDITOR user with id: ${auditorUser.id}`)
 
+  const users = [adminUser, managerUser, operatorUser, auditorUser];
+  for (const user of users) {
+    await prisma.pulseProfile.create({
+        data: {
+            userId: user.id,
+            phaseOffset: Math.random() * 2 * Math.PI,
+        }
+    })
+  }
+  console.log('Created Pulse Profiles for all users.');
+
 
   const newWorkspace = await prisma.workspace.create({
     data: {
@@ -91,12 +102,7 @@ async function main() {
       planTier: PlanTier.Artisan,
       credits: 1000.0,
       members: {
-        connect: [
-          { id: adminUser.id },
-          { id: managerUser.id },
-          { id: operatorUser.id },
-          { id: auditorUser.id },
-        ],
+        connect: users.map(u => ({ id: u.id })),
       }
     },
   })
