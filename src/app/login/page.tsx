@@ -12,7 +12,6 @@ import { Form, FormControl, FormField, FormItem, FormMessage } from '@/component
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { FlowerOfLifeIcon } from '@/components/icons/FlowerOfLifeIcon';
 import { Separator } from '@/components/ui/separator';
@@ -121,6 +120,15 @@ export default function LoginPage() {
             className="absolute inset-0 animate-aurora bg-[linear-gradient(135deg,hsl(var(--iridescent-one)/0.2),hsl(var(--iridescent-two)/0.2)_50%,hsl(var(--iridescent-three)/0.2)_100%)] bg-[length:600%_600%]"
           />
           <div className="absolute inset-0 grain-overlay" />
+          <div className="absolute inset-0 flex items-center justify-center opacity-5 pointer-events-none -z-10">
+              <motion.img 
+                src="/logo-neutral.svg" 
+                alt="Aevon OS Watermark" 
+                className="w-1/2 h-1/2 max-w-lg"
+                animate={{ rotate: 360 }}
+                transition={{ duration: 180, repeat: Infinity, ease: 'linear' }}
+              />
+          </div>
         </div>
       
         <motion.div
@@ -132,18 +140,8 @@ export default function LoginPage() {
             <div className="absolute inset-0.5 -z-10 rounded-2xl bg-gradient-to-r from-primary via-accent to-roman-aqua blur-lg opacity-30 group-hover:opacity-50 transition duration-1000 animate-pulse" />
             <div className="relative p-6 sm:p-8 rounded-2xl bg-background/70 backdrop-blur-xl border border-border/20 shadow-lg text-center space-y-4">
                 
-                <div className="absolute inset-0 -z-10 flex items-center justify-center overflow-hidden rounded-2xl">
-                    <FlowerOfLifeIcon className="w-full h-full text-foreground/5 opacity-30 animate-subtle-pulse" />
-                </div>
-                
                 <div className="relative">
-                    <Image
-                      src="/logo.png"
-                      alt="ΛΞVON OS Logo"
-                      width={80}
-                      height={80}
-                      className="mx-auto"
-                    />
+                    <FlowerOfLifeIcon className="w-20 h-20 mx-auto text-primary" />
                     <h1 className="text-2xl font-headline mt-4 text-foreground">Resume the Ritual</h1>
                     <p className="text-sm text-muted-foreground mt-1">The Canvas awaits its Architect.</p>
                 </div>
