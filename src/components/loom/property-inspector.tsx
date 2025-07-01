@@ -9,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
-import { useIsMobile } from '@/hooks/use-is-mobile';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { StonksBotMode, StonksBotModeSchema } from '@/ai/agents/stonks-bot-schemas';
 import { LucilleBluthInputSchema } from '@/ai/agents/lucille-bluth-schemas';
 

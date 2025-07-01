@@ -451,7 +451,7 @@ export const artifactManifests: ArtifactManifest[] = [
     priceModel: 'one-time',
     imageUrl: 'https://placehold.co/600x400.png',
     imageHint: 'latex architecture design',
-    defaultSize: { width: 320, height: 280 },
+    defaultSize: { width: 320, height: 380 },
     permissionsRequired: [],
     isFeatured: false,
   },
