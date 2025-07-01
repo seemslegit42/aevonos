@@ -28,25 +28,25 @@
   }
  
   .dark {
-    --background: 247 36% 11%; /* Obsidian Black */
+    --background: 247 36% 15%; /* Obsidian Black */
     --foreground: 150 100% 98%; /* Vitreous White */
-    --card: 247 36% 14%;
+    --card: 247 36% 18%;
     --card-foreground: 150 100% 98%;
-    --popover: 247 36% 11%;
+    --popover: 247 36% 15%;
     --popover-foreground: 150 100% 98%;
-    --primary: 275 86% 37%; /* Imperial Purple */
+    --primary: 275 86% 42%; /* Imperial Purple */
     --primary-foreground: 150 100% 98%;
-    --secondary: 223 11% 60%; /* Conchoidal Gray */
+    --secondary: 223 18% 61%; /* Conchoidal Gray */
     --secondary-foreground: 150 100% 98%;
-    --muted: 223 11% 20%;
-    --muted-foreground: 223 11% 60%;
+    --muted: 223 18% 30%;
+    --muted-foreground: 223 18% 61%;
     --accent: 159 50% 48%; /* Patina Green */
-    --accent-foreground: 247 36% 11%;
+    --accent-foreground: 247 36% 15%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
-    --border: 223 11% 60%; /* Conchoidal Gray */
-    --input: 223 11% 60%;
-    --ring: 275 86% 37%; /* Imperial Purple */
+    --border: 223 18% 61%; /* Conchoidal Gray */
+    --input: 223 18% 61%;
+    --ring: 275 86% 42%; /* Imperial Purple */
     
     /* Roman Aqua Token */
     --roman-aqua: 178 68% 41%;
