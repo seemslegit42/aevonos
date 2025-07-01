@@ -18,8 +18,9 @@ The suite is composed of several independent but interoperable agents, all orche
 
 ### 2.1. `osint-agent` (`agents/osint.ts`)
 - **Purpose**: Acts as a digital bloodhound, scouring open sources for information.
-- **Flow**: The `performOsintScan` flow uses a suite of dedicated tools (`checkEmailBreaches`, `searchIntelX`, `runFirecrawlerScan`) to gather data on a target based on their name and any provided context (email, social URLs).
-- **Synthesis**: The raw data from these tools is then synthesized by an LLM into a coherent `OsintOutputSchema`, providing a summary, risk factors, and structured data on breaches, leaks, and social profiles.
+- **Architecture**: As a specialist daemon in the Groq Swarm, this agent is implemented using `LangGraph` for multi-step reasoning. It first plans which intelligence tools to use, executes them, and then synthesizes the results into a final report.
+- **Flow**: The `performOsintScan` flow orchestrates a suite of dedicated tools (`checkEmailBreaches`, `searchIntelX`, `runFirecrawlerScan`) to gather data on a target.
+- **Synthesis**: The raw data from all tool calls is synthesized by an LLM into a coherent `OsintOutputSchema`, providing a summary, risk factors, and structured data on breaches, leaks, and social profiles.
 
 ### 2.2. `infidelity-analysis-agent` (`agents/infidelity-analysis.ts`)
 - **Purpose**: Provides a clinical, behavioral analysis of a situation.
