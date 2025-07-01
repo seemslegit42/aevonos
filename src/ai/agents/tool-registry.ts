@@ -354,9 +354,9 @@ export async function getTools(context: AgentContext): Promise<Tool[]> {
         createAgentTool({
             name: 'performOsintScan',
             description: 'Performs an OSINT (Open-Source Intelligence) scan on a target person. Requires a name and optional context like email or social media URLs.',
-            schema: OsintInputSchema.omit({ workspaceId: true }),
+            schema: OsintInputSchema.omit({ workspaceId: true, userId: true }),
             agentName: 'osint',
-            agentFunc: (toolInput) => performOsintScan({ ...toolInput, workspaceId }),
+            agentFunc: (toolInput) => performOsintScan({ ...toolInput, workspaceId, userId }),
         }),
         
         createAgentTool({
