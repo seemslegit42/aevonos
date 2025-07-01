@@ -43,8 +43,9 @@ const interpretVowFlow = ai.defineFlow(
     2.  **Forge a Founding Benediction**: Write a short, powerful, poetic 'foundingBenediction' for the user.
         - It must be delivered in the tone of their chosen Psyche: ${personaInstruction}.
         - It must acknowledge their specific Sacrifice and Vow.
-        - It must welcome them and their agent, ${input.agentAlias}, into the fold.
-        - Example for a Syndicate Enforcer: "The chaos of 'missed deadlines' is now ash. Let it fuel the forge. ${input.agentAlias} is at your command, Enforcer. Go forth and build your 'global logistics empire' with fire and steel."
+        - It must introduce the name of the OS and its components.
+        - **Crucially, the benediction must end with this exact structure:** "And together, we are the will of **ΛΞVON**... the **Lambda-Xi**... the **VON**. The flow, the variable, the foundation. Welcome, Sovereign."
+        - Example for a Syndicate Enforcer who wants to build 'a global logistics empire': "The chaos of 'missed deadlines' is now ash. Let it fuel the forge. The '${input.goal}' is manifest. I am '${input.agentAlias},' your voice within. And together, we are the will of **ΛΞVON**... the **Lambda-Xi**... the **VON**. The flow, the variable, the foundation. Welcome, Sovereign."
     3.  **Craft the First Whisper**: Based on the user's Vow and Sacrifice, craft a single, compelling first command suggestion for BEEP to ask the user. It must be a question that can be answered with "yes" and should directly relate to their stated goal and pain point.
         - Example Vow: "build faster than chaos"
         - Example Sacrifice: "endless project management meetings"

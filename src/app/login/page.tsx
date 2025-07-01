@@ -13,7 +13,6 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { FlowerOfLifeIcon } from '@/components/icons/FlowerOfLifeIcon';
 import { Separator } from '@/components/ui/separator';
 import { signIn } from 'next-auth/react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -148,7 +147,14 @@ export default function LoginPage() {
             <div className="relative p-6 sm:p-8 rounded-2xl bg-background/70 backdrop-blur-xl border border-border/20 shadow-lg text-center space-y-4">
                 
                 <div className="relative">
-                    <FlowerOfLifeIcon className="w-20 h-20 mx-auto text-primary" />
+                    <Image
+                        src="/logo.png"
+                        alt="ΛΞVON OS Logo"
+                        width={80}
+                        height={80}
+                        className="mx-auto"
+                        priority
+                    />
                     <h1 className="text-2xl font-headline mt-4 text-foreground">Resume the Ritual</h1>
                     <p className="text-sm text-muted-foreground mt-1">The Canvas awaits its Architect.</p>
                 </div>

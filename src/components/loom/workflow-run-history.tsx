@@ -1,6 +1,6 @@
 
 'use client';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -154,7 +154,7 @@ function RunItem({ run }: { run: WorkflowRunSummary }) {
             {isDialogOpen && (
                 <DialogContent className="max-w-2xl">
                     <DialogHeader>
-                        <DialogTitle>Workflow Run Details</DialogTitle>
+                        <DialogTitle>Lambda Run Details</DialogTitle>
                         <DialogDescription>
                             <span className='font-mono text-xs'>{run.id}</span>
                         </DialogDescription>
@@ -175,7 +175,7 @@ export default function WorkflowRunHistory({ activeWorkflowId, triggerRefresh }:
   const [runs, setRuns] = useState<WorkflowRunSummary[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  const fetchRuns = async () => {
+  const fetchRuns = useCallback(async () => {
     setIsLoading(true);
     try {
       const url = activeWorkflowId
@@ -190,13 +190,13 @@ export default function WorkflowRunHistory({ activeWorkflowId, triggerRefresh }:
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [activeWorkflowId]);
 
   useEffect(() => {
     fetchRuns();
     const interval = setInterval(fetchRuns, 10000); // Poll every 10 seconds
     return () => clearInterval(interval);
-  }, [activeWorkflowId, triggerRefresh]);
+  }, [activeWorkflowId, triggerRefresh, fetchRuns]);
 
 
   const renderContent = () => {
@@ -211,7 +211,7 @@ export default function WorkflowRunHistory({ activeWorkflowId, triggerRefresh }:
         return (
             <div className="text-center text-muted-foreground text-sm pt-8">
                 <p>No runs found.</p>
-                <p className="text-xs">Trigger a workflow to see its history here.</p>
+                <p className="text-xs">Trigger a lambda to see its history here.</p>
             </div>
         )
     }
@@ -231,7 +231,7 @@ export default function WorkflowRunHistory({ activeWorkflowId, triggerRefresh }:
         </Button>
       </div>
       <p className="text-xs text-muted-foreground -mt-1">
-        {activeWorkflowId ? 'Showing runs for selected workflow.' : 'Showing all recent runs.'}
+        {activeWorkflowId ? 'Showing runs for selected Lambda.' : 'Showing all recent runs.'}
       </p>
       <ScrollArea className="flex-grow -mr-4 pr-4">
         {renderContent()}

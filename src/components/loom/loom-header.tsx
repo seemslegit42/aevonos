@@ -62,9 +62,9 @@ export default function LoomHeader({
             </Tooltip>
         </TooltipProvider>
         <Input
-          value={activeWorkflow?.name || 'Untitled Workflow'}
+          value={activeWorkflow?.name || 'Untitled Lambda'}
           onChange={(e) => onWorkflowNameChange(e.target.value)}
-          placeholder="Workflow Name"
+          placeholder="Lambda Name"
           className="text-lg font-headline bg-transparent border-0 focus-visible:ring-0 focus-visible:ring-offset-0 p-0 h-auto"
           disabled={!canEdit || isArchitectView}
         />
@@ -79,7 +79,7 @@ export default function LoomHeader({
                       </Button>
                   </TooltipTrigger>
                   <TooltipContent>
-                      <p>{isArchitectView ? "Return to Workflow Editor" : "Enter Architect View (Owner Only)"}</p>
+                      <p>{isArchitectView ? "Return to Lambda Editor" : "Enter Architect View (Owner Only)"}</p>
                   </TooltipContent>
               </Tooltip>
            </TooltipProvider>
@@ -94,7 +94,7 @@ export default function LoomHeader({
                         </Button>
                     </TooltipTrigger>
                      <TooltipContent>
-                        <p>Delete this workflow</p>
+                        <p>Delete this Lambda</p>
                     </TooltipContent>
                 </Tooltip>
                  <Tooltip>
@@ -120,7 +120,7 @@ export default function LoomHeader({
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>Save workflow changes</p>
+                    <p>Save Lambda changes</p>
                   </TooltipContent>
               </Tooltip>
           </TooltipProvider>

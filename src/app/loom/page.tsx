@@ -13,14 +13,14 @@ import WorkflowRunHistory from '@/components/loom/workflow-run-history';
 import { useToast } from '@/hooks/use-toast';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import type { User, Workspace, UserRole } from '@prisma/client';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { useIsMobile } from '@/hooks/use-is-mobile';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import type { Node, Edge, Workflow, NodeType } from '@/components/loom/types';
 import LoomMobileToolbar from '@/components/loom/loom-mobile-toolbar';
 import ArchitectView from '@/components/loom/ArchitectView';
 
 const BLANK_WORKFLOW: Workflow = {
-  name: 'New Contact Follow-up',
+  name: 'New Contact Follow-up Lambda',
   definition: {
     nodes: [
         { id: 'trigger-1', type: 'trigger', position: { x: 50, y: 150 }, data: { label: 'BEEP Command Received' } },
@@ -111,7 +111,7 @@ export default function LoomPage() {
                 const data = await response.json();
                 setActiveWorkflow(data);
             } catch (e) {
-                toast({ variant: 'destructive', title: 'Error', description: 'Failed to load workflow.' });
+                toast({ variant: 'destructive', title: 'Error', description: 'Failed to load Lambda.' });
                 setActiveWorkflow(BLANK_WORKFLOW);
             }
         } else {
@@ -150,14 +150,14 @@ export default function LoomPage() {
 
             if (!response.ok) {
                 const errorData = await response.json();
-                throw new Error(errorData.error || 'Failed to save workflow.');
+                throw new Error(errorData.error || 'Failed to save Lambda.');
             }
             
             const savedWorkflow = await response.json();
             setActiveWorkflow(savedWorkflow);
             setActiveWorkflowId(savedWorkflow.id);
 
-            toast({ title: 'Success', description: 'Workflow saved.' });
+            toast({ title: 'Success', description: 'Lambda saved.' });
             setListRefreshTrigger(val => val + 1);
         } catch (e) {
             toast({ variant: 'destructive', title: 'Error', description: (e as Error).message });
@@ -186,19 +186,19 @@ export default function LoomPage() {
 
             if (response.status !== 202) {
                 const errorData = await response.json();
-                throw new Error(errorData.error || 'Failed to trigger workflow.');
+                throw new Error(errorData.error || 'Failed to trigger Lambda.');
             }
             
             const runData = await response.json();
             toast({
-                title: "Workflow Triggered",
+                title: "Lambda Triggered",
                 description: `Run ID: ${runData.runId}. Check history for status updates.`
             });
             setListRefreshTrigger(val => val + 1);
 
         } catch (e) {
             const error = e as Error;
-            toast({ variant: 'destructive', title: 'Error', description: error.message || 'Could not trigger workflow run.' });
+            toast({ variant: 'destructive', title: 'Error', description: error.message || 'Could not trigger Lambda run.' });
         } finally {
             setIsRunning(false);
         }
@@ -211,10 +211,10 @@ export default function LoomPage() {
             const response = await fetch(`/api/workflows/${activeWorkflow.id}`, { method: 'DELETE' });
             if (response.status !== 204) {
                  const errorData = await response.json();
-                 throw new Error(errorData.error || 'Failed to delete workflow.');
+                 throw new Error(errorData.error || 'Failed to delete Lambda.');
             }
             
-            toast({ title: 'Success', description: 'Workflow deleted.' });
+            toast({ title: 'Success', description: 'Lambda deleted.' });
             handleSelectWorkflow(null);
             setListRefreshTrigger(val => val + 1);
         } catch (e) {
@@ -443,7 +443,7 @@ export default function LoomPage() {
                     <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                     <AlertDialogDescription>
                         This action cannot be undone. This will permanently delete the
-                        workflow "{activeWorkflow?.name}".
+                        Lambda "{activeWorkflow?.name}".
                     </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>

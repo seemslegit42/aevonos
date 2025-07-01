@@ -30,7 +30,7 @@ export default function WorkflowList({ onSelectWorkflow, activeWorkflowId, trigg
       try {
         const response = await fetch('/api/workflows');
         if (!response.ok) {
-          throw new Error('Failed to fetch workflows');
+          throw new Error('Failed to fetch Lambdas');
         }
         const data = await response.json();
         setWorkflows(data);
@@ -46,10 +46,10 @@ export default function WorkflowList({ onSelectWorkflow, activeWorkflowId, trigg
   return (
     <div className="h-full w-full bg-foreground/10 backdrop-blur-xl p-4 flex flex-col gap-4">
       <div className="flex justify-between items-center">
-        <h2 className="font-headline text-lg text-foreground">Workflows</h2>
+        <h2 className="font-headline text-lg text-foreground">Lambdas</h2>
         <Button variant="outline" size="sm" onClick={() => onSelectWorkflow(null)}>
             <PlusCircle className="mr-2 h-4 w-4" />
-            New
+            New Lambda
         </Button>
       </div>
       <ScrollArea className="flex-grow -mr-4 pr-4">

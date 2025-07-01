@@ -199,8 +199,8 @@ export default function UsageMonitor({ workspace: initialWorkspace, user: initia
             <Card className="bg-background/50 flex-grow flex flex-col min-h-0">
                  <CardHeader className="p-3 flex flex-row items-center justify-between">
                     <div>
-                        <CardTitle className="text-base">Transaction History</CardTitle>
-                        <CardDescription className="text-xs">Recent credit and debit activity.</CardDescription>
+                        <CardTitle className="text-base">Ledger of the Lambda-Xi-VON Collective</CardTitle>
+                        <CardDescription className="text-xs">An immutable record of all Tributes, Boons, and Debits.</CardDescription>
                     </div>
                     <Button variant="ghost" size="icon" onClick={fetchAllData} disabled={isLoading}><RefreshCw className={cn("h-4 w-4", isLoading && "animate-spin")}/></Button>
                  </CardHeader>
@@ -223,7 +223,7 @@ export default function UsageMonitor({ workspace: initialWorkspace, user: initia
                                       return (
                                           <div key={tx.id} className="text-xs p-2 rounded-md border border-purple-500/50 bg-purple-950/20">
                                                 <div className="flex justify-between items-center mb-2">
-                                                    <p className="font-bold text-base text-purple-300">Tribute to {card ? card.name : 'an Unknown Artifact'}</p>
+                                                    <p className="font-bold text-base text-purple-300">Xi-Event: Tribute to {card ? card.name : 'an Unknown Artifact'}</p>
                                                     <Badge variant="outline" className="border-purple-500/50 text-purple-300 capitalize">{tx.outcome}</Badge>
                                                 </div>
                                                 <div className="grid grid-cols-2 gap-2 text-center font-mono">
