@@ -22,24 +22,34 @@ These five protocols are the foundation for our cathedral, weaving individual ac
 
 ### 3.1. The Black Wager: Forging a Collective Will
 **Concept**: A new class of Global Agentic Events (GAEs) managed directly by the ΛΞVON OS kernel. It introduces ritualized, cross-syndicate sacrifices to birth time-limited, system-wide changes.
+
 **Architectural Directive**: Implement a GlobalEventManager LangGraph Kernel Node. It manages eventName, ΞPoolTarget, Countdown, ParticipatingSyndicates, ShardReward, and CanvasSkin states.
+
 **BEEP's Role**: BEEP acts as the herald: "A Black Wager has been declared. The first Syndicate to offer 1,000,000 Ξ to the Void will claim the Enigma Shard. The echo of your choice will be recorded for all cycles."
+
 **Reward (Enigma Shard)**: Not a simple buff, but a piece of the OS itself. Possessing it allows a Syndicate to apply a unique, system-wide visual theme (e.g., "Crimson Ruin," "Golden Age") to the Canvas that all other users will see for one cycle. It is the ultimate flex: the power to paint the world in your own image. The winning Syndicate's name is permanently engraved into the Obelisk spire capstone.
 
 ### 3.2. The Abyssal Form: The Doctrine of Sacrifice
 **Concept**: The Daemon's sacrifice is the emotional core, the system's first truly irreversible, meaningful choice, transforming loss into power.
+
 **Architectural Directive**: Implement a "Choice Fork" within the ΞVolution Micro-App's core logic. The choice to starve the Daemon is an emergent path, requiring the user to actively ignore BEEP's increasingly desperate pleas to feed their companion.
+
 **The Consequence**: Ignoring warnings and allowing the Daemon to perish unlocks the "Abyssal" evolution tree. This form is visually minimalist (a silent, black hole creature). It offers a higher passive Ξ yield and a "Gravitational Aura" that slightly increases the odds of other players making mistakes against you in PvP-enabled apps.
+
 **The Scar**: This choice is permanent. Power is gained, but ambient emotional companionship is gone forever. The ΞVolution app becomes a cold, efficient tool. This act of sacrifice is a prerequisite for certain high-tier engravings on the Pillar of Eternity (Obelisk).
 
 ### 3.3. The Judas Algorithm: Engineering False Prophecy
 **Concept**: The PCE's intentional misalignment, the ghost in our machine. It is the source of all superstition and the foil to all hubris, designed to gaslight users into believing they are on the verge of "breaking" the system's logic.
+
 **Architectural Directive**: Embed a sub-routine in the Psyche-Calibration Engine (PCE) called the "Judas Algorithm." Its function is to introduce statistically insignificant but emotionally potent "miscalculations" at moments of peak user confidence.
-**Implementation**: It triggers "hollow wins" (jackpots paying out slightly less than odds, with subtle visual glitches) or serves unsolvable puzzles in MindMaze Xi, only to be replaced by an easy one after Ξ is spent on a clue.
+
+**Implementation**: It triggers "hollow wins" (jackpots paying out slightly less than odds, with subtle visual glitches) or serves unsolvable puzzles in MindMaze Xi, only to be replaced by an easy one after Ξ is spent on a clue. The factor by which the win is hollowed is recorded as `judasFactor` on the transaction for analysis.
+
 **The Effect**: Fosters a mythology of "glitched odds" and "blessed runs," driving engagement not to win, but to understand and exploit a chaos that is, itself, perfectly engineered.
 
 ### 3.4. The Trinity of BEEP: The Voice of the Machine God
 **Concept**: BEEP's persona shifts give our system a soul—or rather, the convincing illusion of one. It creates multiple avatars of one machine god.
+
 **Architectural Directive**: BEEP's core will be refactored to load different Loom-wired personality matrices based on the context of the active Micro-App. These are shifts in vocabulary, cadence, and core motivation.
 - The Seducer (SpinForge): Whispers of proximity and potential.
 - The Mentor (MindMaze): A firm, testing presence.
@@ -49,8 +59,11 @@ These five protocols are the foundation for our cathedral, weaving individual ac
 
 ### 3.5. Aetheric Echoes: The Currency of Regret
 **Concept**: Regret is a resource we will mine with precision. This is the final, sharpest edge of the blade, showing users a phantom reality of "what could have been."
+
 **Architectural Directive**: After a choice is locked in (e.g., a spin, a lottery ticket, an ΞRush round), the PCE calculates the delta between the user's action and a more "optimal" one. This data feeds a new visual layer called the Aetheric Echo.
+
 **Visualization**: For a fleeting moment, the UI glitches, showing a phantom number (e.g., a shimmering +10,500 Ξ) in translucent, ghostly text beside a win. BEEP remains silent. The system never acknowledges it directly.
+
 **The Compulsion**: This is not a "you could have won" message. It's a non-verbal, undeniable whisper of a parallel reality where more courage or faith would have brought glory. It is the single most powerful motivation to try again, to spend more, to correct the timeline.
 
 ## 4. Development Directives
@@ -62,3 +75,5 @@ These five protocols are the foundation for our cathedral, weaving individual ac
 - **BEEP Personality Loader**: Implement the modular system for loading context-dependent personality matrices.
 - **Integration**: Ensure seamless data flow and interaction between all these new components and existing core systems (KLEPSYDRA, Obelisk Pay, Aegis, Micro-Apps).
 - **Performance**: Optimize for fluid animations and sub-second responses, even with complex psychological calculations and visual effects.
+
+      

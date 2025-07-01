@@ -30,6 +30,7 @@ Every user is silently and automatically assigned a `PulseProfile`. This is not 
 - **`lastEventTimestamp`**: The timestamp of their last tribute, used to calculate the time decay component of the pulse.
 - **`phaseOffset`**: A unique value assigned at creation to ensure user pulses are not synchronized, creating a more organic and unpredictable system-wide rhythm.
 - **`lastResolvedPhase`**: The user's phase (Crest, Trough, Equilibrium) at the end of their last interaction.
+- **Dynamic Psychological State**: Fields like `frustration` and `flowState` track the user's current emotional state, directly influencing the `luckWeight` calculation.
 
 ### 3.2. Instruments of Folly (Micro-Apps & Chaos Cards)
 These are the designated points of interaction with the Klepsydra Engine. They are the only places where a user can make a "tribute" and test their fate.
@@ -40,12 +41,13 @@ These are the designated points of interaction with the Klepsydra Engine. They a
 ### 3.3. The Algorithm of Fate (`klepsydra-service.ts`)
 This is the server-side logic that determines the outcome of every tribute. It is a black box to the user, but its logic is transparent to the Architect:
 1.  **Invokes `processFollyTribute`**: This is the single, unified function that orchestrates the entire tribute process.
-2.  **Retrieves** the user's `PulseProfile`.
-3.  **Calculates** the current `luckWeight` based on a sinusoidal pulse wave, incorporating time decay and the user's unique phase offset.
-4.  **Applies Psyche Modifiers**: The user's chosen `psyche` (Zen Architect, etc.) applies a multiplier to the base odds and potential boon amount, tuning the risk/reward profile.
-5.  **Checks for Pity Boon**: If `consecutiveLosses` exceeds the `PITY_THRESHOLD`, it overrides the odds and forces a small win to prevent user burnout and maintain engagement.
-6.  **Determines Outcome**: A random roll against the final, modulated odds determines a `win` or `loss`.
-7.  **Executes Atomic Transaction**: All database changes—updating the user's pulse profile, debiting the tribute, crediting any boon, and logging the immutable `TRIBUTE` transaction—are performed in a single, atomic database transaction to ensure perfect ledger consistency.
+2.  **Retrieves** the user's `PulseProfile`, including their dynamic psychological state.
+3.  **Calculates** the current `luckWeight` based on a sinusoidal pulse wave, incorporating time decay, phase offset, and psychological modifiers (`frustration`, `flowState`).
+4.  **Applies Archetype Modifiers**: The user's chosen `psyche` (Zen Architect, etc.) applies a multiplier to the base odds and potential boon amount, tuning the risk/reward profile.
+5.  **Checks for Pity Boon**: If `consecutiveLosses` exceeds the `PITY_THRESHOLD`, it overrides the odds and forces a small win to prevent user burnout.
+6.  **Triggers Judas Algorithm**: If the user is in a high `flowState`, there is a chance to trigger a "hollow win"—a slightly reduced jackpot—to engineer superstition and prevent hubris.
+7.  **Determines Outcome**: A random roll against the final, modulated odds determines a `win` or `loss`.
+8.  **Executes Atomic Transaction**: All database changes—updating the user's pulse profile, debiting the tribute, crediting any boon, and logging the immutable `TRIBUTE` transaction—are performed in a single, atomic database transaction to ensure perfect ledger consistency.
 
 ---
 
@@ -53,6 +55,8 @@ This is the server-side logic that determines the outcome of every tribute. It i
 
 The Klepsydra Engine is the primary driver of the **Tribute Velocity Index (TVI)**. By making economic participation a compelling, narrative-driven ritual rather than a simple purchase, it encourages deeper, more frequent engagement with the ΞCredit economy.
 
-The engine's ability to tune itself based on a user's `psyche` is a direct implementation of the Doctrine's pillar of optimizing for **Return on Belief**. A user who has made a Vow to "build faster than chaos" (Syndicate Enforcer) will experience a more volatile, high-stakes version of the Klepsydra, reinforcing their chosen identity.
+The engine's ability to tune itself based on a user's `psyche` and dynamic psychological state is a direct implementation of the Doctrine's pillar of optimizing for **Return on Belief**. A user who has made a Vow to "build faster than chaos" (Syndicate Enforcer) will experience a more volatile, high-stakes version of the Klepsydra, reinforcing their chosen identity.
 
 The Klepsydra Engine is not a slot machine. It is a carefully calibrated system designed to make **belief** the most valuable currency in ΛΞVON OS.
+
+      

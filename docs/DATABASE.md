@@ -66,10 +66,11 @@ These models power the internal economy of ΛΞVON OS.
     -   `judasFactor`: A decimal representing the reduction factor in a 'hollow win' scenario from the Judas Algorithm.
 
 ### `PulseProfile`
--   **Purpose**: The core of the Klepsydra Engine. Stores each user's unique "luck" parameters, including their oscillation frequency and phase, allowing for personalized, dynamic odds in games of chance.
+-   **Purpose**: The core of the Klepsydra Engine. Stores each user's unique "luck" parameters and dynamic psychological state.
 -   **Key Fields**:
     -   `consecutiveLosses`: A counter used to trigger the Pity Boon protocol.
     -   `lastEventTimestamp`: Used to calculate time decay in the pulse wave.
+    -   `frustration`, `flowState`, `riskAversion`: Floating-point values (0-1) representing the user's current psychological state, which dynamically modulate economic outcomes.
 
 ### `ChaosCard` & `ActiveSystemEffect`
 -   **Purpose**: `ChaosCard` is the manifest for acquirable Chaos Cards. `ActiveSystemEffect` tracks which temporary, system-wide effects (like theme changes from a card) are currently active for a workspace.
@@ -89,3 +90,5 @@ These models support various Micro-Apps and core utilities.
 
 ### `InstrumentDiscovery`
 -   **Purpose**: A crucial table for the Nudge Engine. It logs when a user first views an acquirable item in The Armory and tracks whether they eventually purchase it, allowing for the calculation of `Discovery-to-Tribute Time` (DTT).
+
+      
