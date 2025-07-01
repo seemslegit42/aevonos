@@ -1,5 +1,5 @@
 
-import { PrismaClient, AgentStatus, SecurityRiskLevel, TransactionType, PlanTier, UserRole, UserPsyche, Prisma } from '@prisma/client'
+import { PrismaClient, AgentStatus, SecurityRiskLevel, TransactionType, PlanTier, UserRole, UserPsyche, Prisma, ChaosCardClass } from '@prisma/client'
 import bcrypt from 'bcryptjs'
 import { chaosCardManifest } from '../src/config/chaos-cards';
 import prisma from '../src/lib/prisma';
