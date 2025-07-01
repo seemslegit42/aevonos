@@ -1,11 +1,10 @@
-
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { ArrowUpRight, RefreshCw, AlertTriangle, CheckCircle, Clock, Loader2, Flame, Gem } from 'lucide-react';
+import { ArrowUpRight, RefreshCw, AlertTriangle, CheckCircle, Clock, Loader2, Flame, Gem, CircleDollarSign } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter, CardDescription } from '@/components/ui/card';
@@ -45,6 +44,10 @@ const UsageSkeleton = () => (
                 <Skeleton className="h-9 w-28" />
             </CardFooter>
         </Card>
+        <div className="grid grid-cols-2 gap-3">
+            <Skeleton className="h-24 w-full" />
+            <Skeleton className="h-24 w-full" />
+        </div>
         <Card className="bg-background/50 flex-grow flex flex-col min-h-0">
             <CardHeader className="p-3 flex flex-row items-center justify-between">
                 <div>
@@ -57,7 +60,6 @@ const UsageSkeleton = () => (
                 <div className="space-y-2">
                     <Skeleton className="h-24 w-full" />
                     <Skeleton className="h-12 w-full" />
-                    <Skeleton className="h-12 w-full" />
                 </div>
             </CardContent>
             <CardFooter className="p-3 pt-0">
@@ -67,6 +69,24 @@ const UsageSkeleton = () => (
     </>
 )
 
+const StatCard = ({ icon: Icon, title, value, description, loading, className }: { icon: React.ElementType, title: string, value: React.ReactNode, description?: string, loading: boolean, className?: string }) => (
+    <Card className={cn("bg-background/50", className)}>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">{title}</CardTitle>
+            <Icon className="h-4 w-4 text-muted-foreground" />
+        </CardHeader>
+        <CardContent>
+            {loading ? (
+                <Skeleton className="h-7 w-20" />
+            ) : (
+                <div className="text-2xl font-bold">{value}</div>
+            )}
+            {description && <p className="text-xs text-muted-foreground">{description}</p>}
+        </CardContent>
+    </Card>
+);
+
+
 export default function UsageMonitor({ workspace: initialWorkspace, user: initialUser }: UsageMonitorProps) {
     const { toast } = useToast();
     const { upsertApp } = useAppStore();
@@ -74,28 +94,33 @@ export default function UsageMonitor({ workspace: initialWorkspace, user: initia
     const [workspace, setWorkspace] = useState<Workspace | null>(initialWorkspace);
     const [currentUser, setCurrentUser] = useState<UserProp>(initialUser);
     const [isLoading, setIsLoading] = useState(!initialWorkspace);
+    const [economyStats, setEconomyStats] = useState<{ totalCreditsBurned: number } | null>(null);
     
     const [confirmingId, setConfirmingId] = useState<string | null>(null);
 
     const fetchAllData = useCallback(async () => {
         setIsLoading(true);
         try {
-            const [txResponse, wsResponse, userResponse] = await Promise.all([
+            const [txResponse, wsResponse, userResponse, economyStatsResponse] = await Promise.all([
                 fetch('/api/billing/transactions'),
                 fetch('/api/workspaces/me'),
-                fetch('/api/users/me')
+                fetch('/api/users/me'),
+                fetch('/api/workspaces/me/economy-stats')
             ]);
             if (!txResponse.ok) throw new Error('Failed to fetch transaction history.');
             if (!wsResponse.ok) throw new Error('Failed to fetch workspace data.');
             if (!userResponse.ok) throw new Error('Failed to fetch user data.');
+            if (!economyStatsResponse.ok) throw new Error('Failed to fetch economy stats.');
             
             const txData = await txResponse.json();
             const wsData = await wsResponse.json();
             const userData = await userResponse.json();
+            const economyData = await economyStatsResponse.json();
 
             setTransactions(txData);
             setWorkspace(wsData);
             setCurrentUser(userData);
+            setEconomyStats(economyData);
         } catch (error) {
             toast({ variant: 'destructive', title: 'Error', description: (error as Error).message });
         } finally {
@@ -196,6 +221,24 @@ export default function UsageMonitor({ workspace: initialWorkspace, user: initia
                 </CardFooter>
             </Card>
 
+            <div className="grid grid-cols-2 gap-3">
+                <StatCard 
+                    icon={CircleDollarSign} 
+                    title="Credit Balance" 
+                    value={workspace?.credits ? Number(workspace.credits).toFixed(2) : '0.00'}
+                    description="ΞCredits"
+                    loading={isLoading}
+                />
+                <StatCard 
+                    icon={Flame} 
+                    title="Credits Burned" 
+                    value={economyStats?.totalCreditsBurned.toLocaleString() ?? '...'}
+                    description="All-Time"
+                    loading={isLoading}
+                    className="border-destructive/20"
+                />
+            </div>
+
             <Card className="bg-background/50 flex-grow flex flex-col min-h-0">
                  <CardHeader className="p-3 flex flex-row items-center justify-between">
                     <div>
@@ -257,7 +300,7 @@ export default function UsageMonitor({ workspace: initialWorkspace, user: initia
                                         </div>
                                         <div className="flex justify-between items-center text-muted-foreground mt-1">
                                             <span className="font-mono">{new Date(tx.createdAt).toLocaleString()}</span>
-                                            <span className={cn("flex items-center gap-1 font-semibold", statusInfo.color)}>
+                                            <span className={cn("font-bold flex items-center gap-1", statusInfo.color)}>
                                                 <Icon className="h-3 w-3" /> {statusInfo.text}
                                             </span>
                                         </div>
