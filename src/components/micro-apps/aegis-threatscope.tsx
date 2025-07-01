@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
@@ -49,12 +49,28 @@ function AlertCard({ alert }: { alert: SecurityAlert }) {
     );
 }
 
+function AlertSkeleton() {
+    return (
+        <div className="p-4 rounded-lg border bg-background/80 flex items-start gap-4">
+            <Skeleton className="h-5 w-5 rounded-full" />
+            <div className="w-full space-y-2">
+                <div className="flex justify-between">
+                    <Skeleton className="h-4 w-1/2" />
+                    <Skeleton className="h-4 w-16" />
+                </div>
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-3/4" />
+            </div>
+        </div>
+    )
+}
+
 export default function AegisThreatScope() {
     const [alerts, setAlerts] = useState<SecurityAlert[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    const fetchAlerts = async () => {
+    const fetchAlerts = useCallback(async () => {
         setIsLoading(true);
         setError(null);
         try {
@@ -70,19 +86,19 @@ export default function AegisThreatScope() {
         } finally {
             setIsLoading(false);
         }
-    };
+    }, []);
 
     useEffect(() => {
         fetchAlerts();
-    }, []);
+    }, [fetchAlerts]);
 
     const renderContent = () => {
         if (isLoading) {
             return (
                 <div className="space-y-3">
-                    <Skeleton className="h-24 w-full" />
-                    <Skeleton className="h-24 w-full" />
-                    <Skeleton className="h-24 w-full" />
+                   <AlertSkeleton />
+                   <AlertSkeleton />
+                   <AlertSkeleton />
                 </div>
             );
         }

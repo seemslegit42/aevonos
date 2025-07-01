@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -26,6 +26,47 @@ type UsageMonitorProps = {
 
 const chaosCardMap = new Map(chaosCardManifest.map(c => [c.key, c]));
 
+const UsageSkeleton = () => (
+    <>
+        <Card className="bg-background/50 flex-shrink-0">
+            <CardHeader className="p-3">
+                <Skeleton className="h-5 w-24 mb-1" />
+                <Skeleton className="h-3 w-40" />
+            </CardHeader>
+            <CardContent className="p-3 pt-0 space-y-2">
+                 <Skeleton className="h-4 w-full" />
+                 <div className="flex justify-between items-baseline">
+                    <Skeleton className="h-6 w-20" />
+                    <Skeleton className="h-4 w-24" />
+                 </div>
+            </CardContent>
+             <CardFooter className="p-3 pt-0 flex justify-between items-center">
+                <Skeleton className="h-6 w-20" />
+                <Skeleton className="h-9 w-28" />
+            </CardFooter>
+        </Card>
+        <Card className="bg-background/50 flex-grow flex flex-col min-h-0">
+            <CardHeader className="p-3 flex flex-row items-center justify-between">
+                <div>
+                    <Skeleton className="h-5 w-32" />
+                    <Skeleton className="h-3 w-48 mt-1" />
+                </div>
+                <Skeleton className="h-10 w-10" />
+            </CardHeader>
+            <CardContent className="p-3 pt-0 flex-grow min-h-0">
+                <div className="space-y-2">
+                    <Skeleton className="h-24 w-full" />
+                    <Skeleton className="h-12 w-full" />
+                    <Skeleton className="h-12 w-full" />
+                </div>
+            </CardContent>
+            <CardFooter className="p-3 pt-0">
+                <Skeleton className="h-10 w-full" />
+            </CardFooter>
+        </Card>
+    </>
+)
+
 export default function UsageMonitor({ workspace: initialWorkspace, user: initialUser }: UsageMonitorProps) {
     const { toast } = useToast();
     const { upsertApp } = useAppStore();
@@ -36,7 +77,7 @@ export default function UsageMonitor({ workspace: initialWorkspace, user: initia
     
     const [confirmingId, setConfirmingId] = useState<string | null>(null);
 
-    const fetchAllData = React.useCallback(async () => {
+    const fetchAllData = useCallback(async () => {
         setIsLoading(true);
         try {
             const [txResponse, wsResponse, userResponse] = await Promise.all([
@@ -95,6 +136,14 @@ export default function UsageMonitor({ workspace: initialWorkspace, user: initia
         }
     };
     
+    if (isLoading) {
+        return (
+             <div className="p-2 h-full flex flex-col space-y-3">
+                <UsageSkeleton />
+            </div>
+        )
+    }
+
     const planTier = workspace?.planTier as keyof typeof PLAN_LIMITS | undefined;
     const planLimit = planTier ? PLAN_LIMITS[planTier] : 0;
     const totalActionsUsed = workspace?.agentActionsUsed ?? 0;
@@ -157,13 +206,7 @@ export default function UsageMonitor({ workspace: initialWorkspace, user: initia
                  </CardHeader>
                  <CardContent className="p-3 pt-0 flex-grow min-h-0">
                     <ScrollArea className="h-full">
-                        {isLoading ? (
-                            <div className="space-y-2">
-                                <Skeleton className="h-10 w-full" />
-                                <Skeleton className="h-24 w-full" />
-                                <Skeleton className="h-10 w-full" />
-                            </div>
-                        ) : transactions.length === 0 ? (
+                        {transactions.length === 0 ? (
                             <p className="text-center text-muted-foreground text-sm pt-4">No transactions found.</p>
                         ) : (
                             <div className="space-y-2">

@@ -3,12 +3,35 @@
 
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { UserPlus } from 'lucide-react';
+import { UserPlus, AlertTriangle } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { User } from '@prisma/client';
 import UserCard from './UserCard';
+import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 
 type UserData = Pick<User, 'id' | 'email' | 'firstName' | 'lastName' | 'role' | 'lastLoginAt' | 'psyche' | 'agentAlias'>;
+
+const UserCardSkeleton = () => (
+    <div className="bg-background/50 flex flex-col p-4 rounded-lg border border-foreground/20 space-y-3">
+        <div className="flex flex-row items-start gap-4">
+            <Skeleton className="h-10 w-10 rounded-full" />
+            <div className="flex-grow space-y-2">
+                <Skeleton className="h-4 w-3/4" />
+                <Skeleton className="h-3 w-full" />
+                <Skeleton className="h-5 w-20 rounded-full" />
+            </div>
+            <Skeleton className="h-8 w-8 rounded-md" />
+        </div>
+        <div className="space-y-2">
+            <Skeleton className="h-4 w-1/2" />
+            <Skeleton className="h-4 w-2/3" />
+        </div>
+        <div className="mt-auto">
+            <Skeleton className="h-3 w-1/3" />
+        </div>
+    </div>
+);
+
 
 export default function UserManagementTab() {
   const [users, setUsers] = useState<UserData[]>([]);
@@ -27,7 +50,8 @@ export default function UserManagementTab() {
         ]);
 
         if (!usersResponse.ok) {
-          throw new Error('You do not have permission to view users.');
+            const errorData = await usersResponse.json();
+            throw new Error(errorData.error || 'Failed to fetch users.');
         }
         if (!sessionResponse.ok) {
             throw new Error('Could not identify current user.');
@@ -56,13 +80,13 @@ export default function UserManagementTab() {
     if (isLoading) {
       return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {[...Array(3)].map((_, i) => <Skeleton key={i} className="h-48 w-full" />)}
+          {[...Array(3)].map((_, i) => <UserCardSkeleton key={i} />)}
         </div>
       );
     }
     
     if (error) {
-        return <p className="text-center text-destructive">{error}</p>
+        return <Alert variant="destructive"><AlertTriangle className="h-4 w-4" /><AlertTitle>Error</AlertTitle><AlertDescription>{error}</AlertDescription></Alert>
     }
     
     if (users.length === 0) {

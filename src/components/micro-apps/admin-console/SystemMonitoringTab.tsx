@@ -23,6 +23,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { updateAgentStatus, deleteAgent } from '@/app/admin/actions';
 import { cn } from '@/lib/utils';
+import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 
 const statusConfig: Record<AgentStatus, { icon: React.ElementType, color: string, text: string }> = {
   [AgentStatus.active]: { icon: CheckCircle, color: 'text-accent', text: 'Active' },
@@ -117,7 +118,8 @@ export default function SystemMonitoringTab() {
       try {
         const response = await fetch('/api/agents');
         if (!response.ok) {
-          throw new Error('You do not have permission to view agents.');
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to fetch agents.');
         }
         const data = await response.json();
         setAgents(data);
@@ -140,20 +142,23 @@ export default function SystemMonitoringTab() {
     if (isLoading) {
       return Array.from({ length: 3 }).map((_, i) => (
         <TableRow key={i}>
-          <TableCell><Skeleton className="h-5 w-32" /></TableCell>
-          <TableCell><Skeleton className="h-5 w-24" /></TableCell>
-          <TableCell className="hidden md:table-cell"><Skeleton className="h-5 w-24" /></TableCell>
-          <TableCell className="text-right"><Skeleton className="h-8 w-8 ml-auto" /></TableCell>
+          <TableCell className="space-y-1">
+            <Skeleton className="h-5 w-32" />
+            <Skeleton className="h-4 w-40" />
+          </TableCell>
+          <TableCell><Skeleton className="h-6 w-24 rounded-full" /></TableCell>
+          <TableCell className="hidden md:table-cell"><Skeleton className="h-4 w-24" /></TableCell>
+          <TableCell className="text-right"><Skeleton className="h-8 w-8 ml-auto rounded-md" /></TableCell>
         </TableRow>
       ));
     }
 
     if (error) {
-        return <TableRow><TableCell colSpan={4} className="text-center text-destructive">{error}</TableCell></TableRow>;
+        return <TableRow><TableCell colSpan={4} className="h-24 text-center"><Alert variant="destructive"><Bot className="h-4 w-4" /><AlertTitle>Error</AlertTitle><AlertDescription>{error}</AlertDescription></Alert></TableCell></TableRow>;
     }
     
     if (agents.length === 0) {
-        return <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground">No agents deployed.</TableCell></TableRow>;
+        return <TableRow><TableCell colSpan={4} className="h-24 text-center text-muted-foreground">No agents have been commissioned for this workspace.</TableCell></TableRow>;
     }
 
     return agents.map(agent => {
@@ -182,8 +187,8 @@ export default function SystemMonitoringTab() {
   }
 
   return (
-    <div className="p-2">
-      <div className="flex justify-end mb-4">
+    <div className="p-2 space-y-4">
+      <div className="flex justify-end">
         <Button disabled><Bot className="mr-2" />Commission Daemon</Button>
       </div>
       <div className="border rounded-lg">
