@@ -57,6 +57,13 @@ const PhaseZero = ({ nextPhase }: { nextPhase: () => void }) => {
                 transition={{ duration: 1.5 }}
                 className="space-y-6"
             >
+                <img
+                  src="/logo-light-purple.png"
+                  alt="ΛΞVON OS Logo"
+                  width={60}
+                  height={60}
+                  className="mx-auto"
+                />
                 <h1 className="text-4xl md:text-5xl font-headline tracking-wider text-primary">
                     The Rite of Invocation
                 </h1>

@@ -94,7 +94,7 @@ export default function LoginPage() {
                 
                 <div className="relative">
                     <img
-                      src="/logo.png"
+                      src="/logo-light-purple.png"
                       alt="ΛΞVON OS Logo"
                       width={60}
                       height={60}
