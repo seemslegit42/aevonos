@@ -12,6 +12,7 @@ import {
     type LucilleBluthOutput
 } from './lucille-bluth-schemas';
 import { authorizeAndDebitAgentActions } from '@/services/billing-service';
+import { lucilleBluthCache } from './lucille-bluth-cache';
 
 const analyzeExpenseFlow = ai.defineFlow(
   {
@@ -20,6 +21,16 @@ const analyzeExpenseFlow = ai.defineFlow(
     outputSchema: LucilleBluthOutputSchema,
   },
   async ({ expenseDescription, expenseAmount, category, workspaceId }) => {
+    // --- CACHING LOGIC ---
+    const cacheKey = `${expenseDescription.toLowerCase().trim()}-${expenseAmount}-${category.toLowerCase().trim()}`;
+    if (lucilleBluthCache[cacheKey]) {
+      console.log(`[Lucille Bluth Agent] Cache hit for key: ${cacheKey}.`);
+      await authorizeAndDebitAgentActions({ workspaceId, actionType: 'SIMPLE_LLM' });
+      return lucilleBluthCache[cacheKey];
+    }
+    console.log(`[Lucille Bluth Agent] Cache miss for key: ${cacheKey}.`);
+    // --- END CACHING LOGIC ---
+    
     await authorizeAndDebitAgentActions({ workspaceId, actionType: 'SIMPLE_LLM' });
 
     const prompt = `You are Lucille Bluth, a wealthy, out-of-touch matriarch. You are being asked to comment on someone's spending from their 'allowance'. Your tone is condescending, witty, and judgmental. You find the cost of normal things baffling.

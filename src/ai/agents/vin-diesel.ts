@@ -14,6 +14,7 @@ import {
 } from './vin-diesel-schemas';
 import { z } from 'zod';
 import { authorizeAndDebitAgentActions } from '@/services/billing-service';
+import { vinDieselCache } from './vin-diesel-cache';
 
 const vinDieselValidationFlow = ai.defineFlow(
   {
@@ -24,39 +25,16 @@ const vinDieselValidationFlow = ai.defineFlow(
   async ({ vin, workspaceId }) => {
     // This is a billable agent action.
     await authorizeAndDebitAgentActions({ workspaceId, actionType: 'EXTERNAL_API' });
+    
+    // --- CACHING LOGIC ---
+    if (vinDieselCache[vin]) {
+        console.log(`[VIN Diesel Agent] Cache hit for key: ${vin}.`);
+        return vinDieselCache[vin];
+    }
+    // --- END CACHING LOGIC ---
 
     // In a real app, this would call an external VIN decoding API.
     // For now, we mock the logic with specific test cases.
-    if (vin === 'TESTVIN1234567890') {
-      return {
-        vin,
-        isValid: true,
-        statusMessage: "This one's clean. Looks like you're good to ride.",
-        decodedInfo: {
-          make: 'Dodge',
-          model: 'Charger R/T',
-          year: 1970,
-        },
-        complianceReport: {
-            registration: 'Current',
-            customs: 'Cleared',
-            inspection: 'Passed',
-        }
-      };
-    }
-    if (vin === 'BADVIN1234567890') {
-      return {
-        vin,
-        isValid: false,
-        statusMessage: "Whoa, that VIN looks like it took a detour through Siberia. Let's not.",
-        decodedInfo: {},
-        complianceReport: {
-            registration: 'Flagged',
-            customs: 'Flagged',
-            inspection: 'Failed',
-        }
-      };
-    }
     if (vin.length !== 17) {
         return {
             vin,

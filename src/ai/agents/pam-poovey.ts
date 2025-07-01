@@ -17,6 +17,7 @@ import {
 } from './pam-poovey-schemas';
 import { authorizeAndDebitAgentActions } from '@/services/billing-service';
 import { toWav } from '@/lib/audio-utils';
+import { pamPooveyCache } from './pam-poovey-cache';
 
 
 // Text Generation
@@ -71,7 +72,8 @@ const generatePamAudioFlow = ai.defineFlow(
     });
 
     if (!media) {
-      throw new Error('TTS media generation failed.');
+      console.error('TTS media generation failed, no media returned.');
+      return { audioDataUri: '' };
     }
     const audioBuffer = Buffer.from(
       media.url.substring(media.url.indexOf(',') + 1),
@@ -87,10 +89,22 @@ const generatePamAudioFlow = ai.defineFlow(
 
 // Combined Flow for UI
 export async function generatePamRant(input: PamScriptInput): Promise<PamAudioOutput> {
+    const { topic, workspaceId } = input;
+    
+    // --- CACHING LOGIC ---
+    if (pamPooveyCache[topic] && pamPooveyCache[topic].audioDataUri.length > 50) { // Check if placeholder is replaced
+      console.log(`[Pam Poovey Agent] Cache hit for key: ${topic}.`);
+      await authorizeAndDebitAgentActions({ workspaceId, actionType: 'SIMPLE_LLM' });
+      await authorizeAndDebitAgentActions({ workspaceId, actionType: 'TTS_GENERATION' });
+      return pamPooveyCache[topic];
+    }
+    console.log(`[Pam Poovey Agent] Cache miss for key: ${topic}.`);
+    // --- END CACHING LOGIC ---
+
     // This is the main entry point. It has two LLM calls (script + TTS),
     // so we bill for both actions.
-    await authorizeAndDebitAgentActions({ workspaceId: input.workspaceId, actionType: 'SIMPLE_LLM' });
-    await authorizeAndDebitAgentActions({ workspaceId: input.workspaceId, actionType: 'TTS_GENERATION' });
+    await authorizeAndDebitAgentActions({ workspaceId, actionType: 'SIMPLE_LLM' });
+    await authorizeAndDebitAgentActions({ workspaceId, actionType: 'TTS_GENERATION' });
     
     const { script } = await generatePamScriptFlow(input);
     const { audioDataUri } = await generatePamAudioFlow({ script });
