@@ -27,7 +27,7 @@ import { generateBusinessKit } from '@/ai/agents/jroc';
 import { analyzeLaheyLog } from '@/ai/agents/lahey';
 import { processDailyLog } from '@/ai/agents/foremanator';
 import { analyzeCompliance } from '@/ai/agents/sterileish';
-import { scanEvidence } from '@/ai/agents/paper-trail';
+import { scanEvidence as scanEvidenceFlow } from '@/ai/agents/paper-trail';
 import { processDocument } from '@/ai/agents/barbara';
 import { auditFinances } from '@/ai/agents/auditor-generalissimo';
 import { generateWingmanMessage } from '@/ai/agents/wingman';
@@ -169,7 +169,7 @@ export async function getTools(context: AgentContext): Promise<Tool[]> {
             schema: CreateContactInputSchema,
             agentName: 'crm',
             reportAction: 'create',
-            agentFunc: (toolInput) => createContactInDb(toolInput, workspaceId),
+            agentFunc: (toolInput) => createContactInDb(toolInput, workspaceId, userId),
         }),
         
         createAgentTool({
@@ -178,7 +178,7 @@ export async function getTools(context: AgentContext): Promise<Tool[]> {
             schema: UpdateContactInputSchema,
             agentName: 'crm',
             reportAction: 'update',
-            agentFunc: (toolInput) => updateContactInDb(toolInput, workspaceId),
+            agentFunc: (toolInput) => updateContactInDb(toolInput, workspaceId, userId),
         }),
         
         createAgentTool({
@@ -187,7 +187,7 @@ export async function getTools(context: AgentContext): Promise<Tool[]> {
             schema: z.object({}),
             agentName: 'crm',
             reportAction: 'list',
-            agentFunc: () => listContactsFromDb(workspaceId),
+            agentFunc: () => listContactsFromDb(workspaceId, userId),
         }),
         
         createAgentTool({
@@ -196,7 +196,7 @@ export async function getTools(context: AgentContext): Promise<Tool[]> {
             schema: DeleteContactInputSchema,
             agentName: 'crm',
             reportAction: 'delete',
-            agentFunc: (toolInput) => deleteContactInDb(toolInput, workspaceId),
+            agentFunc: (toolInput) => deleteContactInDb(toolInput, workspaceId, userId),
         }),
 
         createAgentTool({
@@ -232,7 +232,7 @@ export async function getTools(context: AgentContext): Promise<Tool[]> {
             schema: DatingProfileInputSchema,
             agentName: 'dating',
             reportAction: 'get_profile',
-            agentFunc: (toolInput) => getDatingProfile(toolInput, workspaceId),
+            agentFunc: (toolInput) => getDatingProfile(toolInput, workspaceId, userId),
         }),
 
         createAgentTool({
@@ -241,7 +241,7 @@ export async function getTools(context: AgentContext): Promise<Tool[]> {
             schema: CreateSecurityAlertInputSchema,
             agentName: 'security',
             reportAction: 'create_alert',
-            agentFunc: (toolInput) => createSecurityAlertInDb(toolInput, workspaceId),
+            agentFunc: (toolInput) => createSecurityAlertInDb(toolInput, workspaceId, userId),
         }),
         
         createAgentTool({
@@ -316,12 +316,15 @@ export async function getTools(context: AgentContext): Promise<Tool[]> {
             agentFunc: (toolInput) => analyzeCompliance({ ...toolInput, workspaceId }),
         }),
 
-        createAgentTool({
+        new DynamicTool({
             name: 'scanReceipt',
             description: 'Scans a receipt image and extracts transaction details. The user must provide a photo of the receipt as a data URI.',
             schema: PaperTrailScanInputSchema.omit({ workspaceId: true }),
-            agentName: 'paper-trail',
-            agentFunc: (toolInput) => scanEvidence({ ...toolInput, workspaceId }),
+            func: async (toolInput) => {
+                const result = await scanEvidenceFlow({ ...toolInput, workspaceId });
+                const report: z.infer<typeof AgentReportSchema> = { agent: 'paper-trail', report: result };
+                return JSON.stringify(report);
+            },
         }),
 
         createAgentTool({
@@ -375,9 +378,9 @@ export async function getTools(context: AgentContext): Promise<Tool[]> {
         new DynamicTool({
             name: 'generateDossier',
             description: 'Compiles data from OSINT, behavioral analysis, and decoy reports into a formal dossier. Specify standard or legal mode.',
-            schema: DossierInputSchema.omit({ workspaceId: true }),
+            schema: DossierInputSchema.omit({ workspaceId: true, userId: true }),
             func: async (toolInput) => {
-                const result = await generateDossier({ ...toolInput, workspaceId });
+                const result = await generateDossier({ ...toolInput, workspaceId, userId });
                 const report: z.infer<typeof AgentReportSchema> = { agent: toolInput.mode === 'legal' ? 'legal-dossier' : 'dossier', report: result };
                 return JSON.stringify(report);
             },
@@ -442,9 +445,9 @@ export async function getTools(context: AgentContext): Promise<Tool[]> {
         createAgentTool({
             name: 'managePatricktSaga',
             description: 'Logs events, gets roasts, or analyzes drama related to the "Patrickt" saga. Action can be LOG_EVENT, ANALYZE_DRAMA, or GENERATE_ROAST.',
-            schema: PatricktAgentInputSchema.omit({ workspaceId: true }),
+            schema: PatricktAgentInputSchema.omit({ workspaceId: true, userId: true }),
             agentName: 'patrickt-app',
-            agentFunc: (toolInput) => processPatricktAction({ ...toolInput, workspaceId }),
+            agentFunc: (toolInput) => processPatricktAction({ ...toolInput, workspaceId, userId }),
         }),
         
         createAgentTool({
@@ -493,4 +496,3 @@ export async function getTools(context: AgentContext): Promise<Tool[]> {
     
     return allTools;
 }
-    
