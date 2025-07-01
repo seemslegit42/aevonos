@@ -1,8 +1,8 @@
+
 import { z } from 'zod';
 
 export const KifKrokerAnalysisInputSchema = z.object({
-  channelName: z.string().describe('The name of the channel being analyzed (e.g., #project-phoenix).'),
-  messageSamples: z.array(z.string()).describe('A collection of recent message snippets from the channel.'),
+  channelId: z.string().describe('The ID of the Slack channel to analyze (e.g., C012AB3CD).'),
   workspaceId: z.string().describe('The ID of the workspace performing the action.'),
 });
 export type KifKrokerAnalysisInput = z.infer<typeof KifKrokerAnalysisInputSchema>;

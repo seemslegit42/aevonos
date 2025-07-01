@@ -1,16 +1,16 @@
+
 'use client';
 
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Loader2, Zap, FileText } from 'lucide-react';
+import { Loader2, Zap, FileText, Slack } from 'lucide-react';
 import type { KifKrokerAnalysisOutput } from '@/ai/agents/kif-kroker-schemas';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 import { Label } from '../ui/label';
 import { Switch } from '../ui/switch';
 import { cn } from '@/lib/utils';
-import { Textarea } from '../ui/textarea';
 import { Input } from '../ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { useAppStore } from '@/store/app-store';
@@ -25,7 +25,7 @@ const MoraleDisplay = ({ level, name }: { level: KifKrokerAnalysisOutput['morale
     return (
         <div className={cn("text-left p-2 rounded-lg border border-dashed", styles[level])}>
             <p className="font-headline text-lg font-bold">{level}</p>
-            <p className="text-xs font-medium">{name}</p>
+            <p className="text-xs font-medium">#{name}</p>
         </div>
     )
 }
@@ -37,8 +37,7 @@ export default function TheKifKroker(props: KifKrokerAnalysisOutput | {}) {
     }));
     const { toast } = useToast();
     
-    const [channelName, setChannelName] = useState('');
-    const [messageSamples, setMessageSamples] = useState('');
+    const [channelId, setChannelId] = useState('');
     const [result, setResult] = useState<KifKrokerAnalysisOutput | null>(null);
     
     useEffect(() => {
@@ -49,11 +48,11 @@ export default function TheKifKroker(props: KifKrokerAnalysisOutput | {}) {
 
 
     const handleScan = async () => {
-        if (!channelName || !messageSamples) {
-            toast({ variant: 'destructive', title: 'Insufficient Data', description: '*Sigh*... I suppose I need a channel name and some message samples to analyze.' });
+        if (!channelId) {
+            toast({ variant: 'destructive', title: 'Insufficient Data', description: '*Sigh*... I suppose I need a channel ID to analyze.' });
             return;
         }
-        const command = `analyze team comms in channel "${channelName}" with these samples: "${messageSamples}"`;
+        const command = `analyze team comms in channel "${channelId}"`;
         handleCommandSubmit(command);
     }
 
@@ -66,20 +65,17 @@ export default function TheKifKroker(props: KifKrokerAnalysisOutput | {}) {
                         <CardDescription className="text-xs">*Sigh*... Point me at a channel.</CardDescription>
                     </CardHeader>
                     <CardContent className="p-2 space-y-2">
-                        <Input
-                            placeholder="Channel Name (e.g., #project-phoenix)"
-                            value={channelName}
-                            onChange={(e) => setChannelName(e.target.value)}
-                            disabled={isLoading}
-                        />
-                        <Textarea 
-                            placeholder="Paste message samples here, one per line..."
-                            value={messageSamples}
-                            onChange={(e) => setMessageSamples(e.target.value)}
-                            disabled={isLoading}
-                            rows={3}
-                        />
-                        <Button className="w-full" onClick={handleScan} disabled={isLoading || !channelName || !messageSamples}>
+                        <div className="relative">
+                            <Slack className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <Input
+                                placeholder="Slack Channel ID (e.g., C012AB3CD)"
+                                value={channelId}
+                                onChange={(e) => setChannelId(e.target.value)}
+                                disabled={isLoading}
+                                className="pl-9"
+                            />
+                        </div>
+                        <Button className="w-full" onClick={handleScan} disabled={isLoading || !channelId}>
                             {isLoading ? <Loader2 className="animate-spin" /> : <><Zap className="mr-2" /> Scan Atmosphere</>}
                         </Button>
                     </CardContent>
@@ -88,7 +84,7 @@ export default function TheKifKroker(props: KifKrokerAnalysisOutput | {}) {
                 {result && (
                     <Card className="bg-background/50">
                         <CardHeader className="p-2">
-                           <MoraleDisplay level={result.moraleLevel} name={channelName} />
+                           <MoraleDisplay level={result.moraleLevel} name={channelId} />
                         </CardHeader>
                         <CardContent className="p-2 space-y-2">
                             <div className="text-xs space-y-1">
@@ -106,8 +102,8 @@ export default function TheKifKroker(props: KifKrokerAnalysisOutput | {}) {
                     </Card>
                 )}
             </div>
-            
-            {/* MonetizationHook */}
+
+             {/* MonetizationHook */}
             <div className="mt-auto pt-2 border-t border-border/50">
                 <TooltipProvider>
                     <Tooltip>

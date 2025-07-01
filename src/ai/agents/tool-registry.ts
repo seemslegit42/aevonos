@@ -1,5 +1,4 @@
 
-
 /**
  * @fileOverview This file defines the central tool registry for the BEEP agent.
  * It uses a factory pattern to create context-aware tool instances.
@@ -13,7 +12,7 @@ import prisma from '@/lib/prisma';
 import {
     AgentReportSchema,
     UserCommandOutputSchema,
-} from './beep-schemas';
+} from '../agents/beep-schemas';
 
 // Agent Imports
 import { drSyntaxCritique } from '@/ai/agents/dr-syntax';
@@ -39,12 +38,12 @@ import { getKendraTake } from '@/ai/agents/kendra';
 import { invokeOracle } from '@/ai/agents/orphean-oracle-flow';
 import { analyzeInvite } from '@/ai/agents/lumbergh';
 import { analyzeExpense } from '@/ai/agents/lucille-bluth';
-import { generatePamRant } from './pam-poovey';
-import { getStonksAdvice } from './stonks-bot';
+import { generatePamRant } from '../agents/pam-poovey';
+import { getStonksAdvice } from '../agents/stonks-bot';
 import { analyzeCarShame } from '@/ai/agents/reno-mode';
-import { processPatricktAction } from './patrickt-agent';
-import { consultInventoryDaemon } from './inventory-daemon';
-import { executeBurnBridgeProtocol } from './burn-bridge-agent';
+import { processPatricktAction } from '../agents/patrickt-agent';
+import { consultInventoryDaemon } from '../agents/inventory-daemon';
+import { executeBurnBridgeProtocol } from '../agents/burn-bridge-agent';
 
 
 // Tool Imports
@@ -62,31 +61,35 @@ import { CreateContactInputSchema, DeleteContactInputSchema, UpdateContactInputS
 import { RequestCreditTopUpInputSchema } from '@/ai/tools/billing-schemas';
 import { DatingProfileInputSchema } from '@/ai/tools/dating-schemas';
 import { CreateSecurityAlertInputSchema } from '@/ai/tools/security-schemas';
-import { VinDieselInputSchema } from './vin-diesel-schemas';
-import { WinstonWolfeInputSchema } from './winston-wolfe-schemas';
-import { KifKrokerAnalysisInputSchema } from './kif-kroker-schemas';
-import { VandelayAlibiInputSchema } from './vandelay-schemas';
-import { RolodexAnalysisInputSchema } from './rolodex-schemas';
-import { JrocInputSchema } from './jroc-schemas';
-import { LaheyAnalysisInputSchema } from './lahey-schemas';
-import { ForemanatorLogInputSchema } from './foremanator-schemas';
-import { SterileishAnalysisInputSchema } from './sterileish-schemas';
-import { PaperTrailScanInputSchema } from './paper-trail-schemas';
-import { BarbaraInputSchema } from './barbara-schemas';
-import { AuditorInputSchema } from './auditor-generalissimo-schemas';
-import { WingmanInputSchema } from './wingman-schemas';
-import { KendraInputSchema } from './kendra-schemas';
-import { OrpheanOracleInputSchema } from './orphean-oracle-schemas';
-import { LumberghAnalysisInputSchema } from './lumbergh-schemas';
-import { LucilleBluthInputSchema } from './lucille-bluth-schemas';
-import { PamScriptInputSchema } from './pam-poovey-schemas';
+import { VinDieselInputSchema } from '../agents/vin-diesel-schemas';
+import { WinstonWolfeInputSchema } from '../agents/winston-wolfe-schemas';
+import { KifKrokerAnalysisInputSchema } from '../agents/kif-kroker-schemas';
+import { VandelayAlibiInputSchema } from '../agents/vandelay-schemas';
+import { RolodexAnalysisInputSchema } from '../agents/rolodex-schemas';
+import { JrocInputSchema } from '../agents/jroc-schemas';
+import { LaheyAnalysisInputSchema } from '../agents/lahey-schemas';
+import { ForemanatorLogInputSchema } from '../agents/foremanator-schemas';
+import { SterileishAnalysisInputSchema } from '../agents/sterileish-schemas';
+import { PaperTrailScanInputSchema } from '../agents/paper-trail-schemas';
+import { BarbaraInputSchema } from '../agents/barbara-schemas';
+import { AuditorInputSchema } from '../agents/auditor-generalissimo-schemas';
+import { WingmanInputSchema } from '../agents/wingman-schemas';
+import { OsintInputSchema } from '../agents/osint-schemas';
+import { InfidelityAnalysisInputSchema } from '../agents/infidelity-analysis-schemas';
+import { DecoyInputSchema } from '../agents/decoy-schemas';
+import { DossierInputSchema } from '../agents/dossier-schemas';
+import { KendraInputSchema } from '../agents/kendra-schemas';
+import { OrpheanOracleInputSchema } from '../agents/orphean-oracle-schemas';
+import { LumberghAnalysisInputSchema } from '../agents/lumbergh-schemas';
+import { LucilleBluthInputSchema } from '../agents/lucille-bluth-schemas';
+import { PamScriptInputSchema } from '../agents/pam-poovey-schemas';
 import { CreateManualTransactionInputSchema } from '@/ai/tools/ledger-schemas';
-import { StonksBotInputSchema } from './stonks-bot-schemas';
-import { RenoModeAnalysisInputSchema } from './reno-mode-schemas';
-import { PatricktAgentInputSchema } from './patrickt-agent-schemas';
-import { InventoryDaemonInputSchema } from './inventory-daemon-schemas';
-import { BurnBridgeInputSchema } from './burn-bridge-schemas';
-import { FindUsersByVowInputSchema, ManageSyndicateInputSchema } from '@/ai/tools/demiurge-schemas';
+import { StonksBotInputSchema } from '../agents/stonks-bot-schemas';
+import { RenoModeAnalysisInputSchema } from '../agents/reno-mode-schemas';
+import { PatricktAgentInputSchema } from '../agents/patrickt-agent-schemas';
+import { InventoryDaemonInputSchema } from '../agents/inventory-daemon-schemas';
+import { BurnBridgeInputSchema } from '../agents/burn-bridge-schemas';
+import { FindUsersByVowInputSchema, ManageSyndicateInputSchema } from '@/ai/tools/demiurge-tools';
 
 
 // Context for multi-tenancy and personalization
@@ -260,8 +263,8 @@ export async function getTools(context: AgentContext): Promise<Tool[]> {
         
         createAgentTool({
             name: 'analyzeTeamComms',
-            description: 'Analyzes team communication snippets (e.g., from Slack or Teams) for morale, passive-aggression, and burnout probability. Use this for "checking team morale", "analyzing a conversation", etc.',
-            schema: KifKrokerAnalysisInputSchema.omit({ workspaceId: true }),
+            description: 'Analyzes a Slack channel for morale, passive-aggression, and burnout probability using the channel ID. Use this for "checking team morale", "analyzing a conversation", etc.',
+            schema: z.object({ channelId: z.string().describe("The ID of the public Slack channel to analyze.") }),
             agentName: 'kif-kroker',
             agentFunc: (toolInput) => analyzeComms({ ...toolInput, workspaceId }),
         }),
@@ -400,9 +403,9 @@ export async function getTools(context: AgentContext): Promise<Tool[]> {
         createAgentTool({
             name: 'getStonksAdvice',
             description: 'Gets unhinged, bullish, and financially irresponsible advice for a stock ticker. This is not financial advice.',
-            schema: StonksBotInputSchema.omit({ workspaceId: true, userId: true }),
+            schema: StonksBotInputSchema.omit({ workspaceId: true }),
             agentName: 'stonks',
-            agentFunc: (toolInput) => getStonksAdvice({ ...toolInput, workspaceId, userId }),
+            agentFunc: (toolInput) => getStonksAdvice({ ...toolInput, workspaceId }),
         }),
 
         createAgentTool({

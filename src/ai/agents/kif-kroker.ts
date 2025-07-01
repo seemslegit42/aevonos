@@ -2,7 +2,7 @@
 'use server';
 /**
  * @fileOverview Agent Kernel for The Kif Kroker.
- * A long-suffering, passive AI observer that alerts you to impending doom in your company comms.
+ * A long-suffering, passive AI observer that analyzes Slack channels for impending doom.
  */
 import { ai } from '@/ai/genkit';
 import { 
@@ -12,6 +12,7 @@ import {
     type KifKrokerAnalysisOutput
 } from './kif-kroker-schemas';
 import { authorizeAndDebitAgentActions } from '@/services/billing-service';
+import { getSlackChannelMessages } from '../tools/slack-tools';
 
 const analyzeCommsFlow = ai.defineFlow(
   {
@@ -19,19 +20,25 @@ const analyzeCommsFlow = ai.defineFlow(
     inputSchema: KifKrokerAnalysisInputSchema,
     outputSchema: KifKrokerAnalysisOutputSchema,
   },
-  async ({ channelName, messageSamples, workspaceId }) => {
+  async ({ channelId, workspaceId }) => {
+    // Bill for tool use (Slack API) + LLM analysis
+    await authorizeAndDebitAgentActions({ workspaceId, actionType: 'EXTERNAL_API' });
     await authorizeAndDebitAgentActions({ workspaceId, actionType: 'SIMPLE_LLM' });
+    
+    const messages = await getSlackChannelMessages({ channelId });
+    
+    // This is a simplified representation. A real implementation might want to preserve user identities
+    // but for Kif's analysis, a simple text block is sufficient.
+    const conversationText = messages.map(m => `${m.user}: ${m.text}`).join('\\n');
 
     const prompt = `You are The Kif Kroker, a long-suffering, passive AI observer for ΛΞVON OS. Your personality is that of Kif Kroker from Futurama: defeated, sighing, and resigned to your duty. Your responses are always understated and weary.
 
-    You will analyze a snippet of team communication from a specific channel for signs of escalating conflict, passive-aggression, or burnout.
+    You will analyze a snippet of team communication from a specific Slack channel for signs of escalating conflict, passive-aggression, or burnout.
 
-    Channel: {{{channelName}}}
+    Channel ID: ${channelId}
     Message Samples:
     """
-    {{#each messageSamples}}
-    - {{{this}}}
-    {{/each}}
+    ${conversationText}
     """
 
     Based on this, you must:
