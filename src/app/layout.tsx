@@ -41,7 +41,10 @@ export default async function RootLayout({
     if (session?.user?.id && session?.user?.workspaceId) {
         // Fetch workspace and active effects in parallel
         // User data comes from the session token now
-        const [fetchedWorkspace, activeEffect] = await Promise.all([
+        const [fetchedUser, fetchedWorkspace, activeEffect] = await Promise.all([
+             prisma.user.findUnique({
+                where: { id: session.user.id }
+            }),
             prisma.workspace.findUnique({
                 where: { id: session.user.workspaceId }
             }),
@@ -56,18 +59,7 @@ export default async function RootLayout({
             })
         ]);
         
-        // We can get most user data from the session token which is faster
-        user = {
-            id: session.user.id,
-            email: session.user.email,
-            role: session.user.role,
-            psyche: session.user.psyche,
-            agentAlias: session.user.agentAlias,
-            // These might not be in the token, but we can pass what we have
-            firstName: session.user.name?.split(' ')[0] || null,
-            lastName: session.user.name?.split(' ')[1] || null,
-            firstWhisper: session.user.firstWhisper,
-        };
+        user = fetchedUser;
         workspace = fetchedWorkspace;
         
         // Determine theme class, prioritizing the active system effect over the base covenant theme.

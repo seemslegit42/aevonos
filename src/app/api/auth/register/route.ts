@@ -66,6 +66,14 @@ export async function POST(request: Request) {
                 }
             }
         });
+
+        // Also create their Pulse Profile for the Klepsydra Engine
+        await tx.pulseProfile.create({
+            data: {
+                userId: newUser.id,
+                phaseOffset: Math.random() * 2 * Math.PI,
+            }
+        });
         
         // Log the genesis transaction for the initial credits. This is for the audit trail.
         await tx.transaction.create({
