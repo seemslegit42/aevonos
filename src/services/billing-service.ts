@@ -64,7 +64,7 @@ export async function authorizeAndDebitAgentActions(input: AuthorizeAndDebitInpu
     }
     
     const baseCost = ActionCostRegistry[actionType];
-    let cost = Math.ceil(baseCost * costMultiplier);
+    let cost = Math.ceil(baseCost * (costMultiplier || 1));
 
     try {
         // If a userId is provided, first check for the reclamation grace period.
@@ -144,7 +144,7 @@ export async function authorizeAndDebitAgentActions(input: AuthorizeAndDebitInpu
                     userId, // Log which user triggered the debit
                     type: TransactionType.DEBIT,
                     amount: new Prisma.Decimal(cost),
-                    description: `Agent Action: ${actionType} (x${costMultiplier})`,
+                    description: `Agent Action: ${actionType} (x${costMultiplier || 1})`,
                     status: TransactionStatus.COMPLETED,
                 },
             });
@@ -154,11 +154,8 @@ export async function authorizeAndDebitAgentActions(input: AuthorizeAndDebitInpu
 
         return { success: true, remainingBalance, debitAmount, message };
     } catch (error) {
-        const workspace = await prisma.workspace.findUnique({ where: { id: workspaceId }, select: { credits: true } });
-        const balance = Number(workspace?.credits || 0);
-
         if (error instanceof InsufficientCreditsError) {
-            throw new InsufficientCreditsError(error.message);
+            throw error;
         }
         console.error(`[Billing Service] Failed to process agent action debit for workspace ${workspaceId}:`, error);
         throw new Error('An internal error occurred during billing.');

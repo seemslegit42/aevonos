@@ -22,7 +22,17 @@ const processPatricktActionFlow = ai.defineFlow(
     outputSchema: PatricktAgentOutputSchema,
   },
   async (input) => {
-    await authorizeAndDebitAgentActions(input.workspaceId);
+    // Determine action type for billing before the switch
+    let actionType: 'SIMPLE_LLM' | 'COMPLEX_LLM' = 'SIMPLE_LLM';
+    if (input.action === 'ANALYZE_DRAMA') {
+        actionType = 'COMPLEX_LLM';
+    }
+
+    await authorizeAndDebitAgentActions({
+        workspaceId: input.workspaceId,
+        userId: input.userId,
+        actionType: actionType,
+    });
     
     switch (input.action) {
         case 'LOG_EVENT':
@@ -36,7 +46,7 @@ const processPatricktActionFlow = ai.defineFlow(
                     description: input.eventDescription || 'Another day, another drama.',
                     martyrPoints: points,
                 },
-                confirmationMessage: `Logged. You've earned ${points} Martyr Points. You deserve a fucking medal.`
+                confirmationMessage: `Logged. You've earned ${points} Martyr Points. You deserve a medal.`
             };
 
         case 'ANALYZE_DRAMA':

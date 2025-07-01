@@ -1,3 +1,4 @@
+
 import { z } from 'zod';
 
 export const LoggedEventCategorySchema = z.enum([
@@ -24,6 +25,7 @@ export const PatricktAgentInputSchema = z.object({
   eventCategory: LoggedEventCategorySchema.optional().describe('The category of the event to log.'),
   chatInput: z.string().optional().describe('Chat text to be analyzed for drama level.'),
   workspaceId: z.string().describe('The ID of the workspace performing the action.'),
+  userId: z.string().describe('The ID of the user performing the action.'),
 });
 export type PatricktAgentInput = z.infer<typeof PatricktAgentInputSchema>;
 
