@@ -236,14 +236,14 @@ export async function processFollyTribute(
         if (isWin && flowState > 0.75 && Math.random() < 0.33) { // 33% chance on high flow
             judasFactor = 1 - (Math.random() * 0.15 + 0.05); // Reduce boon by 5-20%
             boonAmount *= judasFactor;
-            console.log(`[Judas Algorithm] Hollow win triggered. Boon reduced by ${((1 - judasFactor) * 100).toFixed(2)}%`);
+            console.log(`[Judas Algorithm] Hollow win triggered. Boon reduced by ${((1 - (judasFactor || 1)) * 100).toFixed(2)}%`);
         }
         // --- End Judas Algorithm ---
 
         const netCreditChange = boonAmount - tributeAmount;
 
         // 5. ATOMIC DATABASE WRITES 
-        outcome === 'loss' || outcome === 'common' ? await recordLoss(userId, tx) : await recordWin(userId, tx);
+        (outcome === 'loss' || outcome === 'common') ? await recordLoss(userId, tx) : await recordWin(userId, tx);
         
         await tx.workspace.update({
             where: { id: workspaceId },

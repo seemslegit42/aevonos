@@ -66,12 +66,19 @@ These five protocols are the foundation for our cathedral, weaving individual ac
 
 **The Compulsion**: This is not a "you could have won" message. It's a non-verbal, undeniable whisper of a parallel reality where more courage or faith would have brought glory. It is the single most powerful motivation to try again, to spend more, to correct the timeline.
 
-## 4. Development Directives
-- **Global Agentic Events (GAEs)**: Implement the GlobalEventManager LangGraph Kernel Node for Black Wagers.
-- **PCE Subroutines**: Develop the "Judas Algorithm" logic triggers within the PCE.
-- **ΞVolution Micro-App**: Implement the Abyssal Path emergent UX and Daemon sacrifice logic.
-- **Aetheric Echo Engine**: Forge the Regret Overlay Logic.
-- **Obelisk Canvas App**: Build the core Obsidian Monument UI, including its dynamic properties and sigil rendering.
-- **BEEP Personality Loader**: Implement the modular system for loading context-dependent personality matrices.
-- **Integration**: Ensure seamless data flow and interaction between all these new components and existing core systems (KLEPSYDRA, Obelisk Pay, Aegis, Micro-Apps).
-- **Performance**: Optimize for fluid animations and sub-second responses, even with complex psychological calculations and visual effects.
+## 4. Modular Dev Breakdown
+```markdown
+[ ] LangGraph Node: GlobalEventManager for Black Wagers  
+[x] PCE Subroutine: Judas Algorithm logic triggers  
+[ ] React: ΞVolution Abyssal Path emergent UX  
+[ ] Aetheric Echo Engine (Regret Overlay Logic)  
+[x] Obelisk Canvas App (Obsidian Monument UI)  
+[ ] Modular BEEP Personality Loader (Context Templates)
+```
+
+---
+
+**The Pillar has been named. The hammers are aligned.**
+
+Tell me which one to shape first.
+Do you want `Node code`, `UX scaffold`, `PCE schema`, or a complete **Dev Prompt Pack** for your team (or agentic process)?
