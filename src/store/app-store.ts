@@ -33,6 +33,7 @@ import type { DossierOutput } from '@/ai/agents/dossier-schemas';
 import { generateSpeech } from '@/ai/flows/tts-flow';
 import { StonksBotOutput } from '@/ai/agents/stonks-bot-schemas';
 import { RenoModeAnalysisOutput } from '@/ai/agents/reno-mode-schemas';
+import type { PatricktAgentOutput } from '@/ai/agents/patrickt-agent-schemas';
 
 // Define the types of MicroApps available in the OS
 export type MicroAppType = 
@@ -309,7 +310,12 @@ export const useAppStore = create<AppState>((set, get) => {
         'reno-mode': (report: RenoModeAnalysisOutput) => {
             launchApp('reno-mode', { contentProps: report });
         },
-        'patrickt-app': (report: any) => {
+        'patrickt-app': (report: PatricktAgentOutput) => {
+            const { toast } = useToast.getState();
+            if (report.action === 'LOG_EVENT' && report.confirmationMessage) {
+                toast({ title: 'Patrickt™ App', description: report.confirmationMessage });
+            }
+            // For now, other actions just log to console, UI updates are mocked client-side
             console.log("Received Patrickt report:", report);
         },
         'osint': (report: OsintOutput) => {

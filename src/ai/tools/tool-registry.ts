@@ -44,6 +44,7 @@ import { getStonksAdvice } from '../agents/stonks-bot';
 import { analyzeCarShame } from '@/ai/agents/reno-mode';
 import { processPatricktAction } from '../agents/patrickt-agent';
 import { consultInventoryDaemon } from '../agents/inventory-daemon';
+import { executeBurnBridgeProtocol } from '../agents/burn-bridge-agent';
 
 
 // Tool Imports
@@ -88,6 +89,7 @@ import { StonksBotInputSchema } from '../agents/stonks-bot-schemas';
 import { RenoModeAnalysisInputSchema } from '../agents/reno-mode-schemas';
 import { PatricktAgentInputSchema } from '../agents/patrickt-agent-schemas';
 import { InventoryDaemonInputSchema } from '../agents/inventory-daemon-schemas';
+import { BurnBridgeInputSchema } from '../agents/burn-bridge-schemas';
 import { FindUsersByVowInputSchema, ManageSyndicateInputSchema } from '@/ai/tools/demiurge-tools';
 
 
@@ -262,8 +264,8 @@ export async function getTools(context: AgentContext): Promise<Tool[]> {
         
         createAgentTool({
             name: 'analyzeTeamComms',
-            description: 'Analyzes team communication snippets (e.g., from Slack or Teams) for morale, passive-aggression, and burnout probability. Use this for "checking team morale", "analyzing a conversation", etc.',
-            schema: KifKrokerAnalysisInputSchema.omit({ workspaceId: true }),
+            description: 'Analyzes a Slack channel for morale, passive-aggression, and burnout probability using the channel ID. Use this for "checking team morale", "analyzing a conversation", etc.',
+            schema: z.object({ channelId: z.string().describe("The ID of the public Slack channel to analyze.") }),
             agentName: 'kif-kroker',
             agentFunc: (toolInput) => analyzeComms({ ...toolInput, workspaceId }),
         }),
@@ -352,38 +354,11 @@ export async function getTools(context: AgentContext): Promise<Tool[]> {
         }),
 
         createAgentTool({
-            name: 'performOsintScan',
-            description: 'Performs an OSINT (Open-Source Intelligence) scan on a target person. Requires a name and optional context like email or social media URLs.',
-            schema: OsintInputSchema.omit({ workspaceId: true, userId: true }),
-            agentName: 'osint',
-            agentFunc: (toolInput) => performOsintScan({ ...toolInput, workspaceId, userId }),
-        }),
-        
-        createAgentTool({
-            name: 'performInfidelityAnalysis',
-            description: 'Analyzes a situation description for behavioral red flags and calculates an infidelity risk score.',
-            schema: InfidelityAnalysisInputSchema.omit({ workspaceId: true }),
-            agentName: 'infidelity-analysis',
-            agentFunc: (toolInput) => performInfidelityAnalysis({ ...toolInput, workspaceId }),
-        }),
-        
-        createAgentTool({
-            name: 'deployDecoy',
-            description: 'Deploys an AI decoy with a specific persona to engage a target and test loyalty.',
-            schema: DecoyInputSchema.omit({ workspaceId: true }),
-            agentName: 'decoy',
-            agentFunc: (toolInput) => deployDecoy({ ...toolInput, workspaceId }),
-        }),
-        
-        new DynamicTool({
-            name: 'generateDossier',
-            description: 'Compiles data from OSINT, behavioral analysis, and decoy reports into a formal dossier. Specify standard or legal mode.',
-            schema: DossierInputSchema.omit({ workspaceId: true, userId: true }),
-            func: async (toolInput) => {
-                const result = await generateDossier({ ...toolInput, workspaceId, userId });
-                const report: z.infer<typeof AgentReportSchema> = { agent: toolInput.mode === 'legal' ? 'legal-dossier' : 'dossier', report: result };
-                return JSON.stringify(report);
-            },
+            name: 'executeBurnBridgeProtocol',
+            description: 'Executes the "Burn Bridge Protocol". This is a high-level, multi-agent process for comprehensive intelligence gathering on a target. It runs OSINT, behavioral analysis, deploys a decoy, and compiles a final dossier. Requires a target name, a situation description, and optional context.',
+            schema: BurnBridgeInputSchema.omit({ workspaceId: true, userId: true }),
+            agentName: 'dossier',
+            agentFunc: (toolInput) => executeBurnBridgeProtocol({ ...toolInput, workspaceId, userId }),
         }),
         
         createAgentTool({
@@ -429,9 +404,9 @@ export async function getTools(context: AgentContext): Promise<Tool[]> {
         createAgentTool({
             name: 'getStonksAdvice',
             description: 'Gets unhinged, bullish, and financially irresponsible advice for a stock ticker. This is not financial advice.',
-            schema: StonksBotInputSchema.omit({ workspaceId: true }),
+            schema: StonksBotInputSchema.omit({ workspaceId: true, userId: true }),
             agentName: 'stonks',
-            agentFunc: (toolInput) => getStonksAdvice({ ...toolInput, workspaceId }),
+            agentFunc: (toolInput) => getStonksAdvice({ ...toolInput, workspaceId, userId }),
         }),
 
         createAgentTool({
