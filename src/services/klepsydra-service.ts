@@ -169,6 +169,7 @@ export async function processFollyTribute(
             getPulseProfile(userId, tx)
         ]);
 
+        const { flowState } = profile;
         let boonFactor = 1.0;
         
         // 2. Apply any active one-time buffs
@@ -231,6 +232,18 @@ export async function processFollyTribute(
         }
 
         const outcome = isGuaranteedWin ? 'guaranteed_win' : isPity ? 'pity_boon' : selectedTier.tier.toLowerCase();
+        
+        // --- Judas Algorithm ---
+        let judasFactor = null;
+        const isWin = outcome !== 'loss' && outcome !== 'common';
+        // At high confidence (flowState), introduce a chance of a "hollow win".
+        if (isWin && flowState > 0.75 && Math.random() < 0.33) { // 33% chance on high flow
+            judasFactor = 1 - (Math.random() * 0.15 + 0.05); // Reduce boon by 5-20%
+            boonAmount *= judasFactor;
+            console.log(`[Judas Algorithm] Hollow win triggered. Boon reduced by ${((1 - judasFactor) * 100).toFixed(2)}%`);
+        }
+        // --- End Judas Algorithm ---
+
         const netCreditChange = boonAmount - tributeAmount;
 
         // 5. ATOMIC DATABASE WRITES 
@@ -253,6 +266,7 @@ export async function processFollyTribute(
                 luckWeight, outcome, 
                 tributeAmount: new Prisma.Decimal(tributeAmount),
                 boonAmount: new Prisma.Decimal(boonAmount),
+                judasFactor: judasFactor ? new Prisma.Decimal(judasFactor) : null,
                 userPsyche: user.psyche, status: 'COMPLETED',
             }
         });

@@ -1,3 +1,4 @@
+
 # ΛΞVON OS: Database Schema Specification
 
 > "The architecture of truth is built on well-defined tables."
@@ -62,6 +63,7 @@ These models power the internal economy of ΛΞVON OS.
     -   `amount`: The net change to the balance.
     -   `description`: A human-readable description of the transaction.
     -   `instrumentId`, `luckWeight`, `outcome`, `boonAmount`: Special fields to store rich metadata for `TRIBUTE` transactions from Folly Instruments.
+    -   `judasFactor`: A decimal representing the reduction factor in a 'hollow win' scenario from the Judas Algorithm.
 
 ### `PulseProfile`
 -   **Purpose**: The core of the Klepsydra Engine. Stores each user's unique "luck" parameters, including their oscillation frequency and phase, allowing for personalized, dynamic odds in games of chance.
