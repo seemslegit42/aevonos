@@ -198,7 +198,7 @@ function BeepCore({ state }: { state: BeepCoreState }) {
     );
 }
 
-function Scene({ agents, beepCoreState, highlightedAgents, pulsePhase }: { agents: AgentData[], beepCoreState: BeepCoreState, highlightedAgents: Set<string>, pulsePhase: PulsePhase | null }) {
+function Scene({ agents, beepCoreState, highlightedAgents, pulsePhase, totalCreditsBurned }: { agents: AgentData[], beepCoreState: BeepCoreState, highlightedAgents: Set<string>, pulsePhase: PulsePhase | null, totalCreditsBurned: number }) {
     const orbitControlsRef = useRef<any>(null!);
 
     useFrame(() => {
@@ -231,7 +231,7 @@ function Scene({ agents, beepCoreState, highlightedAgents, pulsePhase }: { agent
             <ambientLight intensity={ambientLightIntensity} />
             <pointLight position={[0, 0, 0]} color="hsl(var(--primary))" intensity={15} distance={20} />
             
-            <Obelisk />
+            <Obelisk totalCreditsBurned={totalCreditsBurned} />
 
             <group position={[0, 0, 3]}>
                 <BeepCore state={beepCoreState} />
@@ -259,6 +259,7 @@ export default function SystemWeave({ initialAgents }: { initialAgents: AgentDat
   const [highlightedAgents, setHighlightedAgents] = useState<Set<string>>(new Set());
   const audioRef = useRef<HTMLAudioElement>(null);
   const [pulsePhase, setPulsePhase] = useState<PulsePhase | null>(null);
+  const [economyStats, setEconomyStats] = useState<{ totalCreditsBurned: number } | null>(null);
 
   useEffect(() => {
     const fetchPulse = async () => {
@@ -272,8 +273,24 @@ export default function SystemWeave({ initialAgents }: { initialAgents: AgentDat
             console.error("Failed to fetch pulse state for SystemWeave:", error);
         }
     };
-    fetchPulse();
-    const interval = setInterval(fetchPulse, 30000); // Refresh every 30 seconds
+    const fetchEconomyStats = async () => {
+        try {
+            const res = await fetch('/api/workspaces/me/economy-stats');
+            if (res.ok) {
+                const data = await res.json();
+                setEconomyStats(data);
+            }
+        } catch (error) {
+            console.error("Failed to fetch economy stats for SystemWeave:", error);
+        }
+    };
+
+    const fetchAll = () => {
+        fetchPulse();
+        fetchEconomyStats();
+    }
+    fetchAll();
+    const interval = setInterval(fetchAll, 30000); // Refresh every 30 seconds
     return () => clearInterval(interval);
   }, []);
 
@@ -331,7 +348,7 @@ export default function SystemWeave({ initialAgents }: { initialAgents: AgentDat
   return (
       <div className="absolute inset-0 -z-10">
         <Canvas camera={{ position: [0, 8, 18], fov: 60 }}>
-            <Scene agents={agents} beepCoreState={beepCoreState} highlightedAgents={highlightedAgents} pulsePhase={pulsePhase} />
+            <Scene agents={agents} beepCoreState={beepCoreState} highlightedAgents={highlightedAgents} pulsePhase={pulsePhase} totalCreditsBurned={economyStats?.totalCreditsBurned ?? 0} />
         </Canvas>
          <audio ref={audioRef} onEnded={handleAudioEnd} className="hidden" />
       </div>
