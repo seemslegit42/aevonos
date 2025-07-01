@@ -20,7 +20,7 @@ export const checkEmailBreaches = ai.defineTool(
   async ({ email }) => {
     const apiKey = process.env.HAVEIBEENPWNED_API_KEY;
 
-    if (!apiKey || apiKey === "YOUR_API_KEY_HERE") {
+    if (!apiKey || apiKey === "YOUR_API_KEY_HERE" || apiKey === '') {
       console.warn('[OSINT Tool] HaveIBeenPwned API key not set. Using mock data.');
       if (email.includes('breached')) {
         return [
@@ -71,22 +71,44 @@ export const checkEmailBreaches = ai.defineTool(
 export const checkBurnerPhoneNumber = ai.defineTool(
     {
       name: 'checkBurnerPhoneNumber',
-      description: 'Checks if a phone number is a known burner or a temporary number.',
+      description: 'Checks if a phone number is a known burner or a temporary number using AbstractAPI.',
       inputSchema: BurnerCheckInputSchema,
       outputSchema: BurnerCheckOutputSchema,
     },
     async ({ phoneNumber }) => {
-        if (phoneNumber.includes('555')) {
-            return {
-                isBurner: true,
-                carrier: 'BurnerApp Services',
-                country: 'US',
-            }
+        const apiKey = process.env.ABSTRACT_API_KEY;
+
+        if (!apiKey || apiKey === "YOUR_API_KEY_HERE" || apiKey === "") {
+          console.warn('[OSINT Tool] AbstractAPI key not set. Using mock data for burner phone check.');
+          if (phoneNumber.includes('555')) {
+            return { isBurner: true, carrier: 'BurnerApp Services (Mock)', country: 'US' }
+          }
+          return { isBurner: false, carrier: 'Major Carrier (Mock)', country: 'US' }
         }
-        return {
-            isBurner: false,
-            carrier: 'Major Carrier',
-            country: 'US',
+
+        const url = `https://phonevalidation.abstractapi.com/v1/?api_key=${apiKey}&phone=${phoneNumber}`;
+        
+        try {
+            const response = await fetch(url);
+            if (!response.ok) {
+                console.error(`[OSINT Tool] AbstractAPI returned status ${response.status}`);
+                // Don't throw, just return a safe default.
+                return { isBurner: false, carrier: 'API Error', country: 'Unknown' };
+            }
+            const data = await response.json();
+            
+            // VOIP numbers are often used as burners. This is a reasonable proxy.
+            const isBurner = data.type === 'VOIP';
+
+            return {
+                isBurner,
+                carrier: data.carrier || 'Unknown',
+                country: data.country?.code || 'Unknown',
+            };
+        } catch (error) {
+            console.error('[OSINT Tool] Error fetching from AbstractAPI:', error);
+            // Don't throw, just return a safe default.
+            return { isBurner: false, carrier: 'Fetch Error', country: 'Unknown' };
         }
     }
 );
