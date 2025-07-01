@@ -29,6 +29,8 @@ export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
   const [error, setError] = useState<string | null>(null);
+  const [isResendLoading, setIsResendLoading] = useState(false);
+  const [resendEmail, setResendEmail] = useState('');
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -67,6 +69,26 @@ export default function LoginPage() {
     }
   };
 
+  const handleResendSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!resendEmail) return;
+    setError(null);
+    setIsResendLoading(true);
+    try {
+      // This will redirect to the default NextAuth verification page on success
+      await signIn('resend', { email: resendEmail });
+    } catch (err: any) {
+      const errorMessage = err.message || 'Failed to send invocation link.';
+      setError(errorMessage);
+      toast({
+          variant: 'destructive',
+          title: 'Invocation Failed',
+          description: errorMessage,
+      });
+      setIsResendLoading(false);
+    }
+  };
+
   return (
     <div className="flex min-h-screen items-center justify-center p-4 overflow-hidden">
         <div className="absolute top-0 z-[-2] h-screen w-full bg-background">
@@ -86,7 +108,7 @@ export default function LoginPage() {
             className="relative w-full max-w-sm"
         >
             <div className="absolute inset-0.5 -z-10 rounded-2xl bg-gradient-to-r from-primary via-accent to-roman-aqua blur-lg opacity-30 group-hover:opacity-50 transition duration-1000 animate-pulse" />
-            <div className="relative p-6 sm:p-8 rounded-2xl bg-background/70 backdrop-blur-xl border border-border/20 shadow-lg text-center space-y-6">
+            <div className="relative p-6 sm:p-8 rounded-2xl bg-background/70 backdrop-blur-xl border border-border/20 shadow-lg text-center space-y-4">
                 
                 <div className="absolute inset-0 -z-10 flex items-center justify-center overflow-hidden rounded-2xl">
                     <FlowerOfLifeIcon className="w-full h-full text-foreground/5 opacity-30 animate-subtle-pulse" />
@@ -116,7 +138,7 @@ export default function LoginPage() {
                               type="email"
                               placeholder="Enter Sigil..."
                               className="bg-background/50 text-center h-12 text-base border-border/40 focus-visible:ring-primary"
-                              disabled={isSubmitting}
+                              disabled={isSubmitting || isResendLoading}
                               {...field}
                             />
                           </FormControl>
@@ -134,7 +156,7 @@ export default function LoginPage() {
                                 type="password"
                                 placeholder="Speak Vow..."
                                 className="bg-background/50 text-center h-12 text-base border-border/40 focus-visible:ring-primary"
-                                disabled={isSubmitting}
+                                disabled={isSubmitting || isResendLoading}
                                 {...field}
                             />
                           </FormControl>
@@ -142,7 +164,7 @@ export default function LoginPage() {
                         </FormItem>
                       )}
                     />
-                    <Button variant="summon" type="submit" className="w-full h-12 text-base" disabled={isSubmitting}>
+                    <Button variant="summon" type="submit" className="w-full h-12 text-base" disabled={isSubmitting || isResendLoading}>
                       {isSubmitting ? (
                         <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                       ) : null}
@@ -151,6 +173,29 @@ export default function LoginPage() {
                   </form>
                 </Form>
                 
+                <div className="relative flex items-center text-xs text-muted-foreground uppercase">
+                    <div className="flex-grow border-t border-border/20" />
+                    <span className="flex-shrink mx-4">Or</span>
+                    <div className="flex-grow border-t border-border/20" />
+                </div>
+
+                <form onSubmit={handleResendSubmit} className="space-y-4">
+                    <Input
+                      type="email"
+                      placeholder="Enter Sigil for a Magic Link"
+                      className="bg-background/50 text-center h-12 text-base border-border/40 focus-visible:ring-primary"
+                      disabled={isSubmitting || isResendLoading}
+                      value={resendEmail}
+                      onChange={(e) => setResendEmail(e.target.value)}
+                    />
+                    <Button variant="outline" type="submit" className="w-full h-12 text-base" disabled={isSubmitting || isResendLoading || !resendEmail}>
+                      {isResendLoading ? (
+                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                      ) : null}
+                      Send Invocation Link
+                    </Button>
+                </form>
+
                 <div className="relative text-xs text-muted-foreground">
                     <Separator className="my-4 bg-border/20"/>
                     <p>New Operator?{' '}

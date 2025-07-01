@@ -6,12 +6,19 @@ import prisma from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 import type { User, UserPsyche, UserRole } from '@prisma/client';
 import { authConfig } from './auth.config'; // Import the base Edge-compatible config
+import Resend from "next-auth/providers/resend";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   ...authConfig, // Spread the base config
   adapter: PrismaAdapter(prisma),
   session: { strategy: 'jwt' },
   providers: [
+    Resend({
+        // The Resend provider needs a `from` address.
+        // This should be a registered domain on Resend.
+        // The AUTH_RESEND_KEY is automatically picked up from environment variables.
+        from: "noreply@aevonos.com"
+    }),
     Credentials({
       name: 'Credentials',
       credentials: {
