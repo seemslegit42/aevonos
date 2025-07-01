@@ -42,7 +42,7 @@ export const chaosCardManifest: ChaosCardManifest[] = [
     cardClass: 'AESTHETIC',
     cost: 75,
     rarity: 'COMMON',
-    systemEffect: "Activates a 'dark mode' that is pure black, with text glowing in a soft, silver light. All non-essential UI elements fade unless hovered over.",
+    systemEffect: "Activates a \"dark mode\" that is pure black, with text glowing in a soft, silver light. All non-essential UI elements fade unless hovered over.",
     imageUrl: 'https://placehold.co/400x560.png',
     imageHint: 'owl eyes',
   },
