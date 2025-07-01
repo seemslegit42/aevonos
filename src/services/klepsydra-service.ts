@@ -303,5 +303,3 @@ export async function processFollyTribute(
         return { outcome, boonAmount: Number(boonAmount) };
     });
 }
-
-      
