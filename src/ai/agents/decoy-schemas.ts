@@ -15,4 +15,4 @@ export const DecoyOutputSchema = z.object({
   persona: z.enum(['sapiosexual', 'alpha-hustler', 'chill-demon', 'awkward-sweetheart'])
     .describe('The persona the decoy agent adopted for the message.'),
 });
-export type DecoyOutput = z.infer<typeof DecoyOutputSchema>;
+export type DecoyOutput = z.infer<typeof DecoyOutputSchema>
