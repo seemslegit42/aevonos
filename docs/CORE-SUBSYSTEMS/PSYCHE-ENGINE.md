@@ -29,7 +29,9 @@ The engine's foundation is the immutable `psyche` field on the `User` model, cho
 - **Specialized Agents (`dr-syntax.ts`, etc.)**: Agents like Dr. Syntax are explicitly designed to be "psyche-aware," modifying the flavor and intensity of their critiques based on the user's profile. This design pattern is a core tenet for all future agent development.
 
 ### 3.3. System Behavior Modulation
-- **Klepsydra Engine (`klepsydra-service.ts`)**: The Psyche Engine directly interfaces with the economic core. The `PSYCHE_MODIFIERS` constant applies a risk/reward factor to the odds and boon amounts in all games of chance, ensuring that a Syndicate Enforcer experiences a more volatile, high-stakes system than a Risk-Averse Artisan.
+- **Klepsydra Engine (`klepsydra-service.ts`)**: The Psyche Engine modulates the economy on two levels:
+  1.  **Static Archetype Tuning**: The `PSYCHE_MODIFIERS` constant applies a baseline risk/reward factor based on the user's declared `psyche` (Zen Architect, etc.), ensuring different archetypes have distinct gameplay feels.
+  2.  **Dynamic Behavioral Regulation**: The `pulse-engine-service.ts` now incorporates the user's dynamic psychological state (`frustration`, `flowState`) directly into their `luckWeight` calculation. This creates a self-regulating feedback loop: a frustrated user gets a subtle boost to prevent churn, while a user in a "flow state" is rewarded for their engagement, making the system feel more responsive and alive.
 - **Covenant Theming (`layout.tsx`)**: The engine determines which Covenant theme is applied to the UI, fundamentally altering the user's visual and interactive experience to match their Vow.
 
 ---

@@ -57,13 +57,22 @@ export async function getCurrentPulseValue(userId: string, tx?: PrismaTransactio
     phaseOffset,
     baselineLuck,
     lastEventTimestamp,
+    frustration,
+    flowState,
   } = profile;
 
   // Time `t` in minutes since the last event
   const t = (new Date().getTime() - new Date(lastEventTimestamp).getTime()) / (1000 * 60);
 
+  // The base sinusoidal pulse
   const luckOscillation = amplitude * Math.sin(2 * Math.PI * frequency * t + phaseOffset);
-  const finalLuckWeight = baselineLuck + luckOscillation;
+
+  // The psychological adjustment layer.
+  // High flow state gives a slight boost to luck, rewarding engagement.
+  // High frustration also gives a slight boost, acting as a soft "pity" mechanism to prevent churn.
+  const psychologicalModifier = (flowState * 0.05) + (frustration * 0.075);
+
+  const finalLuckWeight = baselineLuck + luckOscillation + psychologicalModifier;
   
   // Clamp the luck weight between a reasonable min and max to avoid extreme swings.
   return Math.max(0.05, Math.min(0.95, finalLuckWeight));
