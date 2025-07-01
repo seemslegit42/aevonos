@@ -17,6 +17,8 @@ import { InsufficientCreditsError } from '@/lib/errors';
 import { UserPsyche, TransactionType, Prisma } from '@prisma/client';
 import { differenceInMinutes } from 'date-fns';
 
+const AGE_OF_ASCENSION_ACTIVE = true;
+
 const PSYCHE_MODIFIERS: Record<UserPsyche, { oddsFactor: number; boonFactor: number }> = {
     [UserPsyche.ZEN_ARCHITECT]: { oddsFactor: 1.0, boonFactor: 1.0 }, // The baseline experience
     [UserPsyche.SYNDICATE_ENFORCER]: { oddsFactor: 0.85, boonFactor: 1.25 }, // Higher risk, higher reward
@@ -119,19 +121,27 @@ export async function processFollyTribute(
         // --- 3. DETERMINE BOON ---
         const selectedBoon = selectWeightedRandom(selectedTier.boons, boon => boon.weight);
         let boonAmount = 0;
+        let potentialChange = 0;
         let awardedCardId: string | undefined = undefined;
+        let systemEffect: string | undefined = undefined;
         
         if (selectedBoon.type === 'credits') {
-            boonAmount = tributeAmount * (selectedBoon.value as number) * psycheModifiers.boonFactor;
+            const calculatedBoon = tributeAmount * (selectedBoon.value as number) * psycheModifiers.boonFactor;
+            if (AGE_OF_ASCENSION_ACTIVE) {
+                potentialChange = calculatedBoon;
+            } else {
+                boonAmount = calculatedBoon;
+            }
         } else if (selectedBoon.type === 'chaos_card') {
             awardedCardId = selectedBoon.value as string;
-            // The value of a card is its cost + a bonus
             const wonCardManifest = chaosCardManifest.find(c => c.key === awardedCardId);
             boonAmount = (wonCardManifest?.cost || 100) * 1.5;
+        } else if (selectedBoon.type === 'system_effect') {
+            systemEffect = selectedBoon.value as string;
         }
 
         const outcome = isPity ? 'pity_boon' : selectedTier.tier.toLowerCase();
-        const netAmount = boonAmount - tributeAmount;
+        const netCreditChange = boonAmount - tributeAmount;
 
         // --- 4. ATOMIC DATABASE WRITES ---
         if (outcome === 'loss' || outcome === 'common') {
@@ -142,14 +152,18 @@ export async function processFollyTribute(
 
         await tx.workspace.update({
             where: { id: workspaceId },
-            data: { credits: { increment: new Prisma.Decimal(netAmount) } },
+            data: { 
+                credits: { increment: new Prisma.Decimal(netCreditChange) },
+                potential: { increment: new Prisma.Decimal(potentialChange) }
+            },
         });
 
         await tx.transaction.create({
             data: {
                 workspaceId, userId, instrumentId: instrumentId,
                 type: TransactionType.TRIBUTE,
-                amount: new Prisma.Decimal(netAmount),
+                amount: new Prisma.Decimal(netCreditChange),
+                potentialChange: new Prisma.Decimal(potentialChange),
                 description: `Tribute: ${instrumentManifest.name} - ${outcome}`,
                 luckWeight, outcome, 
                 tributeAmount: new Prisma.Decimal(tributeAmount),
@@ -169,19 +183,25 @@ export async function processFollyTribute(
             }
         }
         
-        // --- 5. POST-PROCESSING (DISCOVERY LOG, SYSTEM EFFECTS) ---
-        // If it's a win, and the instrument is an aesthetic card, apply the effect.
-        if ((outcome !== 'loss' && outcome !== 'common') && aestheticEffectCardKeys.includes(instrumentId)) {
-           await tx.activeSystemEffect.deleteMany({
-              where: { workspaceId: workspaceId, cardKey: { in: aestheticEffectCardKeys } }
-           });
-           await tx.activeSystemEffect.create({
-              data: {
-                workspaceId: workspaceId,
-                cardKey: instrumentId,
-                expiresAt: new Date(Date.now() + 60 * 60 * 1000)
-              }
-           });
+        // Handle system effects
+        if (systemEffect) {
+            if (aestheticEffectCardKeys.includes(instrumentId)) {
+                await tx.activeSystemEffect.deleteMany({
+                    where: { workspaceId: workspaceId, cardKey: { in: aestheticEffectCardKeys } }
+                });
+                await tx.activeSystemEffect.create({
+                    data: {
+                        workspaceId: workspaceId,
+                        cardKey: instrumentId,
+                        expiresAt: new Date(Date.now() + 60 * 60 * 1000)
+                    }
+                });
+            } else if (systemEffect === 'PSYCHE_MATRIX_RESONANCE') {
+                await tx.pulseProfile.update({
+                    where: { userId },
+                    data: { unlockedMatrixPatterns: { push: 'RESONANCE_BURST_01' }}
+                })
+            }
         }
         
         const discovery = await tx.instrumentDiscovery.findFirst({

@@ -14,7 +14,7 @@ export type Boon = {
 
 export type OutcomeTier = {
     tier: 'COMMON' | 'UNCOMMON' | 'RARE' | 'MYTHIC' | 'DIVINE';
-    baseWeight: number;
+    baseWeight: number; // Out of 10,000 for easy percentage understanding
     boons: Boon[];
     narrativeTriggers: string[];
 }
@@ -47,7 +47,7 @@ const sisyphusAscentRarityTable: OutcomeTier[] = [
         boons: [
             { type: 'credits', value: 3, weight: 60 },
             { type: 'credits', value: 5, weight: 30 },
-            { type: 'chaos_card', value: 'GEOLOGIC_TIME', weight: 10 },
+            { type: 'chaos_card', value: 'WEEPING_GLASS', weight: 10 },
         ],
         narrativeTriggers: ["A foothold is found.", "The path levels, briefly."],
     },
@@ -63,7 +63,7 @@ const sisyphusAscentRarityTable: OutcomeTier[] = [
     },
     {
         tier: 'DIVINE',
-        baseWeight: 1, // Reserved for forced events like pity boons
+        baseWeight: 1, // This is not a random roll; it's a forced outcome pool.
         boons: [
             { type: 'system_effect', value: 'SISYPHUS_REPRIEVE', weight: 50 },
             { type: 'system_effect', value: 'PSYCHE_MATRIX_RESONANCE', weight: 50 },
