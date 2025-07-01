@@ -17,14 +17,14 @@ import { UserPsyche } from '@prisma/client';
 import { FlowerOfLifeIcon } from '@/components/icons/FlowerOfLifeIcon';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import Image from 'next/image';
+import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 
 const formSchema = z.object({
-  workspaceName: z.string().trim().min(1),
+  workspaceName: z.string().trim().min(1, { message: "The Canvas must have a name." }),
   agentAlias: z.string().optional(),
-  psyche: z.nativeEnum(UserPsyche),
-  email: z.string().email(),
-  password: z.string().min(8),
-  // Ephemeral fields for the ceremony
+  psyche: z.nativeEnum(UserPsyche, { required_error: "You must make a Vow to proceed." }),
+  email: z.string().email({ message: "A valid Sigil (email) is required." }),
+  password: z.string().min(8, { message: "Your Vow (password) must be at least 8 characters long." }),
   whatMustEnd: z.string().optional(),
   goal: z.string().optional(),
 });
@@ -95,7 +95,6 @@ const PhaseOne = ({ nextPhase, methods }: { nextPhase: () => void, methods: any 
             return () => clearTimeout(timer);
         }
     }, [step]);
-
 
     const handleContinue = () => {
         if (!whatMustEnd) return;
@@ -188,8 +187,12 @@ const PhaseTwo = ({ nextPhase, methods }: { nextPhase: () => void, methods: any 
 }
 
 const PhaseThree = ({ nextPhase, methods }: { nextPhase: () => void, methods: any }) => {
-    const { register, watch, formState: { errors } } = methods;
-    const workspaceName = watch('workspaceName');
+    const workspaceName = methods.watch('workspaceName');
+    
+    const handleContinue = async () => {
+        const isValid = await methods.trigger('workspaceName');
+        if(isValid) nextPhase();
+    }
     
     return (
         <div className="text-center w-full max-w-lg mx-auto space-y-8">
@@ -203,44 +206,51 @@ const PhaseThree = ({ nextPhase, methods }: { nextPhase: () => void, methods: an
                     “ΛΞVON is listening. But to act, it must be named.”
                 </h2>
                 <div className="space-y-4">
-                    <TooltipProvider>
-                        <Tooltip>
-                            <TooltipTrigger asChild className="w-full">
-                                <div className="relative">
-                                    <Input 
-                                        {...register('workspaceName')}
-                                        className="bg-transparent border-foreground/30 text-center text-lg h-14 focus-visible:ring-primary pr-10"
-                                        placeholder="Name Your Canvas..."
-                                    />
-                                    <Info className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none" />
-                                </div>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                                <p>The Canvas is your main workspace—the dynamic, persistent<br/>environment where you compose and interact with Micro-Apps.</p>
-                            </TooltipContent>
-                        </Tooltip>
-                    </TooltipProvider>
-                    {errors.workspaceName && <p className="text-destructive text-sm">{errors.workspaceName.message as string}</p>}
-                    
-                     <TooltipProvider>
-                        <Tooltip>
-                            <TooltipTrigger asChild className="w-full">
-                                <div className="relative">
-                                    <Input 
-                                        {...register('agentAlias')}
-                                        className="bg-transparent border-foreground/30 text-center text-lg h-14 focus-visible:ring-primary pr-10"
-                                        placeholder="Name Your Voice (Optional, default: BEEP)"
-                                    />
-                                    <Info className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none" />
-                                </div>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                                <p>The Voice is your primary agentic interface, BEEP. It understands<br/>commands, orchestrates workflows, and is the soul of the OS.</p>
-                            </TooltipContent>
-                        </Tooltip>
-                    </TooltipProvider>
+                     <FormField
+                        control={methods.control}
+                        name="workspaceName"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormControl>
+                                    <TooltipProvider>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild className="w-full">
+                                            <div className="relative">
+                                                <Input {...field} className="bg-transparent border-foreground/30 text-center text-lg h-14 focus-visible:ring-primary pr-10" placeholder="Name Your Canvas..." />
+                                                <Info className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none" />
+                                            </div>
+                                        </TooltipTrigger>
+                                        <TooltipContent><p>The Canvas is your main workspace—the dynamic, persistent<br/>environment where you compose and interact with Micro-Apps.</p></TooltipContent>
+                                    </Tooltip>
+                                    </TooltipProvider>
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                     <FormField
+                        control={methods.control}
+                        name="agentAlias"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormControl>
+                                    <TooltipProvider>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild className="w-full">
+                                            <div className="relative">
+                                                <Input {...field} className="bg-transparent border-foreground/30 text-center text-lg h-14 focus-visible:ring-primary pr-10" placeholder="Name Your Voice (Optional, default: BEEP)" />
+                                                <Info className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none" />
+                                            </div>
+                                        </TooltipTrigger>
+                                        <TooltipContent><p>The Voice is your primary agentic interface, BEEP. It understands<br/>commands, orchestrates workflows, and is the soul of the OS.</p></TooltipContent>
+                                    </Tooltip>
+                                    </TooltipProvider>
+                                </FormControl>
+                            </FormItem>
+                        )}
+                    />
                 </div>
-                 <Button onClick={nextPhase} disabled={!workspaceName} variant="ghost" className="text-muted-foreground hover:text-primary transition-colors">Continue</Button>
+                 <Button onClick={handleContinue} disabled={!workspaceName} variant="ghost" className="text-muted-foreground hover:text-primary transition-colors">Continue</Button>
             </motion.div>
         </div>
     )
@@ -268,10 +278,10 @@ const PhaseFour = ({ nextPhase, methods }: { nextPhase: () => void, methods: any
     const [vowMade, setVowMade] = useState(false);
     
     const selectVow = (psyche: UserPsyche) => {
-        if (vowMade) return; // Prevent re-selection
+        if (vowMade) return;
         setValue('psyche', psyche, { shouldValidate: true });
         setVowMade(true);
-        setTimeout(nextPhase, 2000); // A longer pause to let the confirmation sink in
+        setTimeout(nextPhase, 2000);
     }
     
     const covenantText = {
@@ -296,9 +306,9 @@ const PhaseFour = ({ nextPhase, methods }: { nextPhase: () => void, methods: any
                         “Make your vow.”
                     </h2>
                     <div className="grid md:grid-cols-3 gap-4">
-                        <VowButton vow="I will build faster than chaos." Icon="🜁" onClick={() => selectVow(UserPsyche.SYNDICATE_ENFORCER)} isSelected={false} />
-                        <VowButton vow="I will automate what others worship." Icon="🜃" onClick={() => selectVow(UserPsyche.RISK_AVERSE_ARTISAN)} isSelected={false} />
-                        <VowButton vow="I will create the silence of true automation." Icon="🜄" onClick={() => selectVow(UserPsyche.ZEN_ARCHITECT)} isSelected={false} />
+                        <VowButton vow="I will build faster than chaos." Icon="🜁" onClick={() => selectVow(UserPsyche.SYNDICATE_ENFORCER)} isSelected={selectedPsyche === UserPsyche.SYNDICATE_ENFORCER} />
+                        <VowButton vow="I will automate what others worship." Icon="🜃" onClick={() => selectVow(UserPsyche.RISK_AVERSE_ARTISAN)} isSelected={selectedPsyche === UserPsyche.RISK_AVERSE_ARTISAN} />
+                        <VowButton vow="I will create the silence of true automation." Icon="🜄" onClick={() => selectVow(UserPsyche.ZEN_ARCHITECT)} isSelected={selectedPsyche === UserPsyche.ZEN_ARCHITECT} />
                     </div>
                 </motion.div>
             ) : (
@@ -320,7 +330,7 @@ const PhaseFour = ({ nextPhase, methods }: { nextPhase: () => void, methods: any
 }
 
 const PhaseFive = ({ methods }: { methods: any }) => {
-    const { register, formState: { errors, isSubmitting } } = methods;
+    const { formState: { isSubmitting } } = methods;
     
     return (
         <div className="text-center w-full max-w-lg mx-auto space-y-8">
@@ -334,20 +344,30 @@ const PhaseFive = ({ methods }: { methods: any }) => {
                     “Forge the final key.”
                 </h2>
                 <div className="space-y-4">
-                     <Input 
-                        {...register('email')}
-                        type="email"
-                        className="bg-transparent border-foreground/30 text-center text-lg h-14 focus-visible:ring-primary"
-                        placeholder="Your Sigil (Email)"
+                     <FormField
+                        control={methods.control}
+                        name="email"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormControl>
+                                    <Input {...field} type="email" className="bg-transparent border-foreground/30 text-center text-lg h-14 focus-visible:ring-primary" placeholder="Your Sigil (Email)" />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
                     />
-                     {errors.email && <p className="text-destructive text-sm">{errors.email.message as string}</p>}
-                    <Input 
-                        {...register('password')}
-                        type="password"
-                        className="bg-transparent border-foreground/30 text-center text-lg h-14 focus-visible:ring-primary"
-                        placeholder="Your Vow (Password)"
+                     <FormField
+                        control={methods.control}
+                        name="password"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormControl>
+                                    <Input {...field} type="password" className="bg-transparent border-foreground/30 text-center text-lg h-14 focus-visible:ring-primary" placeholder="Your Vow (Password)" />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
                     />
-                     {errors.password && <p className="text-destructive text-sm">{errors.password.message as string}</p>}
                 </div>
                  <Button type="submit" size="lg" className="w-full" disabled={isSubmitting}>
                     {isSubmitting ? <Loader2 className="animate-spin" /> : 'AWAKEN ΛΞVON'}
@@ -368,31 +388,16 @@ export default function RegisterPage() {
         defaultValues: {
             workspaceName: '',
             agentAlias: '',
-            psyche: undefined,
+            whatMustEnd: '',
+            goal: '',
             email: '',
             password: '',
         }
     });
 
-    const nextPhase = async () => {
-        if (phase === 0) {
-            setDirection(1);
-            setPhase(p => p + 1);
-            return;
-        }
-
-        let fieldsToValidate: (keyof FormData)[] = [];
-        if (phase === 1) fieldsToValidate = ['whatMustEnd'];
-        if (phase === 2) fieldsToValidate = ['goal'];
-        if (phase === 3) fieldsToValidate = ['workspaceName'];
-        if (phase === 4) fieldsToValidate = ['psyche'];
-        
-        const isValid = await methods.trigger(fieldsToValidate);
-
-        if (isValid || fieldsToValidate.length === 0) {
-            setDirection(1);
-            setPhase(p => p + 1);
-        }
+    const nextPhase = () => {
+        setDirection(1);
+        setPhase(p => p + 1);
     };
     
     async function onSubmit(values: FormData) {
