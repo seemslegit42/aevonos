@@ -12,7 +12,7 @@ import { Workspace, ChaosCard as PrismaChaosCard, UserRole } from '@prisma/clien
 import type { User } from '@prisma/client';
 import { useToast } from '@/hooks/use-toast';
 import { getNudges } from '@/app/actions';
-import { MicroAppManifest } from '@/config/micro-apps';
+import { microAppManifests, MicroAppManifest } from '@/config/micro-apps';
 
 interface FullUser extends User {
     ownedChaosCards: PrismaChaosCard[];
@@ -29,17 +29,15 @@ export default function Armory() {
   const fetchArmoryData = useCallback(async () => {
       setIsLoading(true);
       try {
-        const [appsResponse, workspaceResponse, userResponse] = await Promise.all([
-            fetch('/api/microapps'),
+        const [workspaceResponse, userResponse] = await Promise.all([
             fetch('/api/workspaces/me'),
             fetch('/api/users/me')
         ]);
         
-        if (!appsResponse.ok) throw new Error('Failed to fetch micro-apps');
         if (!workspaceResponse.ok) throw new Error('Failed to fetch workspace data');
         if (!userResponse.ok) throw new Error('Failed to fetch user data');
         
-        const allAppsData: MicroAppManifest[] = await appsResponse.json();
+        const allAppsData: MicroAppManifest[] = microAppManifests;
         const workspaceData: Workspace = await workspaceResponse.json();
         const userData: FullUser = await userResponse.json();
 
@@ -60,8 +58,7 @@ export default function Armory() {
             return true;
         });
 
-        // The Armory is for acquisitions. Filter to only show purchasable apps.
-        setApps(filteredApps.filter((app: MicroAppManifest) => app.creditCost > 0));
+        setApps(filteredApps);
         setCards(chaosCardManifest);
         setWorkspace(workspaceData);
         setUser(userData);
