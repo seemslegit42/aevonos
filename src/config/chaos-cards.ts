@@ -256,7 +256,7 @@ export const chaosCardManifest: ChaosCardManifest[] = [
     name: 'The Loaded Die',
     description: 'For those who prefer to make their own luck. Subtly influences the threads of fate for your next three tributes.',
     cardClass: 'SYSTEMIC',
-    cost: 450, // High Cost
+    cost: 450,
     systemEffect: 'Applies a +15% multiplier to the base weight of Uncommon, Rare, and Mythic outcomes for the next 3 Folly Instrument tributes.',
     imageUrl: 'https://placehold.co/400x560.png',
     imageHint: 'glowing dice',
@@ -264,9 +264,9 @@ export const chaosCardManifest: ChaosCardManifest[] = [
   {
     key: 'SISYPHUS_REPRIEVE',
     name: "Sisyphus's Reprieve",
-    description: 'Even a condemned king deserves a moment of peace. Your next push will not be in vain.',
+    description: "Even a condemned king deserves a moment of peace. Your next push will not be in vain.",
     cardClass: 'SYSTEMIC',
-    cost: 250, // Medium Cost
+    cost: 250,
     systemEffect: "Guarantees the next tribute on 'Sisyphus\\'s Ascent' is not a Common (Loss) outcome.",
     imageUrl: 'https://placehold.co/400x560.png',
     imageHint: 'boulder peak',
@@ -276,7 +276,7 @@ export const chaosCardManifest: ChaosCardManifest[] = [
     name: "Oracle's Insight",
     description: "The Oracle whispers the real-time Payout Ratio, allowing you to hunt for an Instrument that is 'hot'.",
     cardClass: 'AGENTIC',
-    cost: 300, // Medium Cost
+    cost: 300,
     systemEffect: 'Unlocks a temporary UI element on Folly Instruments showing their current payout ratio for the next 5 minutes.',
     imageUrl: 'https://placehold.co/400x560.png',
     imageHint: 'seeing eye chart',
@@ -286,7 +286,7 @@ export const chaosCardManifest: ChaosCardManifest[] = [
     name: "Hades' Bargain",
     description: 'A dark pact for greater glory. Double the tribute, double the potential boon. High risk, high reward.',
     cardClass: 'SYSTEMIC',
-    cost: 100, // Low Cost
+    cost: 100,
     systemEffect: 'Doubles the tribute cost and the potential credit boon multipliers for the next single Folly Instrument tribute.',
     imageUrl: 'https://placehold.co/400x560.png',
     imageHint: 'underworld contract fire',
