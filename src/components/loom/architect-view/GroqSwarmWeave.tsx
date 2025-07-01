@@ -17,15 +17,16 @@ const DaemonParticle = ({ i }: { i: number }) => {
         <motion.circle
             cx={xStart}
             cy={yStart}
-            r="0.5"
-            className="text-primary"
+            r="0.75"
+            className="text-accent"
             fill="currentColor"
+            filter="url(#particle-glow)"
             animate={{
                 cx: [xStart, xEnd, xStart],
                 cy: [yStart, yEnd, yStart],
             }}
             transition={{
-                duration: Math.random() * 10 + 10,
+                duration: Math.random() * 15 + 10,
                 repeat: Infinity,
                 repeatType: 'loop',
                 ease: "linear",
@@ -55,7 +56,7 @@ const WeaveLine = ({ i }: { i: number }) => {
             y1={Math.random() * 80 + 10}
             x2={Math.random() * 80 + 10}
             y2={Math.random() * 80 + 10}
-            stroke="hsl(var(--primary) / 0.1)"
+            stroke="hsl(var(--primary) / 0.2)"
             strokeWidth="0.2"
             variants={variants}
         />
@@ -63,8 +64,8 @@ const WeaveLine = ({ i }: { i: number }) => {
 }
 
 export default function GroqSwarmWeave() {
-    const numParticles = 50;
-    const numLines = 25;
+    const numParticles = 75;
+    const numLines = 40;
 
     return (
         <Card className="bg-background/50 border-primary/30 h-full flex flex-col">
@@ -74,14 +75,16 @@ export default function GroqSwarmWeave() {
             </CardHeader>
             <CardContent className="flex-grow relative overflow-hidden">
                 <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none" className="absolute inset-0">
+                    <defs>
+                        <filter id="particle-glow" x="-50%" y="-50%" width="200%" height="200%">
+                            <feGaussianBlur in="SourceGraphic" stdDeviation="1.5" result="blur" />
+                        </filter>
+                    </defs>
                     <motion.g initial="hidden" animate="visible">
                         {Array.from({ length: numLines }).map((_, i) => <WeaveLine key={`line-${i}`} i={i} />)}
                     </motion.g>
                     {Array.from({ length: numParticles }).map((_, i) => <DaemonParticle key={`particle-${i}`} i={i} />)}
                 </svg>
-                <div className="absolute inset-0 flex items-center justify-center">
-                    <p className="text-muted-foreground bg-background/80 px-4 py-2 rounded-lg backdrop-blur-sm border">Live Swarm visualization coming soon.</p>
-                </div>
             </CardContent>
         </Card>
     );

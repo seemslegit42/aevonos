@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Slider } from '@/components/ui/slider';
 import { pulseEngineConfig } from '@/config/pulse-engine-config';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Info } from 'lucide-react';
+import { Info, SlidersHorizontal } from 'lucide-react';
 
 const Dial = ({ label, description, value, onValueChange, min, max, step, disabled = true }: { label: string, description: string, value: number, onValueChange: (val: number) => void, min: number, max: number, step: number, disabled?: boolean }) => (
     <div className="space-y-2">
@@ -55,7 +55,10 @@ export default function ProfitDials() {
     return (
         <Card className="bg-background/50 border-primary/30 h-full">
             <CardHeader>
-                <CardTitle>Klepsydra Engine: Profit Dials</CardTitle>
+                <CardTitle className="flex items-center gap-2">
+                    <SlidersHorizontal className="w-6 h-6"/>
+                    Klepsydra Engine: Profit Dials
+                </CardTitle>
                 <CardDescription>Tune the fundamental physics of the ΞCredit economy. Changes are not yet live.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
