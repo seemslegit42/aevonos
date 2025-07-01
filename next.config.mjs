@@ -1,16 +1,9 @@
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  reactStrictMode: true,
-  images: {
-    remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: 'placehold.co',
-        port: '',
-        pathname: '/**',
-      },
-    ],
-  },
+  // This file establishes a standard Next.js configuration.
+  // It is intentionally sparse to ensure maximum compatibility
+  // and resolve routing conflicts during the build process.
 };
 
 export default nextConfig;
