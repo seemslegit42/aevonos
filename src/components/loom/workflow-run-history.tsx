@@ -36,7 +36,7 @@ const statusConfig: Record<WorkflowRunStatus, { icon: React.ElementType, color: 
 };
 
 
-function RunDetails({ runId }: { runId: string }) {
+function RunDetails({ runId, workflowName }: { runId: string, workflowName: string }) {
     const [details, setDetails] = useState<FullWorkflowRun | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -154,12 +154,12 @@ function RunItem({ run }: { run: WorkflowRunSummary }) {
             {isDialogOpen && (
                 <DialogContent className="max-w-2xl">
                     <DialogHeader>
-                        <DialogTitle>Lambda Run Details</DialogTitle>
+                        <DialogTitle>Run Details: {run.workflow.name}</DialogTitle>
                         <DialogDescription>
                             <span className='font-mono text-xs'>{run.id}</span>
                         </DialogDescription>
                     </DialogHeader>
-                    <RunDetails runId={run.id} />
+                    <RunDetails runId={run.id} workflowName={run.workflow.name} />
                 </DialogContent>
             )}
         </Dialog>
@@ -211,7 +211,7 @@ export default function WorkflowRunHistory({ activeWorkflowId, triggerRefresh }:
         return (
             <div className="text-center text-muted-foreground text-sm pt-8">
                 <p>No runs found.</p>
-                <p className="text-xs">Trigger a lambda to see its history here.</p>
+                <p className="text-xs">Trigger a workflow to see its history here.</p>
             </div>
         )
     }
@@ -231,7 +231,7 @@ export default function WorkflowRunHistory({ activeWorkflowId, triggerRefresh }:
         </Button>
       </div>
       <p className="text-xs text-muted-foreground -mt-1">
-        {activeWorkflowId ? 'Showing runs for selected Lambda.' : 'Showing all recent runs.'}
+        {activeWorkflowId ? 'Showing runs for selected workflow.' : 'Showing all recent runs.'}
       </p>
       <ScrollArea className="flex-grow -mr-4 pr-4">
         {renderContent()}
