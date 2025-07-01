@@ -19,6 +19,17 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Input } from '../ui/input';
 
 type ConfiguredIntegration = {
@@ -28,8 +39,32 @@ type ConfiguredIntegration = {
     manifest: IntegrationManifest;
 };
 
-const IntegrationCard = ({ integration }: { integration: ConfiguredIntegration }) => {
+const IntegrationCard = ({ integration, onDeleteSuccess }: { integration: ConfiguredIntegration, onDeleteSuccess: () => void }) => {
+    const { toast } = useToast();
+    const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
     const isActive = integration.status === 'active';
+
+    const handleDelete = async () => {
+        setIsDeleting(true);
+        try {
+            const response = await fetch(`/api/integrations/${integration.id}`, {
+                method: 'DELETE',
+            });
+            if (response.status !== 204) {
+                 const errorData = await response.json().catch(() => ({ error: 'Failed to delete integration.' }));
+                 throw new Error(errorData.error);
+            }
+            toast({ title: 'Integration Removed', description: `The connection to ${integration.name} has been deleted.` });
+            onDeleteSuccess();
+        } catch (error) {
+            toast({ variant: 'destructive', title: 'Error', description: (error as Error).message });
+        } finally {
+            setIsDeleting(false);
+            setIsDeleteConfirmOpen(false);
+        }
+    }
+
     return (
         <Card className="bg-background/50 hover:border-primary transition-colors">
             <CardHeader className="flex flex-row items-center gap-4 space-y-0 p-3">
@@ -43,8 +78,27 @@ const IntegrationCard = ({ integration }: { integration: ConfiguredIntegration }
                         {isActive ? <Wifi className="h-3 w-3 mr-1" /> : <WifiOff className="h-3 w-3 mr-1" />}
                         {integration.status}
                     </Badge>
-                     <Button variant="ghost" size="icon" className="h-8 w-8"><Settings className="h-4 w-4"/></Button>
-                     <Button variant="ghost" size="icon" className="h-8 w-8"><Trash2 className="h-4 w-4 text-destructive"/></Button>
+                     <Button variant="ghost" size="icon" className="h-8 w-8" disabled><Settings className="h-4 w-4"/></Button>
+                     <AlertDialog open={isDeleteConfirmOpen} onOpenChange={setIsDeleteConfirmOpen}>
+                        <AlertDialogTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8"><Trash2 className="h-4 w-4 text-destructive"/></Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                            <AlertDialogHeader>
+                                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                    This will permanently delete the "{integration.name}" integration and revoke any associated access tokens. This action cannot be undone.
+                                </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction onClick={handleDelete} disabled={isDeleting} className="bg-destructive hover:bg-destructive/90">
+                                    {isDeleting && <Loader2 className="animate-spin mr-2" />}
+                                    Delete Integration
+                                </AlertDialogAction>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialog>
                 </div>
             </CardHeader>
         </Card>
@@ -176,7 +230,7 @@ export default function IntegrationNexus() {
       <>
         {integrations.length > 0 ? (
           <div className="space-y-3">
-            {integrations.map(int => <IntegrationCard key={int.id} integration={int} />)}
+            {integrations.map(int => <IntegrationCard key={int.id} integration={int} onDeleteSuccess={fetchIntegrations} />)}
           </div>
         ) : (
           <div className="text-center py-10 text-muted-foreground">
