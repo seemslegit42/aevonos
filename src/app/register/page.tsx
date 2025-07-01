@@ -383,6 +383,7 @@ export default function RegisterPage() {
     const { toast } = useToast();
     const [phase, setPhase] = useState(0);
     const [direction, setDirection] = useState(1);
+    const [benediction, setBenediction] = useState<string | null>(null);
 
     const methods = useForm<FormData>({
         resolver: zodResolver(formSchema),
@@ -414,6 +415,10 @@ export default function RegisterPage() {
                 throw new Error(errorMsg || 'Invocation failed. The connection is unstable.');
             }
             
+            if (responseData.benediction) {
+                setBenediction(responseData.benediction);
+            }
+
             // Registration successful, now sign in to create the session
             const signInResult = await signIn('credentials', {
                 redirect: false,
@@ -457,7 +462,7 @@ export default function RegisterPage() {
                     transition={{ duration: 1.5 }}
                 >
                     <h2 className="text-2xl md:text-3xl font-headline tracking-wider text-foreground text-center">
-                        “You are now in command of ΛΞVON. Your time belongs to you again.”
+                       {benediction || "“You are now in command of ΛΞVON. Your time belongs to you again.”"}
                     </h2>
                 </motion.div>
             )

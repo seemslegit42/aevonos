@@ -10,6 +10,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 import { useAppStore } from '@/store/app-store';
 import TendyRain from '@/components/effects/TendyRain';
+import { NudgeHandler } from './NudgeHandler';
 
 type UserProp = Pick<User, 'id' | 'email' | 'firstName' | 'lastName' | 'role' | 'agentAlias' | 'psyche' | 'firstWhisper'> | null;
 
@@ -41,6 +42,7 @@ export function MainLayout({ children, user, workspace }: { children: React.Reac
       </main>
       {isMobile && <BottomNavBar />}
       {tendyRainActive && <TendyRain />}
+      <NudgeHandler />
     </div>
   );
 }

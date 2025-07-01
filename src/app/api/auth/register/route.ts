@@ -84,6 +84,7 @@ export async function POST(request: Request) {
 
     // After successful registration, call the invocation agent to get the benediction.
     // This is non-critical; if it fails, registration still succeeds.
+    let benediction = null;
     try {
         const invocationResult = await interpretVow({
             whatMustEnd: whatMustEnd || 'the old ways',
@@ -100,12 +101,13 @@ export async function POST(request: Request) {
                 firstWhisper: invocationResult.firstWhisper,
             }
         });
+        benediction = invocationResult.foundingBenediction;
     } catch (aiError) {
         console.error('[Rite of Invocation AI Error]', aiError);
     }
     
     // Do NOT create a session here. The client will call signIn.
-    return NextResponse.json({ success: true, userId: user.id }, { status: 201 });
+    return NextResponse.json({ success: true, userId: user.id, benediction }, { status: 201 });
 
   } catch (error) {
     console.error('[API /auth/register POST]', error);
