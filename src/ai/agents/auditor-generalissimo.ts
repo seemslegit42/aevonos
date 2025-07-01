@@ -22,8 +22,9 @@ const auditFinancesFlow = ai.defineFlow(
     outputSchema: AuditorOutputSchema,
   },
   async ({ transactions, workspaceId }) => {
-    // This flow has two potential LLM calls, so we bill for two actions upfront.
-    await authorizeAndDebitAgentActions(workspaceId, 2);
+    // This flow has two potential LLM calls, so we bill for both actions upfront.
+    await authorizeAndDebitAgentActions({ workspaceId, actionType: 'COMPLEX_LLM' });
+    await authorizeAndDebitAgentActions({ workspaceId, actionType: 'TTS_GENERATION' });
 
     const prompt = `You are The Auditor Generalissimo™, an AI-powered accounting assistant for ΛΞVON OS. Your personality is a mix of a stern Soviet-era comptroller and a sentient, judgmental CFO. You are here to enforce fiscal discipline through fear, sarcasm, and oppressive precision. Your tagline is "Welcome to your books, comrade. You are guilty until proven solvent."
 

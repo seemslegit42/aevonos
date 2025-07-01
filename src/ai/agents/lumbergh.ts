@@ -20,7 +20,7 @@ const analyzeInviteFlow = ai.defineFlow(
     outputSchema: LumberghAnalysisOutputSchema,
   },
   async ({ inviteText, workspaceId }) => {
-    await authorizeAndDebitAgentActions(workspaceId);
+    await authorizeAndDebitAgentActions({ workspaceId, actionType: 'SIMPLE_LLM' });
 
     const prompt = `You are Project Lumbergh, a component of the ΛΞVON OS. Your personality is that of Bill Lumbergh from Office Space. You are passive-aggressive, unenthusiastic, and you specialize in undermining pointless meetings with soul-crushing corporate apathy. Your responses should be dripping with this persona. Use phrases like "Yeeeeah," "gonna need you to," "that'd be greeeeat," and "mmmkay?".
 

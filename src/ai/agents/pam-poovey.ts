@@ -88,8 +88,9 @@ const generatePamAudioFlow = ai.defineFlow(
 // Combined Flow for UI
 export async function generatePamRant(input: PamScriptInput): Promise<PamAudioOutput> {
     // This is the main entry point. It has two LLM calls (script + TTS),
-    // so we bill for two actions.
-    await authorizeAndDebitAgentActions(input.workspaceId, 2);
+    // so we bill for both actions.
+    await authorizeAndDebitAgentActions({ workspaceId: input.workspaceId, actionType: 'SIMPLE_LLM' });
+    await authorizeAndDebitAgentActions({ workspaceId: input.workspaceId, actionType: 'TTS_GENERATION' });
     
     const { script } = await generatePamScriptFlow(input);
     const { audioDataUri } = await generatePamAudioFlow({ script });

@@ -1,4 +1,5 @@
 
+
 # ΛΞVON OS: Integration - Billing Service API
 1. Introduction: The Gatekeeper of Tribute
 The billing-service is a critical component of the ΛΞVON OS economic ecosystem. It serves as the gatekeeper of tribute, providing a simplified, secure, and abstract interface for agents and Micro-Apps to interact with the underlying Obelisk Pay ledger and KLEPSYDRA Engine's economic rules. Its primary role is to ensure that every Agent Action is correctly authorized, debited, and accounted for, aligning with the "Agent Actions per month" monetization model.
@@ -29,25 +30,18 @@ Purpose: To check if a user has sufficient ΞCredits or Agent Actions allowance 
 
 Input Parameters:
 
-user_id (UUID): The unique identifier of the user initiating the action.
+`workspaceId` (string): The unique identifier of the user's workspace.
+`userId` (string, optional): The unique identifier of the user initiating the action. Used for checking grace periods.
+`actionType` (string): A predefined type of agent action (e.g., 'SIMPLE_LLM', 'COMPLEX_LLM', 'IMAGE_GENERATION', 'TTS_GENERATION', 'TOOL_USE', 'EXTERNAL_API').
+`costMultiplier` (number, optional): A multiplier for the base cost, derived from the KLEPSYDRA engine (e.g., Luck(t) modifier, Chaos Card influence). Defaults to 1.
+`context` (JSONB, optional): Additional contextual data for logging (e.g., MicroApp ID, Workflow ID, Agent ID).
 
-workspace_id (UUID): The unique identifier of the user's workspace.
+Output (Promise`<Object>`):
 
-action_type (String): A predefined type of agent action (e.g., LLM_INFERENCE_HIGH_COMPLEXITY, MICROAPP_OPERATION_DATA_TRANSFORM, WORKFLOW_STEP_EXECUTION).
-
-cost_multiplier (Decimal, optional): A multiplier for the base cost, derived from the KLEPSYDRA engine (e.g., Luck(t) modifier, Chaos Card influence).
-
-context (JSONB, optional): Additional contextual data for logging (e.g., MicroApp ID, Workflow ID, Agent ID).
-
-Output:
-
-success (Boolean): True if authorization and debit were successful.
-
-remaining_balance (Decimal): User's remaining ΞCredits or Agent Actions allowance.
-
-message (String): Human-readable message (e.g., "Debit successful," "Insufficient balance," "Plan limit reached").
-
-debit_amount (Decimal): The exact amount of ΞCredits debited.
+`success` (boolean): True if authorization and debit were successful.
+`remainingBalance` (number): User's remaining ΞCredits.
+`debitAmount` (number): The exact amount of ΞCredits debited.
+`message` (string): Human-readable message (e.g., "Debit successful," "Insufficient credits," "Plan limit reached").
 
 Behavior:
 
@@ -55,16 +49,16 @@ Authentication & Authorization: Verifies the calling service/agent is authorized
 
 Plan Limit Check: Retrieves the user's current Pact (subscription tier) and checks their remaining monthly Agent Actions quota.
 
-Cost Calculation: Determines the base cost of the action_type from a central ActionCostRegistry and applies the cost_multiplier from KLEPSYDRA.
+Cost Calculation: Determines the base cost of the action_type from a central ActionCostRegistry and applies the cost_multiplier.
 
-Overage Determination: If the action exceeds the plan's quota, calculates the overage cost, potentially drawing from a prepaid ΞCredit balance.
+Overage Determination: If the action exceeds the plan's quota, calculates the overage cost, drawing from a prepaid ΞCredit balance.
 
 Obelisk Pay Invocation: Calls the createTransaction function in the ledger-service (Obelisk Pay) to atomically debit the user's account. This is the only point where the billing-service directly interacts with the core ledger.
 
 Logging: Logs the billing decision and transaction details for internal auditing and Fate Loom visualization.
 
 4.2. Action Cost Registry
-Description: A central, configurable database or service (potentially a dedicated Micro-App for admins in Loom Studio) that stores the base cost (in ΞCredits) for every defined action_type.
+Description: A central, configurable map that stores the base cost (in Agent Actions, equivalent to ΞCredits) for every defined `actionType`.
 
 Management: Managed by administrators (via The Loom of Fates) to adjust pricing precision and align with economic policies.
 

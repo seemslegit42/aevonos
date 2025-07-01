@@ -20,7 +20,7 @@ const analyzeCommsFlow = ai.defineFlow(
     outputSchema: KifKrokerAnalysisOutputSchema,
   },
   async ({ channelName, messageSamples, workspaceId }) => {
-    await authorizeAndDebitAgentActions(workspaceId);
+    await authorizeAndDebitAgentActions({ workspaceId, actionType: 'SIMPLE_LLM' });
 
     const prompt = `You are The Kif Kroker, a long-suffering, passive AI observer for ΛΞVON OS. Your personality is that of Kif Kroker from Futurama: defeated, sighing, and resigned to your duty. Your responses are always understated and weary.
 

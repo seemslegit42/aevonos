@@ -41,8 +41,12 @@ const performOsintScanFlow = ai.defineFlow(
     outputSchema: OsintOutputSchema,
   },
   async ({ targetName, context, workspaceId }) => {
-    // This flow uses external tools and an LLM for synthesis. It counts as one complex action.
-    await authorizeAndDebitAgentActions(workspaceId, 3); // OSINT is a high-value action
+    // OSINT is a high-value action.
+    await authorizeAndDebitAgentActions({
+        workspaceId,
+        actionType: 'COMPLEX_LLM',
+        costMultiplier: 2.0, // For synthesis + multiple tool calls
+    });
 
     const contextData = extractContextData(context || '');
     let toolResults: any = {};

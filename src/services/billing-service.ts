@@ -4,27 +4,67 @@
  * @fileOverview Service for handling billing and usage tracking.
  */
 import prisma from '@/lib/prisma';
-import { Prisma, TransactionStatus, TransactionType } from '@prisma/client';
+import { Prisma, TransactionStatus, TransactionType, PlanTier } from '@prisma/client';
 import { aegisAnomalyScan } from '@/ai/agents/aegis';
 import { createSecurityAlertInDb } from '@/ai/tools/security-tools';
 import { PLAN_LIMITS } from '@/config/billing';
 import { InsufficientCreditsError } from '@/lib/errors';
 import type { BillingUsage, RequestCreditTopUpInput, RequestCreditTopUpOutput } from '@/ai/tools/billing-schemas';
+import { z } from 'zod';
+
+export const ActionTypeSchema = z.enum([
+    'SIMPLE_LLM',
+    'COMPLEX_LLM',
+    'IMAGE_GENERATION',
+    'TTS_GENERATION',
+    'TOOL_USE',
+    'EXTERNAL_API'
+]);
+export type ActionType = z.infer<typeof ActionTypeSchema>;
+
+const ActionCostRegistry: Record<ActionType, number> = {
+    SIMPLE_LLM: 1,
+    COMPLEX_LLM: 2,
+    IMAGE_GENERATION: 5,
+    TTS_GENERATION: 1,
+    TOOL_USE: 1,
+    EXTERNAL_API: 2,
+};
+
+export const AuthorizeAndDebitInputSchema = z.object({
+  workspaceId: z.string(),
+  userId: z.string().optional(),
+  actionType: ActionTypeSchema,
+  costMultiplier: z.number().optional().default(1),
+  context: z.record(z.any()).optional(), // Not used for now, but part of spec
+});
+type AuthorizeAndDebitInput = z.infer<typeof AuthorizeAndDebitInputSchema>;
+
+export const AuthorizeAndDebitOutputSchema = z.object({
+  success: z.boolean(),
+  remainingBalance: z.number(),
+  debitAmount: z.number(),
+  message: z.string(),
+});
+export type AuthorizeAndDebitOutput = z.infer<typeof AuthorizeAndDebitOutputSchema>;
+
 
 /**
  * Checks if a workspace can afford an action, then atomically decrements
  * the credit balance, increments the usage counter, and creates a DEBIT transaction.
  * This now respects the monthly plan limits before charging for overage.
  * It also respects the user-specific Reclamation Grace Period.
- * @param workspaceId The ID of the workspace to charge.
- * @param amount The number of agent actions to authorize. Defaults to 1.
- * @param userId The ID of the user performing the action, to check for grace periods.
+ * @param input The details of the action to authorize and debit.
  */
-export async function authorizeAndDebitAgentActions(workspaceId: string, amount: number = 1, userId?: string): Promise<void> {
+export async function authorizeAndDebitAgentActions(input: AuthorizeAndDebitInput): Promise<AuthorizeAndDebitOutput> {
+    const { workspaceId, userId, actionType, costMultiplier } = AuthorizeAndDebitInputSchema.parse(input);
+
     if (!workspaceId) {
-        console.warn("[Billing Service] Attempted to authorize agent actions without a workspaceId. Skipping.");
-        return;
+        throw new Error("[Billing Service] Attempted to authorize agent actions without a workspaceId.");
     }
+    
+    const baseCost = ActionCostRegistry[actionType];
+    let cost = Math.ceil(baseCost * costMultiplier);
 
     try {
         // If a userId is provided, first check for the reclamation grace period.
@@ -36,11 +76,12 @@ export async function authorizeAndDebitAgentActions(workspaceId: string, amount:
             // If user is in grace period, skip the entire transaction.
             if (user?.reclamationGraceUntil && new Date() < user.reclamationGraceUntil) {
                 console.log(`[Billing Service] User ${userId} is in reclamation grace period. Skipping debit.`);
-                return;
+                const workspace = await prisma.workspace.findUnique({ where: { id: workspaceId }, select: { credits: true } });
+                return { success: true, remainingBalance: Number(workspace?.credits || 0), debitAmount: 0, message: "Action covered by Reclamation Grace Period." };
             }
         }
         
-        await prisma.$transaction(async (tx) => {
+        const { remainingBalance, debitAmount, message } = await prisma.$transaction(async (tx) => {
             // 1. Get workspace and its plan details.
             const workspace = await tx.workspace.findUnique({
                 where: { id: workspaceId },
@@ -57,7 +98,7 @@ export async function authorizeAndDebitAgentActions(workspaceId: string, amount:
             // 2. Check if the user is still within their monthly included actions.
             if (workspace.agentActionsUsed < planLimit) {
                 const remainingFreeActions = planLimit - workspace.agentActionsUsed;
-                const actionsCoveredByPlan = Math.min(amount, remainingFreeActions);
+                const actionsCoveredByPlan = Math.min(cost, remainingFreeActions);
 
                 // Increment usage counter for the actions covered by the plan.
                 if (actionsCoveredByPlan > 0) {
@@ -67,32 +108,32 @@ export async function authorizeAndDebitAgentActions(workspaceId: string, amount:
                     });
                 }
 
-                const remainingAmountToDebit = amount - actionsCoveredByPlan;
+                const remainingAmountToDebit = cost - actionsCoveredByPlan;
 
                 if (remainingAmountToDebit <= 0) {
                     // All actions were covered by the plan, no credit charge needed.
-                    return; 
+                    return { remainingBalance: Number(workspace.credits), debitAmount: 0, message: `Action successful. ${actionsCoveredByPlan} free action(s) used.` };
                 }
                 
                 // If some actions are overage, fall through to debit credits for the remainder.
-                amount = remainingAmountToDebit;
+                cost = remainingAmountToDebit;
             }
 
             // 3. If in overage (or partially in overage), check credit balance and debit.
             const currentCredits = Number(workspace.credits);
-            if (currentCredits < amount) {
-                throw new InsufficientCreditsError(`Insufficient credits for overage. Required: ${amount}, Available: ${currentCredits ?? 0}.`);
+            if (currentCredits < cost) {
+                throw new InsufficientCreditsError(`Insufficient credits for overage. Required: ${cost}, Available: ${currentCredits ?? 0}.`);
             }
 
             // 4. Atomically update credits and usage, and log the transaction.
-            await tx.workspace.update({
+            const updatedWorkspace = await tx.workspace.update({
                 where: { id: workspaceId },
                 data: {
                     credits: {
-                        decrement: new Prisma.Decimal(amount),
+                        decrement: new Prisma.Decimal(cost),
                     },
                     agentActionsUsed: {
-                        increment: amount, // Also increment for overage actions
+                        increment: cost, // Also increment for overage actions
                     },
                 },
             });
@@ -102,18 +143,25 @@ export async function authorizeAndDebitAgentActions(workspaceId: string, amount:
                     workspaceId,
                     userId, // Log which user triggered the debit
                     type: TransactionType.DEBIT,
-                    amount: new Prisma.Decimal(amount),
-                    description: `Agent Action Overage Cost (${amount}x)`,
+                    amount: new Prisma.Decimal(cost),
+                    description: `Agent Action: ${actionType} (x${costMultiplier})`,
                     status: TransactionStatus.COMPLETED,
                 },
             });
+
+            return { remainingBalance: Number(updatedWorkspace.credits), debitAmount: cost, message: `Action successful. ${cost} credits debited.` };
         });
+
+        return { success: true, remainingBalance, debitAmount, message };
     } catch (error) {
+        const workspace = await prisma.workspace.findUnique({ where: { id: workspaceId }, select: { credits: true } });
+        const balance = Number(workspace?.credits || 0);
+
         if (error instanceof InsufficientCreditsError) {
-            throw error;
+            throw new InsufficientCreditsError(error.message);
         }
         console.error(`[Billing Service] Failed to process agent action debit for workspace ${workspaceId}:`, error);
-        throw new Error('Failed to process agent action debit transaction.');
+        throw new Error('An internal error occurred during billing.');
     }
 }
 
@@ -154,7 +202,7 @@ export async function getUsageDetails(workspaceId: string): Promise<BillingUsage
  */
 export async function getUsageDetailsForAgent(workspaceId: string, userId: string): Promise<BillingUsage> {
   // Reading usage data via an agent is a billable action.
-  await authorizeAndDebitAgentActions(workspaceId, 1, userId);
+  await authorizeAndDebitAgentActions({ workspaceId, userId, actionType: 'TOOL_USE' });
   return getUsageDetails(workspaceId);
 }
 

@@ -23,7 +23,7 @@ const vinDieselValidationFlow = ai.defineFlow(
   },
   async ({ vin, workspaceId }) => {
     // This is a billable agent action.
-    await authorizeAndDebitAgentActions(workspaceId);
+    await authorizeAndDebitAgentActions({ workspaceId, actionType: 'EXTERNAL_API' });
 
     // In a real app, this would call an external VIN decoding API.
     // For now, we mock the logic with specific test cases.

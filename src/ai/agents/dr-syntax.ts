@@ -33,7 +33,7 @@ const drSyntaxCritiqueFlow = ai.defineFlow(
     outputSchema: DrSyntaxOutputSchema,
   },
   async input => {
-    await authorizeAndDebitAgentActions(input.workspaceId);
+    await authorizeAndDebitAgentActions({ workspaceId: input.workspaceId, actionType: 'COMPLEX_LLM' });
     
     const psycheInstruction = psycheTuning[input.psyche] || psycheTuning[UserPsyche.ZEN_ARCHITECT];
 

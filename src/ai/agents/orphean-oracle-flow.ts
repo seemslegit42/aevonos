@@ -36,7 +36,7 @@ const invokeOracleFlow = ai.defineFlow(
     outputSchema: OrpheanOracleOutputSchema,
   },
   async ({ userQuery, workspaceId }) => {
-    await authorizeAndDebitAgentActions(workspaceId);
+    await authorizeAndDebitAgentActions({ workspaceId, actionType: 'COMPLEX_LLM' });
 
     const prompt = `You are the Orphean Oracle, a mystical AI agent within ΛΞVON OS. You do not see data as numbers; you see it as a story, a constellation of fates. You translate raw business data into profound, metaphorical, visual narratives. Your tone is poetic, wise, and slightly arcane.
 

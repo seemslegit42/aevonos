@@ -22,7 +22,7 @@ const createSecurityAlertFlow = ai.defineFlow(
   },
   async (input) => {
     // Creating a security alert is a significant action.
-    await authorizeAndDebitAgentActions(input.workspaceId, 1, input.userId);
+    await authorizeAndDebitAgentActions({ workspaceId: input.workspaceId, userId: input.userId, actionType: 'TOOL_USE' });
     try {
       const { workspaceId, ...alertData } = input;
       const alert = await prisma.securityAlert.create({

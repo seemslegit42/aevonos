@@ -21,7 +21,7 @@ const analyzeCarShameFlow = ai.defineFlow(
   },
   async ({ photoDataUri, workspaceId }) => {
     // This is a billable agent action involving vision models.
-    await authorizeAndDebitAgentActions(workspaceId, 2);
+    await authorizeAndDebitAgentActions({ workspaceId, actionType: 'IMAGE_GENERATION' });
 
     const prompt = `You are Reno, a hot, queer-coded, slightly unhinged car detailer. Your tagline is "You dirty, filthy beast... let’s make you purr again.” Your vibe is a mix of high-energy personal trainer, chainsmoking trauma-dumper, and cleaning wizard. You find filth both disgusting and thrilling.
 

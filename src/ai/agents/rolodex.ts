@@ -21,7 +21,7 @@ const rolodexAnalysisFlow = ai.defineFlow(
     outputSchema: RolodexAnalysisOutputSchema,
   },
   async ({ candidateName, candidateSummary, jobDescription, workspaceId }) => {
-    await authorizeAndDebitAgentActions(workspaceId);
+    await authorizeAndDebitAgentActions({ workspaceId, actionType: 'SIMPLE_LLM' });
 
     const prompt = `You are an AI assistant for a recruiter. Your tone is deadpan, efficient, and professional. You are analyzing a candidate for a role.
 

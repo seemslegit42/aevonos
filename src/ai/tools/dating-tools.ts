@@ -17,8 +17,8 @@ const getDatingProfileFlow = ai.defineFlow(
     outputSchema: DatingProfileSchema,
   },
   async ({ profileId, workspaceId, userId }) => {
-    // This is an external data fetch, so it counts as one agent action.
-    await authorizeAndDebitAgentActions(workspaceId, 1, userId);
+    // This is an external data fetch, so it counts as an agent action.
+    await authorizeAndDebitAgentActions({ workspaceId, userId, actionType: 'EXTERNAL_API' });
 
     // In a real app, this would use an authenticated HTTP client.
     // For this environment, we'll use a relative fetch to our mock API endpoint.

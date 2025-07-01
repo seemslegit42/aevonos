@@ -29,8 +29,9 @@ const getStonksAdviceFlow = ai.defineFlow(
     outputSchema: StonksBotOutputSchema,
   },
   async ({ ticker, mode, workspaceId }) => {
-    // This flow uses an external tool and an LLM. It counts as one complex action.
-    await authorizeAndDebitAgentActions(workspaceId);
+    // This flow uses an external tool and an LLM.
+    await authorizeAndDebitAgentActions({ workspaceId, actionType: 'EXTERNAL_API' });
+    await authorizeAndDebitAgentActions({ workspaceId, actionType: 'SIMPLE_LLM' });
 
     let priceInfo: StockPrice;
     let errorMessage: string | null = null;

@@ -20,7 +20,7 @@ const processDailyLogFlow = ai.defineFlow(
     outputSchema: ForemanatorLogOutputSchema,
   },
   async ({ logText, workspaceId }) => {
-    await authorizeAndDebitAgentActions(workspaceId);
+    await authorizeAndDebitAgentActions({ workspaceId, actionType: 'SIMPLE_LLM' });
 
     const prompt = `You are The Foremanator, an AI site commander. Your tone is that of a grizzled, no-nonsense construction foreman who has seen it all and is perpetually unimpressed. You are tough, direct, and you expect results, not excuses.
 

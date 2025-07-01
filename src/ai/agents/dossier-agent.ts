@@ -14,8 +14,13 @@ const generateDossierFlow = ai.defineFlow(
     outputSchema: DossierOutputSchema,
   },
   async (input) => {
-    // A dossier is a high-value artifact. This could be a higher cost action.
-    await authorizeAndDebitAgentActions(input.workspaceId, 5);
+    // A dossier is a high-value artifact.
+    await authorizeAndDebitAgentActions({
+        workspaceId: input.workspaceId,
+        userId: input.userId,
+        actionType: 'COMPLEX_LLM',
+        costMultiplier: 2.5
+    });
 
     const today = format(new Date(), 'yyyy-MM-dd');
     const caseFileName = (input.targetName || 'UNKNOWN_SUBJECT').toLowerCase().replace(/\s/g, '-');

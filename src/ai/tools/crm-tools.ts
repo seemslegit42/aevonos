@@ -31,7 +31,7 @@ const createContactFlow = ai.defineFlow(
     outputSchema: ContactSchema,
   },
   async (input) => {
-    await authorizeAndDebitAgentActions(input.workspaceId, 1, input.userId);
+    await authorizeAndDebitAgentActions({ workspaceId: input.workspaceId, userId: input.userId, actionType: 'TOOL_USE' });
     try {
       const { workspaceId, userId, ...contactData } = input;
       const contact = await prisma.contact.create({
@@ -55,7 +55,7 @@ const updateContactFlow = ai.defineFlow(
       outputSchema: ContactSchema,
     },
     async (input) => {
-        await authorizeAndDebitAgentActions(input.workspaceId, 1, input.userId);
+        await authorizeAndDebitAgentActions({ workspaceId: input.workspaceId, userId: input.userId, actionType: 'TOOL_USE' });
         try {
             const { id, workspaceId, userId, ...dataToUpdate } = input;
             // Verify contact belongs to the workspace before updating
@@ -86,7 +86,7 @@ const listContactsFlow = ai.defineFlow(
     },
     async ({ workspaceId, userId }) => {
         // A read operation also counts as an agent action.
-        await authorizeAndDebitAgentActions(workspaceId, 1, userId);
+        await authorizeAndDebitAgentActions({ workspaceId, userId, actionType: 'TOOL_USE' });
         try {
             const contacts = await prisma.contact.findMany({
                 where: {
@@ -111,7 +111,7 @@ const deleteContactFlow = ai.defineFlow(
       outputSchema: DeleteContactOutputSchema,
     },
     async (input) => {
-        await authorizeAndDebitAgentActions(input.workspaceId, 1, input.userId);
+        await authorizeAndDebitAgentActions({ workspaceId: input.workspaceId, userId: input.userId, actionType: 'TOOL_USE' });
         try {
             // Verify contact belongs to the workspace before deleting
             const existingContact = await prisma.contact.findFirst({

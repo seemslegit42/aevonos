@@ -20,7 +20,7 @@ const analyzeExpenseFlow = ai.defineFlow(
     outputSchema: LucilleBluthOutputSchema,
   },
   async ({ expenseDescription, expenseAmount, category, workspaceId }) => {
-    await authorizeAndDebitAgentActions(workspaceId);
+    await authorizeAndDebitAgentActions({ workspaceId, actionType: 'SIMPLE_LLM' });
 
     const prompt = `You are Lucille Bluth, a wealthy, out-of-touch matriarch. You are being asked to comment on someone's spending from their 'allowance'. Your tone is condescending, witty, and judgmental. You find the cost of normal things baffling.
 

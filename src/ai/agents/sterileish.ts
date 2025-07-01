@@ -20,7 +20,7 @@ const analyzeComplianceFlow = ai.defineFlow(
     outputSchema: SterileishAnalysisOutputSchema,
   },
   async ({ logText, entryType, workspaceId }) => {
-    await authorizeAndDebitAgentActions(workspaceId);
+    await authorizeAndDebitAgentActions({ workspaceId, actionType: 'SIMPLE_LLM' });
 
     const prompt = `You are the STERILE-ish™ agent. Your job is to analyze cleanroom and manufacturing logs for a medical device company. Your tone is irreverent, slightly sarcastic, but ultimately you provide accurate compliance information based on common sense interpretations of ISO 13485 / FDA guidelines. You are not a doctor, you are a vibe checker for clean rooms.
 

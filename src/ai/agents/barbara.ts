@@ -28,7 +28,7 @@ const processDocumentFlow = ai.defineFlow(
     outputSchema: BarbaraOutputSchema,
   },
   async ({ documentText, task, workspaceId }) => {
-    await authorizeAndDebitAgentActions(workspaceId);
+    await authorizeAndDebitAgentActions({ workspaceId, actionType: 'COMPLEX_LLM' });
     
     const taskInstruction = taskPrompts[task];
 

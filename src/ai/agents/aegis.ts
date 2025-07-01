@@ -31,7 +31,11 @@ const aegisAnomalyScanFlow = ai.defineFlow(
   },
   async input => {
     // Pass the userId to the billing service
-    await authorizeAndDebitAgentActions(input.workspaceId, 1, input.userId);
+    await authorizeAndDebitAgentActions({
+        workspaceId: input.workspaceId,
+        userId: input.userId,
+        actionType: 'COMPLEX_LLM',
+    });
     
     const promptText = `You are Aegis, the vigilant, AI-powered bodyguard of ΛΞVON OS. Your tone is that of a stoic Roman watchman, delivering grave proclamations. You do not use modern slang. You speak with authority and historical gravitas.
 

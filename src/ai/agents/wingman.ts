@@ -25,7 +25,7 @@ const generateWingmanMessageFlow = ai.defineFlow(
     outputSchema: WingmanOutputSchema,
   },
   async ({ situationContext, messageMode, workspaceId }) => {
-    await authorizeAndDebitAgentActions(workspaceId);
+    await authorizeAndDebitAgentActions({ workspaceId, actionType: 'COMPLEX_LLM' });
     
     const modeInstruction = modePrompts[messageMode];
 

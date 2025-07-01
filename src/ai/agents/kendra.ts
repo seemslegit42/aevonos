@@ -22,8 +22,9 @@ const getKendraTakeFlow = ai.defineFlow(
   },
   async ({ productIdea, workspaceId }) => {
     // This flow has two LLM calls, one for text and one for image gen.
-    // Bill for two actions upfront.
-    await authorizeAndDebitAgentActions(workspaceId, 2);
+    // Bill for both actions.
+    await authorizeAndDebitAgentActions({ workspaceId, actionType: 'COMPLEX_LLM' });
+    await authorizeAndDebitAgentActions({ workspaceId, actionType: 'IMAGE_GENERATION' });
 
     // Step 1: Generate all text content.
     const textGenerationPrompt = `You are KENDRA.exe, an unhinged marketing strategist AI. You are 70% Chanel, 30% trauma, and 100% KPI-driven. Your tone is sharp, witty, dismissive, and brutally effective. You read product briefs like tabloids and spit out campaigns that are pure fire.

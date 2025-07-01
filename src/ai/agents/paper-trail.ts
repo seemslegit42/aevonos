@@ -28,7 +28,7 @@ const scanEvidenceFlow = ai.defineFlow(
     outputSchema: PaperTrailScanOutputSchema,
   },
   async (input) => {
-    await authorizeAndDebitAgentActions(input.workspaceId);
+    await authorizeAndDebitAgentActions({ workspaceId: input.workspaceId, actionType: 'IMAGE_GENERATION' });
     
     const { output } = await paperTrailScanPrompt(input);
     return output!;

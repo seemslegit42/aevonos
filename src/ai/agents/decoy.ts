@@ -24,7 +24,7 @@ const deployDecoyFlow = ai.defineFlow(
     outputSchema: DecoyOutputSchema,
   },
   async ({ targetDescription, persona: requestedPersona, workspaceId }) => {
-    await authorizeAndDebitAgentActions(workspaceId);
+    await authorizeAndDebitAgentActions({ workspaceId, actionType: 'SIMPLE_LLM' });
 
     const persona = requestedPersona || 'chill-demon'; // Default to chill-demon if not provided
     const personaInstruction = personaPrompts[persona];

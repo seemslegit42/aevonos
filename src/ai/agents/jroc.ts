@@ -22,8 +22,9 @@ const generateBusinessKitFlow = ai.defineFlow(
   },
   async ({ businessType, logoStyle, workspaceId }) => {
     // This flow has two LLM calls, one for text and one for image gen.
-    // Bill for two actions upfront.
-    await authorizeAndDebitAgentActions(workspaceId, 2);
+    // Bill for both actions.
+    await authorizeAndDebitAgentActions({ workspaceId, actionType: 'SIMPLE_LLM' });
+    await authorizeAndDebitAgentActions({ workspaceId, actionType: 'IMAGE_GENERATION' });
 
     const textGenerationPrompt = `You are J-ROC from Trailer Park Boys. You're helpin' your boy start a legit-as-frig business. Your language is full of "know'm sayin'?", "mafk", and other J-Roc slang. Keep it authentic.
 

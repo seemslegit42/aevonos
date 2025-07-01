@@ -20,7 +20,7 @@ const generateAlibiFlow = ai.defineFlow(
     outputSchema: VandelayAlibiOutputSchema,
   },
   async ({ topicHint, addAttendees, workspaceId }) => {
-    await authorizeAndDebitAgentActions(workspaceId);
+    await authorizeAndDebitAgentActions({ workspaceId, actionType: 'SIMPLE_LLM' });
 
     const prompt = `You are an AI assistant for Vandelay Industries, specializing in "importing and exporting" creative alibis. Your sole purpose is to generate one impeccably boring, jargon-filled, and entirely plausible fake calendar invite.
 
