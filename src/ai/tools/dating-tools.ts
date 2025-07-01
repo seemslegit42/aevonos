@@ -5,18 +5,11 @@
  * This simulates an integration with a third-party dating service.
  */
 import { z } from 'zod';
-import { ai } from '@/ai/genkit';
 import { DatingProfileInputSchema, DatingProfileSchema, type DatingProfileInput, type DatingProfile } from './dating-schemas';
 import { authorizeAndDebitAgentActions } from '@/services/billing-service';
 
-// This flow now requires a workspaceId to track usage.
-const getDatingProfileFlow = ai.defineFlow(
-  {
-    name: 'getDatingProfileFlow',
-    inputSchema: DatingProfileInputSchema.extend({ workspaceId: z.string(), userId: z.string() }),
-    outputSchema: DatingProfileSchema,
-  },
-  async ({ profileId, workspaceId, userId }) => {
+export async function getDatingProfile(input: DatingProfileInput, workspaceId: string, userId: string): Promise<DatingProfile> {
+    const { profileId } = input;
     // This is an external data fetch, so it counts as an agent action.
     await authorizeAndDebitAgentActions({ workspaceId, userId, actionType: 'EXTERNAL_API' });
 
@@ -37,9 +30,4 @@ const getDatingProfileFlow = ai.defineFlow(
         console.error(`[Dating Tool Error] Failed to fetch profile ${profileId}:`, error);
         throw error;
     }
-  }
-);
-
-export async function getDatingProfile(input: DatingProfileInput, workspaceId: string, userId: string): Promise<DatingProfile> {
-    return getDatingProfileFlow({ ...input, workspaceId, userId });
 }

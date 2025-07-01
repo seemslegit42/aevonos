@@ -5,7 +5,6 @@
  */
 import prisma from '@/lib/prisma';
 import { z } from 'zod';
-import { ai } from '@/ai/genkit';
 import { 
     CreateSecurityAlertInputSchema,
     SecurityAlertSchema,
@@ -14,17 +13,12 @@ import {
 } from './security-schemas';
 import { authorizeAndDebitAgentActions } from '@/services/billing-service';
 
-const createSecurityAlertFlow = ai.defineFlow(
-  {
-    name: 'createSecurityAlertFlow',
-    inputSchema: CreateSecurityAlertInputSchema.extend({ workspaceId: z.string(), userId: z.string() }),
-    outputSchema: SecurityAlertSchema,
-  },
-  async (input) => {
+
+export async function createSecurityAlertInDb(input: CreateSecurityAlertInput, workspaceId: string, userId: string): Promise<SecurityAlert> {
     // Creating a security alert is a significant action.
-    await authorizeAndDebitAgentActions({ workspaceId: input.workspaceId, userId: input.userId, actionType: 'TOOL_USE' });
+    await authorizeAndDebitAgentActions({ workspaceId, userId, actionType: 'TOOL_USE' });
     try {
-      const { workspaceId, ...alertData } = input;
+      const { ...alertData } = input;
       const alert = await prisma.securityAlert.create({
         data: {
           ...alertData,
@@ -37,9 +31,4 @@ const createSecurityAlertFlow = ai.defineFlow(
       console.error('[Security Tool Error] Failed to create security alert:', error);
       throw new Error('Failed to create the security alert in the database.');
     }
-  }
-);
-
-export async function createSecurityAlertInDb(input: CreateSecurityAlertInput, workspaceId: string, userId: string): Promise<SecurityAlert> {
-    return createSecurityAlertFlow({ ...input, workspaceId, userId });
 }

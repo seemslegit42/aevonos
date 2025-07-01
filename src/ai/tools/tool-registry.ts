@@ -13,7 +13,7 @@ import prisma from '@/lib/prisma';
 import {
     AgentReportSchema,
     UserCommandOutputSchema,
-} from '../beep-schemas';
+} from '../agents/beep-schemas';
 
 // Agent Imports
 import { drSyntaxCritique } from '@/ai/agents/dr-syntax';
@@ -39,11 +39,11 @@ import { getKendraTake } from '@/ai/agents/kendra';
 import { invokeOracle } from '@/ai/agents/orphean-oracle-flow';
 import { analyzeInvite } from '@/ai/agents/lumbergh';
 import { analyzeExpense } from '@/ai/agents/lucille-bluth';
-import { generatePamRant } from './pam-poovey';
-import { getStonksAdvice } from './stonks-bot';
+import { generatePamRant } from '../agents/pam-poovey';
+import { getStonksAdvice } from '../agents/stonks-bot';
 import { analyzeCarShame } from '@/ai/agents/reno-mode';
-import { processPatricktAction } from './patrickt-agent';
-import { consultInventoryDaemon } from './inventory-daemon';
+import { processPatricktAction } from '../agents/patrickt-agent';
+import { consultInventoryDaemon } from '../agents/inventory-daemon';
 
 
 // Tool Imports
@@ -61,33 +61,33 @@ import { CreateContactInputSchema, DeleteContactInputSchema, UpdateContactInputS
 import { RequestCreditTopUpInputSchema } from '@/ai/tools/billing-schemas';
 import { DatingProfileInputSchema } from '@/ai/tools/dating-schemas';
 import { CreateSecurityAlertInputSchema } from '@/ai/tools/security-schemas';
-import { VinDieselInputSchema } from '../vin-diesel-schemas';
-import { WinstonWolfeInputSchema } from '../winston-wolfe-schemas';
-import { KifKrokerAnalysisInputSchema } from '../kif-kroker-schemas';
-import { VandelayAlibiInputSchema } from '../vandelay-schemas';
-import { RolodexAnalysisInputSchema } from '../rolodex-schemas';
-import { JrocInputSchema } from '../jroc-schemas';
-import { LaheyAnalysisInputSchema } from '../lahey-schemas';
-import { ForemanatorLogInputSchema } from '../foremanator-schemas';
-import { SterileishAnalysisInputSchema } from '../sterileish-schemas';
-import { PaperTrailScanInputSchema } from '../paper-trail-schemas';
-import { BarbaraInputSchema } from '../barbara-schemas';
-import { AuditorInputSchema } from '../auditor-generalissimo-schemas';
-import { WingmanInputSchema } from '../wingman-schemas';
-import { OsintInputSchema } from '../osint-schemas';
-import { InfidelityAnalysisInputSchema } from '../infidelity-analysis-schemas';
-import { DecoyInputSchema } from '../decoy-schemas';
-import { DossierInputSchema } from '../dossier-schemas';
-import { KendraInputSchema } from '../kendra-schemas';
-import { OrpheanOracleInputSchema } from '../orphean-oracle-schemas';
-import { LumberghAnalysisInputSchema } from '../lumbergh-schemas';
-import { LucilleBluthInputSchema } from '../lucille-bluth-schemas';
-import { PamScriptInputSchema } from '../pam-poovey-schemas';
+import { VinDieselInputSchema } from '../agents/vin-diesel-schemas';
+import { WinstonWolfeInputSchema } from '../agents/winston-wolfe-schemas';
+import { KifKrokerAnalysisInputSchema } from '../agents/kif-kroker-schemas';
+import { VandelayAlibiInputSchema } from '../agents/vandelay-schemas';
+import { RolodexAnalysisInputSchema } from '../agents/rolodex-schemas';
+import { JrocInputSchema } from '../agents/jroc-schemas';
+import { LaheyAnalysisInputSchema } from '../agents/lahey-schemas';
+import { ForemanatorLogInputSchema } from '../agents/foremanator-schemas';
+import { SterileishAnalysisInputSchema } from '../agents/sterileish-schemas';
+import { PaperTrailScanInputSchema } from '../agents/paper-trail-schemas';
+import { BarbaraInputSchema } from '../agents/barbara-schemas';
+import { AuditorInputSchema } from '../agents/auditor-generalissimo-schemas';
+import { WingmanInputSchema } from '../agents/wingman-schemas';
+import { OsintInputSchema } from '../agents/osint-schemas';
+import { InfidelityAnalysisInputSchema } from '../agents/infidelity-analysis-schemas';
+import { DecoyInputSchema } from '../agents/decoy-schemas';
+import { DossierInputSchema } from '../agents/dossier-schemas';
+import { KendraInputSchema } from '../agents/kendra-schemas';
+import { OrpheanOracleInputSchema } from '../agents/orphean-oracle-schemas';
+import { LumberghAnalysisInputSchema } from '../agents/lumbergh-schemas';
+import { LucilleBluthInputSchema } from '../agents/lucille-bluth-schemas';
+import { PamScriptInputSchema } from '../agents/pam-poovey-schemas';
 import { CreateManualTransactionInputSchema } from '@/ai/tools/ledger-schemas';
-import { StonksBotInputSchema } from '../stonks-bot-schemas';
-import { RenoModeAnalysisInputSchema } from '../reno-mode-schemas';
-import { PatricktAgentInputSchema } from '../patrickt-agent-schemas';
-import { InventoryDaemonInputSchema } from '../inventory-daemon-schemas';
+import { StonksBotInputSchema } from '../agents/stonks-bot-schemas';
+import { RenoModeAnalysisInputSchema } from '../agents/reno-mode-schemas';
+import { PatricktAgentInputSchema } from '../agents/patrickt-agent-schemas';
+import { InventoryDaemonInputSchema } from '../agents/inventory-daemon-schemas';
 import { FindUsersByVowInputSchema, ManageSyndicateInputSchema } from '@/ai/tools/demiurge-tools';
 
 
@@ -354,9 +354,9 @@ export async function getTools(context: AgentContext): Promise<Tool[]> {
         createAgentTool({
             name: 'performOsintScan',
             description: 'Performs an OSINT (Open-Source Intelligence) scan on a target person. Requires a name and optional context like email or social media URLs.',
-            schema: OsintInputSchema.omit({ workspaceId: true }),
+            schema: OsintInputSchema.omit({ workspaceId: true, userId: true }),
             agentName: 'osint',
-            agentFunc: (toolInput) => performOsintScan({ ...toolInput, workspaceId }),
+            agentFunc: (toolInput) => performOsintScan({ ...toolInput, workspaceId, userId }),
         }),
         
         createAgentTool({
