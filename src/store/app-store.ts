@@ -34,6 +34,7 @@ import { generateSpeech } from '@/ai/flows/tts-flow';
 import { StonksBotOutput } from '@/ai/agents/stonks-bot-schemas';
 import { RenoModeAnalysisOutput } from '@/ai/agents/reno-mode-schemas';
 import type { PatricktAgentOutput } from '@/ai/agents/patrickt-agent-schemas';
+import type { VinDieselOutput } from '@/ai/agents/vin-diesel-schemas';
 
 // Define the types of MicroApps available in the OS
 export type MicroAppType = 
@@ -247,7 +248,7 @@ export const useAppStore = create<AppState>((set, get) => {
         'dr-syntax': (report: DrSyntaxOutput) => {
             upsertApp('dr-syntax', { id: `dr-syntax-report-${Date.now()}`, contentProps: report });
         },
-        'vin-diesel': (report: WinstonWolfeOutput) => {
+        'vin-diesel': (report: VinDieselOutput) => {
             launchApp('vin-diesel', { title: `VIN: ...${report.vin.slice(-6)}`, description: 'Validation Result', contentProps: report });
         },
         'winston-wolfe': (report: WinstonWolfeOutput) => {

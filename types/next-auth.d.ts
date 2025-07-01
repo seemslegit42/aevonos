@@ -11,6 +11,7 @@ declare module 'next-auth' {
       psyche: PrismaUser['psyche'];
       agentAlias: string | null;
       firstWhisper: string | null;
+      unlockedChaosCardKeys: string[];
     } & DefaultSession['user'];
   }
 
@@ -19,6 +20,7 @@ declare module 'next-auth' {
       psyche: PrismaUser['psyche'];
       agentAlias: string | null;
       firstWhisper: string | null;
+      unlockedChaosCardKeys: string[];
   }
 }
 
@@ -30,5 +32,6 @@ declare module 'next-auth/jwt' {
     psyche: PrismaUser['psyche'];
     agentAlias: string | null;
     firstWhisper: string | null;
+    unlockedChaosCardKeys: string[];
   }
 }
