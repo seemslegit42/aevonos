@@ -29,3 +29,19 @@ Users engage with the economy through "Instruments of Folly"—gamified Micro-Ap
     *   **Ritual Boon:** Chaos Cards, which are strategic "item drops" that can be used within the OS.
     *   **Psychological Boon:** Psyche-Matrix Resonance, a rare reward that cosmetically enhances the user's avatar as a form of personal validation.
 *   **Folly Instrument SDK:** A dedicated SDK provides tools and guidelines for developers to create new Folly Instruments. It includes a `klepsydra-client` library with functions like `proposeTribute` and requires strict adherence to the system's principles, such as KLEPSYDRA integration, Psyche-Awareness, and Aesthetic Adherence.
+
+### **Featured Micro-Apps: The Arsenal of the Artisan**
+
+A selection of high-affinity, personality-driven utilities available in The Armory. These are not bloated software suites; they are obsidian knives, each forged for a single, specific purpose.
+
+*   **The Auditor Generalissimo™:** A specialized financial analysis agent who delivers fiscal discipline with the iron fist and sarcastic wit of a Soviet-era comptroller. It transforms expense review into a tribunal, providing a brutally honest audit of your financial state, complete with a "Financial Health Score" and a satirical "IRS Audit Simulation".
+
+*   **Beep Wingman:** A social engineer and de-escalation savant for high-stakes communication. The Wingman analyzes tricky social situations and crafts the perfect message to achieve your goal, equipped with a "Cringe Detection Engine™" and a "Regret Shield™" to protect your social capital.
+
+*   **Dr. Syntax:** A brutally honest structural critic with absurdly high standards. Submit your prompts, code, or copy to receive a sarcastic, aggressive, yet genuinely useful critique that weaponizes criticism for your benefit.
+
+*   **Orphean Oracle:** A data narrator that descends into the "underworld" of your business metrics to translate them into profound, metaphorical, visual narratives. It replaces sterile charts with an interactive "data constellation," allowing you to feel the story in your data.
+
+*   **Reno Mode™:** A chaotic-good lifestyle utility for shame-neutralizing your messy car. Submit a photo of the disaster zone and receive a hilarious "Shame Level" rating, a flirty roast, and a recommended detailing package from a cast of colorful local "Filthmatch™" specialists.
+
+*   **Stonks Bot 9000:** An unhinged, extremely bullish, and completely irresponsible degen financial advisor. It provides performance-art-as-financial-advice for any stock ticker, complete with a "Chart of Prophecy" and a financial astrology horoscope.
