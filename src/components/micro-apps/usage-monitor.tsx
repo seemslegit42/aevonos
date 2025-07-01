@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -260,8 +261,8 @@ export default function UsageMonitor({ workspace: initialWorkspace, user: initia
                                   if (tx.type === TransactionType.TRIBUTE) {
                                       const card = tx.instrumentId ? chaosCardMap.get(tx.instrumentId) : null;
                                       const boonAmount = Number(tx.boonAmount ?? 0);
+                                      const tributeAmount = Number(tx.tributeAmount ?? 0);
                                       const netAmount = Number(tx.amount);
-                                      const tributeAmount = boonAmount - netAmount;
 
                                       return (
                                           <div key={tx.id} className="text-xs p-2 rounded-md border border-purple-500/50 bg-purple-950/20">

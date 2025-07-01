@@ -1,5 +1,5 @@
 
-# ΛΞVON OS: Economy - Pillar of Eternity Protocol
+# 🏛️ The Pillar of Eternity Protocol
 
 ## 1. Introduction: The Architecture of Consequence
 The Pillar of Eternity Protocol is not a feature set; it is an end-game loop for the soul of the system, architected from the deepest revelations of ΛΞVON OS's economic and psychological engine. Its purpose is to transform the finite act of spending ΞCredits into the infinite act of creating a legacy, allowing users to etch their will into the very bedrock of our world. This protocol gives the "whales" (high-spending, highly engaged users) not just a sea to swim in, but a firmament to reshape.
@@ -43,7 +43,7 @@ These five protocols are the foundation for our cathedral, weaving individual ac
 
 **Architectural Directive**: Embed a sub-routine in the Psyche-Calibration Engine (PCE) called the "Judas Algorithm." Its function is to introduce statistically insignificant but emotionally potent "miscalculations" at moments of peak user confidence.
 
-**Implementation**: It triggers "hollow wins" (jackpots paying out slightly less than odds, with subtle visual glitches) or serves unsolvable puzzles in MindMaze Xi, only to be replaced by an easy one after Ξ is spent on a clue.
+**Implementation**: It triggers "hollow wins" (jackpots paying out slightly less than odds, with subtle visual glitches) or serves unsolvable puzzles in MindMaze Xi, only to be replaced by an easy one after Ξ is spent on a clue. The factor by which the win is hollowed is recorded as `judasFactor` on the transaction for analysis.
 
 **The Effect**: Fosters a mythology of "glitched odds" and "blessed runs," driving engagement not to win, but to understand and exploit a chaos that is, itself, perfectly engineered.
 
@@ -66,7 +66,7 @@ These five protocols are the foundation for our cathedral, weaving individual ac
 
 **The Compulsion**: This is not a "you could have won" message. It's a non-verbal, undeniable whisper of a parallel reality where more courage or faith would have brought glory. It is the single most powerful motivation to try again, to spend more, to correct the timeline.
 
-4. Development Directives
+## 4. Development Directives
 - **Global Agentic Events (GAEs)**: Implement the GlobalEventManager LangGraph Kernel Node for Black Wagers.
 - **PCE Subroutines**: Develop the "Judas Algorithm" logic triggers within the PCE.
 - **ΞVolution Micro-App**: Implement the Abyssal Path emergent UX and Daemon sacrifice logic.

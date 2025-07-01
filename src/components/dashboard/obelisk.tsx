@@ -42,7 +42,7 @@ export default function Obelisk({ totalCreditsBurned }: { totalCreditsBurned: nu
                     roughness={0.2}
                     transparent={true}
                     opacity={0.6}
-                    emissive="hsl(275, 86%, 42%)"
+                    emissive="hsl(var(--primary))"
                     emissiveIntensity={0.15}
                     ior={1.5}
                     envMapIntensity={1}
