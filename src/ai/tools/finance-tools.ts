@@ -87,19 +87,7 @@ export const getStockPriceFinnhub = ai.defineTool(
     outputSchema: StockPriceSchema,
   },
   async ({ ticker }) => {
-    // START MOCK LOGIC FOR RESILIENCE DEMO
-     if (ticker.toUpperCase() === 'FAIL.V') {
-      return {
-        symbol: 'FAIL.V',
-        price: '100.00',
-        change: '5.00',
-        changePercent: '5.26%',
-        source: 'Finnhub (Mock)',
-      };
-    }
-    // END MOCK LOGIC
-
-    const apiKey = process.env.FINNHUB_API_KEY; // Assuming a FINNHUB_API_KEY exists
+    const apiKey = process.env.FINNHUB_API_KEY;
     if (!apiKey || apiKey === 'YOUR_API_KEY_HERE' || apiKey === '') {
         console.warn('[Finance Tool] FINNHUB_API_KEY not found. Using mock data for Finnhub.');
         return {
@@ -111,8 +99,29 @@ export const getStockPriceFinnhub = ai.defineTool(
         };
     }
     
-    // In a real implementation, you would call the Finnhub API here.
-    // For now, we'll stick to the mock logic above.
-    throw new Error('Finnhub live API not implemented.');
+    const url = `https://finnhub.io/api/v1/quote?symbol=${ticker}&token=${apiKey}`;
+
+    try {
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`Finnhub API request failed with status ${response.status}`);
+      }
+      const data = await response.json();
+
+      if (data.c === 0) { // Finnhub returns 0 for invalid tickers
+        throw new Error(`No quote found for ticker: ${ticker}. It might be an invalid symbol.`);
+      }
+
+      return {
+        symbol: ticker.toUpperCase(),
+        price: data.c.toFixed(2),
+        change: data.d.toFixed(2),
+        changePercent: `${data.dp.toFixed(2)}%`,
+        source: 'Finnhub',
+      };
+    } catch (error) {
+      console.error(`[Finance Tool] Error fetching stock price from Finnhub for ${ticker}:`, error);
+      throw new Error(`Could not fetch stock price for ${ticker} from Finnhub. The market might be closed or the symbol is invalid.`);
+    }
   }
 );
