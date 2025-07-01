@@ -8,8 +8,41 @@ import type { User, UserPsyche, UserRole } from '@prisma/client';
 import { authConfig } from './auth.config'; // Import the base Edge-compatible config
 import Resend from "next-auth/providers/resend";
 
+
+// --- Environment Variable Checks ---
+// These checks ensure that the authentication system is configured correctly,
+// preventing common deployment errors and providing clear warnings to developers.
+if (process.env.NODE_ENV === 'production' && !process.env.AUTH_SECRET) {
+  console.error('\x1b[31m%s\x1b[0m', 'FATAL: AUTH_SECRET is not set. This is required for production.');
+  throw new Error('Missing AUTH_SECRET environment variable. This is required for production.');
+}
+
+if (!process.env.AUTH_SECRET) {
+    console.warn(
+        '\x1b[33m%s\x1b[0m',
+        'WARNING: AUTH_SECRET is not set. A temporary secret will be generated. Please set a permanent secret in your .env file.'
+    );
+}
+if (!process.env.AUTH_RESEND_KEY || process.env.AUTH_RESEND_KEY === 'YOUR_API_KEY_HERE') {
+    console.warn(
+        '\x1b[33m%s\x1b[0m',
+        'WARNING: AUTH_RESEND_KEY is not set. Magic link (Resend) login will not work.'
+    );
+}
+
+const resendFrom = process.env.AUTH_RESEND_FROM || 'noreply@aevonos.com';
+if (resendFrom === 'noreply@aevonos.com') {
+     console.warn(
+        '\x1b[33m%s\x1b[0m',
+        'WARNING: AUTH_RESEND_FROM is not set. Using default "noreply@aevonos.com". This may fail if the domain is not verified on Resend.'
+    );
+}
+// --- End Environment Variable Checks ---
+
+
 export const { handlers, signIn, signOut, auth } = NextAuth({
   ...authConfig, // Spread the base config
+  secret: process.env.AUTH_SECRET, // Explicitly pass the secret
   adapter: PrismaAdapter(prisma),
   session: { strategy: 'jwt' },
   providers: [
@@ -17,7 +50,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         // The Resend provider needs a `from` address.
         // This should be a registered domain on Resend.
         // The AUTH_RESEND_KEY is automatically picked up from environment variables.
-        from: "noreply@aevonos.com"
+        from: resendFrom
     }),
     Credentials({
       name: 'Credentials',
