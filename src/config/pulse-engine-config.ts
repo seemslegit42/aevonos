@@ -7,32 +7,25 @@
 
 export const pulseEngineConfig = {
   /**
-   * The baseline probability for a "win" event before modulation.
-   * Represents the raw, unadjusted odds.
+   * The target percentage of all ΞCredits the system retains over a 24-hour cycle.
+   * The ultimate measure of profitability. Not directly used in calculations, but serves as a target for balancing.
    */
-  BASE_LUCK: 0.5,
-
-  /**
-   * Target Tribute Velocity Ratio (unused in initial implementation).
-   * The desired rate of credit expenditure per minute per user.
-   */
-  TARGET_TVR: 1.25,
+  BASE_RTR: 0.25,
 
   /**
    * The maximum number of consecutive losses a user can experience
    * before the system intervenes with a "Pity Boon".
    */
-  PITY_THRESHOLD: 6,
+  PITY_THRESHOLD: 7,
 
   /**
    * The percentage drop in system-wide tribute velocity that triggers
    * a global "Festival of Fortune" event to re-engage users.
    */
-  CRASH_GUARD_PERCENT: 20,
-
+  FESTIVAL_TRIGGER_PERCENT: 20,
+  
   /**
-   * A multiplier for how much more sensitive a user is to receiving a
-   * "Boon" (a near-miss or small win) after hitting a jackpot.
+   * The commission fee Obelisk Pay takes on every real-world transmutation via the Proxy.Agent.
    */
-  SENSITIVITY_MODIFIER: 1.5,
+  TRANSMUTATION_TITHE: 0.18,
 };

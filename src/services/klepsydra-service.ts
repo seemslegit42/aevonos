@@ -10,27 +10,12 @@ import {
   recordLoss,
   shouldTriggerPityBoon,
 } from './pulse-engine-service';
-import { pulseEngineConfig } from '@/config/pulse-engine-config';
 import { chaosCardManifest } from '@/config/chaos-cards';
+import { follyInstrumentsConfig, type OutcomeTier, type Boon } from '@/config/folly-instruments';
 import prisma from '@/lib/prisma';
 import { InsufficientCreditsError } from '@/lib/errors';
 import { UserPsyche, TransactionType, Prisma } from '@prisma/client';
 import { differenceInMinutes } from 'date-fns';
-
-const INSTRUMENT_CONFIG: Record<string, { baseOdds: number; winMultiplier: number }> =
-  chaosCardManifest.reduce((acc, card) => {
-    // A simple inverse relation to cost for odds, and a direct relation for rewards.
-    // These can be tuned for balance.
-    acc[card.key] = {
-      baseOdds: Math.max(0.05, 1 - card.cost / 2000), 
-      winMultiplier: 1.5 + card.cost / 500,
-    };
-    return acc;
-  }, {} as Record<string, { baseOdds: number; winMultiplier: number }>);
-
-// Add specific config for the Oracle, since its cost is variable.
-INSTRUMENT_CONFIG['ORACLE_OF_DELPHI_VALLEY'] = { baseOdds: 0.4, winMultiplier: 2.5 };
-
 
 const PSYCHE_MODIFIERS: Record<UserPsyche, { oddsFactor: number; boonFactor: number }> = {
     [UserPsyche.ZEN_ARCHITECT]: { oddsFactor: 1.0, boonFactor: 1.0 }, // The baseline experience
@@ -44,7 +29,30 @@ const aestheticEffectCardKeys = chaosCardManifest
     .map(card => card.key);
 
 // List of instruments that are pure gambles and should not be "owned".
+// These don't award a Chaos Card on win.
 const PURE_FOLLY_INSTRUMENTS = ['ORACLE_OF_DELPHI_VALLEY', 'SISYPHUSS_ASCENT', 'MERCHANT_OF_CABBAGE'];
+
+/**
+ * A helper function to perform weighted random selection.
+ * @param items An array of items to choose from.
+ * @param getWeight A function that returns the weight for a given item.
+ * @returns The selected item.
+ */
+function selectWeightedRandom<T>(items: T[], getWeight: (item: T) => number): T {
+    const totalWeight = items.reduce((sum, item) => sum + getWeight(item), 0);
+    let random = Math.random() * totalWeight;
+
+    for (const item of items) {
+        const weight = getWeight(item);
+        if (random < weight) {
+            return item;
+        }
+        random -= weight;
+    }
+    
+    // Fallback to the last item in case of floating point inaccuracies
+    return items[items.length - 1];
+}
 
 
 /**
@@ -62,15 +70,17 @@ export async function processFollyTribute(
   instrumentId: string,
   tributeAmountOverride?: number
 ) {
+    const instrumentConfig = follyInstrumentsConfig[instrumentId];
     const instrumentManifest = chaosCardManifest.find(card => card.key === instrumentId);
-    if (!instrumentManifest) {
-        throw new Error('Instrument not found in manifest.');
+
+    if (!instrumentConfig || !instrumentManifest) {
+        throw new Error(`Instrument '${instrumentId}' not found in configuration.`);
     }
     
     const tributeAmount = tributeAmountOverride ?? instrumentManifest.cost;
 
     return prisma.$transaction(async (tx) => {
-        // --- 1. PRE-CHECK AND OUTCOME CALCULATION ---
+        // --- 1. PRE-CHECK AND GET MODIFIERS ---
         const [user, workspace] = await Promise.all([
             tx.user.findUniqueOrThrow({ where: { id: userId }, select: { psyche: true } }),
             tx.workspace.findUniqueOrThrow({ where: { id: workspaceId }, select: { credits: true } }),
@@ -79,47 +89,52 @@ export async function processFollyTribute(
         if ((workspace.credits as unknown as number) < tributeAmount) {
             throw new InsufficientCreditsError('Cannot make tribute. Insufficient credits.');
         }
-        
-        const instrument = INSTRUMENT_CONFIG[instrumentId] || { baseOdds: 0.5, winMultiplier: 2 };
-        const modifiers = PSYCHE_MODIFIERS[user.psyche] || PSYCHE_MODIFIERS.ZEN_ARCHITECT;
-        const modifiedBaseOdds = instrument.baseOdds * modifiers.oddsFactor;
-        const modifiedWinMultiplier = instrument.winMultiplier * modifiers.boonFactor;
 
-        // Update risk aversion based on this tribute
-        const maxPlausibleTribute = 500; // An arbitrary max to normalize against
-        const tributeRatio = Math.min(1, tributeAmount / maxPlausibleTribute);
-        const riskAversionUpdate = 1 - tributeRatio; // Higher tribute = lower aversion score
-
-        await tx.pulseProfile.upsert({
-            where: { userId },
-            update: { riskAversion: riskAversionUpdate },
-            create: {
-                userId,
-                riskAversion: riskAversionUpdate,
-                phaseOffset: Math.random() * 2 * Math.PI,
-            }
-        });
-
+        const psycheModifiers = PSYCHE_MODIFIERS[user.psyche] || PSYCHE_MODIFIERS.ZEN_ARCHITECT;
         const luckWeight = await getCurrentPulseValue(userId, tx);
         const isPity = await shouldTriggerPityBoon(userId);
         
-        const finalOdds = Math.max(0, Math.min(1, modifiedBaseOdds * luckWeight));
-        
-        let outcome = 'loss';
-        let boonAmount = 0;
-        
+        // --- 2. DETERMINE OUTCOME TIER ---
+        let selectedTier: OutcomeTier;
+
         if (isPity) {
-            outcome = 'pity_boon';
-            boonAmount = tributeAmount * 0.5;
-        } else if (Math.random() < finalOdds) {
-            outcome = 'win';
-            boonAmount = tributeAmount * modifiedWinMultiplier;
+            selectedTier = instrumentConfig.rarityTable.find(t => t.tier === 'DIVINE')!;
+        } else {
+            // Modulate weights based on luck and psyche
+            const getModulatedWeight = (tier: OutcomeTier) => {
+                if (tier.tier === 'COMMON') {
+                    // Luck weight inversely affects common outcomes
+                    return tier.baseWeight / (luckWeight * psycheModifiers.oddsFactor);
+                }
+                // Luck weight positively affects better outcomes
+                return tier.baseWeight * luckWeight * psycheModifiers.oddsFactor;
+            };
+            selectedTier = selectWeightedRandom(instrumentConfig.rarityTable, getModulatedWeight);
         }
 
+        if (!selectedTier) { // Fallback, should not happen
+            selectedTier = instrumentConfig.rarityTable.find(t => t.tier === 'COMMON')!;
+        }
+
+        // --- 3. DETERMINE BOON ---
+        const selectedBoon = selectWeightedRandom(selectedTier.boons, boon => boon.weight);
+        let boonAmount = 0;
+        let awardedCardId: string | undefined = undefined;
+        
+        if (selectedBoon.type === 'credits') {
+            boonAmount = tributeAmount * (selectedBoon.value as number) * psycheModifiers.boonFactor;
+        } else if (selectedBoon.type === 'chaos_card') {
+            awardedCardId = selectedBoon.value as string;
+            // The value of a card is its cost + a bonus
+            const wonCardManifest = chaosCardManifest.find(c => c.key === awardedCardId);
+            boonAmount = (wonCardManifest?.cost || 100) * 1.5;
+        }
+
+        const outcome = isPity ? 'pity_boon' : selectedTier.tier.toLowerCase();
         const netAmount = boonAmount - tributeAmount;
 
-        // --- 2. ATOMIC DATABASE WRITES ---
-        if (outcome === 'loss') {
+        // --- 4. ATOMIC DATABASE WRITES ---
+        if (outcome === 'loss' || outcome === 'common') {
             await recordLoss(userId, tx);
         } else {
             await recordWin(userId, tx);
@@ -143,28 +158,30 @@ export async function processFollyTribute(
             }
         });
 
-        // If it's a win, and the instrument is ownable, award it.
-        if ((outcome === 'win' || outcome === 'pity_boon') && !PURE_FOLLY_INSTRUMENTS.includes(instrumentId)) {
-            const cardInDb = await tx.chaosCard.findUnique({ where: { key: instrumentId } });
+        // Award the card if it was won (and ownable)
+        if (awardedCardId && !PURE_FOLLY_INSTRUMENTS.includes(awardedCardId)) {
+            const cardInDb = await tx.chaosCard.findUnique({ where: { key: awardedCardId } });
             if (cardInDb) {
                  await tx.user.update({
                     where: { id: userId },
                     data: { ownedChaosCards: { connect: { id: cardInDb.id } } },
                 });
             }
-            
-            if (instrumentManifest.systemEffect && aestheticEffectCardKeys.includes(instrumentId)) {
-               await tx.activeSystemEffect.deleteMany({
-                  where: { workspaceId: workspaceId, cardKey: { in: aestheticEffectCardKeys } }
-               });
-               await tx.activeSystemEffect.create({
-                  data: {
-                    workspaceId: workspaceId,
-                    cardKey: instrumentId,
-                    expiresAt: new Date(Date.now() + 60 * 60 * 1000)
-                  }
-               });
-            }
+        }
+        
+        // --- 5. POST-PROCESSING (DISCOVERY LOG, SYSTEM EFFECTS) ---
+        // If it's a win, and the instrument is an aesthetic card, apply the effect.
+        if ((outcome !== 'loss' && outcome !== 'common') && aestheticEffectCardKeys.includes(instrumentId)) {
+           await tx.activeSystemEffect.deleteMany({
+              where: { workspaceId: workspaceId, cardKey: { in: aestheticEffectCardKeys } }
+           });
+           await tx.activeSystemEffect.create({
+              data: {
+                workspaceId: workspaceId,
+                cardKey: instrumentId,
+                expiresAt: new Date(Date.now() + 60 * 60 * 1000)
+              }
+           });
         }
         
         const discovery = await tx.instrumentDiscovery.findFirst({
