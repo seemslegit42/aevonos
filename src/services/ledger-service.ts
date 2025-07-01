@@ -11,6 +11,7 @@ import { Prisma, Transaction, TransactionStatus, TransactionType, UserPsyche } f
 import { InsufficientCreditsError } from '@/lib/errors';
 import { CreateManualTransactionInputSchema } from '@/ai/tools/ledger-schemas';
 import { differenceInMinutes } from 'date-fns';
+import { artifactManifests } from '@/config/artifacts';
 
 const CreateTransactionInputSchema = z.object({
   workspaceId: z.string(),

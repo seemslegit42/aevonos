@@ -10,11 +10,11 @@ import {
   recordLoss,
   shouldTriggerPityBoon,
 } from './pulse-engine-service';
-import { chaosCardManifest } from '@/config/chaos-cards';
+import { artifactManifests } from '@/config/artifacts';
 import { follyInstrumentsConfig, type OutcomeTier, type Boon } from '@/config/folly-instruments';
 import prisma from '@/lib/prisma';
 import { InsufficientCreditsError } from '@/lib/errors';
-import { UserPsyche, TransactionType, Prisma, PulseProfile } from '@prisma/client';
+import { UserPsyche, TransactionType, Prisma, PulseProfile, PulseInteractionType } from '@prisma/client';
 import { differenceInMinutes } from 'date-fns';
 
 const AGE_OF_ASCENSION_ACTIVE = false;
@@ -26,9 +26,9 @@ const PSYCHE_MODIFIERS: Record<UserPsyche, { oddsFactor: number; boonFactor: num
 };
 
 // Create a list of all card keys that are purely for aesthetic system effects.
-const aestheticEffectCardKeys = chaosCardManifest
-    .filter(card => card.cardClass === 'AESTHETIC' && card.systemEffect.includes('UI theme'))
-    .map(card => card.key);
+const aestheticEffectCardKeys = artifactManifests
+    .filter(artifact => artifact.type === 'CHAOS_CARD' && artifact.cardClass === 'AESTHETIC' && artifact.systemEffect?.includes('UI theme'))
+    .map(artifact => artifact.id);
 
 // List of instruments that are pure gambles and should not be "owned".
 // These don't award a Chaos Card on win.
@@ -103,7 +103,7 @@ export async function processFollyTribute(
   instrumentId: string,
   tributeAmountOverride?: number
 ) {
-    const instrumentManifest = chaosCardManifest.find(card => card.key === instrumentId);
+    const instrumentManifest = artifactManifests.find(a => a.id === instrumentId);
     if (!instrumentManifest && !follyInstrumentsConfig[instrumentId]) {
         throw new Error(`Instrument '${instrumentId}' not found in manifest or folly config.`);
     }
@@ -111,7 +111,7 @@ export async function processFollyTribute(
     // --- HANDLE MERCENARY CARD PURCHASE ---
     if (MERCENARY_CARDS.includes(instrumentId)) {
         return prisma.$transaction(async (tx) => {
-            const cost = instrumentManifest!.cost;
+            const cost = instrumentManifest!.creditCost;
             const workspace = await tx.workspace.findUniqueOrThrow({ where: { id: workspaceId }, select: { credits: true } });
 
             if ((workspace.credits as unknown as number) < cost) {
@@ -159,7 +159,7 @@ export async function processFollyTribute(
         throw new Error(`Instrument '${instrumentId}' not found in Folly configuration.`);
     }
     
-    let tributeAmount = tributeAmountOverride ?? instrumentManifest?.cost ?? 0;
+    let tributeAmount = tributeAmountOverride ?? instrumentManifest?.creditCost ?? 0;
 
     return prisma.$transaction(async (tx) => {
         // 1. Get user, workspace, and profile data
@@ -220,8 +220,8 @@ export async function processFollyTribute(
             boonAmount = calculatedBoon;
         } else if (selectedBoon.type === 'chaos_card') {
             awardedCardId = selectedBoon.value as string;
-            const wonCardManifest = chaosCardManifest.find(c => c.key === awardedCardId);
-            boonAmount = (wonCardManifest?.cost || 100) * 1.5;
+            const wonCardManifest = artifactManifests.find(c => c.id === awardedCardId);
+            boonAmount = (wonCardManifest?.creditCost || 100) * 1.5;
         } else if (selectedBoon.type === 'system_effect') {
             systemEffect = selectedBoon.value as string;
         }

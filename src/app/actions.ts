@@ -9,8 +9,7 @@ import { getServerActionSession } from '@/lib/auth';
 import { processMicroAppPurchase } from '@/services/ledger-service';
 import { z } from 'zod';
 import { requestCreditTopUpInDb } from '@/services/billing-service';
-import { microAppManifests } from '@/config/micro-apps';
-import { chaosCardManifest } from '@/config/chaos-cards';
+import { artifactManifests } from '@/config/artifacts';
 import { InsufficientCreditsError } from '@/lib/errors';
 import { acceptReclamationGift, deleteAccount, logout } from './auth/actions';
 import { processFollyTribute } from '@/services/klepsydra-service';
@@ -106,7 +105,7 @@ export async function requestCreditTopUp(amount: number) {
 export async function purchaseMicroApp(appId: string) {
   const sessionUser = await getServerActionSession();
 
-  const appManifest = microAppManifests.find(app => app.id === appId);
+  const appManifest = artifactManifests.find(artifact => artifact.id === appId && artifact.type === 'MICRO_APP');
   if (!appManifest) {
     return { success: false, error: 'Micro-App not found.' };
   }
@@ -218,8 +217,8 @@ export async function getNudges() {
       return [];
   }
 
-  const allInstruments = [...microAppManifests, ...chaosCardManifest];
-  const instrumentMap = new Map(allInstruments.map(i => [i.id || i.key, i.name]));
+  const allInstruments = artifactManifests;
+  const instrumentMap = new Map(allInstruments.map(i => [i.id, i.name]));
   
   const nudges = ripeDiscoveries.map(discovery => {
       const instrumentName = instrumentMap.get(discovery.instrumentId) || 'a forgotten artifact';

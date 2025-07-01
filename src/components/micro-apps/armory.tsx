@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { MicroAppListingCard } from '@/components/armory/micro-app-listing-card';
-import { chaosCardManifest, ChaosCardManifest } from '@/config/chaos-cards';
+import { artifactManifests, type ArtifactManifest } from '@/config/artifacts';
 import { ChaosCardListingCard } from '@/components/armory/chaos-card-listing-card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -12,15 +12,13 @@ import { Workspace, ChaosCard as PrismaChaosCard, UserRole } from '@prisma/clien
 import type { User } from '@prisma/client';
 import { useToast } from '@/hooks/use-toast';
 import { getNudges } from '@/app/actions';
-import { microAppManifests, MicroAppManifest } from '@/config/micro-apps';
 
 interface FullUser extends User {
     ownedChaosCards: PrismaChaosCard[];
 }
 
 export default function Armory() {
-  const [apps, setApps] = useState<MicroAppManifest[]>([]);
-  const [cards, setCards] = useState<ChaosCardManifest[]>([]);
+  const [artifacts, setArtifacts] = useState<ArtifactManifest[]>([]);
   const [workspace, setWorkspace] = useState<Workspace | null>(null);
   const [user, setUser] = useState<FullUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -37,29 +35,26 @@ export default function Armory() {
         if (!workspaceResponse.ok) throw new Error('Failed to fetch workspace data');
         if (!userResponse.ok) throw new Error('Failed to fetch user data');
         
-        const allAppsData: MicroAppManifest[] = microAppManifests;
+        const allArtifacts: ArtifactManifest[] = artifactManifests;
         const workspaceData: Workspace = await workspaceResponse.json();
         const userData: FullUser = await userResponse.json();
 
         const isOwner = userData.id === workspaceData.ownerId;
         
-        // Filter apps based on user permissions
-        const filteredApps = allAppsData.filter(app => {
-            if (app.permissionsRequired.length === 0) {
-                return true; // No permissions required
+        const filteredArtifacts = allArtifacts.filter(artifact => {
+            if (!artifact.permissionsRequired || artifact.permissionsRequired.length === 0) {
+                return true;
             }
-            if (app.permissionsRequired.includes('OWNER_ONLY') && !isOwner) {
-                return false; // Owner-only app, user is not owner
+            if (artifact.permissionsRequired.includes('OWNER_ONLY') && !isOwner) {
+                return false;
             }
-            if (app.permissionsRequired.includes('ADMIN') && userData.role !== UserRole.ADMIN) {
-                return false; // Admin-only app, user is not admin
+            if (artifact.permissionsRequired.includes('ADMIN') && userData.role !== UserRole.ADMIN) {
+                return false;
             }
-            // Add other role checks here if needed...
             return true;
         });
 
-        setApps(filteredApps);
-        setCards(chaosCardManifest);
+        setArtifacts(filteredArtifacts);
         setWorkspace(workspaceData);
         setUser(userData);
 
@@ -94,6 +89,9 @@ export default function Armory() {
 
   const unlockedAppIds = workspace?.unlockedAppIds || [];
   const ownedCardKeys = user?.ownedChaosCards.map(c => c.key) || [];
+  
+  const microApps = artifacts.filter(a => a.type === 'MICRO_APP');
+  const chaosCards = artifacts.filter(a => a.type === 'CHAOS_CARD');
 
   return (
     <div className="h-full p-2">
@@ -111,10 +109,10 @@ export default function Armory() {
                      </div>
                  ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-2">
-                      {apps.map(app => (
+                      {microApps.map(artifact => (
                           <MicroAppListingCard 
-                            key={app.id} 
-                            app={app} 
+                            key={artifact.id} 
+                            artifact={artifact} 
                             unlockedAppIds={unlockedAppIds}
                             onAcquire={fetchArmoryData}
                           />
@@ -133,10 +131,10 @@ export default function Armory() {
                      </div>
                  ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-2">
-                      {cards.map(card => (
+                      {chaosCards.map(artifact => (
                           <ChaosCardListingCard 
-                            key={card.key} 
-                            card={card}
+                            key={artifact.id} 
+                            artifact={artifact}
                             ownedCardKeys={ownedCardKeys}
                             onAcquire={fetchArmoryData}
                           />

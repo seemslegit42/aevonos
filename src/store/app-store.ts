@@ -5,7 +5,7 @@ import React from 'react';
 
 import { handleCommand } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
-import { microAppManifests } from '@/config/micro-apps';
+import { artifactManifests } from '@/config/artifacts';
 
 import type { DrSyntaxOutput } from '@/ai/agents/dr-syntax-schemas';
 import type { Contact } from '@/ai/tools/crm-schemas';
@@ -100,7 +100,7 @@ export interface BeepState extends UserCommandOutput {
 }
 
 // Create a lookup map from the single source of truth for efficient access.
-const manifestMap = new Map(microAppManifests.map(m => [m.id, m]));
+const manifestMap = new Map(artifactManifests.map(m => [m.id, m]));
 
 export interface AppState {
   apps: MicroApp[];
