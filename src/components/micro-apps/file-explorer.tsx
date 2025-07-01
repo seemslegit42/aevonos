@@ -17,35 +17,55 @@ const mockCrystals = [
 
 const DataCrystal = ({ crystal, index }: { crystal: (typeof mockCrystals)[0], index: number }) => {
   const Icon = crystal.icon;
+  const duration = Math.random() * 5 + 7; // 7-12 seconds for a slow float
+  const yRange = Math.random() * 15 + 10; // 10-25px vertical float
+
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
+      initial={{ opacity: 0, scale: 0.8 }}
+      animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.5, delay: index * 0.1 }}
-      className="w-48"
+      className="w-48 relative"
     >
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Card className={cn("bg-background/50 hover:bg-background/80 hover:border-primary cursor-pointer transition-all", crystal.color)}>
-              <CardHeader className="p-3">
-                <div className="flex items-center gap-2">
-                  <Icon className="w-5 h-5 flex-shrink-0 text-primary" />
-                  <CardTitle className="text-sm truncate">{crystal.name}</CardTitle>
-                </div>
-              </CardHeader>
-              <CardContent className="p-3 pt-0 text-xs text-muted-foreground">
-                <p>Type: {crystal.type}</p>
-                <p>Date: {crystal.date}</p>
-              </CardContent>
-            </Card>
-          </TooltipTrigger>
-          <TooltipContent side="bottom">
-            <p><span className="font-semibold">Agent:</span> {crystal.agent}</p>
-            <p><span className="font-semibold">Aegis Integrity:</span> {crystal.integrity}</p>
-          </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
+        <motion.div
+            animate={{
+                y: [0, -yRange, 0],
+            }}
+            transition={{
+                duration: duration,
+                repeat: Infinity,
+                repeatType: "mirror",
+                ease: "easeInOut"
+            }}
+        >
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Card className={cn(
+                    "bg-background/50 hover:bg-background/80 hover:border-primary cursor-pointer transition-all crystal-pulse", 
+                    crystal.color
+                    )}
+                     style={{animationDelay: `${index * 0.5}s`}}
+                >
+                  <CardHeader className="p-3">
+                    <div className="flex items-center gap-2">
+                      <Icon className="w-5 h-5 flex-shrink-0 text-primary" />
+                      <CardTitle className="text-sm truncate">{crystal.name}</CardTitle>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="p-3 pt-0 text-xs text-muted-foreground">
+                    <p>Type: {crystal.type}</p>
+                    <p>Date: {crystal.date}</p>
+                  </CardContent>
+                </Card>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">
+                <p><span className="font-semibold">Agent:</span> {crystal.agent}</p>
+                <p><span className="font-semibold">Aegis Integrity:</span> {crystal.integrity}</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </motion.div>
     </motion.div>
   );
 };
@@ -53,8 +73,8 @@ const DataCrystal = ({ crystal, index }: { crystal: (typeof mockCrystals)[0], in
 
 export default function ScribesArchive() {
   return (
-    <div className="p-4 h-full">
-      <div className="flex flex-wrap items-start justify-center gap-6">
+    <div className="p-4 h-full overflow-hidden">
+      <div className="flex flex-wrap items-start justify-center gap-8 h-full">
         {mockCrystals.map((crystal, index) => (
           <DataCrystal key={crystal.id} crystal={crystal} index={index} />
         ))}
