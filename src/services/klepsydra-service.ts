@@ -136,7 +136,9 @@ export async function processFollyTribute(
                 type: TransactionType.TRIBUTE,
                 amount: new Prisma.Decimal(netAmount),
                 description: `Tribute: ${instrumentManifest.name} - ${outcome}`,
-                luckWeight, outcome, boonAmount: new Prisma.Decimal(boonAmount),
+                luckWeight, outcome, 
+                tributeAmount: new Prisma.Decimal(tributeAmount),
+                boonAmount: new Prisma.Decimal(boonAmount),
                 userPsyche: user.psyche, status: 'COMPLETED',
             }
         });

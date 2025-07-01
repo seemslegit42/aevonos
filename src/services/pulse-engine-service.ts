@@ -8,7 +8,7 @@
 
 import prisma from '@/lib/prisma';
 import { pulseEngineConfig } from '@/config/pulse-engine-config';
-import { PulseProfile, PulsePhase, Prisma } from '@prisma/client';
+import { PulseProfile, PulsePhase, Prisma, PulseInteractionType } from '@prisma/client';
 
 type PrismaTransactionClient = Omit<Prisma.PrismaClient, "$connect" | "$disconnect" | "$on" | "$transaction" | "$use" | "$extends">;
 
@@ -59,11 +59,13 @@ export async function getCurrentPulseValue(userId: string, tx?: PrismaTransactio
     lastEventTimestamp,
   } = profile;
 
+  // Time `t` in minutes since the last event
   const t = (new Date().getTime() - new Date(lastEventTimestamp).getTime()) / (1000 * 60);
 
   const luckOscillation = amplitude * Math.sin(2 * Math.PI * frequency * t + phaseOffset);
   const finalLuckWeight = baselineLuck + luckOscillation;
   
+  // Clamp the luck weight between a reasonable min and max to avoid extreme swings.
   return Math.max(0.05, Math.min(0.95, finalLuckWeight));
 }
 
@@ -95,7 +97,7 @@ export async function recordWin(userId: string, tx?: PrismaTransactionClient): P
             lastEventTimestamp: new Date(),
             consecutiveLosses: 0,
             lastResolvedPhase: currentPhase,
-            lastInteractionType: 'WIN',
+            lastInteractionType: PulseInteractionType.WIN,
             frustration: Math.max(0, profile.frustration - 0.2),
             flowState: Math.min(1, profile.flowState + 0.1),
         },
@@ -123,7 +125,7 @@ export async function recordLoss(userId: string, tx?: PrismaTransactionClient): 
                 increment: 1,
             },
             lastResolvedPhase: currentPhase,
-            lastInteractionType: 'LOSS',
+            lastInteractionType: PulseInteractionType.LOSS,
             frustration: Math.min(1, profile.frustration + 0.15),
             flowState: Math.max(0, profile.flowState - 0.05),
         },
