@@ -13,6 +13,7 @@ export const DossierInputSchema = z.object({
   mode: z.enum(['standard', 'legal']).default('standard').describe('The format of the dossier.'),
   preparedFor: z.string().optional().describe('The attorney or case file ID the report is prepared for. Used in legal mode.'),
   workspaceId: z.string().describe('The ID of the workspace performing the action.'),
+  userId: z.string().describe('The ID of the user performing the action.'),
 });
 export type DossierInput = z.infer<typeof DossierInputSchema>;
 

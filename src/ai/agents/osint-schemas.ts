@@ -1,3 +1,4 @@
+
 import { z } from 'zod';
 import { BreachSchema, IntelXLeakSchema, SocialScrapeOutputSchema, BurnerCheckOutputSchema } from '../tools/osint-schemas';
 
@@ -5,6 +6,7 @@ export const OsintInputSchema = z.object({
   targetName: z.string().describe('The full name of the individual to investigate.'),
   context: z.string().optional().describe('Any additional context about the target, e.g., email, known associates, last known location, phone number, social media links.'),
   workspaceId: z.string().describe('The ID of the workspace performing the action.'),
+  userId: z.string().describe('The ID of the user performing the action.'),
 });
 export type OsintInput = z.infer<typeof OsintInputSchema>;
 

@@ -1,3 +1,4 @@
+
 # Infidelity Radar: The Spectre Intelligence Suite - Technical Specification
 
 > "Because intuition deserves evidence."

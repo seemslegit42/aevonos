@@ -139,10 +139,11 @@ const osintApp = workflow.compile();
 
 // 5. Create the exported flow
 export async function performOsintScan(input: OsintInput): Promise<OsintOutput> {
-    const { targetName, context, workspaceId } = OsintInputSchema.parse(input);
+    const { targetName, context, workspaceId, userId } = OsintInputSchema.parse(input);
 
     await authorizeAndDebitAgentActions({
         workspaceId,
+        userId,
         actionType: 'COMPLEX_LLM',
         costMultiplier: 3.0, // OSINT is a premium, multi-step process
     });
