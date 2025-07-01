@@ -14,7 +14,7 @@ import { Skeleton } from '../ui/skeleton';
 import { Transaction, TransactionStatus, TransactionType, User, UserRole, Workspace } from '@prisma/client';
 import { useAppStore } from '@/store/app-store';
 import { Separator } from '../ui/separator';
-import { chaosCardManifest } from '@/config/chaos-cards';
+import { artifactManifests } from '@/config/artifacts';
 import { confirmPendingTransactionAction } from '@/app/admin/actions';
 import { PLAN_LIMITS } from '@/config/billing';
 
@@ -24,7 +24,7 @@ type UsageMonitorProps = {
     user: UserProp;
 }
 
-const chaosCardMap = new Map(chaosCardManifest.map(c => [c.key, c]));
+const chaosCardMap = new Map(artifactManifests.filter(a => a.type === 'CHAOS_CARD').map(c => [c.id, c]));
 
 const UsageSkeleton = () => (
     <>
