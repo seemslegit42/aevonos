@@ -9,6 +9,7 @@ import { type Agent as AgentData, AgentStatus } from '@prisma/client';
 import { cn } from '@/lib/utils';
 import { useAppStore } from '@/store/app-store';
 import type { MicroAppType } from '@/store/app-store';
+import Obelisk from './obelisk';
 
 // Configuration for agent node visuals based on status
 const statusConfig: Record<AgentStatus, { color: THREE.Color; emissiveIntensity: number }> = {
@@ -197,47 +198,12 @@ function BeepCore({ state }: { state: BeepCoreState }) {
     );
 }
 
-function AgentConnection({ agent, position }: { agent: AgentData, position: THREE.Vector3 }) {
-    const lineRef = useRef<any>(null); // Using `any` for ref as Line's type from trei can be complex
-    
-    const { color: targetColor, opacity: targetOpacity, lineWidth: targetWidth } = useMemo(() => {
-        switch(agent.status) {
-            case AgentStatus.processing:
-                return { color: statusConfig.processing.color, opacity: 0.7, lineWidth: 1 };
-            case AgentStatus.active:
-                return { color: statusConfig.active.color, opacity: 0.4, lineWidth: 0.75 };
-            default:
-                return { color: new THREE.Color('hsl(var(--muted-foreground))'), opacity: 0.2, lineWidth: 0.5 };
-        }
-    }, [agent.status]);
-
-    useFrame(() => {
-        if (!lineRef.current?.material) return;
-        
-        const material = lineRef.current.material;
-        material.color.lerp(targetColor, 0.1);
-        material.opacity = THREE.MathUtils.lerp(material.opacity, targetOpacity, 0.1);
-    });
-
-    return (
-        <Line
-            ref={lineRef}
-            points={[[0, 0, 0], position]}
-            color={targetColor}
-            lineWidth={targetWidth}
-            transparent
-            opacity={0.2} // Start with a low opacity, lerp to target
-        />
-    );
-}
-
-
 function Scene({ agents, beepCoreState, highlightedAgents }: { agents: AgentData[], beepCoreState: BeepCoreState, highlightedAgents: Set<string> }) {
     const nodePositions = useMemo(() => {
         return agents.map((agent, index) => {
             const angle = (index / agents.length) * Math.PI * 2;
-            const radius = 3 + Math.floor(index / 8) * 1.5;
-            const yPos = (Math.random() - 0.5) * 4;
+            const radius = 4 + Math.floor(index / 8) * 1.5; // Increased radius to orbit Obelisk
+            const yPos = (Math.random() - 0.5) * 6;
             return new THREE.Vector3(Math.cos(angle) * radius, yPos, Math.sin(angle) * radius)
         });
     }, [agents]);
@@ -246,23 +212,28 @@ function Scene({ agents, beepCoreState, highlightedAgents }: { agents: AgentData
         <>
             <ambientLight intensity={0.2} />
             <pointLight position={[0, 0, 0]} color="hsl(var(--primary))" intensity={15} distance={20} />
-            <BeepCore state={beepCoreState} />
+            
+            <Obelisk />
+
+            <group position={[0, 0, 3]}>
+                <BeepCore state={beepCoreState} />
+            </group>
+
             {agents.map((agent, index) => {
                 const isHighlighted = highlightedAgents.has(agent.type);
                 return (
                     <group key={agent.id}>
                         <AgentNode agent={agent} position={nodePositions[index]} isHighlighted={isHighlighted} />
-                        <AgentConnection agent={agent} position={nodePositions[index]} />
                     </group>
                 )
             })}
-            <Sparkles count={200} scale={15} size={2} speed={0.3} color="hsl(var(--accent))" />
+            <Sparkles count={200} scale={20} size={2} speed={0.3} color="hsl(var(--accent))" />
         </>
     );
 }
 
 
-export default function OracleBackground({ initialAgents }: { initialAgents: AgentData[] }) {
+export default function SystemWeave({ initialAgents }: { initialAgents: AgentData[] }) {
   const [agents, setAgents] = useState<AgentData[]>(initialAgents);
   const { isLoading, beepOutput } = useAppStore();
   const [beepCoreState, setBeepCoreState] = useState<BeepCoreState>('idle');
@@ -290,10 +261,10 @@ export default function OracleBackground({ initialAgents }: { initialAgents: Age
             const data: AgentData[] = await response.json();
             setAgents(data);
         } catch (err) {
-            console.error("Oracle background sync failed:", err);
+            console.error("System Weave agent sync failed:", err);
         }
     };
-    const interval = setInterval(fetchAgents, 15000); // Optimized polling
+    const interval = setInterval(fetchAgents, 15000);
     return () => clearInterval(interval);
   }, []);
 
@@ -322,9 +293,9 @@ export default function OracleBackground({ initialAgents }: { initialAgents: Age
 
   return (
       <div className="absolute inset-0 -z-10">
-        <Canvas camera={{ position: [0, 8, 14], fov: 60 }}>
+        <Canvas camera={{ position: [0, 8, 18], fov: 60 }}>
             <Scene agents={agents} beepCoreState={beepCoreState} highlightedAgents={highlightedAgents} />
-            <OrbitControls autoRotate autoRotateSpeed={0.2} enableZoom={true} enablePan={false} />
+            <OrbitControls autoRotate autoRotateSpeed={0.1} enableZoom={true} enablePan={false} maxDistance={40} minDistance={10} />
         </Canvas>
          <audio ref={audioRef} onEnded={handleAudioEnd} className="hidden" />
       </div>

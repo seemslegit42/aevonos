@@ -1,10 +1,11 @@
+
 'use client';
 
 import React from 'react';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import MicroAppGrid from '@/components/micro-app-grid';
 import { useAppStore } from '@/store/app-store';
-import OracleBackground from '@/components/dashboard/oracle-background';
+import SystemWeave from '@/components/dashboard/system-weave';
 import { type Agent as AgentData } from '@prisma/client';
 import PulseNarrativeDisplay from './pulse-narrative-display';
 
@@ -22,7 +23,7 @@ export default function DashboardClient({ initialAgents }: DashboardClientProps)
 
     return (
         <div className="relative h-full">
-            <OracleBackground initialAgents={initialAgents} />
+            <SystemWeave initialAgents={initialAgents} />
             <DndContext
                 sensors={sensors}
                 collisionDetection={closestCenter}
