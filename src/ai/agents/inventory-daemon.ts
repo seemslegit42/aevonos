@@ -14,13 +14,13 @@ import {
   ToolMessage,
 } from '@langchain/core/messages';
 import { zodToJsonSchema } from 'zod-to-json-schema';
-import { langchainGroq } from '@/ai/genkit';
+import { langchainGroqComplex } from '@/ai/genkit';
 import { getStockLevels, placePurchaseOrder } from '@/ai/tools/inventory-tools';
 import { z } from 'zod';
 import { InventoryDaemonInputSchema, InventoryDaemonOutputSchema, type InventoryDaemonInput, type InventoryDaemonOutput } from './inventory-daemon-schemas';
 
 const inventoryTools = [getStockLevels, placePurchaseOrder];
-const modelWithTools = langchainGroq.bind({
+const modelWithTools = langchainGroqComplex.bind({
     tools: inventoryTools.map(tool => ({
         type: 'function',
         function: {

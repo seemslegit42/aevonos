@@ -5,14 +5,12 @@ import Credentials from 'next-auth/providers/credentials';
 import prisma from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 import type { User, UserPsyche, UserRole } from '@prisma/client';
-import type { AdapterUser } from 'next-auth/adapters';
+import { authConfig } from './auth.config'; // Import the base Edge-compatible config
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
+  ...authConfig, // Spread the base config
   adapter: PrismaAdapter(prisma),
   session: { strategy: 'jwt' },
-  pages: {
-    signIn: '/login',
-  },
   providers: [
     Credentials({
       name: 'Credentials',
@@ -38,28 +36,29 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           user.password
         );
 
-        if (!isPasswordValid) {
-          return null;
+        if (isPasswordValid) {
+          // This object is passed to the `user` property of the `jwt` callback
+          return {
+            id: user.id,
+            email: user.email,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            role: user.role,
+            psyche: user.psyche,
+            agentAlias: user.agentAlias,
+            firstWhisper: user.firstWhisper
+          };
         }
-        
-        // This object is passed to the `user` property of the `jwt` callback
-        return {
-          id: user.id,
-          email: user.email,
-          firstName: user.firstName,
-          lastName: user.lastName,
-          role: user.role,
-          psyche: user.psyche,
-          agentAlias: user.agentAlias,
-          firstWhisper: user.firstWhisper
-        };
+        return null;
       },
     }),
   ],
   callbacks: {
+    ...authConfig.callbacks, // Include callbacks from the base config
+
+    // JWT and Session callbacks are Node.js-safe and are needed to enrich the session
     async jwt({ token, user }) {
       if (user) {
-        // On sign-in, `user` object is available.
         token.id = user.id;
         token.role = (user as User).role;
         token.psyche = (user as User).psyche;

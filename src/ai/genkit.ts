@@ -41,14 +41,19 @@ if (groqApiKey === 'YOUR_GROQ_API_KEY_HERE') {
     );
 }
 
+// Pass a dummy key if the real one is missing to prevent startup crash.
+// The SDK will handle the invalid key gracefully at runtime.
+const effectiveGroqApiKey = groqApiKey === 'YOUR_GROQ_API_KEY_HERE' ? 'gsk_dummy_key_to_prevent_crash' : groqApiKey;
+
+
 // The fast model for simple commands and routing.
 export const langchainGroqFast = new ChatGroq({
-    apiKey: groqApiKey === 'YOUR_GROQ_API_KEY_HERE' ? undefined : groqApiKey,
+    apiKey: effectiveGroqApiKey,
     model: "llama3-8b-8192", 
 });
 
 // The complex model for reasoning, analysis, and generation.
 export const langchainGroqComplex = new ChatGroq({
-    apiKey: groqApiKey === 'YOUR_GROQ_API_KEY_HERE' ? undefined : groqApiKey,
+    apiKey: effectiveGroqApiKey,
     model: "mixtral-8x7b-32768",
 });
