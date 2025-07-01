@@ -225,13 +225,16 @@ export async function confirmPendingTransactionAction(transactionId: string) {
         return { success: false, error: 'Unauthorized' };
     }
     
-    const workspace = await prisma.workspace.findUnique({
-      where: { id: session.workspaceId },
-      select: { ownerId: true }
+    const user = await prisma.user.findFirst({
+        where: {
+            id: session.userId,
+            workspaces: { some: { id: session.workspaceId }}
+        },
+        select: { role: true }
     });
 
-    if (!workspace || session.userId !== workspace.ownerId) {
-        return { success: false, error: 'Forbidden: Only the workspace Architect can perform this action.' };
+    if (!user || user.role !== UserRole.ADMIN) {
+        return { success: false, error: 'Forbidden: Administrator access required for this action.' };
     }
 
     try {
