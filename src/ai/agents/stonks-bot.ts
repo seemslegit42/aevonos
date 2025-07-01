@@ -19,7 +19,7 @@ import {
     type StonksBotOutput,
     StonksBotModeSchema
 } from './stonks-bot-schemas';
-import { getStockPrice } from '../tools/finance-tools';
+import { getStockPriceAlphaVantage, getStockPriceFinnhub } from '../tools/finance-tools';
 import { authorizeAndDebitAgentActions } from '@/services/billing-service';
 
 const personaPrompts: Record<z.infer<typeof StonksBotModeSchema>, string> = {
@@ -36,7 +36,7 @@ interface StonksAgentState {
 }
 
 // 2. Define Tools and Model
-const tools = [getStockPrice];
+const tools = [getStockPriceAlphaVantage, getStockPriceFinnhub];
 const modelWithTools = langchainGroqComplex.bind({
     tools: tools.map(tool => ({
         type: 'function',
@@ -50,15 +50,25 @@ const modelWithTools = langchainGroqComplex.bind({
 const toolsNode = new ToolNode<StonksAgentState>(tools);
 
 // 3. Define Agent Nodes
-// This node plans the tool call.
+// This node plans the primary tool call.
 const callPlanner = async (state: StonksAgentState) => {
     const { ticker } = state;
-    const plannerPrompt = new HumanMessage(`I need to get stock advice for the ticker: ${ticker}. Please call the getStockPrice tool for this ticker.`);
+    const plannerPrompt = new HumanMessage(`I need to get stock advice for the ticker: ${ticker}. Please call the getStockPriceAlphaVantage tool for this ticker as it is the primary source.`);
     const response = await modelWithTools.invoke([plannerPrompt]);
     return { messages: [response] };
 };
 
-// This node synthesizes the final report after the tool has run.
+// This node plans the fallback tool call if the first one fails.
+const callFallback = async (state: StonksAgentState) => {
+    const { messages } = state;
+    const lastMessage = messages[messages.length - 1];
+    const fallbackPrompt = new HumanMessage(`The previous tool call failed with the following error: "${lastMessage.content}". Please call the alternative financial data source, getStockPriceFinnhub, to get the stock price.`);
+    const response = await modelWithTools.invoke(messages.concat(fallbackPrompt));
+    return { messages: [response] };
+};
+
+
+// This node synthesizes the final report after a tool has run successfully.
 const callSynthesizer = async (state: StonksAgentState) => {
     const { messages, mode, ticker } = state;
     const personaInstruction = personaPrompts[mode];
@@ -84,7 +94,8 @@ const callSynthesizer = async (state: StonksAgentState) => {
     
     const analysis = await structuredModel.invoke(messagesForSynth);
     
-    const toolCallMessage = messages.find(m => m instanceof ToolMessage);
+    const toolCallMessage = messages.findLast(m => m instanceof ToolMessage && !m.content.includes("Error:"));
+    
     if (!toolCallMessage) {
         throw new Error("Stonks Bot failed to get stock price from tool message.");
     }
@@ -99,6 +110,17 @@ const callSynthesizer = async (state: StonksAgentState) => {
     return { messages: [new AIMessage({ content: JSON.stringify(finalResponse) })] };
 };
 
+// Conditional Edge Logic
+const shouldFallback = (state: StonksAgentState): "fallback" | "synthesize" => {
+    const lastMessage = state.messages[state.messages.length - 1];
+    // Check if the last message is a ToolMessage and its content indicates an error
+    if (lastMessage instanceof ToolMessage && lastMessage.content.includes("Error:")) {
+        console.log("[Stonks Bot] Tool failed. Attempting fallback.");
+        return "fallback";
+    }
+    console.log("[Stonks Bot] Tool succeeded. Synthesizing report.");
+    return "synthesize";
+}
 
 // 4. Build the Graph
 const workflow = new StateGraph<StonksAgentState>({
@@ -111,22 +133,29 @@ const workflow = new StateGraph<StonksAgentState>({
 
 workflow.addNode('planner', callPlanner);
 workflow.addNode('tools', toolsNode);
+workflow.addNode('fallback', callFallback);
 workflow.addNode('synthesizer', callSynthesizer);
 
 workflow.setEntryPoint('planner');
 workflow.addEdge('planner', 'tools');
-workflow.addEdge('tools', 'synthesizer');
+workflow.addConditionalEdges('tools', shouldFallback, {
+    fallback: 'fallback',
+    synthesize: 'synthesizer',
+});
+workflow.addEdge('fallback', 'tools');
 workflow.addEdge('synthesizer', END);
 
 const stonkBotApp = workflow.compile();
 
 // 5. Define the public-facing flow
 export async function getStonksAdvice(input: StonksBotInput): Promise<StonksBotOutput> {
-    const { ticker, mode, workspaceId } = StonksBotInputSchema.parse(input);
+    const { ticker, mode, workspaceId, userId } = StonksBotInputSchema.parse(input);
 
     // This flow uses an external tool and an LLM.
-    await authorizeAndDebitAgentActions({ workspaceId, actionType: 'EXTERNAL_API' });
-    await authorizeAndDebitAgentActions({ workspaceId, actionType: 'SIMPLE_LLM' });
+    // Bill for up to 2 API calls (if fallback is needed) + 1 LLM call.
+    await authorizeAndDebitAgentActions({ workspaceId, userId, actionType: 'EXTERNAL_API' });
+    await authorizeAndDebitAgentActions({ workspaceId, userId, actionType: 'EXTERNAL_API' });
+    await authorizeAndDebitAgentActions({ workspaceId, userId, actionType: 'SIMPLE_LLM' });
 
     const result = await stonkBotApp.invoke({
         ticker,

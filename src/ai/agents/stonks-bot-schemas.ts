@@ -1,3 +1,4 @@
+
 import { z } from 'zod';
 import { StockPriceSchema } from '../tools/finance-tools';
 
@@ -8,6 +9,7 @@ export const StonksBotInputSchema = z.object({
   ticker: z.string().describe('The stock ticker symbol, e.g., GME, AMC, TSLA.'),
   mode: StonksBotModeSchema.describe("The personality mode for the bot's response."),
   workspaceId: z.string().describe('The ID of the workspace performing the action.'),
+  userId: z.string().describe('The ID of the user performing the action.'),
 });
 export type StonksBotInput = z.infer<typeof StonksBotInputSchema>;
 
