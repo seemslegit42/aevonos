@@ -373,8 +373,8 @@ export const microAppManifests: MicroAppManifest[] = [
   {
     id: 'infidelity-radar',
     name: 'Spectre Intelligence Suite',
-    author: 'Spectre Intelligence',
-    description: 'Because intuition deserves evidence. An orchestrated suite of OSINT, behavioral analysis, and decoy deployment tools.',
+    author: 'Bloodhound Protocol // Forged by ΛΞVON OS',
+    description: 'A multi-agent digital investigation console. Execute full-spectrum intelligence gathering via LangGraph daemons, OSINT reconnaissance, and synthesized dossier generation. Deploy the Burn Bridge Protocol to unleash an automated swarm of data extraction tools. Results are rendered as secure, exportable artifacts—ready for legal review or shadow operations.',
     creditCost: 999,
     priceModel: 'one-time',
     imageUrl: 'https://placehold.co/600x400.png',
