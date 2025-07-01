@@ -13,6 +13,7 @@ import {
     type InfidelityAnalysisOutput 
 } from './infidelity-analysis-schemas';
 import { authorizeAndDebitAgentActions } from '@/services/billing-service';
+import { langchainGroqComplex } from '@/ai/genkit';
 
 const performInfidelityAnalysisFlow = ai.defineFlow(
   {
@@ -39,14 +40,11 @@ Based on this report, you will:
 
 Your analysis should be based on patterns, inconsistencies, and psychological indicators. Be objective and evidence-based.
 `;
-
-    const { output } = await ai.generate({
-        prompt: finalPrompt,
-        output: { schema: InfidelityAnalysisOutputSchema },
-        model: 'googleai/gemini-1.5-flash-latest',
-    });
     
-    return output!;
+    const structuredGroq = langchainGroqComplex.withStructuredOutput(InfidelityAnalysisOutputSchema);
+    const output = await structuredGroq.invoke(finalPrompt);
+    
+    return output;
   }
 );
 

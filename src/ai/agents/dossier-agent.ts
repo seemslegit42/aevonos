@@ -6,6 +6,8 @@ import { DossierInputSchema, DossierOutputSchema, type DossierInput, type Dossie
 import { format } from 'date-fns';
 import { createHash } from 'crypto';
 import { authorizeAndDebitAgentActions } from '@/services/billing-service';
+import { langchainGroqComplex } from '@/ai/genkit';
+import { z } from 'zod';
 
 const generateDossierFlow = ai.defineFlow(
   {
@@ -183,20 +185,17 @@ The subject demonstrates a consistent pattern of concealment, behavioral inconsi
 
     const prompt = input.mode === 'legal' ? legalPrompt : standardPrompt;
 
-    const { output } = await ai.generate({
-      prompt: prompt,
-      model: 'googleai/gemini-1.5-flash-latest',
-      output: { schema: z.object({ markdownContent: z.string() }) },
-    });
+    const structuredGroq = langchainGroqComplex.withStructuredOutput(z.object({ markdownContent: z.string() }));
+    const output = await structuredGroq.invoke(prompt);
     
-    if (!output) {
+    if (!output?.markdownContent) {
       throw new Error("Dossier generation failed.");
     }
     
     const hash = createHash('sha256').update(output.markdownContent).digest('hex');
 
     return {
-        ...output,
+        markdownContent: output.markdownContent,
         fileName,
         reportHash: hash,
         mode: input.mode || 'standard',

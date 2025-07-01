@@ -19,21 +19,21 @@ The suite is composed of several independent but interoperable agents, all orche
 
 ### 2.1. `osint-agent` (`agents/osint.ts`)
 - **Purpose**: Acts as a digital bloodhound, scouring open sources for information.
-- **Architecture**: As a specialist daemon in the Groq Swarm, this agent is implemented using `LangGraph` for multi-step reasoning. It first plans which intelligence tools to use, executes them, and then synthesizes the results into a final report.
+- **Architecture**: As a specialist daemon in the Groq Swarm, this agent is implemented using `LangGraph` for multi-step reasoning. It first plans which intelligence tools to use, executes them with blistering speed, and then synthesizes the results into a final report.
 - **Flow**: The `performOsintScan` flow orchestrates a suite of dedicated tools (`checkEmailBreaches`, `searchIntelX`, `runFirecrawlerScan`) to gather data on a target.
 - **Synthesis**: The raw data from all tool calls is synthesized by an LLM into a coherent `OsintOutputSchema`, providing a summary, risk factors, and structured data on breaches, leaks, and social profiles.
 
 ### 2.2. `infidelity-analysis-agent` (`agents/infidelity-analysis.ts`)
 - **Purpose**: Provides a clinical, behavioral analysis of a situation.
-- **Flow**: The `performInfidelityAnalysis` flow takes a user's description of a situation and uses an LLM, prompted as a private investigator, to calculate a `riskScore`, write a `riskSummary`, and identify the `keyFactors` that contributed to the score.
+- **Flow**: The `performInfidelityAnalysis` flow takes a user's description of a situation and uses a Groq-powered LLM, prompted as a private investigator, to calculate a `riskScore`, write a `riskSummary`, and identify the `keyFactors` that contributed to the score with extreme speed.
 
 ### 2.3. `decoy-agent` (`agents/decoy.ts`)
 - **Purpose**: Deploys a social engineering probe to test a target's loyalty.
-- **Flow**: The `deployDecoy` flow crafts a compelling, persona-driven opening message designed to elicit a response from a target, based on a brief description.
+- **Flow**: The `deployDecoy` flow crafts a compelling, persona-driven opening message designed to elicit a response from a target, based on a brief description. This analysis and generation is supercharged by the Groq LPU engine.
 
 ### 2.4. `dossier-agent` (`agents/dossier-agent.ts`)
 - **Purpose**: Compiles all gathered intelligence into a formal report.
-- **Flow**: The `generateDossier` flow takes the outputs from the other agents and formats them into a professional Markdown document, available in a standard or "legal" format.
+- **Flow**: The `generateDossier` flow takes the outputs from the other agents and uses a Groq-powered LLM to format them into a professional Markdown document, available in a standard or "legal" format, in near real-time.
 
 ### 2.5. The "Burn Bridge Protocol"
 - **Function**: A master sequence in the BEEP agent (`agents/beep.ts`) that orchestrates the entire suite. When a user issues the "burn the bridge" command, BEEP calls the OSINT, analysis, and decoy agents in parallel, then feeds their outputs into the dossier agent to generate the final, comprehensive report.

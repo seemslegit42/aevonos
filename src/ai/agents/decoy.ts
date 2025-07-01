@@ -9,6 +9,7 @@ import { ai } from '@/ai/genkit';
 import { DecoyInputSchema, DecoyOutputSchema, type DecoyInput, type DecoyOutput } from './decoy-schemas';
 import { z } from 'zod';
 import { authorizeAndDebitAgentActions } from '@/services/billing-service';
+import { langchainGroqComplex } from '@/ai/genkit';
 
 const personaPrompts = {
     sapiosexual: 'You are intelligent, witty, and slightly esoteric. Your message should be a clever observation or a thought-provoking question related to their profile.',
@@ -41,14 +42,11 @@ ${targetDescription}
 
 Based on this, generate a single, concise decoy message. The message should be natural-sounding and designed to elicit a reply. Do not reveal you are an AI. Only output the message.`;
 
-    const { output } = await ai.generate({
-        prompt: finalPrompt,
-        output: { schema: z.object({ decoyMessage: z.string() }) },
-        model: 'googleai/gemini-1.5-flash-latest',
-    });
+    const structuredGroq = langchainGroqComplex.withStructuredOutput(z.object({ decoyMessage: z.string() }));
+    const output = await structuredGroq.invoke(finalPrompt);
     
     return {
-        decoyMessage: output!.decoyMessage,
+        decoyMessage: output.decoyMessage,
         persona,
     };
   }
