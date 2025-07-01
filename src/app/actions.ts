@@ -5,7 +5,7 @@ import { processUserCommand } from '@/ai/agents/beep';
 import type { UserCommandOutput } from '@/ai/agents/beep-schemas';
 import { revalidatePath } from 'next/cache';
 import { scanEvidence as scanEvidenceFlow, type PaperTrailScanInput, type PaperTrailScanOutput } from '@/ai/agents/paper-trail';
-import { getServerActionSession } from '@/lib/auth';
+import { auth } from '@/auth';
 import { processMicroAppPurchase } from '@/services/ledger-service';
 import { z } from 'zod';
 import { requestCreditTopUpInDb } from '@/services/billing-service';
@@ -18,8 +18,8 @@ import prisma from '@/lib/prisma';
 
 
 export async function handleCommand(command: string): Promise<UserCommandOutput> {
-  const session = await getServerActionSession();
-  if (!session?.userId || !session?.workspaceId) {
+  const session = await auth();
+  if (!session?.user?.id || !session?.user?.workspaceId) {
     return {
         appsToLaunch: [],
         agentReports: [],
@@ -37,27 +37,13 @@ export async function handleCommand(command: string): Promise<UserCommandOutput>
     };
   }
 
-  const user = await prisma.user.findUnique({
-    where: { id: session.userId },
-    select: { psyche: true, role: true }
-  });
-
-  if (!user) {
-    return {
-        appsToLaunch: [],
-        agentReports: [],
-        suggestedCommands: ['Error: User not found.'],
-        responseText: 'Could not identify the active user.'
-    };
-  }
-  
   try {
     const result = await processUserCommand({ 
         userCommand: command,
-        userId: session.userId,
-        workspaceId: session.workspaceId,
-        psyche: user.psyche,
-        role: user.role,
+        userId: session.user.id,
+        workspaceId: session.user.workspaceId,
+        psyche: session.user.psyche,
+        role: session.user.role,
     });
     revalidatePath('/');
     return result;
@@ -79,13 +65,13 @@ export async function handleCommand(command: string): Promise<UserCommandOutput>
 // Keeping this as a specialized action due to the file upload requirement.
 // The BEEP agent's text-based command stream is not suitable for high-bandwidth data.
 export async function scanEvidence(input: Omit<PaperTrailScanInput, 'workspaceId'>): Promise<PaperTrailScanOutput> {
-  const session = await getServerActionSession();
-  if (!session?.workspaceId) {
+  const session = await auth();
+  if (!session?.user?.workspaceId) {
       throw new Error("Unauthorized: No active session found.");
   }
   
   try {
-    const result = await scanEvidenceFlow({...input, workspaceId: session.workspaceId });
+    const result = await scanEvidenceFlow({...input, workspaceId: session.user.workspaceId });
     revalidatePath('/');
     return result;
   } catch (error) {
@@ -105,8 +91,8 @@ const TopUpRequestSchema = z.object({
 });
 
 export async function requestCreditTopUp(amount: number) {
-    const session = await getServerActionSession();
-    if (!session?.userId || !session?.workspaceId) {
+    const session = await auth();
+    if (!session?.user?.id || !session?.user?.workspaceId) {
       return { success: false, error: 'Unauthorized' };
     }
     
@@ -122,7 +108,7 @@ export async function requestCreditTopUp(amount: number) {
     const { amount: validatedAmount } = validatedFields.data;
 
     // Call the centralized tool logic
-    const result = await requestCreditTopUpInDb({ amount: validatedAmount }, session.userId, session.workspaceId);
+    const result = await requestCreditTopUpInDb({ amount: validatedAmount }, session.user.id, session.user.workspaceId);
     
     if (result.success) {
         revalidatePath('/');
@@ -132,8 +118,8 @@ export async function requestCreditTopUp(amount: number) {
 }
 
 export async function purchaseMicroApp(appId: string) {
-  const session = await getServerActionSession();
-  if (!session?.userId || !session?.workspaceId) {
+  const session = await auth();
+  if (!session?.user?.id || !session?.user?.workspaceId) {
     return { success: false, error: 'Unauthorized' };
   }
 
@@ -148,8 +134,8 @@ export async function purchaseMicroApp(appId: string) {
 
   try {
     await processMicroAppPurchase(
-        session.userId, 
-        session.workspaceId, 
+        session.user.id, 
+        session.user.workspaceId, 
         appId, 
         appManifest.name, 
         appManifest.creditCost
@@ -166,15 +152,15 @@ export async function purchaseMicroApp(appId: string) {
 }
 
 export async function makeFollyTribute(instrumentId: string, tributeAmount?: number) {
-  const session = await getServerActionSession();
-  if (!session?.userId || !session?.workspaceId) {
+  const session = await auth();
+  if (!session?.user?.id || !session?.user?.workspaceId) {
     return { success: false, error: 'Unauthorized' };
   }
   
   try {
     const { outcome, boonAmount } = await processFollyTribute(
-        session.userId, 
-        session.workspaceId, 
+        session.user.id, 
+        session.user.workspaceId, 
         instrumentId,
         tributeAmount,
     );
@@ -206,15 +192,15 @@ export async function makeFollyTribute(instrumentId: string, tributeAmount?: num
 
 
 export async function logInstrumentDiscovery(instrumentId: string) {
-  const session = await getServerActionSession();
-  if (!session?.userId || !session?.workspaceId) {
+  const session = await auth();
+  if (!session?.user?.id || !session?.user?.workspaceId) {
     return;
   }
 
   try {
     const existingDiscovery = await prisma.instrumentDiscovery.findFirst({
       where: {
-        userId: session.userId,
+        userId: session.user.id,
         instrumentId,
       },
     });
@@ -222,8 +208,8 @@ export async function logInstrumentDiscovery(instrumentId: string) {
     if (!existingDiscovery) {
       await prisma.instrumentDiscovery.create({
         data: {
-          userId: session.userId,
-          workspaceId: session.workspaceId,
+          userId: session.user.id,
+          workspaceId: session.user.workspaceId,
           instrumentId,
         },
       });
@@ -234,8 +220,8 @@ export async function logInstrumentDiscovery(instrumentId: string) {
 }
 
 export async function getNudges() {
-  const session = await getServerActionSession();
-  if (!session?.userId) {
+  const session = await auth();
+  if (!session?.user?.id) {
     return [];
   }
 
@@ -243,7 +229,7 @@ export async function getNudges() {
 
   const ripeDiscoveries = await prisma.instrumentDiscovery.findMany({
     where: {
-      userId: session.userId,
+      userId: session.user.id,
       converted: false,
       firstViewedAt: {
         lt: twelveMinutesAgo,
@@ -293,16 +279,16 @@ export async function handleDeleteAccount() {
 }
 
 export async function clearFirstWhisper() {
-  const session = await getServerActionSession();
-  if (!session?.userId) {
+  const session = await auth();
+  if (!session?.user?.id) {
     return;
   }
   try {
     await prisma.user.update({
-      where: { id: session.userId },
+      where: { id: session.user.id },
       data: { firstWhisper: null },
     });
   } catch (error) {
-    console.error(`[Action: clearFirstWhisper] for user ${session.userId}:`, error);
+    console.error(`[Action: clearFirstWhisper] for user ${session.user.id}:`, error);
   }
 }

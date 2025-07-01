@@ -3,7 +3,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster"
 import { MainLayout } from '@/components/layout/main-layout';
-import { getServerActionSession } from '@/lib/auth';
+import { auth } from '@/auth';
 import prisma from '@/lib/prisma';
 import { type User, type Workspace, UserPsyche } from '@prisma/client';
 import { cn } from '@/lib/utils';
@@ -37,29 +37,17 @@ export default async function RootLayout({
   let themeClass = '';
 
   try {
-    const session = await getServerActionSession();
-    if (session?.userId && session?.workspaceId) {
-        // Fetch user, workspace, and active effects in parallel
-        const [fetchedUser, fetchedWorkspace, activeEffect] = await Promise.all([
-            prisma.user.findUnique({
-                where: { id: session.userId },
-                 select: {
-                  id: true,
-                  email: true,
-                  firstName: true,
-                  lastName: true,
-                  role: true,
-                  agentAlias: true,
-                  psyche: true,
-                  firstWhisper: true,
-                },
-            }),
+    const session = await auth();
+    if (session?.user?.id && session?.user?.workspaceId) {
+        // Fetch workspace and active effects in parallel
+        // User data comes from the session token now
+        const [fetchedWorkspace, activeEffect] = await Promise.all([
             prisma.workspace.findUnique({
-                where: { id: session.workspaceId }
+                where: { id: session.user.workspaceId }
             }),
             prisma.activeSystemEffect.findFirst({
               where: {
-                  workspaceId: session.workspaceId,
+                  workspaceId: session.user.workspaceId,
                   expiresAt: { gt: new Date() },
               },
               orderBy: {
@@ -68,7 +56,18 @@ export default async function RootLayout({
             })
         ]);
         
-        user = fetchedUser;
+        // We can get most user data from the session token which is faster
+        user = {
+            id: session.user.id,
+            email: session.user.email,
+            role: session.user.role,
+            psyche: session.user.psyche,
+            agentAlias: session.user.agentAlias,
+            // These might not be in the token, but we can pass what we have
+            firstName: session.user.name?.split(' ')[0] || null,
+            lastName: session.user.name?.split(' ')[1] || null,
+            firstWhisper: session.user.firstWhisper,
+        };
         workspace = fetchedWorkspace;
         
         // Determine theme class, prioritizing the active system effect over the base covenant theme.

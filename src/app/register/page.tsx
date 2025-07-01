@@ -18,6 +18,7 @@ import { FlowerOfLifeIcon } from '@/components/icons/FlowerOfLifeIcon';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import Image from 'next/image';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
+import { signIn } from 'next-auth/react';
 
 const formSchema = z.object({
   workspaceName: z.string().trim().min(1, { message: "The Canvas must have a name." }),
@@ -412,6 +413,20 @@ export default function RegisterPage() {
                 const errorMsg = responseData.issues ? responseData.issues.map((i: any) => i.message).join(', ') : responseData.error;
                 throw new Error(errorMsg || 'Invocation failed. The connection is unstable.');
             }
+            
+            // Registration successful, now sign in to create the session
+            const signInResult = await signIn('credentials', {
+                redirect: false,
+                email: values.email,
+                password: values.password,
+            });
+
+            if (signInResult?.error) {
+                // This case is unlikely but good to handle.
+                // It means user was created but login failed.
+                throw new Error('Account created, but automatic login failed. Please try logging in manually.');
+            }
+
             setPhase(6); // Final success message phase
             setTimeout(() => {
                 router.push('/');

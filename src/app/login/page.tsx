@@ -16,6 +16,7 @@ import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { FlowerOfLifeIcon } from '@/components/icons/FlowerOfLifeIcon';
 import { Separator } from '@/components/ui/separator';
+import { signIn } from 'next-auth/react';
 
 const loginSchema = z.object({
   email: z.string().email({ message: 'A valid sigil is required.' }),
@@ -42,16 +43,14 @@ export default function LoginPage() {
   const onSubmit = async (values: LoginFormValues) => {
     setError(null);
     try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(values),
+      const result = await signIn('credentials', {
+        redirect: false,
+        email: values.email,
+        password: values.password,
       });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'The ritual was rejected. Check your sigil and vow.');
+      if (result?.error) {
+        throw new Error('Invalid Sigil or Vow. The ritual was rejected.');
       }
       
       router.push('/');

@@ -1,7 +1,7 @@
 
 import { NextResponse, NextRequest } from 'next/server';
 import { z } from 'zod';
-import { getSession } from '@/lib/auth';
+import { auth } from '@/auth';
 import prisma from '@/lib/prisma';
 
 // Schema from api-spec.md for updating a user
@@ -14,14 +14,13 @@ const UserUpdateRequestSchema = z.object({
 
 // Corresponds to operationId `getCurrentUser`
 export async function GET(request: NextRequest) {
-  // Protect the route
-  const session = await getSession(request);
-  if (!session?.userId) {
+  const session = await auth();
+  if (!session?.user?.id) {
     return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 });
   }
 
   const user = await prisma.user.findUnique({
-    where: { id: session.userId },
+    where: { id: session.user.id },
     select: {
       id: true,
       email: true,
@@ -43,9 +42,8 @@ export async function GET(request: NextRequest) {
 
 // Corresponds to operationId `updateCurrentUser`
 export async function PUT(request: NextRequest) {
-  // Protect the route
-  const session = await getSession(request);
-  if (!session?.userId) {
+  const session = await auth();
+  if (!session?.user?.id) {
     return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 });
   }
 
@@ -58,7 +56,7 @@ export async function PUT(request: NextRequest) {
     }
 
     const updatedUser = await prisma.user.update({
-        where: { id: session.userId },
+        where: { id: session.user.id },
         data: validation.data
     });
     

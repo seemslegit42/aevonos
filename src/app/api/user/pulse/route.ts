@@ -1,16 +1,16 @@
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getSession } from '@/lib/auth';
+import { auth } from '@/auth';
 import { getUserPulseState } from '@/services/pulse-engine-service';
 
 export async function GET(request: NextRequest) {
-  const session = await getSession(request);
-  if (!session?.userId) {
+  const session = await auth();
+  if (!session?.user?.id) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
   
   try {
-    const pulseState = await getUserPulseState(session.userId);
+    const pulseState = await getUserPulseState(session.user.id);
     return NextResponse.json(pulseState);
   } catch (error) {
     console.error(`[API /user/pulse GET]`, error);

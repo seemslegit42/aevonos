@@ -1,7 +1,7 @@
 
 import { NextResponse, NextRequest } from 'next/server';
 import { z } from 'zod';
-import { getSession } from '@/lib/auth';
+import { auth } from '@/auth';
 import prisma from '@/lib/prisma';
 import { PlanTier } from '@prisma/client';
 
@@ -13,14 +13,13 @@ const WorkspaceUpdateSchema = z.object({
 
 // Corresponds to operationId `getCurrentWorkspace`
 export async function GET(request: NextRequest) {
-  // Protect the route
-  const session = await getSession(request);
-  if (!session?.workspaceId) {
+  const session = await auth();
+  if (!session?.user?.workspaceId) {
     return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 });
   }
 
   const workspace = await prisma.workspace.findUnique({
-    where: { id: session.workspaceId },
+    where: { id: session.user.workspaceId },
   });
 
   if (!workspace) {
@@ -32,8 +31,8 @@ export async function GET(request: NextRequest) {
 
 // Corresponds to an extension of `getCurrentWorkspace` for updates
 export async function PUT(request: NextRequest) {
-  const session = await getSession(request);
-  if (!session?.workspaceId) {
+  const session = await auth();
+  if (!session?.user?.workspaceId) {
     return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 });
   }
 
@@ -51,7 +50,7 @@ export async function PUT(request: NextRequest) {
     }
     
     const updatedWorkspace = await prisma.workspace.update({
-        where: { id: session.workspaceId },
+        where: { id: session.user.workspaceId },
         data: validation.data
     });
 

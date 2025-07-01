@@ -3,7 +3,6 @@
 
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import { encrypt } from '@/lib/auth';
 import prisma from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 import { UserPsyche, PlanTier, TransactionType, TransactionStatus, UserRole, Prisma } from '@prisma/client';
@@ -104,42 +103,9 @@ export async function POST(request: Request) {
     } catch (aiError) {
         console.error('[Rite of Invocation AI Error]', aiError);
     }
-
-    const sessionPayload = {
-        userId: user.id,
-        workspaceId: workspace.id,
-        expires: new Date(Date.now() + 3600 * 1000),
-    };
-
-    const token = await encrypt(sessionPayload);
     
-    // Response must match AuthResponse schema in api-spec.md
-    const apiResponse = {
-        accessToken: token,
-        tokenType: 'Bearer',
-        expiresIn: 3600,
-        user: {
-            id: user.id,
-            email: user.email,
-            firstName: user.firstName,
-            lastName: user.lastName,
-            role: user.role,
-            lastLoginAt: user.lastLoginAt,
-        }
-    };
-    
-    const response = NextResponse.json(apiResponse, { status: 201 });
-
-    response.cookies.set({
-        name: 'session',
-        value: token,
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        expires: new Date(Date.now() + 60 * 60 * 1000), // 1 hour
-        path: '/',
-    });
-
-    return response;
+    // Do NOT create a session here. The client will call signIn.
+    return NextResponse.json({ success: true, userId: user.id }, { status: 201 });
 
   } catch (error) {
     console.error('[API /auth/register POST]', error);
