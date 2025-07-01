@@ -41,6 +41,7 @@ import { HowardsSidekickIcon } from './icons/HowardsSidekickIcon';
 import { SisyphusIcon } from './icons/SisyphusIcon';
 import { MerchantOfCabbageIcon } from './icons/MerchantOfCabbageIcon';
 import { FileExplorerIcon } from './icons/FileExplorerIcon';
+import Terminal from './micro-apps/terminal';
 
 import { type MicroAppType } from '@/store/app-store';
 import ContactList from './micro-apps/contact-list';
@@ -97,6 +98,7 @@ export const microAppRegistry: Record<MicroAppType, ComponentRegistry> = {
   },
   'terminal': {
     icon: TerminalIcon,
+    content: Terminal,
   },
   'ai-suggestion': {
       icon: CrystalIcon,
