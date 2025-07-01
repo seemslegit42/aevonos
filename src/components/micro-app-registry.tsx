@@ -40,6 +40,7 @@ import { RenoModeIcon } from './icons/RenoModeIcon';
 import { PatricktIcon } from './icons/PatricktIcon';
 import { HowardsSidekickIcon } from './icons/HowardsSidekickIcon';
 import { SisyphusIcon } from './icons/SisyphusIcon';
+import { MerchantOfCabbageIcon } from './icons/MerchantOfCabbageIcon';
 
 import { type MicroAppType } from '@/store/app-store';
 import ContactList from './micro-apps/contact-list';
@@ -75,6 +76,7 @@ import TopUp from './micro-apps/top-up';
 import StonksBot from './micro-apps/stonks-bot';
 import OracleOfDelphiValley from './micro-apps/oracle-of-delphi-valley';
 import SisyphusAscent from './micro-apps/sisyphus-ascent';
+import MerchantOfCabbage from './micro-apps/merchant-of-cabbage';
 import AdminConsole from './micro-apps/admin-console';
 import Validator from './micro-apps/validator';
 import RenoMode from './micro-apps/reno-mode';
@@ -227,6 +229,10 @@ export const microAppRegistry: Record<MicroAppType, ComponentRegistry> = {
   'sisyphus-ascent': {
     icon: SisyphusIcon,
     content: SisyphusAscent,
+  },
+  'merchant-of-cabbage': {
+    icon: MerchantOfCabbageIcon,
+    content: MerchantOfCabbage,
   },
   'admin-console': {
     icon: AdminConsoleIcon,

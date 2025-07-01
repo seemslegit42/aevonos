@@ -76,7 +76,8 @@ export type MicroAppType =
   | 'reno-mode'
   | 'patrickt-app'
   | 'howards-sidekick'
-  | 'sisyphus-ascent';
+  | 'sisyphus-ascent'
+  | 'merchant-of-cabbage';
 
 // Define the shape of a MicroApp instance
 export interface MicroApp {
