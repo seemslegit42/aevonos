@@ -77,7 +77,8 @@ export type MicroAppType =
   | 'patrickt-app'
   | 'howards-sidekick'
   | 'sisyphus-ascent'
-  | 'merchant-of-cabbage';
+  | 'merchant-of-cabbage'
+  | 'obelisk-marketplace';
 
 // Define the shape of a MicroApp instance
 export interface MicroApp {

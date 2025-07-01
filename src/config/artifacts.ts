@@ -183,6 +183,20 @@ export const artifactManifests: ArtifactManifest[] = [
     permissionsRequired: [],
     isFeatured: true,
   },
+   {
+    id: 'obelisk-marketplace',
+    type: 'MICRO_APP',
+    name: 'Obelisk Marketplace',
+    author: 'The Pantheon',
+    description: 'Transmute ΞCredits into real-world assets of power. For high-sovereignty users only.',
+    creditCost: 0,
+    priceModel: 'included',
+    imageUrl: 'https://placehold.co/600x400.png',
+    imageHint: 'obelisk marble gold',
+    defaultSize: { width: 600, height: 500 },
+    permissionsRequired: ['OWNER_ONLY'],
+    tags: ["economy", "sovereignty", "premium"]
+  },
   {
     id: 'howards-sidekick',
     type: 'MICRO_APP',
