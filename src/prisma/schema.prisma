@@ -1,105 +1,197 @@
+
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model User {
   id                      String                 @id @default(cuid())
   email                   String                 @unique
+  password                String
   firstName               String?
   lastName                String?
-  password                String?
   role                    UserRole               @default(OPERATOR)
+  psyche                  UserPsyche             @default(ZEN_ARCHITECT)
+  agentAlias              String?
+  lastLoginAt             DateTime?
+  reclamationGraceUntil   DateTime?
   createdAt               DateTime               @default(now())
   updatedAt               DateTime               @updatedAt
-  lastLoginAt             DateTime?
   workspaces              Workspace[]            @relation("WorkspaceMembers")
-  ownedWorkspaces         Workspace[]            @relation("WorkspaceOwner")
+  ownedWorkspace          Workspace?             @relation("WorkspaceOwner")
   transactions            Transaction[]
-  agentAlias              String?                @default("BEEP")
-  psyche                  UserPsyche             @default(ZEN_ARCHITECT)
-  foundingVow             String?
-  foundingGoal            String?
-  conversations           Conversation[]
   pulseProfile            PulseProfile?
   ownedChaosCards         ChaosCard[]
   instrumentDiscoveries   InstrumentDiscovery[]
+  conversations           Conversation[]
+  foundingVow             String?
+  foundingGoal            String?
+  corePainIndex           Float?
+  firstWhisper            String?
+
+  // Auth.js specific fields
+  emailVerified DateTime?
+  image         String?
+  accounts      Account[]
+  sessions      Session[]
+
+  @@map("users")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
 }
 
 model Workspace {
-  id                    String              @id @default(cuid())
-  name                  String
-  owner                 User                @relation("WorkspaceOwner", fields: [ownerId], references: [id])
-  ownerId               String
-  members               User[]              @relation("WorkspaceMembers")
-  createdAt             DateTime            @default(now())
-  updatedAt             DateTime            @updatedAt
-  planTier              PlanTier            @default(Apprentice)
-  credits               Decimal             @default(0)
-  agentActionsUsed      Int                 @default(0)
-  overageEnabled        Boolean             @default(true)
-  unlockedAppIds        String[]            @default([])
-  reclamationGraceUntil DateTime?
-  agents                Agent[]
-  contacts              Contact[]
-  transactions          Transaction[]
-  securityAlerts        SecurityAlert[]
-  threatFeeds           ThreatFeed[]
-  workflows             Workflow[]
-  workflowRuns          WorkflowRun[]
-  conversations         Conversation[]
-  instrumentDiscoveries InstrumentDiscovery[]
-  activeSystemEffects   ActiveSystemEffect[]
+  id                String       @id @default(cuid())
+  name              String
+  ownerId           String
+  planTier          PlanTier
+  credits           Decimal      @default(0.0)
+  agentActionsUsed  Int          @default(0)
+  overageEnabled    Boolean      @default(true)
+  unlockedAppIds    String[]
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+  owner             User         @relation("WorkspaceOwner", fields: [ownerId], references: [id])
+  members           User[]       @relation("WorkspaceMembers")
+  agents            Agent[]
+  contacts          Contact[]
+  securityAlerts    SecurityAlert[]
+  threatFeeds       ThreatFeed[]
+  workflows         Workflow[]
+  workflowRuns      WorkflowRun[]
+  transactions      Transaction[]
+  integrations      Integration[]
+  activeSystemEffects ActiveSystemEffect[]
+  discoveries       InstrumentDiscovery[]
+  conversations     Conversation[]
 }
 
 model Agent {
-  id            String      @id @default(cuid())
-  name          String
-  type          String
-  description   String?
-  status        AgentStatus @default(idle)
-  configuration Json?
-  workspace     Workspace   @relation(fields: [workspaceId], references: [id])
-  workspaceId   String
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
+  id          String      @id @default(cuid())
+  name        String
+  type        String
+  description String?
+  status      AgentStatus
+  workspaceId String
+  workspace   Workspace   @relation(fields: [workspaceId], references: [id])
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
 }
 
 model Contact {
   id          String    @id @default(cuid())
+  email       String?
   firstName   String?
   lastName    String?
-  email       String?
   phone       String?
-  workspace   Workspace @relation(fields: [workspaceId], references: [id])
   workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id])
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+}
 
-  @@unique([email, workspaceId])
+model SecurityAlert {
+  id                String            @id @default(cuid())
+  type              String
+  explanation       String
+  riskLevel         SecurityRiskLevel
+  timestamp         DateTime          @default(now())
+  actionableOptions String[]
+  workspaceId       String
+  workspace         Workspace         @relation(fields: [workspaceId], references: [id])
+}
+
+model ThreatFeed {
+  id          String    @id @default(cuid())
+  url         String
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id])
+}
+
+model Workflow {
+  id           String        @id @default(cuid())
+  name         String
+  isActive     Boolean       @default(true)
+  triggerType  String        @default("api")
+  definition   Json
+  workspaceId  String
+  workspace    Workspace     @relation(fields: [workspaceId], references: [id])
+  runs         WorkflowRun[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+}
+
+model WorkflowRun {
+  id             String            @id @default(cuid())
+  workflowId     String
+  workspaceId    String
+  status         WorkflowRunStatus
+  startedAt      DateTime          @default(now())
+  finishedAt     DateTime?
+  triggerPayload Json?
+  output         Json?
+  log            Json?
+  workflow       Workflow          @relation(fields: [workflowId], references: [id])
+  workspace      Workspace         @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
 }
 
 model Transaction {
-  id           String            @id @default(cuid())
-  workspace    Workspace         @relation(fields: [workspaceId], references: [id])
+  id           String          @id @default(cuid())
   workspaceId  String
-  user         User?             @relation(fields: [userId], references: [id])
   userId       String?
   type         TransactionType
   amount       Decimal
   description  String
-  status       TransactionStatus @default(PENDING)
-  createdAt    DateTime          @default(now())
+  status       TransactionStatus
+  createdAt    DateTime        @default(now())
+  workspace    Workspace       @relation(fields: [workspaceId], references: [id])
+  user         User?           @relation(fields: [userId], references: [id])
+  // For Tributes
   instrumentId String?
   luckWeight   Float?
   outcome      String?
@@ -107,116 +199,183 @@ model Transaction {
   userPsyche   UserPsyche?
 }
 
-model SecurityAlert {
-  id                String            @id @default(cuid())
-  workspace         Workspace         @relation(fields: [workspaceId], references: [id])
-  workspaceId       String
-  type              String
-  explanation       String
-  riskLevel         SecurityRiskLevel
-  timestamp         DateTime          @default(now())
-  actionableOptions String[]
-}
-
-model ThreatFeed {
-  id          String    @id @default(cuid())
-  url         String
-  workspace   Workspace @relation(fields: [workspaceId], references: [id])
-  workspaceId String
-  createdAt   DateTime  @default(now())
-}
-
-model Workflow {
-  id           String          @id @default(cuid())
-  name         String
-  isActive     Boolean         @default(true)
-  triggerType  String          @default("api")
-  definition   Json
-  workspace    Workspace       @relation(fields: [workspaceId], references: [id])
-  workspaceId  String
-  createdAt    DateTime        @default(now())
-  updatedAt    DateTime        @updatedAt
-  workflowRuns WorkflowRun[]
-}
-
-model WorkflowRun {
-  id             String            @id @default(cuid())
-  workflow       Workflow          @relation(fields: [workflowId], references: [id])
-  workflowId     String
-  workspace      Workspace         @relation(fields: [workspaceId], references: [id])
-  workspaceId    String
-  status         WorkflowRunStatus @default(pending)
-  startedAt      DateTime          @default(now())
-  finishedAt     DateTime?
-  triggerPayload Json?
-  output         Json?
-  log            Json?
-}
-
-model Conversation {
-  id          String    @id @default(cuid())
-  user        User      @relation(fields: [userId], references: [id])
-  userId      String    @unique
-  workspace   Workspace @relation(fields: [workspaceId], references: [id])
-  workspaceId String
-  messages    Json
-  updatedAt   DateTime  @updatedAt
+model Integration {
+  id                    String            @id @default(cuid())
+  workspaceId           String
+  integrationManifestId String
+  name                  String
+  status                IntegrationStatus
+  configDetails         Json
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
+  workspace             Workspace         @relation(fields: [workspaceId], references: [id])
 }
 
 model PulseProfile {
-  id                 String     @id @default(cuid())
-  user               User       @relation(fields: [userId], references: [id])
-  userId             String     @unique
-  baselineLuck       Float      @default(0.5)
-  amplitude          Float      @default(0.15)
-  frequency          Float      @default(0.005) // cycles per minute
-  phaseOffset        Float      @default(0)
-  lastEventTimestamp DateTime   @default(now())
-  consecutiveLosses  Int        @default(0)
-  lastResolvedPhase  PulsePhase @default(EQUILIBRIUM)
+  id                  String     @id @default(cuid())
+  userId              String     @unique
+  user                User       @relation(fields: [userId], references: [id])
+  baselineLuck        Float      @default(0.5)
+  amplitude           Float      @default(0.15)
+  frequency           Float      @default(0.01)
+  phaseOffset         Float
+  lastEventTimestamp  DateTime   @default(now())
+  consecutiveLosses   Int        @default(0)
+  lastResolvedPhase   PulsePhase @default(EQUILIBRIUM)
+  riskAversion        Float      @default(0.5) @db.Real
+  frustration         Float      @default(0.0) @db.Real
+  flowState           Float      @default(0.0) @db.Real
+  lastInteractionType String?
 }
 
 model ChaosCard {
-  id           String   @id @default(cuid())
+  id           Int      @id @default(autoincrement())
   key          String   @unique
   name         String
   description  String
   cardClass    ChaosCardClass
   cost         Int
   systemEffect String
-  owners       User[]
+  users        User[]
 }
 
 model ActiveSystemEffect {
-    id          String    @id @default(cuid())
-    workspace   Workspace @relation(fields: [workspaceId], references: [id])
-    workspaceId String
-    cardKey     String
-    expiresAt   DateTime
-    createdAt   DateTime  @default(now())
+  id          String    @id @default(cuid())
+  workspaceId String
+  cardKey     String
+  expiresAt   DateTime
+  createdAt   DateTime  @default(now())
+  workspace   Workspace @relation(fields: [workspaceId], references: [id])
+
+  @@unique([workspaceId, cardKey])
 }
 
 model InstrumentDiscovery {
   id           String    @id @default(cuid())
-  user         User      @relation(fields: [userId], references: [id])
   userId       String
-  workspace    Workspace @relation(fields: [workspaceId], references: [id])
   workspaceId  String
-  instrumentId String // ID of ChaosCard or MicroApp
-  firstViewedAt DateTime  @default(now())
+  instrumentId String // This can be a MicroApp ID or a ChaosCard key
+  firstViewedAt DateTime @default(now())
   converted    Boolean   @default(false)
-  dtt          Int? // Difference-to-Tribute in minutes
   nudgeSentAt  DateTime?
-
-  @@unique([userId, instrumentId])
+  dtt          Int?      // Discovery-to-Tribute time in minutes
+  user         User      @relation(fields: [userId], references: [id])
+  workspace    Workspace @relation(fields: [workspaceId], references: [id])
 }
 
+model Conversation {
+  id          String    @id @default(cuid())
+  userId      String    @unique
+  workspaceId String
+  messages    Json[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  user        User      @relation(fields: [userId], references: [id])
+  workspace   Workspace @relation(fields: [workspaceId], references: [id])
+}
 
-enum UserRole {
-  ADMIN
-  MANAGER
-  OPERATOR
-  AUDITOR
+model Directory {
+  id        String   @id @default(cuid())
+  name      String
+  path      String   @unique
+  parentId  String?
+  parent    Directory?  @relation("DirectoryChildren", fields: [parentId], references: [id])
+  children  Directory[] @relation("DirectoryChildren")
+  files     File[]
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id])
+}
+
+model File {
+  id          String   @id @default(cuid())
+  name        String
+  path        String   @unique
+  directoryId String
+  directory   Directory @relation(fields: [directoryId], references: [id])
+  mimeType    String
+  size        Int
+  storageRef  String // e.g., gs://bucket/path/to/file
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id])
+}
+
+model Product {
+  id            String   @id @default(cuid())
+  name          String
+  description   String?
+  stockLevel    Int
+  reorderLevel  Int
+  workspaceId   String
+  workspace     Workspace @relation(fields: [workspaceId], references: [id])
+}
+
+model Supplier {
+  id          String   @id @default(cuid())
+  name        String
+  contactInfo Json?
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id])
+}
+
+model PurchaseOrder {
+  id            String   @id @default(cuid())
+  productId     String
+  quantity      Int
+  supplierId    String
+  status        String // e.g., 'PENDING', 'SHIPPED', 'RECEIVED'
+  workspaceId   String
+  workspace     Workspace @relation(fields: [workspaceId], references: [id])
+}
+
+model IntelligenceCase {
+    id                  String      @id @default(cuid())
+    targetName          String
+    caseStatus          String      // e.g., 'ACTIVE', 'CLOSED'
+    osintReport         Json?
+    behavioralAnalysis  Json?
+    decoyReport         Json?
+    dossier             Json?
+    workspaceId         String
+    workspace           Workspace @relation(fields: [workspaceId], references: [id])
+}
+
+model Expense {
+    id                  String      @id @default(cuid())
+    description         String
+    amount              Decimal
+    category            String
+    judgement           String?
+    workspaceId         String
+    workspace           Workspace @relation(fields: [workspaceId], references: [id])
+}
+
+model LogEntry {
+    id                  String      @id @default(cuid())
+    source              String      // e.g., 'Lahey', 'Foremanator'
+    rawLog              String
+    parsedLog           Json?
+    workspaceId         String
+    workspace           Workspace @relation(fields: [workspaceId], references: [id])
+}
+
+model Receipt {
+    id                  String      @id @default(cuid())
+    vendor              String
+    amount              Decimal
+    transactionDate     DateTime
+    lead                String?
+    storageRef          String
+    workspaceId         String
+    workspace           Workspace @relation(fields: [workspaceId], references: [id])
+}
+
+model SagaEvent {
+    id                  String      @id @default(cuid())
+    category            String
+    description         String
+    martyrPoints        Int
+    workspaceId         String
+    workspace           Workspace @relation(fields: [workspaceId], references: [id])
 }
 
 enum PlanTier {
@@ -225,12 +384,41 @@ enum PlanTier {
   Priesthood
 }
 
+enum UserRole {
+  ADMIN
+  MANAGER
+  OPERATOR
+  AUDITOR
+}
+
+enum UserPsyche {
+  ZEN_ARCHITECT
+  SYNDICATE_ENFORCER
+  RISK_AVERSE_ARTISAN
+}
+
 enum AgentStatus {
   active
   idle
   processing
   paused
   error
+}
+
+enum SecurityRiskLevel {
+  none
+  low
+  medium
+  high
+  critical
+}
+
+enum WorkflowRunStatus {
+  pending
+  running
+  completed
+  failed
+  paused
 }
 
 enum TransactionType {
@@ -245,12 +433,10 @@ enum TransactionStatus {
   FAILED
 }
 
-enum SecurityRiskLevel {
-  low
-  medium
-  high
-  critical
-  none
+enum IntegrationStatus {
+  active
+  paused
+  error
 }
 
 enum PulsePhase {

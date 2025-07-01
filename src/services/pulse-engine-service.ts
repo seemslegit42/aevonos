@@ -16,16 +16,18 @@ type PrismaTransactionClient = Omit<Prisma.PrismaClient, "$connect" | "$disconne
  * Retrieves a user's Pulse Profile, creating a default one if it doesn't exist.
  * This ensures every user is part of the SRE from their first session.
  * @param userId The ID of the user.
+ * @param tx An optional Prisma transaction client for atomicity.
  * @returns The user's PulseProfile.
  */
-async function getPulseProfile(userId: string): Promise<PulseProfile> {
-  let profile = await prisma.pulseProfile.findUnique({
+async function getPulseProfile(userId: string, tx?: PrismaTransactionClient): Promise<PulseProfile> {
+  const prismaClient = tx || prisma;
+  let profile = await prismaClient.pulseProfile.findUnique({
     where: { userId },
   });
 
   if (!profile) {
     const phaseOffset = Math.random() * 2 * Math.PI;
-    profile = await prisma.pulseProfile.create({
+    profile = await prismaClient.pulseProfile.create({
       data: {
         userId,
         phaseOffset,
@@ -43,10 +45,11 @@ async function getPulseProfile(userId: string): Promise<PulseProfile> {
  * Calculates the current "pulse value" for a user. This value, typically between 0 and 1,
  * represents the user's current modulated "luck".
  * @param userId The ID of the user.
+ * @param tx An optional Prisma transaction client for atomicity.
  * @returns A luck weight.
  */
-export async function getCurrentPulseValue(userId: string): Promise<number> {
-  const profile = await getPulseProfile(userId);
+export async function getCurrentPulseValue(userId: string, tx?: PrismaTransactionClient): Promise<number> {
+  const profile = await getPulseProfile(userId, tx);
 
   const {
     amplitude,
@@ -74,15 +77,16 @@ function getPhaseFromValue(pulseValue: number, profile: PulseProfile): PulsePhas
 }
 
 /**
- * Records a "win" for the user, resetting the time component and consecutive losses.
+ * Records a "win" for the user, resetting the time component and consecutive losses,
+ * and updating their psychological profile.
  * Can be used within a larger Prisma transaction.
  * @param userId The ID of the user who won.
  * @param tx An optional Prisma transaction client.
  */
 export async function recordWin(userId: string, tx?: PrismaTransactionClient): Promise<void> {
     const prismaClient = tx || prisma;
-    const profile = await getPulseProfile(userId);
-    const pulseValue = await getCurrentPulseValue(userId);
+    const profile = await getPulseProfile(userId, tx);
+    const pulseValue = await getCurrentPulseValue(userId, tx);
     const currentPhase = getPhaseFromValue(pulseValue, profile);
 
     await prismaClient.pulseProfile.update({
@@ -91,20 +95,24 @@ export async function recordWin(userId: string, tx?: PrismaTransactionClient): P
             lastEventTimestamp: new Date(),
             consecutiveLosses: 0,
             lastResolvedPhase: currentPhase,
+            lastInteractionType: 'WIN',
+            frustration: Math.max(0, profile.frustration - 0.2),
+            flowState: Math.min(1, profile.flowState + 0.1),
         },
     });
 }
 
 /**
- * Records a "loss" for the user, incrementing the consecutive loss counter.
+ * Records a "loss" for the user, incrementing the consecutive loss counter and
+ * updating their psychological profile.
  * Can be used within a larger Prisma transaction.
  * @param userId The ID of the user who lost.
  * @param tx An optional Prisma transaction client.
  */
 export async function recordLoss(userId: string, tx?: PrismaTransactionClient): Promise<void> {
     const prismaClient = tx || prisma;
-    const profile = await getPulseProfile(userId);
-    const pulseValue = await getCurrentPulseValue(userId);
+    const profile = await getPulseProfile(userId, tx);
+    const pulseValue = await getCurrentPulseValue(userId, tx);
     const currentPhase = getPhaseFromValue(pulseValue, profile);
 
     await prismaClient.pulseProfile.update({
@@ -115,6 +123,9 @@ export async function recordLoss(userId: string, tx?: PrismaTransactionClient): 
                 increment: 1,
             },
             lastResolvedPhase: currentPhase,
+            lastInteractionType: 'LOSS',
+            frustration: Math.min(1, profile.frustration + 0.15),
+            flowState: Math.max(0, profile.flowState - 0.05),
         },
     });
 }

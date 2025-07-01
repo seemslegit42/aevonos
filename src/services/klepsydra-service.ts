@@ -85,7 +85,22 @@ export async function processFollyTribute(
         const modifiedBaseOdds = instrument.baseOdds * modifiers.oddsFactor;
         const modifiedWinMultiplier = instrument.winMultiplier * modifiers.boonFactor;
 
-        const luckWeight = await getCurrentPulseValue(userId);
+        // Update risk aversion based on this tribute
+        const maxPlausibleTribute = 500; // An arbitrary max to normalize against
+        const tributeRatio = Math.min(1, tributeAmount / maxPlausibleTribute);
+        const riskAversionUpdate = 1 - tributeRatio; // Higher tribute = lower aversion score
+
+        await tx.pulseProfile.upsert({
+            where: { userId },
+            update: { riskAversion: riskAversionUpdate },
+            create: {
+                userId,
+                riskAversion: riskAversionUpdate,
+                phaseOffset: Math.random() * 2 * Math.PI,
+            }
+        });
+
+        const luckWeight = await getCurrentPulseValue(userId, tx);
         const isPity = await shouldTriggerPityBoon(userId);
         
         const finalOdds = Math.max(0, Math.min(1, modifiedBaseOdds * luckWeight));

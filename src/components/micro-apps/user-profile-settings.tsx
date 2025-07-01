@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/form";
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
-import type { User } from '@prisma/client';
+import type { User, UserPsyche, PulseProfile } from '@prisma/client';
 import { useAppStore } from '@/store/app-store';
 import { handleLogout, handleDeleteAccount, acceptReclamationGift } from '@/app/actions';
 import { Separator } from '../ui/separator';
@@ -32,7 +32,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-
+import PsycheMatrix from '../profile/psyche-matrix';
+import { Skeleton } from '../ui/skeleton';
 
 const profileFormSchema = z.object({
   firstName: z.string().optional(),
@@ -41,7 +42,7 @@ const profileFormSchema = z.object({
 });
 
 type ProfileFormData = z.infer<typeof profileFormSchema>;
-type UserProp = Pick<User, 'id' | 'email' | 'firstName' | 'lastName' | 'agentAlias'> | null;
+type UserProp = Pick<User, 'id' | 'email' | 'firstName' | 'lastName' | 'agentAlias' | 'psyche'> | null;
 
 interface UserProfileSettingsProps {
   id: string; // App instance ID
@@ -54,6 +55,29 @@ export default function UserProfileSettings({ id, user }: UserProfileSettingsPro
   const { closeApp } = useAppStore();
   const [isReclamationOpen, setIsReclamationOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [pulseProfile, setPulseProfile] = useState<PulseProfile | null>(null);
+  const [isLoadingProfile, setIsLoadingProfile] = useState(true);
+
+  useEffect(() => {
+    async function fetchPulseProfile() {
+      if (!user) return;
+      setIsLoadingProfile(true);
+      try {
+        const res = await fetch('/api/user/pulse-profile');
+        if (!res.ok) {
+            console.error('Failed to fetch pulse profile, it might not exist yet.');
+            return;
+        }
+        const data = await res.json();
+        setPulseProfile(data);
+      } catch (error) {
+        console.error("Error fetching pulse profile:", error);
+      } finally {
+        setIsLoadingProfile(false);
+      }
+    }
+    fetchPulseProfile();
+  }, [user]);
 
   const form = useForm<ProfileFormData>({
     resolver: zodResolver(profileFormSchema),
@@ -119,58 +143,67 @@ export default function UserProfileSettings({ id, user }: UserProfileSettingsPro
   return (
     <>
     <div className="p-4 h-full flex flex-col justify-between">
-        <div>
-            <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                    <FormField
-                        control={form.control}
-                        name="firstName"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>First Name</FormLabel>
-                                <FormControl>
-                                    <Input placeholder="The" {...field} disabled={isSubmitting} className="bg-background/80" />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-                    <FormField
-                        control={form.control}
-                        name="lastName"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Last Name</FormLabel>
-                                <FormControl>
-                                    <Input placeholder="Architect" {...field} disabled={isSubmitting} className="bg-background/80" />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-                     <FormField
-                        control={form.control}
-                        name="agentAlias"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Agent Alias</FormLabel>
-                                <FormControl>
-                                    <Input placeholder="BEEP" {...field} disabled={isSubmitting} className="bg-background/80" />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-                    <div className="flex gap-2 pt-2">
-                        <Button variant="outline" type="button" className="w-full" onClick={() => closeApp(id)}>
-                            Cancel
-                        </Button>
-                        <Button type="submit" disabled={isSubmitting} className="w-full">
-                            {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'Save Changes'}
-                        </Button>
-                    </div>
-                </form>
-            </Form>
+        <div className="flex gap-4">
+            <div className="w-24 h-24 flex-shrink-0">
+                {isLoadingProfile ? (
+                    <Skeleton className="w-full h-full rounded-lg" />
+                ) : pulseProfile && user?.psyche ? (
+                    <PsycheMatrix profile={pulseProfile} psyche={user.psyche} />
+                ) : null}
+            </div>
+            <div className="flex-grow">
+                <Form {...form}>
+                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                        <FormField
+                            control={form.control}
+                            name="firstName"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>First Name</FormLabel>
+                                    <FormControl>
+                                        <Input placeholder="The" {...field} disabled={isSubmitting} className="bg-background/80" />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="lastName"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Last Name</FormLabel>
+                                    <FormControl>
+                                        <Input placeholder="Architect" {...field} disabled={isSubmitting} className="bg-background/80" />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                         <FormField
+                            control={form.control}
+                            name="agentAlias"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Agent Alias</FormLabel>
+                                    <FormControl>
+                                        <Input placeholder="BEEP" {...field} disabled={isSubmitting} className="bg-background/80" />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                         <div className="flex gap-2 pt-2">
+                            <Button variant="outline" type="button" className="w-full" onClick={() => closeApp(id)}>
+                                Cancel
+                            </Button>
+                            <Button type="submit" disabled={isSubmitting} className="w-full">
+                                {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'Save Changes'}
+                            </Button>
+                        </div>
+                    </form>
+                </Form>
+            </div>
         </div>
         <div>
             <Separator className="my-4" />
