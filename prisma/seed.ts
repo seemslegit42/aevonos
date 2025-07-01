@@ -142,7 +142,7 @@ async function main() {
   
   await prisma.contact.createMany({
     data: [
-      { firstName: 'Art', lastName: 'Vandelay', email: 'art.vandelay@vandelay.com', phone: '555-123-4567', workspaceId: newWorkspace.id },
+      { firstName: 'Art', lastName: 'Vandelay', email: 'art.vandelay@aevonos.com', phone: '555-123-4567', workspaceId: newWorkspace.id },
       { firstName: 'Cosmo', lastName: 'Kramer', email: 'kramer@kramerica.com', phone: '555-987-6543', workspaceId: newWorkspace.id },
     ]
   });

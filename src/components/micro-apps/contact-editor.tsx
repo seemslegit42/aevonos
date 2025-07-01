@@ -111,7 +111,7 @@ export default function ContactEditor({ id, contact }: ContactEditorProps) {
                             <FormItem>
                                 <FormLabel>Email</FormLabel>
                                 <FormControl>
-                                    <Input placeholder="john.doe@example.com" {...field} className="bg-background/80" />
+                                    <Input placeholder="john.doe@aevonos.com" {...field} className="bg-background/80" />
                                 </FormControl>
                                 <FormMessage />
                             </FormItem>
