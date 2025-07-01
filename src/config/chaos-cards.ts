@@ -254,7 +254,7 @@ export const chaosCardManifest: ChaosCardManifest[] = [
   {
     key: 'LOADED_DIE',
     name: 'The Loaded Die',
-    description: 'For those who prefer to make their own luck. Subtly influences the threads of fate for your next three tributes.',
+    description: 'For those who prefer to make their own luck. Subtly increases the payout odds on your next three tributes.',
     cardClass: 'SYSTEMIC',
     cost: 450,
     systemEffect: 'Applies a +15% multiplier to the base weight of Uncommon, Rare, and Mythic outcomes for the next 3 Folly Instrument tributes.',
@@ -287,7 +287,7 @@ export const chaosCardManifest: ChaosCardManifest[] = [
     description: 'A dark pact for greater glory. Double the tribute, double the potential boon. High risk, high reward.',
     cardClass: 'SYSTEMIC',
     cost: 100,
-    systemEffect: 'Doubles the tribute cost and the potential credit boon multipliers for the next single Folly Instrument tribute.',
+    systemEffect: 'Doubles the tribute cost and the potential boon multipliers for the next single Folly Instrument tribute.',
     imageUrl: 'https://placehold.co/400x560.png',
     imageHint: 'underworld contract fire',
   },
