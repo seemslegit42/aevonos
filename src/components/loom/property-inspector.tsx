@@ -9,7 +9,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { useIsMobile } from '@/hooks/use-is-mobile';
+import { StonksBotMode, StonksBotModeSchema } from '@/ai/agents/stonks-bot-schemas';
+import { LucilleBluthInputSchema } from '@/ai/agents/lucille-bluth-schemas';
 
 interface PropertyInspectorProps {
     node: Node | null;
@@ -289,6 +291,50 @@ const PaperTrailProperties = ({ node, onUpdate }: { node: Node, onUpdate: (data:
     </div>
 );
 
+const LumberghProperties = ({ node, onUpdate }: { node: Node, onUpdate: (data: any) => void }) => (
+    <div>
+        <Label htmlFor="inviteText">Meeting Invite Text</Label>
+        <Textarea id="inviteText" value={node.data.inviteText || ''} onChange={(e) => onUpdate({ ...node.data, inviteText: e.target.value })} className="bg-background/80" placeholder="Paste the full meeting invite here..." rows={5} />
+    </div>
+);
+
+const LucilleBluthProperties = ({ node, onUpdate }: { node: Node, onUpdate: (data: any) => void }) => (
+    <div className="space-y-3">
+        <div>
+            <Label htmlFor="expenseDescription">Expense Description</Label>
+            <Input id="expenseDescription" value={node.data.expenseDescription || ''} onChange={(e) => onUpdate({ ...node.data, expenseDescription: e.target.value })} className="bg-background/80" placeholder="e.g., Latte" />
+        </div>
+        <div>
+            <Label htmlFor="expenseAmount">Amount</Label>
+            <Input id="expenseAmount" type="number" value={node.data.expenseAmount || ''} onChange={(e) => onUpdate({ ...node.data, expenseAmount: e.target.value })} className="bg-background/80" placeholder="7" />
+        </div>
+         <div>
+            <Label htmlFor="category">Category</Label>
+            <Input id="category" value={node.data.category || ''} onChange={(e) => onUpdate({ ...node.data, category: e.target.value })} className="bg-background/80" placeholder="e.g., Coffee" />
+        </div>
+    </div>
+);
+
+const StonksBotProperties = ({ node, onUpdate }: { node: Node, onUpdate: (data: any) => void }) => (
+    <div className="space-y-3">
+        <div>
+            <Label htmlFor="ticker">Ticker Symbol</Label>
+            <Input id="ticker" value={node.data.ticker || ''} onChange={(e) => onUpdate({ ...node.data, ticker: e.target.value })} className="bg-background/80 font-mono" placeholder="GME" />
+        </div>
+        <div>
+            <Label>Mode</Label>
+            <Select value={node.data.mode || 'Meme-Lord'} onValueChange={(value) => onUpdate({ ...node.data, mode: value })}>
+                <SelectTrigger className="bg-background/80"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                    <SelectItem value="Meme-Lord">Meme-Lord</SelectItem>
+                    <SelectItem value="MBAcore">MBA-core</SelectItem>
+                    <SelectItem value="Oracle Mode">Oracle Mode</SelectItem>
+                </SelectContent>
+            </Select>
+        </div>
+    </div>
+);
+
 const GenericProperties = ({ node, onUpdate }: { node: Node, onUpdate: (data: any) => void }) => (
     <div className="space-y-3">
         {Object.entries(node.data).map(([key, value]) => (
@@ -325,30 +371,21 @@ export default function PropertyInspector({ node, onUpdate }: PropertyInspectorP
 
   const renderContent = () => {
       switch(node.type) {
-          case 'logic':
-              return <LogicProperties node={node} onUpdate={handleDataUpdate} />;
-          case 'tool-crm':
-              return <CRMProperties node={node} onUpdate={handleDataUpdate} />;
-          case 'tool-winston-wolfe':
-              return <WinstonWolfeProperties node={node} onUpdate={handleDataUpdate} />;
-          case 'tool-kif-kroker':
-              return <KifKrokerProperties node={node} onUpdate={handleDataUpdate} />;
-          case 'tool-vandelay':
-              return <VandelayProperties node={node} onUpdate={handleDataUpdate} />;
-          case 'tool-rolodex':
-              return <RolodexProperties node={node} onUpdate={handleDataUpdate} />;
-          case 'tool-dr-syntax':
-              return <DrSyntaxProperties node={node} onUpdate={handleDataUpdate} />;
-          case 'tool-jroc':
-              return <JrocProperties node={node} onUpdate={handleDataUpdate} />;
-          case 'tool-lahey':
-              return <LaheyProperties node={node} onUpdate={handleDataUpdate} />;
-          case 'tool-foremanator':
-              return <ForemanatorProperties node={node} onUpdate={handleDataUpdate} />;
-          case 'tool-sterileish':
-              return <SterileishProperties node={node} onUpdate={handleDataUpdate} />;
-          case 'tool-paper-trail':
-              return <PaperTrailProperties node={node} onUpdate={handleDataUpdate} />;
+          case 'logic': return <LogicProperties node={node} onUpdate={handleDataUpdate} />;
+          case 'tool-crm': return <CRMProperties node={node} onUpdate={handleDataUpdate} />;
+          case 'tool-winston-wolfe': return <WinstonWolfeProperties node={node} onUpdate={handleDataUpdate} />;
+          case 'tool-kif-kroker': return <KifKrokerProperties node={node} onUpdate={handleDataUpdate} />;
+          case 'tool-vandelay': return <VandelayProperties node={node} onUpdate={handleDataUpdate} />;
+          case 'tool-rolodex': return <RolodexProperties node={node} onUpdate={handleDataUpdate} />;
+          case 'tool-dr-syntax': return <DrSyntaxProperties node={node} onUpdate={handleDataUpdate} />;
+          case 'tool-jroc': return <JrocProperties node={node} onUpdate={handleDataUpdate} />;
+          case 'tool-lahey': return <LaheyProperties node={node} onUpdate={handleDataUpdate} />;
+          case 'tool-foremanator': return <ForemanatorProperties node={node} onUpdate={handleDataUpdate} />;
+          case 'tool-sterileish': return <SterileishProperties node={node} onUpdate={handleDataUpdate} />;
+          case 'tool-paper-trail': return <PaperTrailProperties node={node} onUpdate={handleDataUpdate} />;
+          case 'tool-lumbergh': return <LumberghProperties node={node} onUpdate={handleDataUpdate} />;
+          case 'tool-lucille-bluth': return <LucilleBluthProperties node={node} onUpdate={handleDataUpdate} />;
+          case 'tool-stonks-bot': return <StonksBotProperties node={node} onUpdate={handleDataUpdate} />;
           default:
               return <GenericProperties node={node} onUpdate={handleDataUpdate} />;
       }

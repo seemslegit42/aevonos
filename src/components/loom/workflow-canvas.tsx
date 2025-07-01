@@ -19,6 +19,17 @@ import { ForemanatorIcon } from '../icons/ForemanatorIcon';
 import { SterileishIcon } from '../icons/SterileishIcon';
 import { PaperTrailIcon } from '../icons/PaperTrailIcon';
 import { BarbaraIcon } from '../icons/BarbaraIcon';
+import { motion, AnimatePresence } from 'framer-motion';
+import { AuditorGeneralissimoIcon } from '../icons/AuditorGeneralissimoIcon';
+import { BeepWingmanIcon } from '../icons/BeepWingmanIcon';
+import { KendraIcon } from '../icons/KendraIcon';
+import { LumberghIcon } from '../icons/LumberghIcon';
+import { LucilleBluthIcon } from '../icons/LucilleBluthIcon';
+import { PamPooveyIcon } from '../icons/PamPooveyIcon';
+import { StonksIcon } from '../icons/StonksIcon';
+import { RenoModeIcon } from '../icons/RenoModeIcon';
+import { PatricktIcon } from '../icons/PatricktIcon';
+import { VinDieselIcon } from '../icons/VinDieselIcon';
 
 const nodeIcons: Record<string, React.ComponentType<any>> = {
     trigger: PlayCircle,
@@ -37,6 +48,16 @@ const nodeIcons: Record<string, React.ComponentType<any>> = {
     'tool-foremanator': ForemanatorIcon,
     'tool-sterileish': SterileishIcon,
     'tool-barbara': BarbaraIcon,
+    'tool-auditor-generalissimo': AuditorGeneralissimoIcon,
+    'tool-beep-wingman': BeepWingmanIcon,
+    'tool-kendra': KendraIcon,
+    'tool-lumbergh': LumberghIcon,
+    'tool-lucille-bluth': LucilleBluthIcon,
+    'tool-pam-poovey': PamPooveyIcon,
+    'tool-stonks-bot': StonksIcon,
+    'tool-reno-mode': RenoModeIcon,
+    'tool-patrickt-app': PatricktIcon,
+    'tool-vin-diesel': VinDieselIcon,
 };
 
 function WorkflowNodeItem({ node, onClick, isSelected, onConnectStart, onConnectEnd }: { 
@@ -50,13 +71,16 @@ function WorkflowNodeItem({ node, onClick, isSelected, onConnectStart, onConnect
     const style = { position: 'absolute' as 'absolute', left: node.position.x, top: node.position.y, zIndex: isSelected ? 10 : 1 };
     const Icon = nodeIcons[node.type] || CrystalIcon;
 
+    const nodeTypeColor = node.type === 'trigger' ? 'border-accent' : node.type === 'logic' ? 'border-yellow-400' : 'border-primary';
+
     return (
         <div ref={setNodeRef} style={style} {...attributes} {...listeners} onClick={() => onClick(node)}>
             <div className={cn(
-                "w-48 rounded-lg shadow-lg bg-foreground/15 backdrop-blur-[20px] border border-foreground/30 hover:border-primary transition-all duration-300 flex flex-col group cursor-grab",
-                isSelected && "border-primary ring-2 ring-primary"
+                "w-48 rounded-lg shadow-lg bg-background/50 backdrop-blur-xl border hover:border-primary transition-all duration-300 flex flex-col group cursor-grab",
+                isSelected ? "border-primary ring-2 ring-primary" : "border-border/20",
+                nodeTypeColor
             )}>
-                <div className="flex items-center gap-2 p-2 border-b border-foreground/20">
+                <div className="flex items-center gap-2 p-2 border-b border-border/20">
                     {Icon && <Icon className="h-4 w-4 text-primary" />}
                     <p className="text-xs font-bold text-foreground truncate">{node.data.label}</p>
                 </div>
@@ -64,12 +88,12 @@ function WorkflowNodeItem({ node, onClick, isSelected, onConnectStart, onConnect
                     <p>Type: {node.type}</p>
                 </div>
                 <div 
-                    className="absolute -left-1.5 top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-accent border-2 border-background ring-1 ring-inset ring-background cursor-crosshair" 
+                    className="absolute -left-1.5 top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-background border-2 border-border cursor-crosshair transition-all group-hover:scale-125 group-hover:border-primary" 
                     title="Input"
                     onPointerUp={(e) => { e.stopPropagation(); onConnectEnd(node.id); }}
                 />
                 <div 
-                    className="absolute -right-1.5 top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-accent border-2 border-background ring-1 ring-inset ring-background cursor-crosshair" 
+                    className="absolute -right-1.5 top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-background border-2 border-border cursor-crosshair transition-all group-hover:scale-125 group-hover:border-primary" 
                     title="Output"
                     onPointerDown={(e) => { e.stopPropagation(); onConnectStart(node.id); }}
                 />
@@ -148,6 +172,10 @@ const WorkflowCanvas = forwardRef<HTMLDivElement, WorkflowCanvasProps>(({
                     <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
                         <circle cx="1" cy="1" r="0.5" fill="hsl(var(--muted-foreground) / 0.3)" />
                     </pattern>
+                    <linearGradient id="edge-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" stopColor="hsl(var(--primary))" />
+                        <stop offset="100%" stopColor="hsl(var(--accent))" />
+                    </linearGradient>
                 </defs>
                 <rect width="100%" height="100%" fill="url(#grid)" />
                 <g>
@@ -158,7 +186,15 @@ const WorkflowCanvas = forwardRef<HTMLDivElement, WorkflowCanvasProps>(({
                         const { path, midX, midY } = getEdgePath(source, target);
                         return (
                             <g key={edge.id}>
-                                <path d={path} stroke="hsl(var(--foreground) / 0.5)" strokeWidth="2" fill="none" />
+                                <motion.path 
+                                    d={path} 
+                                    stroke="url(#edge-gradient)"
+                                    strokeWidth="2" 
+                                    fill="none"
+                                    initial={{ pathLength: 0 }}
+                                    animate={{ pathLength: 1 }}
+                                    transition={{ duration: 0.5, ease: 'easeInOut' }}
+                                />
                                 {edge.condition && (
                                     <text x={midX} y={midY - 5} fill="hsl(var(--foreground))" fontSize="10" textAnchor="middle" className="font-mono">
                                         {edge.condition === 'true' ? 'T' : 'F'}
@@ -172,16 +208,26 @@ const WorkflowCanvas = forwardRef<HTMLDivElement, WorkflowCanvasProps>(({
                     )}
                 </g>
             </svg>
+            <AnimatePresence>
             {nodes.map(node => 
-                <WorkflowNodeItem 
-                    key={node.id} 
-                    node={node} 
-                    onClick={onNodeClick} 
-                    isSelected={selectedNodeId === node.id}
-                    onConnectStart={onConnectStart}
-                    onConnectEnd={onConnectEnd}
-                />
+                 <motion.div
+                    key={node.id}
+                    layout
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.8 }}
+                    transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                >
+                    <WorkflowNodeItem 
+                        node={node} 
+                        onClick={onNodeClick} 
+                        isSelected={selectedNodeId === node.id}
+                        onConnectStart={onConnectStart}
+                        onConnectEnd={onConnectEnd}
+                    />
+                </motion.div>
             )}
+            </AnimatePresence>
         </div>
     );
 });

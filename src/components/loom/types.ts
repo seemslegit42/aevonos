@@ -15,6 +15,16 @@ export type NodeType =
     | 'tool-foremanator'
     | 'tool-sterileish'
     | 'tool-barbara'
+    | 'tool-auditor-generalissimo'
+    | 'tool-beep-wingman'
+    | 'tool-kendra'
+    | 'tool-lumbergh'
+    | 'tool-lucille-bluth'
+    | 'tool-pam-poovey'
+    | 'tool-stonks-bot'
+    | 'tool-reno-mode'
+    | 'tool-patrickt-app'
+    | 'tool-vin-diesel'
     | 'tool-final-answer';
 
 

@@ -1,3 +1,4 @@
+
 'use client';
 
 import React from 'react';
@@ -17,6 +18,16 @@ import { ForemanatorIcon } from '../icons/ForemanatorIcon';
 import { SterileishIcon } from '../icons/SterileishIcon';
 import { PaperTrailIcon } from '../icons/PaperTrailIcon';
 import { BarbaraIcon } from '../icons/BarbaraIcon';
+import { AuditorGeneralissimoIcon } from '../icons/AuditorGeneralissimoIcon';
+import { BeepWingmanIcon } from '../icons/BeepWingmanIcon';
+import { KendraIcon } from '../icons/KendraIcon';
+import { LumberghIcon } from '../icons/LumberghIcon';
+import { LucilleBluthIcon } from '../icons/LucilleBluthIcon';
+import { PamPooveyIcon } from '../icons/PamPooveyIcon';
+import { StonksIcon } from '../icons/StonksIcon';
+import { RenoModeIcon } from '../icons/RenoModeIcon';
+import { PatricktIcon } from '../icons/PatricktIcon';
+import { VinDieselIcon } from '../icons/VinDieselIcon';
 import type { NodeType } from './types';
 import { ScrollArea } from '../ui/scroll-area';
 
@@ -29,22 +40,34 @@ interface NodeInfo {
 }
 
 const nodeTypes: NodeInfo[] = [
+    // Core Logic
     { type: 'trigger', label: 'BEEP Trigger', description: 'Starts workflow from BEEP', icon: PlayCircle },
     { type: 'agent', label: 'BEEP Kernel', description: 'Central LangGraph orchestrator', icon: Bot },
     { type: 'logic', label: 'Conditional Logic', description: 'Branch your workflow', icon: GitBranch },
-    { type: 'tool-winston-wolfe', label: 'Winston Wolfe', description: 'Solves reputation problems', icon: WinstonWolfeIcon },
-    { type: 'tool-kif-kroker', label: 'Kif Kroker', description: 'Analyzes team comms', icon: KifKrokerIcon },
-    { type: 'tool-vandelay', label: 'Vandelay', description: 'Generates alibis', icon: VandelayIcon },
-    { type: 'tool-rolodex', label: 'Rolodex', description: 'Analyzes candidates', icon: RolodexIcon },
-    { type: 'tool-dr-syntax', label: 'Dr. Syntax', description: 'Critiques content harshly', icon: DrSyntaxIcon },
-    { type: 'tool-jroc', label: 'J-ROC', description: 'Generates business kits', icon: JrocIcon },
-    { type: 'tool-lahey', label: 'Lahey', description: 'Investigates logs', icon: LaheyIcon },
-    { type: 'tool-foremanator', label: 'Foremanator', description: 'Processes site logs', icon: ForemanatorIcon },
-    { type: 'tool-sterileish', label: 'STERILE-ish', description: 'Analyzes compliance logs', icon: SterileishIcon },
-    { type: 'tool-barbara', label: 'Agent Barbara', description: 'Processes documents', icon: BarbaraIcon },
-    { type: 'tool-crm', label: 'CRM Tool', description: 'Manages contacts', icon: AddressBookIcon },
-    { type: 'tool-paper-trail', label: 'Paper Trail', description: 'Scans evidence', icon: PaperTrailIcon },
     { type: 'tool-final-answer', label: 'Final Answer', description: 'Outputs final response', icon: CrystalIcon },
+    // Specialist Agents & Tools
+    { type: 'tool-auditor-generalissimo', label: 'Auditor Generalissimo', description: 'Audits finances with prejudice', icon: AuditorGeneralissimoIcon },
+    { type: 'tool-barbara', label: 'Agent Barbara', description: 'Processes documents', icon: BarbaraIcon },
+    { type: 'tool-beep-wingman', label: 'BEEP Wingman', description: 'Crafts social messages', icon: BeepWingmanIcon },
+    { type: 'tool-crm', label: 'CRM Tool', description: 'Manages contacts', icon: AddressBookIcon },
+    { type: 'tool-dr-syntax', label: 'Dr. Syntax', description: 'Critiques content harshly', icon: DrSyntaxIcon },
+    { type: 'tool-foremanator', label: 'Foremanator', description: 'Processes site logs', icon: ForemanatorIcon },
+    { type: 'tool-jroc', label: 'J-ROC', description: 'Generates business kits', icon: JrocIcon },
+    { type: 'tool-kendra', label: 'KENDRA.exe', description: 'Generates marketing campaigns', icon: KendraIcon },
+    { type: 'tool-kif-kroker', label: 'Kif Kroker', description: 'Analyzes team comms', icon: KifKrokerIcon },
+    { type: 'tool-lahey', label: 'Lahey', description: 'Investigates logs', icon: LaheyIcon },
+    { type: 'tool-lumbergh', label: 'Lumbergh', description: 'Analyzes meeting invites', icon: LumberghIcon },
+    { type: 'tool-lucille-bluth', label: 'Lucille Bluth', description: 'Judges expenses', icon: LucilleBluthIcon },
+    { type: 'tool-pam-poovey', label: 'Pam Poovey', description: 'Generates HR rants', icon: PamPooveyIcon },
+    { type: 'tool-paper-trail', label: 'Paper Trail', description: 'Scans evidence', icon: PaperTrailIcon },
+    { type: 'tool-patrickt-app', label: 'Patrickt App', description: 'Manages personal chaos', icon: PatricktIcon },
+    { type: 'tool-reno-mode', label: 'Reno Mode', description: 'Analyzes car shame', icon: RenoModeIcon },
+    { type: 'tool-rolodex', label: 'Rolodex', description: 'Analyzes candidates', icon: RolodexIcon },
+    { type: 'tool-sterileish', label: 'STERILE-ish', description: 'Analyzes compliance logs', icon: SterileishIcon },
+    { type: 'tool-stonks-bot', label: 'Stonks Bot', description: 'Gives "financial advice"', icon: StonksIcon },
+    { type: 'tool-vandelay', label: 'Vandelay', description: 'Generates alibis', icon: VandelayIcon },
+    { type: 'tool-vin-diesel', label: 'VIN Diesel', description: 'Validates VINs', icon: VinDieselIcon },
+    { type: 'tool-winston-wolfe', label: 'Winston Wolfe', description: 'Solves reputation problems', icon: WinstonWolfeIcon },
 ];
 
 
