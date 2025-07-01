@@ -54,16 +54,15 @@ export async function getConversationHistory(
   });
 
   if (conversation && Array.isArray(conversation.messages)) {
-    const allMessages = deserializeMessages(conversation.messages);
-    // Return only the most recent messages to keep context windows small
-    return allMessages.slice(-MAX_HISTORY_LENGTH);
+    // The history in DB is already trimmed, so we just deserialize.
+    return deserializeMessages(conversation.messages);
   }
 
   return [];
 }
 
 /**
- * Saves the updated conversation history for a user.
+ * Saves the updated conversation history for a user, trimming it to a max length.
  * @param userId The ID of the user.
  * @param workspaceId The ID of the current workspace.
  * @param messages The full, updated array of BaseMessage objects for the conversation.
@@ -76,15 +75,18 @@ export async function saveConversationHistory(
   // LangChain messages have a toJSON() method that we can use for serialization.
   const serializableMessages = messages.map((msg) => msg.toJSON());
 
+  // Keep only the most recent messages to prevent the history from growing indefinitely.
+  const trimmedMessages = serializableMessages.slice(-MAX_HISTORY_LENGTH);
+
   await prisma.conversation.upsert({
     where: { userId },
     create: {
       userId,
       workspaceId,
-      messages: serializableMessages,
+      messages: trimmedMessages,
     },
     update: {
-      messages: serializableMessages,
+      messages: trimmedMessages,
     },
   });
 }
