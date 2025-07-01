@@ -5,7 +5,7 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { OrbitControls, Sparkles, Line, Edges, Html, Torus } from '@react-three/drei';
 import * as THREE from 'three';
-import { type Agent as AgentData, AgentStatus } from '@prisma/client';
+import { type Agent as AgentData, AgentStatus, PulsePhase } from '@prisma/client';
 import { cn } from '@/lib/utils';
 import { useAppStore } from '@/store/app-store';
 import type { MicroAppType } from '@/store/app-store';
@@ -198,7 +198,25 @@ function BeepCore({ state }: { state: BeepCoreState }) {
     );
 }
 
-function Scene({ agents, beepCoreState, highlightedAgents }: { agents: AgentData[], beepCoreState: BeepCoreState, highlightedAgents: Set<string> }) {
+function Scene({ agents, beepCoreState, highlightedAgents, pulsePhase }: { agents: AgentData[], beepCoreState: BeepCoreState, highlightedAgents: Set<string>, pulsePhase: PulsePhase | null }) {
+    const orbitControlsRef = useRef<any>(null!);
+
+    useFrame(() => {
+        if (orbitControlsRef.current) {
+            let targetSpeed = 0.1;
+            if (pulsePhase === PulsePhase.CREST) targetSpeed = 0.5;
+            if (pulsePhase === PulsePhase.TROUGH) targetSpeed = 0.05;
+            
+            orbitControlsRef.current.autoRotateSpeed = THREE.MathUtils.lerp(orbitControlsRef.current.autoRotateSpeed, targetSpeed, 0.1);
+        }
+    });
+
+    const ambientLightIntensity = useMemo(() => {
+        if (pulsePhase === PulsePhase.CREST) return 0.5;
+        if (pulsePhase === PulsePhase.TROUGH) return 0.1;
+        return 0.2;
+    }, [pulsePhase]);
+
     const nodePositions = useMemo(() => {
         return agents.map((agent, index) => {
             const angle = (index / agents.length) * Math.PI * 2;
@@ -210,7 +228,7 @@ function Scene({ agents, beepCoreState, highlightedAgents }: { agents: AgentData
 
     return (
         <>
-            <ambientLight intensity={0.2} />
+            <ambientLight intensity={ambientLightIntensity} />
             <pointLight position={[0, 0, 0]} color="hsl(var(--primary))" intensity={15} distance={20} />
             
             <Obelisk />
@@ -228,6 +246,7 @@ function Scene({ agents, beepCoreState, highlightedAgents }: { agents: AgentData
                 )
             })}
             <Sparkles count={200} scale={20} size={2} speed={0.3} color="hsl(var(--accent))" />
+            <OrbitControls ref={orbitControlsRef} autoRotate autoRotateSpeed={0.1} enableZoom={true} enablePan={false} maxDistance={40} minDistance={10} />
         </>
     );
 }
@@ -239,6 +258,24 @@ export default function SystemWeave({ initialAgents }: { initialAgents: AgentDat
   const [beepCoreState, setBeepCoreState] = useState<BeepCoreState>('idle');
   const [highlightedAgents, setHighlightedAgents] = useState<Set<string>>(new Set());
   const audioRef = useRef<HTMLAudioElement>(null);
+  const [pulsePhase, setPulsePhase] = useState<PulsePhase | null>(null);
+
+  useEffect(() => {
+    const fetchPulse = async () => {
+        try {
+            const res = await fetch('/api/user/pulse');
+            if (res.ok) {
+                const data = await res.json();
+                setPulsePhase(data.phase);
+            }
+        } catch (error) {
+            console.error("Failed to fetch pulse state for SystemWeave:", error);
+        }
+    };
+    fetchPulse();
+    const interval = setInterval(fetchPulse, 30000); // Refresh every 30 seconds
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     if (beepOutput?.agentReports) {
@@ -294,8 +331,7 @@ export default function SystemWeave({ initialAgents }: { initialAgents: AgentDat
   return (
       <div className="absolute inset-0 -z-10">
         <Canvas camera={{ position: [0, 8, 18], fov: 60 }}>
-            <Scene agents={agents} beepCoreState={beepCoreState} highlightedAgents={highlightedAgents} />
-            <OrbitControls autoRotate autoRotateSpeed={0.1} enableZoom={true} enablePan={false} maxDistance={40} minDistance={10} />
+            <Scene agents={agents} beepCoreState={beepCoreState} highlightedAgents={highlightedAgents} pulsePhase={pulsePhase} />
         </Canvas>
          <audio ref={audioRef} onEnded={handleAudioEnd} className="hidden" />
       </div>
