@@ -22,17 +22,17 @@ export const microAppManifests: MicroAppManifest[] = [
   // --- System Apps (Included) ---
   {
     id: 'file-explorer',
-    name: 'File Explorer',
+    name: "The Scribe's Archive",
     author: 'ΛΞVON OS',
-    description: 'Access and manage your files.',
+    description: 'A sentient library where every piece of data has a purpose, a context, and a living relationship with your agents.',
     creditCost: 0,
     priceModel: 'included',
     imageUrl: 'https://placehold.co/600x400.png',
-    imageHint: 'data folders files',
-    defaultSize: { width: 400, height: 300 },
+    imageHint: 'library crystal knowledge',
+    defaultSize: { width: 550, height: 400 },
     permissionsRequired: [],
-    routingPath: '/file-explorer',
-    contextAwareCapabilities: [],
+    routingPath: '/scribes-archive',
+    contextAwareCapabilities: ['contextual_retrieval', 'ai_organization'],
   },
   {
     id: 'terminal',

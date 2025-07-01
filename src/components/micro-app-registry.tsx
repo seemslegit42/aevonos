@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { FileExplorerIcon } from '@/components/icons/FileExplorerIcon';
 import { TerminalIcon } from '@/components/icons/TerminalIcon';
 import { CrystalIcon } from '@/components/icons/CrystalIcon';
 import { AegisIcon } from '@/components/icons/AegisIcon';
@@ -41,6 +40,7 @@ import { PatricktIcon } from './icons/PatricktIcon';
 import { HowardsSidekickIcon } from './icons/HowardsSidekickIcon';
 import { SisyphusIcon } from './icons/SisyphusIcon';
 import { MerchantOfCabbageIcon } from './icons/MerchantOfCabbageIcon';
+import { FileExplorerIcon } from './icons/FileExplorerIcon';
 
 import { type MicroAppType } from '@/store/app-store';
 import ContactList from './micro-apps/contact-list';
@@ -82,6 +82,8 @@ import Validator from './micro-apps/validator';
 import RenoMode from './micro-apps/reno-mode';
 import PatricktApp from './micro-apps/patrickt';
 import HowardsSidekick from './micro-apps/howards-sidekick';
+import ScribesArchive from './micro-apps/file-explorer';
+
 
 type ComponentRegistry = {
     icon: React.ComponentType<any>;
@@ -91,6 +93,7 @@ type ComponentRegistry = {
 export const microAppRegistry: Record<MicroAppType, ComponentRegistry> = {
   'file-explorer': {
     icon: FileExplorerIcon,
+    content: ScribesArchive,
   },
   'terminal': {
     icon: TerminalIcon,

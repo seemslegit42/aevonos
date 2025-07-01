@@ -1,31 +1,31 @@
-# File Explorer: The Scriptorium - Technical Specification
+# The Scribe's Archive: Command Over Knowledge - Technical Specification
 
-> "All records are sacred. Here is your library."
+> "This is not a file manager. This is a memory palace."
 
 ---
 
 ## 1. System Overview
 
-The File Explorer is a **core utility Micro-App** that provides a familiar, graphical interface for navigating and managing files within the user's workspace. It serves as the visual counterpart to the command-line for file operations.
-
-It is designed for intuitive access, clear organization, and seamless integration with other Micro-Apps that produce or consume files (e.g., Dossier exports, P.I. evidence logs).
+The Scribe's Archive is the OS's sentient library, where every piece of data has a purpose, a context, and a living relationship with your agents. It replaces the concept of static folders and files with a dynamic, visual representation of knowledge fragments.
 
 ---
 
 ## 2. Core Components & Implementation
 
-### 2.1. The `File-Explorer` Micro-App (`micro-apps/file-explorer.tsx`)
-The UI is a clean, standard file browser interface.
-- **Directory Tree**: A classic tree view for navigating folders.
-- **File List**: A main pane displaying the contents of the selected directory, with icons corresponding to file types.
-- **Mocked Data**: For the prototype, this app will display a mocked, static directory structure to demonstrate the UI and interaction patterns. In a production environment, this would be connected to a secure, workspace-scoped file storage service (e.g., a dedicated S3 bucket or Google Cloud Storage).
+### 2.1. The `ScribesArchive` Micro-App (`micro-apps/file-explorer.tsx`)
+- **Visual Metaphor**: Instead of a hierarchical tree, the UI presents data as floating, translucent "data crystals" on the Canvas.
+- **Spatial Organization**: Crystals can be spatially arranged and grouped by context (e.g., "Client X Documents," "Q3 Reports").
+- **Metadata Overlay**: Selecting a crystal reveals metadata like source, date, associated agents, and its Aegis integrity status.
+- **Mock Data**: For the prototype, the app will display a mocked collection of data crystals to demonstrate the UI and interaction patterns.
 
-### 2.2. Agentic Integration
-- **File Operations**: BEEP can use dedicated tools (e.g., `list_files`, `create_directory`, `delete_file`) to perform file management tasks via natural language commands. Changes made via BEEP would be reactively reflected in the File Explorer UI.
+### 2.2. Agentic Integration (The Archivist Spirit)
+- **AI-Driven Organization**: In a future implementation, when a file is dragged onto the Canvas, a specialized agent ("The Archivist Spirit") will be invoked to analyze, tag, and categorize the content, placing the resulting crystal in the appropriate context within the Archive.
+- **Contextual Retrieval**: The primary method of interaction is through BEEP, e.g., "BEEP, show me all contracts related to Project Chimera." This command would summon the relevant data crystals onto the Canvas.
+- **Content Transmutation**: BEEP will be able to perform actions on the data within the crystals, such as summarization ("distill the essence") or data extraction ("extract all action items").
 
 ---
 
 ## 3. Integration with ΛΞVON OS
 
-- **Invocation**: The File Explorer can be launched from the Canvas or summoned by BEEP, often in response to a command like "show me my files" or "open the project-phoenix directory."
-- **Architectural Role**: It serves as a fundamental building block of the OS, providing a necessary visual tool for users who prefer graphical interfaces over the command line for file management. It ensures that the OS is accessible to users of all technical comfort levels.
+- **Invocation**: Summoned via BEEP commands like, "BEEP, open the Scribe's Archive."
+- **Architectural Role**: It serves as a core instrument of control, transforming data management from a mundane task into an act of intellectual and strategic command. It is a cornerstone of the OS's "intelligent memory palace" concept.
