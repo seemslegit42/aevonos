@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation';
 import TopBar from '@/components/layout/top-bar';
 import type { User, Workspace, UserPsyche } from '@prisma/client';
 import BottomNavBar from './bottom-nav-bar';
-import { useIsMobile } from '@/hooks/use-is-mobile';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 import { useAppStore } from '@/store/app-store';
 import TendyRain from '@/components/effects/TendyRain';

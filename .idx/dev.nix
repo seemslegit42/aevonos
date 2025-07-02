@@ -7,7 +7,6 @@
   packages = [
     pkgs.nodejs_20
     pkgs.zulu
-    pkgs.pnpm
   ];
   # Sets environment variables in the workspace
   env = {
@@ -49,7 +48,6 @@
       onCreate = {
         default.openFiles = [
           "src/app/page.tsx"
-          "src/app/login/page.tsx"
         ];
       };
     };
@@ -58,7 +56,7 @@
       enable = true;
       previews = {
         web = {
-          command = ["pnpm" "dev"];
+          command = ["npm" "run" "dev" "--" "--port" "$PORT" "--hostname" "0.0.0.0"];
           manager = "web";
         };
       };
