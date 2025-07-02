@@ -108,14 +108,22 @@ This document provides the formal OpenAPI 3.0 specification for the ΛΞVON OS P
         "responses": {
           "200": {
             "description": "The user's current pulse narrative.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": { "narrative": { "type": "string", "example": "The river of fortune swells. Ride it before it turns." } }
-                }
-              }
-            }
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PulseState" } } }
+          },
+          "401": { "description": "Unauthorized." }
+        }
+      }
+    },
+    "/user/pulse-profile": {
+      "get": {
+        "tags": ["Users"],
+        "summary": "Retrieve the user's full Pulse Profile.",
+        "operationId": "getUserPulseProfile",
+        "description": "Fetches the detailed psychological and economic state for the user.",
+        "responses": {
+          "200": {
+            "description": "The user's pulse profile.",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PulseProfile" } } }
           },
           "401": { "description": "Unauthorized." }
         }
@@ -147,6 +155,20 @@ This document provides the formal OpenAPI 3.0 specification for the ΛΞVON OS P
             "description": "Workspace updated.",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Workspace" } } }
           }
+        }
+      }
+    },
+     "/workspaces/me/economy-stats": {
+      "get": {
+        "tags": ["Workspaces"],
+        "summary": "Retrieve workspace economy statistics.",
+        "operationId": "getEconomyStats",
+        "responses": {
+          "200": {
+            "description": "Economy statistics for the workspace.",
+            "content": { "application/json": { "schema": { "type": "object", "properties": { "totalCreditsBurned": { "type": "number" } } } } }
+          },
+          "401": { "description": "Unauthorized." }
         }
       }
     },
@@ -272,6 +294,18 @@ This document provides the formal OpenAPI 3.0 specification for the ΛΞVON OS P
         }
       }
     },
+     "/workflows/runs/{runId}": {
+      "get": {
+        "tags": ["Workflows"],
+        "summary": "Retrieve details of a specific workflow run.",
+        "operationId": "getWorkflowRun",
+        "parameters": [{ "name": "runId", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "responses": {
+          "200": { "content": { "application/json": { "schema": { "$ref": "#/components/schemas/WorkflowRun" } } } },
+          "404": { "description": "Workflow run not found." }
+        }
+      }
+    },
     "/contacts": {
       "get": {
         "tags": ["CRM"],
@@ -295,6 +329,37 @@ This document provides the formal OpenAPI 3.0 specification for the ΛΞVON OS P
         }
       }
     },
+     "/contacts/{contactId}": {
+      "get": {
+        "tags": ["CRM"],
+        "summary": "Retrieve a specific contact.",
+        "operationId": "getContact",
+        "parameters": [{ "name": "contactId", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "responses": {
+          "200": { "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Contact" } } } },
+          "404": { "description": "Contact not found." }
+        }
+      },
+      "put": {
+        "tags": ["CRM"],
+        "summary": "Update a contact.",
+        "operationId": "updateContact",
+        "parameters": [{ "name": "contactId", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ContactUpdateRequest" } } } },
+        "responses": {
+          "200": { "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Contact" } } } }
+        }
+      },
+      "delete": {
+        "tags": ["CRM"],
+        "summary": "Delete a contact.",
+        "operationId": "deleteContact",
+        "parameters": [{ "name": "contactId", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "responses": {
+          "204": { "description": "Contact deleted." }
+        }
+      }
+    },
     "/security/alerts": {
       "get": {
         "tags": ["Security"],
@@ -305,6 +370,25 @@ This document provides the formal OpenAPI 3.0 specification for the ΛΞVON OS P
             "description": "A list of security alerts.",
             "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/SecurityAlert" } } } }
           }
+        }
+      }
+    },
+    "/security/threat-feeds": {
+      "get": {
+        "tags": ["Security"],
+        "summary": "Retrieve configured threat intelligence feeds.",
+        "operationId": "getThreatFeeds",
+        "responses": {
+          "200": { "description": "List of threat feed URLs.", "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/ThreatFeed" } } } } }
+        }
+      },
+      "put": {
+        "tags": ["Security"],
+        "summary": "Update the list of threat intelligence feeds.",
+        "operationId": "configureThreatFeeds",
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ThreatFeedUpdateRequest" } } } },
+        "responses": {
+          "200": { "description": "Feeds updated successfully." }
         }
       }
     },
@@ -319,6 +403,16 @@ This document provides the formal OpenAPI 3.0 specification for the ΛΞVON OS P
             "description": "A list of transactions.",
             "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/Transaction" } } } }
           }
+        }
+      }
+    },
+     "/billing/usage/agent-actions": {
+      "get": {
+        "tags": ["Billing"],
+        "summary": "Get current usage details for the workspace.",
+        "operationId": "getAgentActionUsage",
+        "responses": {
+          "200": { "content": { "application/json": { "schema": { "$ref": "#/components/schemas/BillingUsage" } } } }
         }
       }
     },
@@ -366,6 +460,103 @@ This document provides the formal OpenAPI 3.0 specification for the ΛΞVON OS P
           },
           "401": { "description": "Unauthorized." },
           "403": { "description": "Forbidden." }
+        }
+      }
+    },
+     "/admin/vows": {
+      "get": {
+        "tags": ["Admin"],
+        "summary": "Retrieve all founding vows from users in the workspace.",
+        "operationId": "listSacredVows",
+        "responses": {
+          "200": {
+            "description": "A list of user vows.",
+            "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/SacredVow" } } } }
+          },
+          "403": { "description": "Forbidden." }
+        }
+      }
+    },
+    "/covenants/me": {
+      "get": {
+        "tags": ["Covenants"],
+        "summary": "Get the authenticated user's Covenant details.",
+        "operationId": "getMyCovenant",
+        "responses": {
+          "200": { "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Covenant" } } } }
+        }
+      }
+    },
+    "/covenants/{covenantName}/leaderboard": {
+      "get": {
+        "tags": ["Covenants"],
+        "summary": "Get the leaderboard for a specific Covenant.",
+        "operationId": "getCovenantLeaderboard",
+        "parameters": [{ "name": "covenantName", "in": "path", "required": true, "schema": { "type": "string", "enum": ["motion", "worship", "silence"] } }],
+        "responses": {
+          "200": { "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/LeaderboardEntry" } } } } }
+        }
+      }
+    },
+    "/covenants/{covenantName}/members": {
+      "get": {
+        "tags": ["Covenants"],
+        "summary": "List members of a specific Covenant.",
+        "operationId": "getCovenantMembers",
+        "parameters": [{ "name": "covenantName", "in": "path", "required": true, "schema": { "type": "string", "enum": ["motion", "worship", "silence"] } }],
+        "responses": {
+          "200": { "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/User" } } } } },
+          "403": { "description": "Forbidden." }
+        }
+      }
+    },
+     "/microapps": {
+      "get": {
+        "tags": ["MicroApps"],
+        "summary": "List all available Micro-App manifests.",
+        "operationId": "listMicroApps",
+        "responses": {
+          "200": { "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/ArtifactManifest" } } } } }
+        }
+      }
+    },
+     "/integrations": {
+      "get": {
+        "tags": ["Integrations"],
+        "summary": "List configured integrations for the workspace.",
+        "operationId": "listIntegrations",
+        "responses": {
+          "200": { "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/ConfiguredIntegration" } } } } }
+        }
+      },
+      "post": {
+        "tags": ["Integrations"],
+        "summary": "Create a new integration instance.",
+        "operationId": "createIntegration",
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/IntegrationConfigurationRequest" } } } },
+        "responses": {
+          "201": { "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ConfiguredIntegration" } } } }
+        }
+      }
+    },
+    "/integrations/{integrationId}": {
+      "put": {
+        "tags": ["Integrations"],
+        "summary": "Update an integration configuration.",
+        "operationId": "updateIntegration",
+        "parameters": [{ "name": "integrationId", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/IntegrationUpdateRequest" } } } },
+        "responses": {
+          "200": { "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ConfiguredIntegration" } } } }
+        }
+      },
+      "delete": {
+        "tags": ["Integrations"],
+        "summary": "Delete an integration.",
+        "operationId": "deleteIntegration",
+        "parameters": [{ "name": "integrationId", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "responses": {
+          "204": { "description": "Integration deleted." }
         }
       }
     }
@@ -538,6 +729,15 @@ This document provides the formal OpenAPI 3.0 specification for the ΛΞVON OS P
           "phone": { "type": "string", "nullable": true }
         }
       },
+       "ContactUpdateRequest": {
+        "type": "object",
+        "properties": {
+          "email": { "type": "string", "format": "email", "nullable": true },
+          "firstName": { "type": "string", "nullable": true },
+          "lastName": { "type": "string", "nullable": true },
+          "phone": { "type": "string", "nullable": true }
+        }
+      },
       "SecurityAlert": {
         "type": "object",
         "properties": {
@@ -546,6 +746,29 @@ This document provides the formal OpenAPI 3.0 specification for the ΛΞVON OS P
           "explanation": { "type": "string" },
           "riskLevel": { "type": "string", "enum": ["low", "medium", "high", "critical"] },
           "timestamp": { "type": "string", "format": "date-time" }
+        }
+      },
+       "ThreatFeed": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "url": { "type": "string", "format": "uri" }
+        }
+      },
+      "ThreatFeedUpdateRequest": {
+        "type": "object",
+        "properties": {
+          "feeds": { "type": "array", "items": { "type": "string", "format": "uri" } }
+        }
+      },
+       "BillingUsage": {
+        "type": "object",
+        "properties": {
+          "currentPeriod": { "type": "string", "format": "date" },
+          "totalActionsUsed": { "type": "integer" },
+          "planLimit": { "type": "integer" },
+          "planTier": { "type": "string" },
+          "overageEnabled": { "type": "boolean" }
         }
       },
       "DossierExportRequest": {
@@ -577,9 +800,93 @@ This document provides the formal OpenAPI 3.0 specification for the ΛΞVON OS P
           "creditBalance": { "type": "number" },
           "planTier": { "type": "string" }
         }
+      },
+      "SacredVow": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "email": { "type": "string" },
+          "firstName": { "type": "string", "nullable": true },
+          "lastName": { "type": "string", "nullable": true },
+          "psyche": { "$ref": "#/components/schemas/UserPsyche" },
+          "foundingVow": { "type": "string", "nullable": true },
+          "foundingGoal": { "type": "string", "nullable": true }
+        }
+      },
+      "Covenant": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "symbol": { "type": "string" }
+        }
+      },
+      "LeaderboardEntry": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "email": { "type": "string" },
+          "firstName": { "type": "string", "nullable": true },
+          "lastName": { "type": "string", "nullable": true },
+          "vas": { "type": "number", "description": "Vow Alignment Score" }
+        }
+      },
+      "ArtifactManifest": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "type": { "type": "string", "enum": ["MICRO_APP", "CHAOS_CARD"] },
+          "name": { "type": "string" },
+          "description": { "type": "string" }
+        }
+      },
+      "IntegrationConfigurationRequest": {
+        "type": "object",
+        "properties": {
+          "integrationTypeId": { "type": "string", "format": "uuid" },
+          "name": { "type": "string" },
+          "configDetails": { "type": "object" }
+        },
+        "required": ["integrationTypeId", "name", "configDetails"]
+      },
+      "IntegrationUpdateRequest": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "configDetails": { "type": "object" },
+          "status": { "type": "string", "enum": ["active", "inactive", "error"] }
+        }
+      },
+      "ConfiguredIntegration": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "status": { "type": "string", "enum": ["active", "inactive", "error"] },
+          "manifest": { "type": "object" }
+        }
+      },
+       "PulseState": {
+        "type": "object",
+        "properties": {
+          "narrative": { "type": "string", "nullable": true },
+          "phase": { "type": "string", "enum": ["CREST", "TROUGH", "EQUILIBRIUM"], "nullable": true },
+          "value": { "type": "number", "format": "float", "nullable": true }
+        }
+      },
+       "PulseProfile": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "userId": { "type": "string" },
+          "baselineLuck": { "type": "number" },
+          "amplitude": { "type": "number" },
+          "frequency": { "type": "number" },
+          "phaseOffset": { "type": "number" },
+          "consecutiveLosses": { "type": "integer" },
+          "lastEventTimestamp": { "type": "string", "format": "date-time" }
+        }
       }
     }
   }
 }
-
-    
+```
