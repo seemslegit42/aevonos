@@ -1,4 +1,3 @@
-
 # The Kif Kroker: Morale Monitor - Technical Specification
 
 > "*Sigh*... I suppose I should point out that the tone in #general has become... less than ideal."
@@ -17,7 +16,7 @@ Its purpose is not to solve problems, but to provide weary, understated, and dat
 
 ### 2.1. The `kif-kroker-agent` (`agents/kif-kroker.ts`)
 The agent's logic is powered by the `analyzeComms` flow.
-- **External Tool Use**: Before analysis, the agent calls the `getSlackChannelMessages` tool. In the prototype, this tool returns mocked data to simulate an API call to a Slack channel.
+- **External Tool Use**: Before analysis, the agent calls the `getSlackChannelMessages` tool to fetch the most recent messages from the specified channel ID.
 - **Persona-Driven Prompt**: The core prompt instructs the LLM to adopt Kif's understated and exhausted tone.
 - **Input**: Accepts a Slack `channelId`.
 - **Processing**: A single LLM call analyzes the fetched conversational snippets for sentiment, tone, and key indicators of workplace friction.
@@ -39,5 +38,5 @@ The UI is a simple, functional interface for initiating a channel scan.
 
 - **Invocation**: The Kif Kroker can be launched from the Canvas or summoned via a BEEP command, e.g., "Ask Kif to check the vibe in channel C012AB3CD."
 - **Agentic Control**: BEEP uses the `analyzeTeamComms` tool to pass the channel ID to the agent.
-- **Billing**: Each communication analysis involves an external tool call and an LLM call, and is therefore debited by Obelisk Pay.
+- **Billing**: Each communication analysis involves an external API call and an LLM call, and is therefore debited by Obelisk Pay.
 - **The Armory**: As a valuable tool for managers and team leads, The Kif Kroker is listed in The Armory as a one-time purchase.

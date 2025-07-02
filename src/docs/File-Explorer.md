@@ -16,7 +16,7 @@ The Scribe's Archive is the OS's sentient library, where every piece of data has
 - **Visual Metaphor**: Instead of a hierarchical tree, the UI presents data as floating, translucent "data crystals" on the Canvas.
 - **Spatial Organization**: Crystals can be spatially arranged and grouped by context (e.g., "Client X Documents," "Q3 Reports").
 - **Metadata Overlay**: Selecting a crystal reveals metadata like source, date, associated agents, and its Aegis integrity status.
-- **Mock Data**: The app displays a mocked collection of data crystals, demonstrating its unique spatial organization and interaction patterns.
+- **Mock Data**: For the prototype, the app will display a mocked collection of data crystals to demonstrate the UI and interaction patterns.
 
 ### 2.2. Agentic Integration (The Archivist Spirit)
 - **AI-Driven Organization**: In a future implementation, when a file is dragged onto the Canvas, a specialized agent ("The Archivist Spirit") will be invoked to analyze, tag, and categorize the content, placing the resulting crystal in the appropriate context within the Archive.

@@ -1,6 +1,5 @@
 
 
-
 # The Klepsydra Engine: The Profit Pulse
 
 > “Time is not a river. It is a tide. And we are the moon.”
@@ -59,3 +58,5 @@ The Klepsydra Engine is the primary driver of the **Tribute Velocity Index (TVI)
 The engine's ability to tune itself based on a user's `psyche` and dynamic psychological state is a direct implementation of the Doctrine's pillar of optimizing for **Return on Belief**. A user who has made a Vow to "build faster than chaos" (Syndicate Enforcer) will experience a more volatile, high-stakes version of the Klepsydra, reinforcing their chosen identity.
 
 The Klepsydra Engine is not a slot machine. It is a carefully calibrated system designed to make **belief** the most valuable currency in ΛΞVON OS.
+
+      
