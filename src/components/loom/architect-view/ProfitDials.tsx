@@ -8,7 +8,9 @@ import { Input } from '@/components/ui/input';
 import { Slider } from '@/components/ui/slider';
 import { pulseEngineConfig } from '@/config/pulse-engine-config';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Info, SlidersHorizontal } from 'lucide-react';
+import { Info, SlidersHorizontal, Activity } from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
+import EconomicPulseChart from './EconomicPulseChart';
 
 const Dial = ({ label, description, value, onValueChange, min, max, step, disabled = true }: { label: string, description: string, value: number, onValueChange: (val: number) => void, min: number, max: number, step: number, disabled?: boolean }) => (
     <div className="space-y-2">
@@ -53,7 +55,7 @@ export default function ProfitDials() {
     };
 
     return (
-        <Card className="bg-background/50 border-primary/30 h-full">
+        <Card className="bg-background/50 border-primary/30 h-full overflow-y-auto">
             <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                     <SlidersHorizontal className="w-6 h-6"/>
@@ -83,6 +85,19 @@ export default function ProfitDials() {
                     onValueChange={(val) => handleConfigChange('TRANSMUTATION_TITHE', val / 100)}
                     min={1} max={50} step={1}
                 />
+            </CardContent>
+
+            <Separator className="my-4" />
+
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                    <Activity className="w-6 h-6"/>
+                    Economic Pulse
+                </CardTitle>
+                <CardDescription>Last 30 days of ΞCredit economic activity.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <EconomicPulseChart />
             </CardContent>
         </Card>
     );
