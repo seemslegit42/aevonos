@@ -22,6 +22,8 @@ import {
 } from '@langchain/core/messages';
 import { zodToJsonSchema } from 'zod-to-json-schema';
 import { UserPsyche, UserRole } from '@prisma/client';
+import { Runnable, type RunnableConfig } from "@langchain/core/runnables";
+import type { Tool } from '@langchain/core/tools';
 
 import { langchainGroqFast, langchainGroqComplex } from '@/ai/genkit';
 import { aegisAnomalyScan } from '@/ai/agents/aegis';
@@ -48,6 +50,41 @@ interface AgentState {
   workspaceId: string;
   userId: string;
   aegisReport: AegisAnomalyScanOutput | null;
+}
+
+/**
+ * A safe wrapper around the ToolNode that catches errors during tool execution
+ * and returns them as a ToolMessage, allowing the graph to continue.
+ */
+class SafeToolExecutor extends Runnable<AgentState, Partial<AgentState>> {
+  private toolNode: ToolNode<AgentState>;
+
+  constructor(tools: Tool[]) {
+    super();
+    // The tools are passed in during the invocation of the BEEP agent
+    this.toolNode = new ToolNode(tools);
+  }
+
+  async invoke(state: AgentState, config?: RunnableConfig): Promise<Partial<AgentState>> {
+    try {
+      // Delegate the actual tool invocation to the original ToolNode.
+      return await this.toolNode.invoke(state, config);
+    } catch (error: any) {
+      console.error(`[SafeToolExecutor] Tool execution failed:`, error);
+      const lastMessage = state.messages[state.messages.length - 1];
+      
+      // We may not know exactly which tool call failed, so we'll attribute
+      // the error to the first tool call in the list. The LLM is instructed
+      // to handle the failure gracefully.
+      const tool_call_id = lastMessage.tool_calls?.[0]?.id ?? "error_tool_call";
+      
+      const errorMessage = new ToolMessage({
+        content: `Tool execution failed with error: ${error.message}. You MUST inform the user about this failure and suggest a next step. Do not try to call the tool again.`,
+        tool_call_id,
+      });
+      return { messages: [errorMessage] };
+    }
+  }
 }
 
 const callAegis = async (state: AgentState) => {
@@ -262,7 +299,8 @@ export async function processUserCommand(input: UserCommandInput): Promise<UserC
   complexModelWithTools.kwargs.tools = toolSchemas;
   
   // Replace the 'tools' node in the graph with a new one containing the context-aware tools.
-  app.nodes.tools = new ToolNode<AgentState>(tools) as any;
+  // This now uses the safe executor to prevent graph crashes on tool errors.
+  app.nodes.tools = new SafeToolExecutor(tools) as any;
 
   const workspace = await prisma.workspace.findUnique({
       where: { id: workspaceId },
