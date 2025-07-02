@@ -41,34 +41,13 @@ This document provides the formal OpenAPI 3.0 specification for the ΛΞVON OS P
     { "name": "CRM", "description": "Management of contacts and customer data." },
     { "name": "Security", "description": "Aegis security alerts, threat intelligence, and baseline management." },
     { "name": "Billing", "description": "Management of plans, subscriptions, and usage." },
+    { "name": "Covenants", "description": "Management of community cohorts and their data." },
     { "name": "MicroApps", "description": "Discovery and interaction with modular Micro-Apps." },
     { "name": "Integrations", "description": "Management of third-party service connections." },
     { "name": "Export", "description": "Endpoints for exporting system data." },
     { "name": "Admin", "description": "Privileged endpoints for workspace administration." }
   ],
   "paths": {
-    "/auth/login": {
-      "post": {
-        "tags": ["Authentication"],
-        "summary": "Authenticate a user and issue a JWT.",
-        "operationId": "loginUser",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": { "$ref": "#/components/schemas/LoginRequest" }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Authentication successful.",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AuthResponse" } } }
-          },
-          "401": { "description": "Invalid credentials." }
-        }
-      }
-    },
     "/auth/register": {
       "post": {
         "tags": ["Authentication"],
@@ -84,8 +63,7 @@ This document provides the formal OpenAPI 3.0 specification for the ΛΞVON OS P
         },
         "responses": {
           "201": {
-            "description": "User and workspace created successfully.",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AuthResponse" } } }
+            "description": "User and workspace created successfully."
           },
           "409": { "description": "User with this email already exists." }
         }
@@ -155,6 +133,21 @@ This document provides the formal OpenAPI 3.0 specification for the ΛΞVON OS P
           },
           "401": { "description": "Unauthorized." }
         }
+      },
+       "put": {
+        "tags": ["Workspaces"],
+        "summary": "Update the authenticated user's current workspace.",
+        "operationId": "updateCurrentWorkspace",
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/WorkspaceUpdateRequest" } } }
+        },
+        "responses": {
+          "200": {
+            "description": "Workspace updated.",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Workspace" } } }
+          }
+        }
       }
     },
     "/beep/command": {
@@ -178,10 +171,10 @@ This document provides the formal OpenAPI 3.0 specification for the ΛΞVON OS P
         }
       }
     },
-    "/workflows": {
+     "/workflows": {
       "get": {
         "tags": ["Workflows"],
-        "summary": "Retrieve a list of all defined Loom Studio workflows.",
+        "summary": "Retrieve a list of all defined Loom Studio workflows for the workspace.",
         "operationId": "listWorkflows",
         "responses": {
           "200": {
@@ -208,6 +201,39 @@ This document provides the formal OpenAPI 3.0 specification for the ΛΞVON OS P
         }
       }
     },
+    "/workflows/{workflowId}": {
+       "get": {
+        "tags": ["Workflows"],
+        "summary": "Retrieve a specific workflow definition.",
+        "operationId": "getWorkflow",
+        "parameters": [ { "name": "workflowId", "in": "path", "required": true, "schema": { "type": "string" } } ],
+        "responses": {
+          "200": { "content": { "application/json": { "schema": { "$ref": "#/components/schemas/WorkflowDefinition" } } } },
+          "404": { "description": "Workflow not found." }
+        }
+      },
+      "put": {
+        "tags": ["Workflows"],
+        "summary": "Update a workflow definition.",
+        "operationId": "updateWorkflow",
+        "parameters": [ { "name": "workflowId", "in": "path", "required": true, "schema": { "type": "string" } } ],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/WorkflowUpdateRequest" } } } },
+        "responses": {
+          "200": { "content": { "application/json": { "schema": { "$ref": "#/components/schemas/WorkflowDefinition" } } } },
+          "403": { "description": "Permission denied." }
+        }
+      },
+      "delete": {
+        "tags": ["Workflows"],
+        "summary": "Delete a workflow.",
+        "operationId": "deleteWorkflow",
+        "parameters": [ { "name": "workflowId", "in": "path", "required": true, "schema": { "type": "string" } } ],
+        "responses": {
+          "204": { "description": "Workflow deleted." },
+          "403": { "description": "Permission denied." }
+        }
+      }
+    },
     "/workflows/{workflowId}/run": {
       "post": {
         "tags": ["Workflows"],
@@ -229,6 +255,20 @@ This document provides the formal OpenAPI 3.0 specification for the ΛΞVON OS P
           },
           "404": { "description": "Workflow not found." },
           "403": { "description": "Permission denied." }
+        }
+      }
+    },
+    "/workflows/runs": {
+       "get": {
+        "tags": ["Workflows"],
+        "summary": "Retrieve a list of workflow runs.",
+        "operationId": "listWorkflowRuns",
+        "parameters": [
+          { "name": "workflowId", "in": "query", "schema": { "type": "string" } },
+          { "name": "status", "in": "query", "schema": { "type": "string", "enum": ["pending", "running", "completed", "failed", "paused"] } }
+        ],
+        "responses": {
+          "200": { "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/WorkflowRun" } } } } }
         }
       }
     },
@@ -335,14 +375,6 @@ This document provides the formal OpenAPI 3.0 specification for the ΛΞVON OS P
       "bearerAuth": { "type": "http", "scheme": "bearer", "bearerFormat": "JWT" }
     },
     "schemas": {
-      "LoginRequest": {
-        "type": "object",
-        "properties": {
-          "email": { "type": "string", "format": "email" },
-          "password": { "type": "string", "format": "password" }
-        },
-        "required": ["email", "password"]
-      },
       "RegisterRequest": {
         "type": "object",
         "properties": {
@@ -355,15 +387,6 @@ This document provides the formal OpenAPI 3.0 specification for the ΛΞVON OS P
           "goal": { "type": "string", "description": "The user's declared 'vow' or goal during the Rite of Invocation.", "nullable": true }
         },
         "required": ["email", "password", "workspaceName", "psyche"]
-      },
-      "AuthResponse": {
-        "type": "object",
-        "properties": {
-          "accessToken": { "type": "string" },
-          "tokenType": { "type": "string", "example": "Bearer" },
-          "expiresIn": { "type": "integer", "example": 3600 },
-          "user": { "$ref": "#/components/schemas/User" }
-        }
       },
       "User": {
         "type": "object",
@@ -388,7 +411,8 @@ This document provides the formal OpenAPI 3.0 specification for the ΛΞVON OS P
         "properties": {
           "firstName": { "type": "string", "nullable": true },
           "lastName": { "type": "string", "nullable": true },
-          "email": { "type": "string", "format": "email", "nullable": true }
+          "email": { "type": "string", "format": "email", "nullable": true },
+          "agentAlias": { "type": "string", "nullable": true }
         }
       },
       "Workspace": {
@@ -398,6 +422,13 @@ This document provides the formal OpenAPI 3.0 specification for the ΛΞVON OS P
           "name": { "type": "string" },
           "planTier": { "type": "string", "enum": ["Apprentice", "Artisan", "Priesthood"] },
           "credits": { "type": "number", "format": "decimal" }
+        }
+      },
+       "WorkspaceUpdateRequest": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string", "nullable": true },
+          "planTier": { "type": "string", "enum": ["Apprentice", "Artisan", "Priesthood"], "nullable": true }
         }
       },
       "BeepCommandRequest": {
@@ -412,7 +443,11 @@ This document provides the formal OpenAPI 3.0 specification for the ΛΞVON OS P
         "type": "object",
         "properties": {
           "response": { "type": "string" },
-          "actionTriggered": { "type": "object", "nullable": true }
+          "actionTriggered": { "type": "object", "nullable": true, "properties": {
+              "launchedApps": { "type": "array", "items": { "type": "string" }},
+              "generatedReports": { "type": "array", "items": { "type": "string" }},
+              "suggestedCommandsCount": { "type": "integer" }
+          }}
         }
       },
       "Transaction": {
@@ -447,9 +482,34 @@ This document provides the formal OpenAPI 3.0 specification for the ΛΞVON OS P
         "type": "object",
         "properties": {
           "name": { "type": "string" },
-          "definition": { "type": "object" }
+          "definition": { "type": "object" },
+          "isActive": { "type": "boolean" },
+          "triggerType": { "type": "string", "enum": ["api", "schedule", "event"] }
         },
         "required": ["name", "definition"]
+      },
+      "WorkflowUpdateRequest": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "definition": { "type": "object" },
+          "isActive": { "type": "boolean" }
+        }
+      },
+      "WorkflowRun": {
+        "type": "object",
+        "properties": {
+           "id": { "type": "string" },
+           "workflowId": { "type": "string" },
+           "workspaceId": { "type": "string" },
+           "status": { "type": "string", "enum": ["pending", "running", "completed", "failed", "paused"] },
+           "triggerPayload": { "type": "object" },
+           "output": { "type": "object" },
+           "log": { "type": "array", "items": {"type": "object"} },
+           "startedAt": { "type": "string", "format": "date-time" },
+           "finishedAt": { "type": "string", "format": "date-time", "nullable": true },
+           "workflow": { "type": "object", "properties": { "name": { "type": "string" } } }
+        }
       },
       "WorkflowRunSummary": {
         "type": "object",
@@ -521,4 +581,5 @@ This document provides the formal OpenAPI 3.0 specification for the ΛΞVON OS P
     }
   }
 }
-```
+
+    
