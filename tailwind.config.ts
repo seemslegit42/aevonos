@@ -1,3 +1,4 @@
+
 import type {Config} from 'tailwindcss';
 
 export default {
@@ -55,6 +56,9 @@ export default {
           foreground: 'hsl(var(--card-foreground))',
         },
         // Thematic colors
+        'sidekick-brown': 'hsl(var(--sidekick-brown))',
+        'sidekick-gold': 'hsl(var(--sidekick-gold))',
+        'sidekick-gold-foreground': 'hsl(var(--sidekick-gold-foreground))',
         'gilded-accent': 'hsl(var(--gilded-accent))',
         'military-green': 'hsl(var(--military-green))',
         'ledger-cream': 'hsl(var(--ledger-cream))',
