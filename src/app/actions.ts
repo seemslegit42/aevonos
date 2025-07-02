@@ -16,7 +16,7 @@ import { processFollyTribute } from '@/services/klepsydra-service';
 import prisma from '@/lib/prisma';
 
 
-export async function handleCommand(command: string): Promise<UserCommandOutput> {
+export async function handleCommand(command: string, activeAppContext?: string): Promise<UserCommandOutput> {
   const sessionUser = await getServerActionSession();
   
   if (command.toLowerCase().trim() === 'the tendies are coming') {
@@ -35,6 +35,7 @@ export async function handleCommand(command: string): Promise<UserCommandOutput>
         workspaceId: sessionUser.workspaceId,
         psyche: sessionUser.psyche,
         role: sessionUser.role,
+        activeAppContext,
     });
     revalidatePath('/');
     return result;

@@ -79,6 +79,7 @@ const LaunchableAppTypeSchema = z.enum([
   'sisyphus-ascent',
   'merchant-of-cabbage',
   'obelisk-marketplace',
+  'command-and-cauldron',
   'integration-nexus',
 ]);
 
@@ -320,6 +321,7 @@ export const UserCommandInputSchema = z.object({
   workspaceId: z.string(),
   psyche: z.nativeEnum(UserPsyche),
   role: z.nativeEnum(UserRole),
+  activeAppContext: z.string().optional().describe('The type of the currently active Micro-App, for contextual persona shifting.'),
 });
 export type UserCommandInput = z.infer<typeof UserCommandInputSchema>;
 

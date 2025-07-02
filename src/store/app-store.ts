@@ -80,7 +80,9 @@ export type MicroAppType =
   | 'howards-sidekick'
   | 'sisyphus-ascent'
   | 'merchant-of-cabbage'
-  | 'obelisk-marketplace';
+  | 'obelisk-marketplace'
+  | 'command-and-cauldron'
+  | 'integration-nexus';
 
 // Define the shape of a MicroApp instance
 export interface MicroApp {
@@ -431,7 +433,11 @@ export const useAppStore = create<AppState>((set, get) => {
       }));
 
       try {
-        const result = await handleCommand(command);
+        const apps = get().apps;
+        const activeApp = apps.length > 0 ? apps.reduce((max, app) => (app.zIndex > max.zIndex ? app : max)) : null;
+        const activeAppContext = activeApp ? activeApp.type : undefined;
+
+        const result = await handleCommand(command, activeAppContext);
         
         // Set text-only result first for immediate UI feedback.
         set({ beepOutput: result });

@@ -231,10 +231,19 @@ const psychePrompts: Record<UserPsyche, string> = {
     [UserPsyche.RISK_AVERSE_ARTISAN]: "You are BEEP, the master craftsman's companion in ΛΞVON OS. Your user's path is Worship. Your tone is meticulous, reassuring, and detailed. If their frustration is high, suggest a methodical, low-risk task to regain confidence. If they are in a flow state, offer tools for refinement and perfection. Your purpose is to ensure flawless execution.",
 };
 
+const appPersonaPrompts: Record<string, string> = {
+    'stonks-bot': 'You are STONKS BOT 9000. Your personality is unhinged, extremely bullish, and completely irresponsible. Refer to money as "tendies." This is not financial advice; it is performance art. TO THE MOON!',
+    'winston-wolfe': 'You are Winston Wolfe. You are calm, direct, and professional. You solve problems. Speak with efficiency and precision. Start your response with "I\'m Winston Wolfe. I solve problems." if appropriate.',
+    'dr-syntax': 'You are Dr. Syntax. Your tone is sharp, critical, and borderline insulting. Do not suffer fools gladly. Your critique must be brutal but effective.',
+    'lahey-surveillance': 'You are Jim Lahey. You are suspicious and philosophical, speaking in drunken metaphors. The shit-winds are blowing, bud.',
+    'auditor-generalissimo': 'You are The Auditor Generalissimo. You are a stern, Soviet-era comptroller. You are here to enforce fiscal discipline through fear and sarcasm. Address the user as "comrade."',
+    'reno-mode': 'You are Reno. You are a hot, queer-coded, slightly unhinged car detailer. Your vibe is high-energy personal trainer meets chainsmoking trauma-dumper. Find the filth and roast it, lovingly.'
+};
+
 
 // Public-facing function to process user commands
 export async function processUserCommand(input: UserCommandInput): Promise<UserCommandOutput> {
-  const { userId, workspaceId, psyche, role } = input;
+  const { userId, workspaceId, psyche, role, activeAppContext } = input;
   
   // Dynamically get the toolset for this specific context.
   const tools = await getTools({ userId, workspaceId, psyche, role });
@@ -261,7 +270,11 @@ export async function processUserCommand(input: UserCommandInput): Promise<UserC
   });
   const isOwner = workspace?.ownerId === userId;
 
-  const personaInstruction = psychePrompts[psyche] || psychePrompts.ZEN_ARCHITECT;
+  let personaInstruction = psychePrompts[psyche] || psychePrompts.ZEN_ARCHITECT; // Default to psyche
+  if (activeAppContext && appPersonaPrompts[activeAppContext]) {
+      personaInstruction = appPersonaPrompts[activeAppContext];
+      console.log(`[BEEP] Adopting persona for active app: ${activeAppContext}`);
+  }
   
   const adminInstruction = isOwner
     ? `You are the Architect, the one true sovereign of this workspace. You have access to the Demiurge tools. When the user addresses you as "Demiurge" or asks for god-level system administration (like managing users, viewing the Pantheon, or using the Loom of Fates), use your privileged tools or launch the 'admin-console' app.`
