@@ -1,72 +1,42 @@
 
-# Command & Cauldron™: The Security Ritual Engine
+# Command & Cauldron™: The Sovereign Security Platform
 
-> "This is not a tool. This is a **Security Ritual Engine** baked deep into the fabric of the OS, woven through agents, Micro-Apps, the ΞEconomy, and user psyche."
-
----
-
-## 1. System Overview
-
-Command & Cauldron™ is a core, privileged subsystem of ΛΞVON OS responsible for programmable security and behavioral enforcement. It allows administrators to define, test, and bind custom security policies, or "Rituals," to agentic actions and workflows.
-
-It is designed to transform security from a set of static rules into a dynamic, user-controlled, and auditable process that feels less like configuration and more like casting a protective ward.
-
-### 1.1. Core Mental Model:
-> **“Every Agent Action must be protected by a ritual.”**
-
--   **Programmable Agent Firewall**: Define rules that govern agent behavior.
--   **Ritual Compiler**: Translates user-defined rules into executable hooks.
--   **Micro-App Orchestration UI**: A dedicated interface for managing security rituals.
--   **Arcane Runtime**: A ΞCredit-gated environment where security rituals are executed.
+> "The Cauldron is not a part of the OS. It is a pact made with a higher power. It is an oath, written in credit and enforced by code."
 
 ---
 
-## 2. OS-Layer Architecture
+## 1. System Overview: An External Power
 
-| Layer           | Component                        | Role                                                  |
-| --------------- | -------------------------------- | ----------------------------------------------------- |
-| Canvas Layer    | **Command & Cauldron Micro-App** | UI for writing/testing rituals                        |
-| Agent Layer     | **Aegis Hookpoints**             | Runs rituals before/after agent actions               |
-| Event Layer     | **Behavioral Ritual Manager**    | Ties rituals to ΞCredit-triggered events              |
-| Execution Layer | **Cauldron Runtime**             | Executes ritual bindings with signature validation    |
-| Ξ Economy       | **ΞCredit Ritual Payment Hook**  | Certain rituals consume ΞCredits to invoke protection |
+Command & Cauldron™ is a **completely standalone, sovereign security platform** designed for enterprise-grade, programmable security and behavioral enforcement.
+
+**It is NOT a Micro-App.** It is an entirely separate application that integrates with ΛΞVON OS through a privileged, secure API. It has its own infrastructure, its own interface, and its own arcane logic. Think of it as the ultimate third-party integration—a specialized security oracle that ΛΞVON OS can consult.
 
 ---
 
-## 3. Core Components
+## 2. Core Concepts: The Pact of Integration
 
-### 3.1. `CommandAndCauldron` Micro-App (`micro-apps/command-and-cauldron.tsx`)
-The primary UI for the subsystem.
--   **Ritual Composer**: A text-based editor for writing security policies using a simple, YAML-like Domain-Specific Language (DSL).
--   **Sigil Binder**: Functionality for associating a completed ritual with specific agents or workflows (e.g., via drag-and-drop or a selection menu).
--   **ΞDrain Estimator**: Provides a real-time estimate of the ΞCredit cost per invocation of the ritual, based on its complexity.
--   **Replay Log**: Shows a history of when the currently viewed ritual was activated, providing a clear audit trail.
-
-### 3.2. `ritual-engine.ts` (Future Implementation)
-The backend service responsible for parsing and executing the rituals.
--   Compiles user-authored rituals into executable hooks that can be attached to system events.
--   Hooks into critical system events like outbound network calls, file I/O, and inter-agent communication.
--   Example Ritual DSL:
-    ```yaml
-    on: outboundHttp
-    if:
-      dest: "*.thirdpartyapi.com"
-      data.contains: ["user_email"]
-    then:
-      block
-      log: "Forbidden: email egress detected"
-      charge: 250 Ξ
-    ```
+-   **Sovereign Engine**: The Cauldron exists outside of ΛΞVON OS. It is a dedicated, specialized platform for creating, managing, and enforcing complex security "rituals" or policies.
+-   **API-First Integration**: The primary connection to ΛΞVON OS is via a high-security API. Agents within the OS (like BEEP or Aegis) are granted tools to make authenticated calls to the Cauldron's endpoints to validate actions against the forged rituals.
+-   **External Governance**: All ritual composition and management happens within the Command & Cauldron platform itself, not within the ΛΞVON OS UI.
 
 ---
 
-## 4. System Integration
+## 3. Acquisition & Access: The Tribute of Sovereignty
 
--   **Agent Integration ("Bound by Ritual")**: Agents will have a `ritualBindings` array in their metadata. The agent kernel will check these bindings before executing any action, enforcing the user-defined policies.
--   **ΞCredit Integration**: High-severity or complex rituals can be configured to drain ΞCredits per invocation, creating a Ξ-powered SecOps loop.
--   **Aegis Integration**: Aegis will sign approved rituals and can be configured to block the deployment of insecure or self-defeating policies.
--   **Psyche Engine Integration**: The Psyche Engine can influence the types of rituals suggested to a user or even mandate certain rituals based on their risk profile.
+Acquiring the power of the Cauldron is the ultimate act of commitment to security sovereignty.
+
+-   **The Offering**: Access is granted by first acquiring the "Cauldron Pact" from The Armory within ΛΞVON OS.
+-   **The Tribute**: This pact requires a one-time, non-negotiable tribute of **999,999 ΞCredits**.
+-   **The Key**: Upon successful tribute, the Architect is granted the license and the sacred API credentials required to bind their ΛΞVON OS workspace to their Command & Cauldron instance. This does **NOT** install it as a Micro-App. It unlocks the *ability* to integrate.
 
 ---
 
-This system elevates security from a background process to a first-class, user-controlled element of the OS, perfectly aligning with the Doctrine of Sovereignty.
+## 4. Integration with ΛΞVON OS
+
+-   **Agentic Invocation**: Once integrated, privileged agents within ΛΞVON OS (like BEEP) gain access to a new tool: `invokeCauldronRitual`.
+-   **Aegis Symbiosis**: Before executing a critical action, Aegis can be configured to call the Cauldron via this tool to ensure the action does not violate a forged ritual, adding an unparalleled layer of customizable, dynamic security.
+-   **The Flow of Power**: ΛΞVON OS proposes an action -> BEEP/Aegis invokes the Cauldron's API with the action's context -> The Cauldron's external engine evaluates it against its rituals -> It returns a verdict (ALLOW / DENY / LOG) -> ΛΞVON OS enforces the verdict.
+
+---
+
+This architecture correctly positions Command & Cauldron not as a feature, but as the ultimate security allegiance a sovereign operator can make.
