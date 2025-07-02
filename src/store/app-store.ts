@@ -33,7 +33,8 @@ export type MicroAppType =
   | 'loom'
   | 'winston-wolfe'
   | 'obelisk-marketplace'
-  | 'proxy-agent';
+  | 'proxy-agent'
+  | 'admin-console';
 
 export interface MicroApp {
   id: string;

@@ -7,11 +7,18 @@ import { FileExplorerIcon } from './icons/FileExplorerIcon';
 import { AddressBookIcon } from './icons/AddressBookIcon';
 import { DrSyntaxIcon } from './icons/DrSyntaxIcon';
 import { Edit } from 'lucide-react';
-import { LayoutGrid, AppWindow, Cog, Shield, LifeBuoy, ShoppingCart } from 'lucide-react';
 import { LoomIcon } from './icons/LoomIcon';
 import { WinstonWolfeIcon } from './icons/WinstonWolfeIcon';
 import { ObeliskMarketplaceIcon } from './icons/ObeliskMarketplaceIcon';
 import { ProxyAgentIcon } from './icons/ProxyAgentIcon';
+import { UsageMonitorIcon } from './icons/UsageMonitorIcon';
+import { TopUpIcon } from './icons/TopUpIcon';
+import { UserSettingsIcon } from './icons/UserSettingsIcon';
+import { WorkspaceSettingsIcon } from './icons/WorkspaceSettingsIcon';
+import { ArmoryIcon } from './icons/ArmoryIcon';
+import { AegisThreatScopeIcon } from './icons/AegisThreatScopeIcon';
+import { AegisCommandIcon } from './icons/AegisCommandIcon';
+import { AdminConsoleIcon } from './icons/AdminConsoleIcon';
 
 import Terminal from './micro-apps/terminal';
 import AegisReport from './micro-apps/aegis-report';
@@ -30,6 +37,7 @@ import LoomPage from '@/app/loom/page';
 import TheWinstonWolfe from './micro-apps/winston-wolfe';
 import ObeliskMarketplace from './micro-apps/obelisk-marketplace';
 import ProxyAgent from './micro-apps/proxy-agent';
+import AdminConsole from './micro-apps/admin-console';
 
 import { type MicroAppType } from '@/store/app-store';
 
@@ -67,32 +75,36 @@ export const microAppRegistry: Record<MicroAppType, ComponentRegistry> = {
       content: ContactEditor,
   },
   'usage-monitor': {
-      icon: AppWindow, // Placeholder, needs specific icon
+      icon: UsageMonitorIcon,
       content: UsageMonitor,
   },
   'top-up': {
-      icon: AppWindow, // Placeholder
+      icon: TopUpIcon,
       content: TopUp,
   },
   'user-profile-settings': {
-      icon: Cog, // Placeholder
+      icon: UserSettingsIcon,
       content: UserProfileSettings,
   },
   'workspace-settings': {
-      icon: Cog, // Placeholder
+      icon: WorkspaceSettingsIcon,
       content: WorkspaceSettings,
   },
   'armory': {
-      icon: ShoppingCart, // Placeholder
+      icon: ArmoryIcon,
       content: Armory,
   },
   'aegis-threatscope': {
-      icon: Shield, // Placeholder
+      icon: AegisThreatScopeIcon,
       content: AegisThreatScope,
   },
   'aegis-command': {
-      icon: Shield, // Placeholder
+      icon: AegisCommandIcon,
       content: AegisCommand,
+  },
+  'admin-console': {
+      icon: AdminConsoleIcon,
+      content: AdminConsole,
   },
   'loom': {
     icon: LoomIcon,
