@@ -82,7 +82,7 @@ model VerificationToken {
 model Workspace {
   id                String                @id @default(cuid())
   name              String
-  ownerId           String                @map("owner_id")
+  ownerId           String                @unique @map("owner_id")
   planTier          PlanTier              @default(Apprentice) @map("plan_tier")
   credits           Decimal               @default(100.0)
   agentActionsUsed  Int                   @default(0) @map("agent_actions_used")
