@@ -112,7 +112,7 @@ const callAegis = async (state: AgentState): Promise<Partial<AgentState>> => {
         report = {
             isAnomalous: false,
             anomalyExplanation: `Aegis security scan could not be completed due to an internal error: ${error.message || 'Unknown error'}. The command will proceed without security validation.`,
-            riskLevel: 'none', // Explicitly set to 'none' for clarity in routing.
+            riskLevel: 'low', 
         };
     }
 
