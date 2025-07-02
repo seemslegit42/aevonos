@@ -101,5 +101,4 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     return NextResponse.json({ error: 'Failed to trigger workflow run.' }, { status: 500 });
   }
 }
-
     
