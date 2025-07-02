@@ -1,4 +1,5 @@
 
+
 # ΛΞVON OS: Database Schema Specification
 
 > "The architecture of truth is built on well-defined tables."
