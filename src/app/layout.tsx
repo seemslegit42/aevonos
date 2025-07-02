@@ -1,4 +1,5 @@
 
+
 import type { Metadata } from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster"
@@ -8,6 +9,8 @@ import prisma from '@/lib/prisma';
 import { type User, type Workspace, UserPsyche } from '@prisma/client';
 import { cn } from '@/lib/utils';
 import { FirstWhisperHandler } from '@/components/layout/FirstWhisperHandler';
+import { motion } from 'framer-motion';
+import Image from 'next/image';
 
 export const metadata: Metadata = {
   title: 'ΛΞVON OS',
@@ -94,6 +97,16 @@ export default async function RootLayout({
             className="absolute inset-0 animate-aurora bg-[linear-gradient(135deg,hsl(var(--iridescent-one)/0.2),hsl(var(--iridescent-two)/0.2)_50%,hsl(var(--iridescent-three)/0.2)_100%)] bg-[length:600%_600%]"
           />
           <div className="absolute inset-0 grain-overlay" />
+          <div className="absolute inset-0 flex items-center justify-center opacity-5 pointer-events-none -z-10">
+                <Image 
+                    src="/logo.png" 
+                    alt="Aevon OS Watermark"
+                    width={512}
+                    height={512}
+                    priority
+                    className="object-contain animate-subtle-pulse"
+                />
+          </div>
         </div>
         
         <MainLayout user={user} workspace={workspace}>
