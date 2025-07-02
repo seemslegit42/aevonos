@@ -16,8 +16,7 @@ interface RouteParams {
 export async function POST(request: NextRequest, { params }: RouteParams) {
   try {
     const sessionUser = await getServerActionSession();
-    const user = await prisma.user.findUnique({ where: { id: sessionUser.id } });
-    if (!user || user.role === UserRole.AUDITOR) {
+    if (sessionUser.role === UserRole.AUDITOR) {
         return NextResponse.json({ error: 'Permission denied. This action is not available for auditors.' }, { status: 403 });
     }
     
@@ -50,11 +49,10 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
                 data: { status: WorkflowRunStatus.running }
             });
 
-            // The executor now returns both the result and the log
             const { finalPayload, executionLog } = await executeWorkflow(
                 workflow, 
                 trigger_payload, 
-                { workspaceId: sessionUser.workspaceId! }
+                { workspaceId: sessionUser.workspaceId, userId: sessionUser.id, psyche: sessionUser.psyche }
             );
 
             await prisma.workflowRun.update({
@@ -62,14 +60,13 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
                 data: { 
                     status: WorkflowRunStatus.completed,
                     finishedAt: new Date(),
-                    output: finalPayload, // Store the actual result from the execution
-                    log: executionLog, // Store the execution log
+                    output: finalPayload,
+                    log: executionLog,
                 }
             });
         } catch (e) {
             console.error(`[Workflow Execution Error] for run ${workflowRun.id}:`, e);
             const errorMessage = e instanceof Error ? e.message : 'An unknown error occurred during execution.';
-            // Check if the error object contains our attached execution log
             const logFromError = (e as any).executionLog || [];
 
              await prisma.workflowRun.update({
@@ -78,7 +75,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
                     status: WorkflowRunStatus.failed,
                     finishedAt: new Date(),
                     output: { error: errorMessage },
-                    log: logFromError, // Save the log up to the point of failure
+                    log: logFromError,
                 }
             });
         }
@@ -104,3 +101,5 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     return NextResponse.json({ error: 'Failed to trigger workflow run.' }, { status: 500 });
   }
 }
+
+    

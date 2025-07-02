@@ -239,3 +239,5 @@ export default function WorkflowRunHistory({ activeWorkflowId, triggerRefresh }:
     </div>
   );
 }
+
+    
