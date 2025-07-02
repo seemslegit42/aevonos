@@ -147,6 +147,12 @@ export async function processFollyTribute(
                     status: 'COMPLETED',
                 }
             });
+            
+            // Add the card to the user's inventory
+            await tx.user.update({
+                where: { id: userId },
+                data: { unlockedChaosCardKeys: { push: instrumentId } }
+            });
 
             // Mark as a "win" for UI purposes; the boon is the applied effect.
             return { outcome: 'win', boonAmount: 0, aethericEcho: 0 };

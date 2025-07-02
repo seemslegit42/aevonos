@@ -27,7 +27,7 @@ export type ArtifactManifest = {
   permissionsRequired?: string[];
   
   // Chaos Card specific fields
-  cardClass?: 'AESTHETIC' | 'AGENTIC' | 'SYSTEMIC' | 'SYNDICATE';
+  cardClass?: 'AESTHETIC' | 'AGENTIC' | 'SYSTEMIC' | 'SYNDICATE' | 'BOON';
   rarity?: 'COMMON' | 'UNCOMMON' | 'RARE' | 'MYTHIC';
   systemEffect?: string;
   durationMinutes?: number;
@@ -859,5 +859,54 @@ export const artifactManifests: ArtifactManifest[] = [
     systemEffect: 'Provides a critical clue to a member\'s "Glitch in the Glass," delivered in fragments to different Syndicate members.',
     imageUrl: 'https://placehold.co/400x560.png',
     imageHint: 'stone tablet',
+  },
+   // --- RITUAL BOONS (MERCENARY CARDS) ---
+  {
+    id: 'LOADED_DIE',
+    type: 'CHAOS_CARD',
+    name: 'Loaded Die',
+    description: 'Subtly bend the laws of probability. Grants a slight, invisible buff to your next 3 tributes.',
+    cardClass: 'BOON',
+    creditCost: 250,
+    priceModel: 'tribute',
+    rarity: 'UNCOMMON',
+    imageUrl: 'https://placehold.co/400x560.png',
+    imageHint: 'glowing dice',
+  },
+  {
+    id: 'SISYPHUS_REPRIEVE',
+    type: 'CHAOS_CARD',
+    name: "Sisyphus's Reprieve",
+    description: 'Even the gods show mercy, sometimes. Guarantees your next tribute to Sisyphus will not result in a loss.',
+    cardClass: 'BOON',
+    creditCost: 150,
+    priceModel: 'tribute',
+    rarity: 'UNCOMMON',
+    imageUrl: 'https://placehold.co/400x560.png',
+    imageHint: 'boulder resting',
+  },
+  {
+    id: 'ORACLES_INSIGHT',
+    type: 'CHAOS_CARD',
+    name: "Oracle's Insight",
+    description: 'For a brief time, the Oracle reveals the true payout probabilities, letting you see the hidden machinery of fate.',
+    cardClass: 'BOON',
+    creditCost: 500,
+    priceModel: 'tribute',
+    rarity: 'RARE',
+    imageUrl: 'https://placehold.co/400x560.png',
+    imageHint: 'glowing eye chart',
+  },
+  {
+    id: 'HADES_BARGAIN',
+    type: 'CHAOS_CARD',
+    name: "Hades' Bargain",
+    description: 'A pact with the underworld. Doubles your next tribute, for double the potential boon... or double the fall.',
+    cardClass: 'BOON',
+    creditCost: 100,
+    priceModel: 'tribute',
+    rarity: 'UNCOMMON',
+    imageUrl: 'https://placehold.co/400x560.png',
+    imageHint: 'skull coin',
   },
 ];
