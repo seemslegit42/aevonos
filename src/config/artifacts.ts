@@ -239,26 +239,6 @@ export const artifactManifests: ArtifactManifest[] = [
     permissionsRequired: [],
   },
   {
-    id: 'integration-nexus',
-    type: 'MICRO_APP',
-    name: 'Integration Nexus',
-    author: 'ΛΞVON OS',
-    description: 'Manage and configure connections to external services. The core of the Interoperability Engine.',
-    creditCost: 0,
-    priceModel: 'included',
-    imageUrl: 'https://placehold.co/600x400.png',
-    imageHint: 'nodes connected network',
-    defaultSize: { width: 600, height: 500 },
-    permissionsRequired: ['ADMIN'],
-    tags: ["core", "integrations", "api", "connectivity"],
-    branding: {
-        poweredBy: ["iPaaS Layer"],
-        forgedIn: "ΛΞVON OS",
-        callsign: "Nexus",
-        doctrine: "Interoperability"
-    }
-  },
-  {
     id: 'spectre-intelligence-suite',
     type: 'MICRO_APP',
     name: 'Spectre Intelligence Suite',

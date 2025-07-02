@@ -65,7 +65,6 @@ export type MicroAppType =
   | 'kendra'
   | 'aegis-threatscope'
   | 'aegis-command'
-  | 'command-and-cauldron'
   | 'usage-monitor'
   | 'dr-syntax'
   | 'armory'
@@ -81,8 +80,7 @@ export type MicroAppType =
   | 'howards-sidekick'
   | 'sisyphus-ascent'
   | 'merchant-of-cabbage'
-  | 'obelisk-marketplace'
-  | 'integration-nexus';
+  | 'obelisk-marketplace';
 
 // Define the shape of a MicroApp instance
 export interface MicroApp {

@@ -24,7 +24,7 @@ const offerings = [
     {
         icon: Award,
         title: "Sovereign Counsel: One Hour with The Architect",
-        description: "A one-on-one strategic consultation on automation and system design with the core ΛΞVON team.",
+        description: "A one-on-one strategic consultation on automation and system design with the core ΛΞVON OS team.",
         price: "1,250,000 Ξ"
     },
     {
