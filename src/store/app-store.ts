@@ -32,6 +32,7 @@ import { RenoModeAnalysisOutput } from '@/ai/agents/reno-mode-schemas';
 import { PatricktAgentOutput } from '@/ai/agents/patrickt-agent-schemas';
 import { VinDieselOutput } from '@/ai/agents/vin-diesel-schemas';
 import { InventoryDaemonOutput } from '@/ai/agents/inventory-daemon-schemas';
+import { artifactManifests } from '@/config/artifacts';
 
 enableMapSet();
 
@@ -105,8 +106,6 @@ interface AppStore {
   activeAppId: string | null;
   nextZIndex: number;
   isLoading: boolean;
-  tendyRainActive: boolean;
-  screenShakeActive: boolean;
   beepOutput: UserCommandOutput | null;
   upsertApp: (type: MicroAppType, partialApp: Partial<MicroApp>) => void;
   closeApp: (id: string) => void;
@@ -116,6 +115,12 @@ interface AppStore {
   handleCommandSubmit: (command: string, activeAppContext?: string) => Promise<void>;
   triggerAppAction: (id: string) => void;
 }
+
+const getAppDefaultSize = (type: MicroAppType) => {
+    const manifest = artifactManifests.find(a => a.id === type);
+    return manifest?.defaultSize || { width: 400, height: 500 };
+}
+
 
 const agentReportHandlers: AgentReportHandlers = {
   'dr-syntax': (report: DrSyntaxOutput, store) => {
@@ -279,8 +284,6 @@ export const useAppStore = create<AppStore>()((set, get) => ({
   activeAppId: null,
   nextZIndex: 10,
   isLoading: false,
-  tendyRainActive: false,
-  screenShakeActive: false,
   beepOutput: null,
 
   upsertApp: (type, partialApp) => {
@@ -304,7 +307,7 @@ export const useAppStore = create<AppStore>()((set, get) => ({
             title: `New ${type}`,
             description: `A new ${type} app.`,
             position: { x: Math.random() * 200 + 100, y: Math.random() * 200 + 50 },
-            size: { width: 400, height: 300 },
+            size: getAppDefaultSize(type),
             zIndex: zIndex,
           };
           state.apps.push({ ...defaults, ...partialApp });
@@ -361,11 +364,6 @@ export const useAppStore = create<AppStore>()((set, get) => ({
 
   handleCommandSubmit: async (command, activeAppContext) => {
     set({ isLoading: true, beepOutput: null });
-    
-    if (command.toLowerCase().trim() === 'the tendies are coming') {
-        set({ tendyRainActive: true, screenShakeActive: true });
-        setTimeout(() => set({ tendyRainActive: false, screenShakeActive: false }), 7000);
-    }
 
     const { handleCommand } = await import('@/app/actions');
     const result = await handleCommand(command, activeAppContext);

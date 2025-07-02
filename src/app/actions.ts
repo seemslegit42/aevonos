@@ -11,7 +11,8 @@ import { z } from 'zod';
 import { requestCreditTopUpInDb } from '@/services/billing-service';
 import { artifactManifests } from '@/config/artifacts';
 import { InsufficientCreditsError } from '@/lib/errors';
-import { acceptReclamationGift, deleteAccount, logout } from './auth/actions';
+import { acceptReclamationGift, deleteAccount } from './auth/actions';
+import { signOut } from '@/auth';
 import { processFollyTribute } from '@/services/klepsydra-service';
 import prisma from '@/lib/prisma';
 
@@ -242,19 +243,6 @@ export async function getNudges() {
 
   return nudges;
 }
-
-export async function handleAcceptReclamationGift(): Promise<{ success: boolean; error?: string }> {
-  return acceptReclamationGift();
-}
-
-export async function handleLogout() {
-  await logout();
-}
-
-export async function handleDeleteAccount() {
-  await deleteAccount();
-}
-
 export async function clearFirstWhisper() {
   const sessionUser = await getServerActionSession();
   try {
@@ -265,4 +253,9 @@ export async function clearFirstWhisper() {
   } catch (error) {
     console.error(`[Action: clearFirstWhisper] for user ${sessionUser.id}:`, error);
   }
+}
+
+
+export async function handleLogout() {
+  await signOut();
 }

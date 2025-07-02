@@ -19,9 +19,8 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import type { User, UserPsyche, PulseProfile } from '@prisma/client';
-import { useAppStore } from '@/store/app-store';
-import { handleLogout, handleDeleteAccount, acceptReclamationGift } from '@/app/actions';
-import { Separator } from '@/components/ui/separator';
+import { useAppStore } from '@/store/app-store'; // This import was already correct
+import { logout as handleLogout, deleteAccount as handleDeleteAccount, acceptReclamationGift } from '@/app/auth/actions';
 import {
   AlertDialog,
   AlertDialogAction,
