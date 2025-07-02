@@ -99,20 +99,41 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
     // JWT and Session callbacks are Node.js-safe and are needed to enrich the session
     async jwt({ token, user }) {
+      // On initial sign-in, add the user's properties to the token.
       if (user) {
         token.id = user.id;
         token.role = (user as User).role;
         token.psyche = (user as User).psyche;
-        token.agentAlias = (user as User).agentAlias;
-        token.firstWhisper = (user as User).firstWhisper;
-        token.unlockedChaosCardKeys = (user as User).unlockedChaosCardKeys;
-        
-        const workspace = await prisma.workspace.findFirst({
-          where: { members: { some: { id: user.id } } },
-          select: { id: true },
-        });
-        token.workspaceId = workspace?.id;
       }
+      
+      // On every invocation (sign-in or session validation), re-fetch the user data
+      // to ensure the session token is always up-to-date with the database.
+      // This prevents stale data issues if user properties (e.g., role, unlocked cards) are
+      // changed by another process while the user is logged in.
+      if (token.id) {
+          const dbUser = await prisma.user.findUnique({
+              where: { id: token.id as string },
+              select: {
+                  role: true,
+                  psyche: true,
+                  agentAlias: true,
+                  firstWhisper: true,
+                  unlockedChaosCardKeys: true,
+                  workspaces: { select: { id: true } }
+              }
+          });
+          
+          if (dbUser) {
+              token.role = dbUser.role;
+              token.psyche = dbUser.psyche;
+              token.agentAlias = dbUser.agentAlias;
+              token.firstWhisper = dbUser.firstWhisper;
+              token.unlockedChaosCardKeys = dbUser.unlockedChaosCardKeys;
+              // Assume user is in one workspace for this OS version.
+              token.workspaceId = dbUser.workspaces[0]?.id;
+          }
+      }
+
       return token;
     },
     async session({ session, token }) {
