@@ -39,19 +39,7 @@ if (resendFrom === 'noreply@aevonos.com') {
 }
 // --- End Environment Variable Checks ---
 
-
-export const { handlers, signIn, signOut, auth } = NextAuth({
-  ...authConfig, // Spread the base config
-  secret: process.env.AUTH_SECRET, // Explicitly pass the secret
-  adapter: PrismaAdapter(prisma),
-  session: { strategy: 'jwt' },
-  providers: [
-    Resend({
-        // The Resend provider needs a `from` address.
-        // This should be a registered domain on Resend.
-        // The AUTH_RESEND_KEY is automatically picked up from environment variables.
-        from: resendFrom
-    }),
+const providers = [
     Credentials({
       name: 'Credentials',
       credentials: {
@@ -93,7 +81,23 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         return null;
       },
     }),
-  ],
+];
+
+// Conditionally add the Resend provider only if the API key is set.
+// This prevents runtime errors if the key is missing.
+if (process.env.AUTH_RESEND_KEY && process.env.AUTH_RESEND_KEY !== 'YOUR_API_KEY_HERE') {
+    providers.push(Resend({
+        from: resendFrom
+    }));
+}
+
+
+export const { handlers, signIn, signOut, auth } = NextAuth({
+  ...authConfig, // Spread the base config
+  secret: process.env.AUTH_SECRET, // Explicitly pass the secret
+  adapter: PrismaAdapter(prisma),
+  session: { strategy: 'jwt' },
+  providers,
   callbacks: {
     ...authConfig.callbacks, // Include callbacks from the base config
 
