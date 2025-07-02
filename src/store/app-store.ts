@@ -10,13 +10,16 @@ import { artifactManifests } from '@/config/artifacts';
 import type { DrSyntaxOutput } from '@/ai/agents/dr-syntax-schemas';
 import type { Contact } from '@/ai/tools/crm-schemas';
 import type { UserCommandOutput, AgentReportSchema } from '@/ai/agents/beep-schemas';
+import { DrSyntaxReportToast } from '@/components/dr-syntax-report-toast';
 
 // Define the types of MicroApps available in the OS
 export type MicroAppType = 
   | 'file-explorer' 
   | 'terminal' 
   | 'ai-suggestion'
-  | 'aegis-control';
+  | 'aegis-control'
+  | 'contact-list'
+  | 'dr-syntax';
 
 // Define the shape of a MicroApp instance
 export interface MicroApp {
@@ -147,6 +150,17 @@ export const useAppStore = create<AppState>((set, get) => {
                 }
             }
         },
+        'dr-syntax': (report) => {
+            upsertApp('dr-syntax', {
+                id: `dr-syntax-report-${Date.now()}`,
+                contentProps: { ...report }
+            });
+            useToast.getState().toast({
+                title: "Dr. Syntax has spoken.",
+                description: <DrSyntaxReportToast {...report} />,
+                duration: 10000,
+            });
+        },
     };
 
   const processAgentReports = (reports: UserCommandOutput['agentReports']) => {
@@ -221,8 +235,8 @@ export const useAppStore = create<AppState>((set, get) => {
         processAgentReports(result.agentReports);
 
         result.appsToLaunch.forEach(appInfo => {
-          const defaults = manifestMap.get(appInfo.type);
-          upsertApp(appInfo.type, {
+          const defaults = manifestMap.get(appInfo.type as MicroAppType);
+          upsertApp(appInfo.type as MicroAppType, {
             id: `singleton-${appInfo.type}`, // Use a consistent ID to make agent apps singletons
             title: appInfo.title || defaults?.name,
             description: appInfo.description || defaults?.description,
