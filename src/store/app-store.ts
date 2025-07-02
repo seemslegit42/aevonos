@@ -31,7 +31,8 @@ export type MicroAppType =
   | 'aegis-command'
   | 'file-explorer'
   | 'loom'
-  | 'winston-wolfe';
+  | 'winston-wolfe'
+  | 'obelisk-marketplace';
 
 export interface MicroApp {
   id: string;
