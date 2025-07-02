@@ -9,6 +9,7 @@ export const SecurityAlertSchema = z.object({
   timestamp: z.date().or(z.string()),
   actionableOptions: z.array(z.string()),
   workspaceId: z.string(),
+  userId: z.string().nullable().optional(),
 });
 export type SecurityAlert = z.infer<typeof SecurityAlertSchema>;
 
@@ -18,3 +19,5 @@ export const CreateSecurityAlertInputSchema = z.object({
   riskLevel: z.nativeEnum(SecurityRiskLevel).describe("The risk level of the event: 'low', 'medium', 'high', or 'critical'."),
 });
 export type CreateSecurityAlertInput = z.infer<typeof CreateSecurityAlertInputSchema>;
+
+    

@@ -24,6 +24,7 @@ export async function createSecurityAlertInDb(input: CreateSecurityAlertInput, w
           ...alertData,
           actionableOptions: ['Lock Account', 'Dismiss Alert', 'View Details'],
           workspaceId,
+          userId,
         },
       });
       return alert;
@@ -33,3 +34,6 @@ export async function createSecurityAlertInDb(input: CreateSecurityAlertInput, w
     }
 }
 
+
+
+    

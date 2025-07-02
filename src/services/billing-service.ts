@@ -222,12 +222,15 @@ export async function requestCreditTopUpInDb(input: RequestCreditTopUpInput, use
     });
 
     if (anomalyReport.isAnomalous) {
-      await createSecurityAlertInDb({
-        type: anomalyReport.anomalyType || 'Suspicious Transaction',
-        explanation: `Aegis flagged a credit top-up request as anomalous. Reason: ${anomalyReport.anomalyExplanation}`,
-        riskLevel: anomalyReport.riskLevel || 'medium',
+      await createSecurityAlertInDb(
+        {
+          type: anomalyReport.anomalyType || 'Suspicious Transaction',
+          explanation: `Aegis flagged a credit top-up request as anomalous. Reason: ${anomalyReport.anomalyExplanation}`,
+          riskLevel: anomalyReport.riskLevel || 'medium',
+        },
         workspaceId,
-      });
+        userId
+      );
     }
 
     await prisma.transaction.create({
@@ -252,3 +255,5 @@ export async function requestCreditTopUpInDb(input: RequestCreditTopUpInput, use
     return { success: false, message: 'Failed to log your top-up request.' };
   }
 }
+
+    
