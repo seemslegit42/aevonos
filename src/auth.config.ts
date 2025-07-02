@@ -2,6 +2,7 @@
 import type { NextAuthConfig } from 'next-auth';
  
 export const authConfig = {
+  secret: process.env.AUTH_SECRET,
   pages: {
     signIn: '/login',
   },
@@ -12,15 +13,11 @@ export const authConfig = {
   callbacks: {
     // The authorized callback is used by the middleware to decide if a request is allowed.
     authorized({ auth, request: { nextUrl } }) {
+      // The `matcher` in `middleware.ts` already defines which routes are protected.
+      // If the user is logged in (auth object exists), allow the request.
+      // Otherwise, NextAuth.js will automatically redirect to the sign-in page.
       const isLoggedIn = !!auth?.user;
-      const protectedPaths = ['/']; // Add any other root protected paths here
-      const isProtected = protectedPaths.some(path => nextUrl.pathname.startsWith(path));
-
-      if (isProtected) {
-        if (isLoggedIn) return true;
-        return false; // Redirect unauthenticated users to login page
-      }
-      return true;
+      return isLoggedIn;
     },
   },
 } satisfies NextAuthConfig;
