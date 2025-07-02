@@ -1,32 +1,53 @@
 
-import { auth } from '@/auth';
-import type { Session } from 'next-auth';
+'use server';
+
+import prisma from '@/lib/prisma';
+import type { User, UserPsyche, UserRole } from '@prisma/client';
+
+// This function now acts as the single source of truth for the "logged in" user.
+// It fetches the Architect user from the database to provide a consistent, valid session.
+async function getMockUserSession() {
+  const user = await prisma.user.findUnique({
+    where: { email: 'architect@aevonos.com' },
+  });
+
+  if (!user) {
+    throw new Error('Architect user not found in database. Please run `npx prisma db seed` to seed the database.');
+  }
+
+  const workspace = await prisma.workspace.findFirst({
+      where: { ownerId: user.id }
+  });
+
+   if (!workspace) {
+    throw new Error('Architect workspace not found in database. Please run `npx prisma db seed` to seed the database.');
+  }
+
+  // We construct a session-like object that satisfies the application's needs.
+  return {
+    ...user,
+    id: user.id,
+    workspaceId: workspace.id,
+    role: user.role as UserRole,
+  };
+}
 
 /**
  * A server-side helper to get the authenticated session user object.
- * Throws an error if the user is not authenticated or lacks a workspace.
- * Use this in Server Actions and API Routes to protect them.
+ * This now returns the hardcoded Architect user session.
  * @returns The user's session object, guaranteed to be non-null.
  */
 export async function getServerActionSession() {
-  const session = await auth();
-  if (!session?.user?.id || !session?.user?.workspaceId) {
-    // In API routes, this will be caught and a 401 returned.
-    // In Server Actions, this will bubble up.
-    throw new Error('Unauthorized: No active session found.');
-  }
-  return session.user;
+  return getMockUserSession();
 }
 
 /**
  * An alternative session helper that returns the session user object or null.
- * Useful for pages that can be viewed by both authenticated and unauthenticated users.
- * Does not throw an error.
+ * This now returns the hardcoded Architect user session.
  */
 export async function getSession() {
-    const session = await auth();
-    if (!session?.user?.id || !session?.user?.workspaceId) {
-        return null;
-    }
-    return session.user;
+    return getMockUserSession();
 }
+
+// Keep this export for type compatibility, but the underlying handlers will be empty.
+export { auth } from '@/auth';

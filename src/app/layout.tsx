@@ -1,14 +1,15 @@
 
+
 import type { Metadata } from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster"
 import { MainLayout } from '@/components/layout/main-layout';
-import { auth } from '@/auth';
 import prisma from '@/lib/prisma';
 import { type User, type Workspace, UserPsyche } from '@prisma/client';
 import { cn } from '@/lib/utils';
 import { FirstWhisperHandler } from '@/components/layout/FirstWhisperHandler';
 import Image from 'next/image';
+import { getSession } from '@/lib/auth';
 
 export const metadata: Metadata = {
   title: 'ΛΞVON OS',
@@ -38,32 +39,23 @@ export default async function RootLayout({
   let themeClass = '';
 
   try {
-    const session = await auth();
-    if (session?.user?.id && session?.user?.workspaceId) {
-        // Fetch workspace and active effects in parallel
-        // User data comes from the session token now
-        const [fetchedUser, fetchedWorkspace, activeEffect] = await Promise.all([
-             prisma.user.findUnique({
-                where: { id: session.user.id }
-            }),
-            prisma.workspace.findUnique({
-                where: { id: session.user.workspaceId }
-            }),
-            prisma.activeSystemEffect.findFirst({
-              where: {
-                  workspaceId: session.user.workspaceId,
-                  expiresAt: { gt: new Date() },
-              },
-              orderBy: {
-                  createdAt: 'desc',
-              },
-            })
-        ]);
+    const session = await getSession();
+    if (session) {
+        user = session;
+        workspace = await prisma.workspace.findUnique({
+            where: { id: session.workspaceId }
+        });
         
-        user = fetchedUser;
-        workspace = fetchedWorkspace;
+        const activeEffect = await prisma.activeSystemEffect.findFirst({
+          where: {
+              workspaceId: session.workspaceId,
+              expiresAt: { gt: new Date() },
+          },
+          orderBy: {
+              createdAt: 'desc',
+          },
+        });
         
-        // Determine theme class, prioritizing the active system effect over the base covenant theme.
         const activeTheme = activeEffect ? themeCardMap[activeEffect.cardKey] : undefined;
 
         if (activeTheme) {
@@ -71,11 +63,9 @@ export default async function RootLayout({
         } else if (user?.psyche) {
           themeClass = psycheToCovenantClass[user.psyche] || '';
         }
-
     }
   } catch (error) {
     console.error('[RootLayout] Failed to get session data, possibly a database connection issue:', error);
-    // Proceed with null user/workspace, allowing the app to render in a logged-out state.
   }
 
 
