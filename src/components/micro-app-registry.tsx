@@ -6,10 +6,13 @@ import { AegisIcon } from '@/components/icons/AegisIcon';
 import { FileExplorerIcon } from './icons/FileExplorerIcon';
 import { AddressBookIcon } from './icons/AddressBookIcon';
 import { DrSyntaxIcon } from './icons/DrSyntaxIcon';
+import { Edit } from 'lucide-react';
 
 import Terminal from './micro-apps/terminal';
 import AegisReport from './micro-apps/aegis-report';
 import DrSyntax from './micro-apps/dr-syntax';
+import ContactList from './micro-apps/contact-list';
+import ContactEditor from './micro-apps/contact-editor';
 
 import { type MicroAppType } from '@/store/app-store';
 
@@ -35,11 +38,16 @@ export const microAppRegistry: Record<MicroAppType, ComponentRegistry> = {
   },
   'contact-list': {
     icon: AddressBookIcon,
+    content: ContactList,
   },
   'dr-syntax': {
     icon: DrSyntaxIcon,
     content: DrSyntax,
   },
+  'contact-editor': {
+      icon: Edit,
+      content: ContactEditor,
+  }
 };
 
 export const getAppIcon = (type: MicroAppType) => {

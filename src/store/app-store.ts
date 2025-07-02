@@ -19,7 +19,8 @@ export type MicroAppType =
   | 'ai-suggestion'
   | 'aegis-control'
   | 'contact-list'
-  | 'dr-syntax';
+  | 'dr-syntax'
+  | 'contact-editor';
 
 // Define the shape of a MicroApp instance
 export interface MicroApp {
@@ -108,24 +109,27 @@ export const useAppStore = create<AppState>((set, get) => {
   }
   
   const upsertApp = (type: MicroAppType, props: Partial<Omit<MicroApp, 'type'>>) => {
-      if (!props.id) {
-          return launchApp(type, props);
-      }
-      
-      const existingApp = get().apps.find(a => a.id === props.id);
+      const existingApp = props.id ? get().apps.find(a => a.id === props.id) : undefined;
       
       if(existingApp) {
           set(state => ({
               apps: state.apps.map(app => 
                   app.id === props.id
-                  ? { ...app, ...props, contentProps: {...existingApp.contentProps, ...props.contentProps}, zIndex: ++zIndexCounter }
+                  ? { ...app, ...props, contentProps: {...(app.contentProps || {}), ...(props.contentProps || {})}, zIndex: ++zIndexCounter }
                   : app
               )
           }));
-          bringToFront(props.id);
+          bringToFront(props.id!);
           return get().apps.find(a => a.id === props.id);
       } else {
-          return launchApp(type, props);
+          const newApp = launchApp(type, props);
+          if (newApp && get().apps.filter(a => a.type === newApp.type).length === 1) {
+            // If this is the first instance of this app type, trigger initial data load.
+            if (type === 'contact-list') {
+              get().handleCommandSubmit('list my contacts');
+            }
+          }
+          return newApp;
       }
   }
 
@@ -141,6 +145,33 @@ export const useAppStore = create<AppState>((set, get) => {
     // Each handler defines how the UI should react to a specific agent's output.
     // =================================================================
     const agentReportHandlerRegistry: AppState['agentReportHandlerRegistry'] = {
+        'crm': (reportData) => {
+            const { action, report } = reportData;
+            const { toast } = useToast.getState();
+
+            // Refresh the contact list on any successful CRM mutation
+            if (action === 'create' || action === 'update' || action === 'delete') {
+                toast({ title: 'CRM Updated', description: `Contact has been ${action}d.` });
+                // Re-fetch list
+                get().handleCommandSubmit('list contacts'); 
+                // Close any open editor windows for the affected contact
+                if (action === 'update' || action === 'delete') {
+                    closeApp(`contact-editor-${report.id}`);
+                }
+                // Close the 'new' editor on creation
+                if(action === 'create') {
+                    closeApp('contact-editor-new');
+                }
+            }
+
+            // Handle the list action specifically
+            if (action === 'list') {
+                const contactListApp = get().apps.find(a => a.type === 'contact-list');
+                if (contactListApp) {
+                    upsertApp('contact-list', { id: contactListApp.id, contentProps: { contacts: report } });
+                }
+            }
+        },
         'aegis': (report) => {
             launchApp('aegis-control', { contentProps: { ...report } });
             if (report.isAnomalous) {
