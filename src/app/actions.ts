@@ -138,7 +138,7 @@ export async function makeFollyTribute(instrumentId: string, tributeAmount?: num
   const sessionUser = await getServerActionSession();
   
   try {
-    const { outcome, boonAmount } = await processFollyTribute(
+    const { outcome, boonAmount, aethericEcho } = await processFollyTribute(
         sessionUser.id, 
         sessionUser.workspaceId, 
         instrumentId,
@@ -163,6 +163,7 @@ export async function makeFollyTribute(instrumentId: string, tributeAmount?: num
         outcome,
         boonAmount,
         message,
+        aethericEcho,
     };
 
   } catch (error) {

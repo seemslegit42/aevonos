@@ -149,7 +149,7 @@ export async function processFollyTribute(
             });
 
             // Mark as a "win" for UI purposes; the boon is the applied effect.
-            return { outcome: 'win', boonAmount: 0 };
+            return { outcome: 'win', boonAmount: 0, aethericEcho: 0 };
         });
     }
 
@@ -214,10 +214,19 @@ export async function processFollyTribute(
         let boonAmount = 0;
         let awardedCardKey: string | undefined = undefined;
         let systemEffect: string | undefined = undefined;
+        let aethericEcho = 0;
         
         if (selectedBoon.type === 'credits') {
             const calculatedBoon = tributeAmount * (selectedBoon.value as number) * psycheModifiers.boonFactor;
             boonAmount = calculatedBoon;
+
+            // --- Aetheric Echo Calculation ---
+            const creditBoons = selectedTier.boons.filter(b => b.type === 'credits');
+            if (creditBoons.length > 1) {
+                const maxMultiplier = Math.max(...creditBoons.map(b => b.value as number));
+                const maxPossibleBoon = tributeAmount * maxMultiplier * psycheModifiers.boonFactor;
+                aethericEcho = Math.max(0, maxPossibleBoon - boonAmount);
+            }
         } else if (selectedBoon.type === 'chaos_card') {
             awardedCardKey = selectedBoon.value as string;
             const wonCardManifest = artifactManifests.find(c => c.id === awardedCardKey);
@@ -299,6 +308,6 @@ export async function processFollyTribute(
             });
         }
         
-        return { outcome, boonAmount: Number(boonAmount) };
+        return { outcome, boonAmount: Number(boonAmount), aethericEcho: Number(aethericEcho) };
     });
 }
