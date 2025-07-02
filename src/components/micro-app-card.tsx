@@ -69,7 +69,7 @@ export default function MicroAppCard({ app }: MicroAppCardProps) {
             draggableOpts={{ disabled: true }}
             minConstraints={[320, 240]}
             maxConstraints={[1000, 800]}
-            className="relative"
+            className="relative shadow-lg rounded-lg"
             handle={<span className="absolute bottom-2 right-2 box-border w-5 h-5 cursor-se-resize border-2 border-solid border-muted-foreground/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-20" />}
         >
             <Card
