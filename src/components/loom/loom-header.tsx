@@ -1,3 +1,4 @@
+
 'use client';
 
 import React from 'react';
@@ -44,7 +45,7 @@ export default function LoomHeader({
   const isActionDisabled = isSaving || isRunning || isLoadingUser;
 
   return (
-    <header className="flex-shrink-0 p-2 border-b border-foreground/20 flex items-center justify-between gap-4 h-16">
+    <header className="flex-shrink-0 p-2 border-b border-border/20 flex items-center justify-between gap-4 h-16 bg-background/70 backdrop-blur-xl">
       <div className="flex items-center gap-2 md:gap-4">
         <TooltipProvider>
             <Tooltip>
