@@ -39,6 +39,7 @@ import {
     saveConversationHistory,
 } from '@/services/conversation-service';
 import prisma from '@/lib/prisma';
+import { InsufficientCreditsError } from '@/lib/errors';
 
 
 // LangGraph State
@@ -294,6 +295,30 @@ export async function processUserCommand(input: UserCommandInput): Promise<UserC
     messages: [...history, new HumanMessage(initialPrompt)],
     workspaceId: input.workspaceId,
     userId: input.userId,
+  }).catch(error => {
+      // Catch errors from the graph execution itself.
+      if (error instanceof InsufficientCreditsError) {
+          return {
+              messages: [
+                  ...history,
+                  new HumanMessage(initialPrompt),
+                  new AIMessage({
+                      content: "",
+                      tool_calls: [{
+                          name: 'final_answer',
+                          args: {
+                              responseText: `Your command could not be completed due to insufficient credits. You can purchase more from the Usage Monitor.`,
+                              appsToLaunch: [{type: 'usage-monitor'}],
+                              suggestedCommands: ['show me my billing', 'top up credits'],
+                          },
+                          id: 'tool_call_insufficient_credits'
+                      }]
+                  })
+              ]
+          };
+      }
+      // Re-throw other errors
+      throw error;
   });
 
   // Save the full conversation history for the next turn.
