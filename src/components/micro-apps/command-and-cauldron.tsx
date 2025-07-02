@@ -105,8 +105,8 @@ export default function CommandAndCauldron() {
         }
 
         // Simulate debiting credits before proceeding
-        const command = `debit ${drainEstimate} credits for consecrating the ritual "${ritualName}"`;
-        await handleCommandSubmit(command); // This is a mock call for the ledger
+        const command = `create a manual transaction of type DEBIT with amount ${drainEstimate} and description "Consecrating the ritual: ${ritualName}"`;
+        await handleCommandSubmit(command);
 
         toast({
             title: "Consecrating Ritual...",
@@ -241,4 +241,3 @@ export default function CommandAndCauldron() {
         </div>
     );
 }
-
