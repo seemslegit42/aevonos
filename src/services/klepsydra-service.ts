@@ -114,7 +114,7 @@ export async function processFollyTribute(
             const cost = instrumentManifest!.creditCost;
             const workspace = await tx.workspace.findUniqueOrThrow({ where: { id: workspaceId }, select: { credits: true } });
 
-            if ((workspace.credits as unknown as number) < cost) {
+            if ((Number(workspace.credits)) < cost) {
                 throw new InsufficientCreditsError('Insufficient credits to acquire this boon.');
             }
 
@@ -175,7 +175,7 @@ export async function processFollyTribute(
             await tx.pulseProfile.update({ where: { userId }, data: { hadesBargainActive: false } });
         }
 
-        if ((workspace.credits as unknown as number) < tributeAmount) {
+        if ((Number(workspace.credits)) < tributeAmount) {
             throw new InsufficientCreditsError('Cannot make tribute. Insufficient credits.');
         }
 

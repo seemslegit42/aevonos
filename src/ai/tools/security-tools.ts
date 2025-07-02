@@ -32,3 +32,4 @@ export async function createSecurityAlertInDb(input: CreateSecurityAlertInput, w
       throw new Error('Failed to create the security alert in the database.');
     }
 }
+

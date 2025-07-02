@@ -1,136 +1,96 @@
-
-datasource db {
-  provider     = "postgresql"
-  url          = env("DATABASE_URL")
-  directUrl    = env("DIRECT_URL")
-  relationMode = "prisma"
-}
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
   provider = "prisma-client-js"
 }
 
-// ===================================
-// ENUMS
-// ===================================
-
-enum UserRole {
-  ADMIN
-  MANAGER
-  OPERATOR
-  AUDITOR
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
-enum UserPsyche {
-  ZEN_ARCHITECT
-  SYNDICATE_ENFORCER
-  RISK_AVERSE_ARTISAN
+model User {
+  id                      String                 @id @default(cuid())
+  firstName               String?
+  lastName                String?
+  email                   String?                @unique
+  emailVerified           DateTime?
+  password                String?
+  image                   String?
+  accounts                Account[]
+  sessions                Session[]
+  workspaces              Workspace[]            @relation("WorkspaceMembers")
+  ownedWorkspace          Workspace?             @relation("WorkspaceOwner")
+  transactions            Transaction[]
+  psyche                  UserPsyche             @default(ZEN_ARCHITECT)
+  agentAlias              String?
+  lastLoginAt             DateTime?
+  unlockedChaosCardKeys   String[]               @default([])
+  corePainIndex           Float?
+  foundingVow             String?
+  foundingGoal            String?
+  foundingBenediction     String?
+  firstWhisper            String?
+  reclamationGraceUntil   DateTime?
+  createdAt               DateTime               @default(now())
+  updatedAt               DateTime               @updatedAt
+  pulseProfile            PulseProfile?
+  instrumentDiscoveries   InstrumentDiscovery[]
 }
 
-enum PlanTier {
-  Apprentice
-  Artisan
-  Priesthood
+model Workspace {
+  id                   String                  @id @default(cuid())
+  name                 String
+  ownerId              String                  @unique
+  owner                User                    @relation("WorkspaceOwner", fields: [ownerId], references: [id])
+  members              User[]                  @relation("WorkspaceMembers")
+  planTier             PlanTier                @default(Apprentice)
+  credits              Decimal                 @default(100.0) @db.Decimal(18, 4)
+  agentActionsUsed     Int                     @default(0)
+  overageEnabled       Boolean                 @default(true)
+  unlockedAppIds       String[]                @default([])
+  agents               Agent[]
+  contacts             Contact[]
+  securityAlerts       SecurityAlert[]
+  transactions         Transaction[]
+  threatFeeds          ThreatFeed[]
+  workflows            Workflow[]
+  workflowRuns         WorkflowRun[]
+  conversations        Conversation[]
+  activeSystemEffects  ActiveSystemEffect[]
+  instrumentDiscoveries InstrumentDiscovery[]
 }
-
-enum AgentStatus {
-  active
-  idle
-  processing
-  paused
-  error
-}
-
-enum SecurityRiskLevel {
-  none
-  low
-  medium
-  high
-  critical
-}
-
-enum TransactionType {
-  CREDIT
-  DEBIT
-  TRIBUTE
-}
-
-enum TransactionStatus {
-  PENDING
-  COMPLETED
-  FAILED
-}
-
-enum IntegrationStatus {
-  active
-  inactive
-  error
-}
-
-enum PulsePhase {
-  CREST
-  TROUGH
-  EQUILIBRIUM
-}
-
-enum PulseInteractionType {
-  WIN
-  LOSS
-}
-
-enum ChaosCardClass {
-  AESTHETIC
-  AGENTIC
-  SYSTEMIC
-  SYNDICATE
-}
-
-enum LoggedEventCategory {
-  DRUG_DEALS
-  FRIEND_BETRAYALS
-  GIRLFRIEND_DRAMA
-  CLASSIC_CHAOS
-  REDEMPTION_ATTEMPTS
-}
-
-enum WorkflowRunStatus {
-  pending
-  running
-  completed
-  failed
-  paused
-}
-
-
-// ===================================
-// AUTHENTICATION MODELS (NextAuth.js)
-// ===================================
 
 model Account {
-  id                String  @id @default(cuid())
   userId            String
   type              String
   provider          String
   providerAccountId String
-  refresh_token     String? @db.Text
-  access_token      String? @db.Text
+  refresh_token     String?
+  access_token      String?
   expires_at        Int?
   token_type        String?
   scope             String?
-  id_token          String? @db.Text
+  id_token          String?
   session_state     String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([provider, providerAccountId])
+  @@id([provider, providerAccountId])
 }
 
 model Session {
-  id           String   @id @default(cuid())
   sessionToken String   @unique
   userId       String
   expires      DateTime
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model VerificationToken {
@@ -138,97 +98,8 @@ model VerificationToken {
   token      String
   expires    DateTime
 
-  @@unique([identifier, token])
+  @@id([identifier, token])
 }
-
-model Authenticator {
-  id                   String  @id @default(cuid())
-  credentialID         String  @unique
-  userId               String
-  providerAccountId    String
-  credentialPublicKey  String
-  counter              Int
-  credentialDeviceType String
-  credentialBackedUp   Boolean
-  transports           String?
- 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
-
-
-// ===================================
-// CORE TENANCY & USER MODELS
-// ===================================
-
-model User {
-  id                      String    @id @default(cuid())
-  email                   String    @unique
-  password                String
-  firstName               String?
-  lastName                String?
-  emailVerified           DateTime?
-  image                   String?
-  role                    UserRole  @default(OPERATOR)
-  psyche                  UserPsyche @default(ZEN_ARCHITECT)
-  agentAlias              String?
-  lastLoginAt             DateTime? @updatedAt
-  createdAt               DateTime  @default(now())
-  updatedAt               DateTime  @updatedAt
-
-  foundingVow             String?   @db.Text
-  foundingGoal            String?   @db.Text
-  corePainIndex           Float?
-  firstWhisper            String?   @db.Text
-  foundingBenediction     String?   @db.Text
-  
-  reclamationGraceUntil   DateTime?
-
-  ownedWorkspaces         Workspace[] @relation("WorkspaceOwner")
-  workspaces              Workspace[] @relation("WorkspaceMembers")
-  
-  accounts                Account[]
-  sessions                Session[]
-  authenticators          Authenticator[]
-  transactions            Transaction[]
-
-  conversations           Conversation[]
-  pulseProfile            PulseProfile?
-  discoveries             InstrumentDiscovery[]
-
-  unlockedChaosCardKeys   String[] @default([])
-}
-
-model Workspace {
-  id                String   @id @default(cuid())
-  name              String
-  ownerId           String   @unique
-  owner             User     @relation("WorkspaceOwner", fields: [ownerId], references: [id])
-  members           User[]   @relation("WorkspaceMembers")
-  planTier          PlanTier @default(Apprentice)
-  credits           Decimal  @default(100.0)
-  agentActionsUsed  Int      @default(0)
-  overageEnabled    Boolean  @default(true)
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-  
-  unlockedAppIds    String[] @default([])
-
-  agents            Agent[]
-  contacts          Contact[]
-  securityAlerts    SecurityAlert[]
-  transactions      Transaction[]
-  workflows         Workflow[]
-  workflowRuns      WorkflowRun[]
-  integrations      Integration[]
-  threatFeeds       ThreatFeed[]
-  conversations     Conversation[]
-  discoveries       InstrumentDiscovery[]
-  activeSystemEffects ActiveSystemEffect[]
-}
-
-// ===================================
-// APPLICATION-SPECIFIC MODELS
-// ===================================
 
 model Agent {
   id          String      @id @default(cuid())
@@ -252,8 +123,6 @@ model Contact {
   workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
-
-  @@unique([workspaceId, email])
 }
 
 model SecurityAlert {
@@ -261,10 +130,31 @@ model SecurityAlert {
   type              String
   explanation       String
   riskLevel         SecurityRiskLevel
-  timestamp         DateTime          @default(now())
   actionableOptions String[]
+  timestamp         DateTime          @default(now())
   workspaceId       String
   workspace         Workspace         @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+}
+
+model Transaction {
+  id               String            @id @default(cuid())
+  workspaceId      String
+  workspace        Workspace         @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  userId           String?
+  user             User?             @relation(fields: [userId], references: [id])
+  type             TransactionType
+  amount           Decimal           @db.Decimal(18, 4)
+  description      String
+  status           TransactionStatus
+  agentId          String?
+  instrumentId     String?
+  luckWeight       Float?
+  outcome          String?
+  tributeAmount    Decimal?          @db.Decimal(18, 4)
+  boonAmount       Decimal?          @db.Decimal(18, 4)
+  judasFactor      Decimal?          @db.Decimal(18, 17)
+  userPsyche       UserPsyche?
+  createdAt        DateTime          @default(now())
 }
 
 model ThreatFeed {
@@ -275,40 +165,17 @@ model ThreatFeed {
   createdAt   DateTime  @default(now())
 }
 
-model Transaction {
-  id                String           @id @default(cuid())
-  workspaceId       String
-  workspace         Workspace        @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  userId            String?
-  user              User?            @relation(fields: [userId], references: [id], onDelete:SetNull)
-  agentId           String?
-  instrumentId      String?
-  type              TransactionType
-  amount            Decimal
-  description       String
-  status            TransactionStatus
-  createdAt         DateTime         @default(now())
-
-  // Fields specific to TRIBUTE transactions
-  luckWeight        Float?
-  outcome           String?
-  tributeAmount     Decimal?
-  boonAmount        Decimal?
-  judasFactor       Decimal?
-  userPsyche        UserPsyche?
-}
-
 model Workflow {
-  id           String        @id @default(cuid())
+  id           String         @id @default(cuid())
   name         String
+  isActive     Boolean        @default(true)
+  triggerType  String         @default("api")
   definition   Json
-  isActive     Boolean       @default(true)
-  triggerType  String        @default("api")
   workspaceId  String
-  workspace    Workspace     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  workspace    Workspace      @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   runs         WorkflowRun[]
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
 }
 
 model WorkflowRun {
@@ -316,88 +183,201 @@ model WorkflowRun {
   workflowId     String
   workflow       Workflow          @relation(fields: [workflowId], references: [id], onDelete: Cascade)
   workspaceId    String
-  workspace      Workspace         @relation(fields: [workspaceId], references: [id])
+  workspace      Workspace         @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   status         WorkflowRunStatus
   triggerPayload Json
   output         Json?
   log            Json[]
-  startedAt      DateTime
+  startedAt      DateTime          @default(now())
   finishedAt     DateTime?
 }
 
-model Integration {
-  id                    String            @id @default(cuid())
-  workspaceId           String
-  workspace             Workspace         @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  integrationManifestId String // UUID of the manifest from config
-  name                  String
-  status                IntegrationStatus @default(active)
-  configDetails         Json? // Encrypted credentials
-  createdAt             DateTime          @default(now())
-  updatedAt             DateTime          @updatedAt
-}
-
 model Conversation {
-  id           String    @id @default(cuid())
-  userId       String    @unique
-  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  workspaceId  String
-  workspace    Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  messages     Json[]
-  updatedAt    DateTime  @updatedAt
-}
-
-model PulseProfile {
-  id                    String        @id @default(cuid())
-  userId                String        @unique
-  user                  User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  baselineLuck          Float         @default(0.4)
-  amplitude             Float         @default(0.15)
-  frequency             Float         @default(0.01)
-  phaseOffset           Float
-  consecutiveLosses     Int           @default(0)
-  lastEventTimestamp    DateTime      @default(now())
-  lastInteractionType   PulseInteractionType?
-  lastResolvedPhase     PulsePhase?
-  frustration           Float         @default(0.0)
-  flowState             Float         @default(0.0)
-  riskAversion          Float         @default(0.5)
-  loadedDieBuffCount    Int           @default(0)
-  nextTributeGuaranteedWin Boolean? @default(false)
-  hadesBargainActive    Boolean? @default(false)
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  messages    Json[]
+  updatedAt   DateTime @updatedAt
 }
 
 model ChaosCard {
-  id           String        @id @default(cuid())
-  key          String        @unique // The unique key from the manifest
+  key          String        @id
   name         String
   description  String
   cardClass    ChaosCardClass
   cost         Int
   systemEffect String
-  createdAt    DateTime      @default(now())
+}
+
+model ActiveSystemEffect {
+  id          String    @id @default(cuid())
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  cardKey     String
+  expiresAt   DateTime
+  createdAt   DateTime  @default(now())
+
+  @@index([workspaceId, expiresAt])
+}
+
+model PulseProfile {
+  id                  String                @id @default(cuid())
+  userId              String                @unique
+  user                User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  baselineLuck        Float                 @default(0.4)
+  amplitude           Float                 @default(0.15)
+  frequency           Float                 @default(0.01)
+  phaseOffset         Float
+  consecutiveLosses   Int                   @default(0)
+  lastEventTimestamp  DateTime              @default(now())
+  lastResolvedPhase   PulsePhase            @default(EQUILIBRIUM)
+  lastInteractionType PulseInteractionType  @default(NEUTRAL)
+  frustration         Float                 @default(0)
+  flowState           Float                 @default(0)
+  riskAversion        Float                 @default(0)
+  nextTributeGuaranteedWin Boolean?         @default(false)
+  hadesBargainActive  Boolean?              @default(false)
+  loadedDieBuffCount  Int?                  @default(0)
 }
 
 model InstrumentDiscovery {
-  id              String    @id @default(cuid())
-  userId          String
-  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  workspaceId     String
-  workspace       Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  instrumentId    String
-  firstViewedAt   DateTime  @default(now())
-  converted       Boolean   @default(false)
-  dtt             Int? // Discovery-to-Tribute time in minutes
-  nudgeSentAt     DateTime?
+  id           String     @id @default(cuid())
+  userId       String
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workspaceId  String
+  workspace    Workspace  @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  instrumentId String
+  firstViewedAt DateTime  @default(now())
+  converted    Boolean    @default(false)
+  dtt          Int? // Discovery-to-Tribute time in minutes
+  nudgeSentAt  DateTime?
 
   @@unique([userId, instrumentId])
 }
 
-model ActiveSystemEffect {
-    id          String    @id @default(cuid())
-    workspaceId String
-    workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-    cardKey     String
-    expiresAt   DateTime
-    createdAt   DateTime  @default(now())
+model GlobalAgenticEvent {
+  id                  String      @id @default(cuid())
+  eventName           String
+  status              EventStatus @default(ACTIVE)
+  poolTarget          Decimal     @db.Decimal(18, 4)
+  currentPool         Decimal     @default(0) @db.Decimal(18, 4)
+  expiresAt           DateTime
+  shardReward         String?
+  winningWorkspaceId  String?
+  createdAt           DateTime    @default(now())
+  updatedAt           DateTime    @updatedAt
+
+  contributions Contribution[]
+  @@index([status])
+}
+
+model Contribution {
+  id          String             @id @default(cuid())
+  amount      Decimal            @db.Decimal(18, 4)
+  workspaceId String
+  userId      String
+  createdAt   DateTime           @default(now())
+
+  event       GlobalAgenticEvent @relation(fields: [eventId], references: [id])
+  eventId     String
+  @@index([workspaceId, eventId])
+}
+
+model Integration {
+    id                      String @id @default(cuid())
+    workspaceId             String
+    workspace               Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+    integrationManifestId   String // This is the UUID from the static manifest file
+    name                    String
+    status                  IntegrationStatus @default(active)
+    configDetails           Json
+    createdAt               DateTime @default(now())
+    updatedAt               DateTime @updatedAt
+}
+
+enum AgentStatus {
+  active
+  processing
+  idle
+  paused
+  error
+}
+
+enum UserRole {
+  ADMIN
+  MANAGER
+  OPERATOR
+  AUDITOR
+}
+
+enum UserPsyche {
+  ZEN_ARCHITECT
+  SYNDICATE_ENFORCER
+  RISK_AVERSE_ARTISAN
+}
+
+enum PlanTier {
+  Apprentice
+  Artisan
+  Priesthood
+}
+
+enum TransactionType {
+  CREDIT
+  DEBIT
+  TRIBUTE
+}
+
+enum TransactionStatus {
+  PENDING
+  COMPLETED
+  FAILED
+}
+
+enum SecurityRiskLevel {
+  none
+  low
+  medium
+  high
+  critical
+}
+
+enum WorkflowRunStatus {
+  pending
+  running
+  completed
+  failed
+  paused
+}
+
+enum ChaosCardClass {
+  AESTHETIC
+  AGENTIC
+  SYSTEMIC
+  SYNDICATE
+}
+
+enum PulsePhase {
+  CREST
+  TROUGH
+  EQUILIBRIUM
+}
+
+enum PulseInteractionType {
+  WIN
+  LOSS
+  NEUTRAL
+}
+
+enum IntegrationStatus {
+    active
+    inactive
+    error
+}
+
+enum EventStatus {
+  ACTIVE
+  CONCLUDED
+  CANCELLED
 }
