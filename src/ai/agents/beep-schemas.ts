@@ -78,6 +78,8 @@ const LaunchableAppTypeSchema = z.enum([
   'howards-sidekick',
   'sisyphus-ascent',
   'merchant-of-cabbage',
+  'obelisk-marketplace',
+  'integration-nexus',
 ]);
 
 export const AppToLaunchSchema = z.object({
