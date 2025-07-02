@@ -49,5 +49,5 @@ export async function getSession() {
     return getMockUserSession();
 }
 
-// Keep this export for type compatibility, but the underlying handlers will be empty.
-export { auth } from '@/auth';
+// This was removed as it caused a build error in 'use server' files.
+// Components needing `auth` should import directly from `@/auth`.
