@@ -5,12 +5,13 @@ import React, { useRef, useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Input } from '@/components/ui/input';
-import { useIsMobile } from '@/hooks/use-is-mobile';
+import { useIsMobile } from '@/hooks/use-mobile';
 import type { User, Workspace } from '@prisma/client';
 import { useAppStore } from '@/store/app-store';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { UserNav } from './user-nav';
 
 type UserProp = Pick<User, 'id' | 'email' | 'firstName' | 'lastName' | 'role' | 'agentAlias'> | null;
 
@@ -124,6 +125,9 @@ export default function TopBar({ user, workspace }: TopBarProps) {
             </Tooltip>
           </div>
         </TooltipProvider>
+         <div className="md:hidden">
+            <UserNav user={user} workspace={workspace} />
+        </div>
       </div>
     </header>
   );
