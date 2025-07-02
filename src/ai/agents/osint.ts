@@ -8,7 +8,7 @@
 
 import { StateGraph, END } from '@langchain/langgraph';
 import { ToolNode } from '@langchain/langgraph/prebuilt';
-import { BaseMessage, HumanMessage, ToolMessage } from '@langchain/core/messages';
+import { BaseMessage, HumanMessage, ToolMessage, SystemMessage } from '@langchain/core/messages';
 import { zodToJsonSchema } from 'zod-to-json-schema';
 import { AIMessage } from '@langchain/core/messages';
 
@@ -24,23 +24,6 @@ import {
 import { runFirecrawlerScan } from '../tools/firecrawler-tools';
 import { authorizeAndDebitAgentActions } from '@/services/billing-service';
 import { langchainGroqComplex } from '@/ai/genkit';
-
-// Helper function to extract potential data points from context
-const extractContextData = (context: string) => {
-    const emailRegex = /([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+)/gi;
-    const phoneRegex = /(\+\d{1,2}\s?)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}/gi;
-    const urlRegex = /https?:\/\/[^\s]+/gi;
-    
-    const emails = context.match(emailRegex);
-    const phones = context.match(phoneRegex);
-    const urls = context.match(urlRegex);
-
-    return {
-        email: emails ? emails[0] : null,
-        phone: phones ? phones[0] : null,
-        socialUrls: urls || []
-    };
-};
 
 // 1. Define the Agent's State
 interface OsintAgentState {
@@ -86,7 +69,28 @@ const callPlanner = async (state: OsintAgentState) => {
   return { messages: [response] };
 };
 
-const toolsNode = new ToolNode<OsintAgentState>(osintTools);
+
+// A "safe" tool node that catches errors during execution and returns them as ToolMessages.
+// This prevents the graph from crashing and allows the synthesizer to handle the failure gracefully.
+const safeToolsNode = async (state: OsintAgentState): Promise<Partial<OsintAgentState>> => {
+    const toolsNode = new ToolNode<OsintAgentState>(osintTools);
+    try {
+        return await toolsNode.invoke(state);
+    } catch (error: any) {
+        console.error(`[OSINT Daemon] Tool execution failed:`, error);
+        const lastMessage = state.messages[state.messages.length - 1];
+        if (!lastMessage || !lastMessage.tool_calls) {
+            return { messages: [new SystemMessage("OSINT tool call failed without a clear tool call ID.")] };
+        }
+        // Create an error message for each failed tool call to maintain graph structure.
+        const errorMessages = lastMessage.tool_calls.map(tc => new ToolMessage({
+            content: `Error: Could not run tool ${tc.name}. Reason: ${error.message}`,
+            tool_call_id: tc.id
+        }));
+        return { messages: errorMessages };
+    }
+};
+
 
 // This node synthesizes the final report after all tools have run.
 const callSynthesizer = async (state: OsintAgentState) => {
@@ -101,7 +105,7 @@ const callSynthesizer = async (state: OsintAgentState) => {
     const synthesisPrompt = `You are an OSINT (Open-Source Intelligence) analysis agent. Your callsign is "Bloodhound". You synthesize raw data from various sources into a coherent intelligence report. Your tone is factual, analytical, and direct.
 
     You have been provided with raw data findings for a target from multiple OSINT tools. Your task is to review this raw data and populate all fields of the OsintOutputSchema correctly and professionally.
-    You must create a high-level summary and identify key risk factors based on the combined data. Pay special attention to any Firecrawler reports to extract profile information.
+    If any tool calls resulted in an error, you MUST mention the failure in your summary and risk factors, and leave the corresponding data field (e.g., 'breaches', 'socialProfiles') as an empty array. Your report must still be complete and conform to the schema.
 
     Target Name: ${targetName}
     
@@ -129,12 +133,12 @@ const workflow = new StateGraph<OsintAgentState>({
 });
 
 workflow.addNode('planner', callPlanner);
-workflow.addNode('tools', toolsNode);
+workflow.addNode('tools', safeToolsNode); // Use the safe tool node
 workflow.addNode('synthesizer', callSynthesizer);
 
 workflow.setEntryPoint('planner');
 workflow.addEdge('planner', 'tools');
-workflow.addEdge('tools', 'synthesizer');
+workflow.addEdge('tools', 'synthesizer'); // Always proceed to the synthesizer, even on error.
 workflow.addEdge('synthesizer', END);
 
 const osintApp = workflow.compile();

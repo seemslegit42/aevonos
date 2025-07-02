@@ -43,19 +43,57 @@ const callModel = async (state: InventoryAgentState) => {
     return { messages: [response] };
 };
 
-const toolsNode = new ToolNode<InventoryAgentState>(inventoryTools);
+// This "safe" tool node catches errors and returns them as a ToolMessage
+// allowing the graph to route to an error handler instead of crashing.
+const safeToolsNode = async (state: InventoryAgentState): Promise<Partial<InventoryAgentState>> => {
+    const toolsNode = new ToolNode<InventoryAgentState>(inventoryTools);
+    try {
+        return await toolsNode.invoke(state);
+    } catch (error: any) {
+        console.error(`[Inventory Daemon] Tool execution failed:`, error);
+        const lastMessage = state.messages[state.messages.length - 1];
+        // We may not know which tool call failed if there were multiple, so we attribute
+        // the error to the first one for simplicity.
+        const tool_call_id = lastMessage.tool_calls?.[0]?.id ?? "error_tool_call";
+        const errorMessage = new ToolMessage({
+            content: `Error: ${error.message}`,
+            tool_call_id,
+        });
+        return { messages: [errorMessage] };
+    }
+};
+
+// This node creates a final, user-facing error message.
+const handleErrorNode = (state: InventoryAgentState): Partial<InventoryAgentState> => {
+    const { messages } = state;
+    const lastMessage = messages[messages.length - 1];
+    const errorMessage = lastMessage.content as string; // "Error: ..."
+
+    const finalErrorMessage = new AIMessage({
+        content: `I'm sorry, I was unable to complete your request. The system reported the following error: ${errorMessage}`
+    });
+    return { messages: [finalErrorMessage] };
+};
 
 // 3. Define the Agent's Conditional Edges
 const shouldContinue = (state: InventoryAgentState) => {
     const { messages } = state;
     const lastMessage = messages[messages.length - 1];
-    // If the model decides to call a tool, we continue to the tools node.
     if ('tool_calls' in lastMessage && lastMessage.tool_calls && lastMessage.tool_calls.length > 0) {
-        return 'continue';
+        return 'continue_to_tools';
     }
-    // Otherwise, we end the graph.
     return 'end';
 };
+
+const checkToolResult = (state: InventoryAgentState) => {
+    const { messages } = state;
+    const lastMessage = messages[messages.length - 1];
+    if (lastMessage instanceof ToolMessage && lastMessage.content.startsWith("Error:")) {
+        return "error";
+    }
+    return "continue_to_agent";
+};
+
 
 // 4. Build the Graph
 const workflow = new StateGraph<InventoryAgentState>({
@@ -68,15 +106,22 @@ const workflow = new StateGraph<InventoryAgentState>({
 });
 
 workflow.addNode('agent', callModel);
-workflow.addNode('tools', toolsNode);
+workflow.addNode('tools', safeToolsNode);
+workflow.addNode('handle_error', handleErrorNode);
 
 workflow.setEntryPoint('agent');
 
 workflow.addConditionalEdges('agent', shouldContinue, {
-    continue: 'tools',
+    continue_to_tools: 'tools',
     end: END,
 });
-workflow.addEdge('tools', 'agent');
+
+workflow.addConditionalEdges('tools', checkToolResult, {
+    continue_to_agent: 'agent',
+    error: 'handle_error',
+});
+workflow.addEdge('handle_error', END);
+
 
 const inventoryApp = workflow.compile();
 
