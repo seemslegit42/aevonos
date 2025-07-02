@@ -9,9 +9,29 @@ import type { DrSyntaxOutput } from '@/ai/agents/dr-syntax-schemas';
 import type { AgentReport, UserCommandOutput } from '@/ai/agents/beep-schemas';
 import type { CrmAgentReport } from '@/ai/agents/beep-schemas';
 import type { BillingAgentReport } from '@/ai/agents/beep-schemas';
-import type { Contact } from '@/ai/tools/crm-schemas';
 import { generateSpeech } from '@/ai/flows/tts-flow';
 import type { WinstonWolfeOutput } from '@/ai/agents/winston-wolfe-schemas';
+import { KifKrokerAnalysisOutput } from '@/ai/agents/kif-kroker-schemas';
+import { VandelayAlibiOutput } from '@/ai/agents/vandelay-schemas';
+import { RolodexAnalysisOutput } from '@/ai/agents/rolodex-schemas';
+import { PaperTrailScanOutput } from '@/ai/agents/paper-trail-schemas';
+import { JrocOutput } from '@/ai/agents/jroc-schemas';
+import { LaheyAnalysisOutput } from '@/ai/agents/lahey-schemas';
+import { ForemanatorLogOutput } from '@/ai/agents/foremanator-schemas';
+import { SterileishAnalysisOutput } from '@/ai/agents/sterileish-schemas';
+import { BarbaraOutput } from '@/ai/agents/barbara-schemas';
+import { AuditorOutput } from '@/ai/agents/auditor-generalissimo-schemas';
+import { WingmanOutput } from '@/ai/agents/wingman-schemas';
+import { KendraOutput } from '@/ai/agents/kendra-schemas';
+import { OrpheanOracleOutput } from '@/ai/agents/orphean-oracle-schemas';
+import { LumberghAnalysisOutput } from '@/ai/agents/lumbergh-schemas';
+import { LucilleBluthOutput } from '@/ai/agents/lucille-bluth-schemas';
+import { PamAudioOutput } from '@/ai/agents/pam-poovey-schemas';
+import { StonksBotOutput } from '@/ai/agents/stonks-bot-schemas';
+import { RenoModeAnalysisOutput } from '@/ai/agents/reno-mode-schemas';
+import { PatricktAgentOutput } from '@/ai/agents/patrickt-agent-schemas';
+import { VinDieselOutput } from '@/ai/agents/vin-diesel-schemas';
+import { InventoryDaemonOutput } from '@/ai/agents/inventory-daemon-schemas';
 
 enableMapSet();
 
@@ -32,9 +52,38 @@ export type MicroAppType =
   | 'file-explorer'
   | 'loom'
   | 'winston-wolfe'
+  | 'kif-kroker'
+  | 'vandelay'
+  | 'rolodex'
+  | 'jroc-business-kit'
+  | 'lahey-surveillance'
+  | 'foremanator'
+  | 'sterileish'
+  | 'paper-trail'
+  | 'barbara'
+  | 'auditor-generalissimo'
+  | 'beep-wingman'
+  | 'kendra'
+  | 'orphean-oracle'
+  | 'project-lumbergh'
+  | 'lucille-bluth'
+  | 'pam-poovey-onboarding'
+  | 'stonks-bot'
+  | 'reno-mode'
+  | 'patrickt-app'
+  | 'vin-diesel'
+  | 'inventory-daemon'
   | 'obelisk-marketplace'
   | 'proxy-agent'
-  | 'admin-console';
+  | 'admin-console'
+  | 'infidelity-radar'
+  | 'ritual-quests'
+  | 'howards-sidekick'
+  | 'sisyphus-ascent'
+  | 'merchant-of-cabbage'
+  | 'command-and-cauldron'
+  | 'integration-nexus'
+  | 'validator';
 
 export interface MicroApp {
   id: string;
@@ -75,6 +124,130 @@ const agentReportHandlers: AgentReportHandlers = {
       contentProps: report,
     });
   },
+  'winston-wolfe': (report: WinstonWolfeOutput, store) => {
+    store.upsertApp('winston-wolfe', {
+      id: `winston-wolfe-${new Date().getTime()}`,
+      contentProps: { suggestedResponse: report.suggestedResponse },
+    });
+  },
+  'kif-kroker': (report: KifKrokerAnalysisOutput, store) => {
+    store.upsertApp('kif-kroker', {
+      id: `kif-kroker-report-${new Date().getTime()}`,
+      contentProps: report,
+    });
+  },
+  'vandelay': (report: VandelayAlibiOutput, store) => {
+    store.upsertApp('vandelay', {
+      id: `vandelay-report-${new Date().getTime()}`,
+      contentProps: { alibi: report },
+    });
+  },
+  'rolodex': (report: RolodexAnalysisOutput, store) => {
+    store.upsertApp('rolodex', {
+      id: `rolodex-report-${new Date().getTime()}`,
+      contentProps: report,
+    });
+  },
+   'paper-trail': (report: PaperTrailScanOutput, store) => {
+    store.upsertApp('paper-trail', {
+      id: `paper-trail-${new Date().getTime()}`,
+      contentProps: { evidenceLog: [report] },
+    });
+  },
+  'jroc': (report: JrocOutput, store) => {
+    store.upsertApp('jroc-business-kit', {
+        id: `jroc-kit-${new Date().getTime()}`,
+        contentProps: report
+    });
+  },
+  'lahey-surveillance': (report: LaheyAnalysisOutput, store) => {
+    // Lahey app is a timeline, so we won't directly open a new one.
+    // Future implementation could update a central timeline view.
+  },
+  'foremanator': (report: ForemanatorLogOutput, store) => {
+      store.upsertApp('foremanator', {
+          id: `foremanator-log-${new Date().getTime()}`,
+          contentProps: report
+      });
+  },
+  'sterileish': (report: SterileishAnalysisOutput, store) => {
+      store.upsertApp('sterileish', {
+          id: `sterileish-report-${new Date().getTime()}`,
+          contentProps: report
+      });
+  },
+   'barbara': (report: BarbaraOutput, store) => {
+      store.upsertApp('barbara', {
+          id: `barbara-report-${new Date().getTime()}`,
+          contentProps: report
+      });
+  },
+   'auditor': (report: AuditorOutput, store) => {
+      store.upsertApp('auditor-generalissimo', {
+          id: `auditor-report-${new Date().getTime()}`,
+          contentProps: report
+      });
+  },
+   'wingman': (report: WingmanOutput, store) => {
+      store.upsertApp('beep-wingman', {
+          id: `wingman-report-${new Date().getTime()}`,
+          contentProps: report
+      });
+  },
+   'kendra': (report: KendraOutput, store) => {
+      store.upsertApp('kendra', {
+          id: `kendra-report-${new Date().getTime()}`,
+          contentProps: report
+      });
+  },
+   'orphean-oracle': (report: OrpheanOracleOutput, store) => {
+      store.upsertApp('orphean-oracle', {
+          id: `oracle-report-${new Date().getTime()}`,
+          contentProps: report
+      });
+  },
+  'lumbergh': (report: LumberghAnalysisOutput, store) => {
+      store.upsertApp('project-lumbergh', {
+          id: `lumbergh-report-${new Date().getTime()}`,
+          contentProps: report
+      });
+  },
+  'lucille-bluth': (report: LucilleBluthOutput, store) => {
+      store.upsertApp('lucille-bluth', {
+          id: `lucille-report-${new Date().getTime()}`,
+          contentProps: report
+      });
+  },
+   'pam-poovey': (report: PamAudioOutput, store) => {
+      store.upsertApp('pam-poovey-onboarding', {
+          id: `pam-rant-${new Date().getTime()}`,
+          contentProps: report
+      });
+  },
+   'stonks': (report: StonksBotOutput, store) => {
+      store.upsertApp('stonks-bot', {
+          id: `stonks-report-${new Date().getTime()}`,
+          contentProps: report
+      });
+  },
+  'reno-mode': (report: RenoModeAnalysisOutput, store) => {
+      store.upsertApp('reno-mode', {
+          id: `reno-report-${new Date().getTime()}`,
+          contentProps: report
+      });
+  },
+  'patrickt-app': (report: PatricktAgentOutput, store) => {
+      // The Patrickt app has its own internal state management
+  },
+   'vin-diesel': (report: VinDieselOutput, store) => {
+      store.upsertApp('vin-diesel', {
+          id: `vin-diesel-report-${new Date().getTime()}`,
+          contentProps: report
+      });
+  },
+  'inventory-daemon': (report: InventoryDaemonOutput, store) => {
+      // The daemon's response is part of BEEP's responseText, not a new app
+  },
   'crm': (report: CrmAgentReport, store) => {
     if (report.action === 'list') {
       store.upsertApp('contact-list', {
@@ -98,12 +271,6 @@ const agentReportHandlers: AgentReportHandlers = {
         });
     }
   },
-  'winston-wolfe': (report: WinstonWolfeOutput, store) => {
-    store.upsertApp('winston-wolfe', {
-      id: `winston-wolfe-${new Date().getTime()}`,
-      contentProps: { suggestedResponse: report.suggestedResponse },
-    });
-  }
 };
 
 

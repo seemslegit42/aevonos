@@ -1,3 +1,4 @@
+
 # ΛΞVON OS: DevOps - CI/CD Strategy
 
 ## 1. Introduction: Automating the Flow of Innovation
@@ -19,7 +20,7 @@ The CI/CD strategy for ΛΞVON OS is designed to support our monolithic Next.js 
 -   **CI/CD Orchestrator**: GitHub Actions for automated testing and deployments.
 -   **Frontend Deployment**: Vercel (for Next.js frontend and API Routes/Edge Functions).
 -   **Database**: Serverless PostgreSQL (e.g., Neon, Supabase, or Vercel Postgres) with Prisma as the ORM.
--   **Package Manager**: `pnpm` for efficient package management.
+-   **Package Manager**: `npm` for standard package management.
 -   **Testing Frameworks**: `jest` or `vitest` for unit/integration testing, `playwright` for E2E testing.
 -   **Code Quality**: ESLint for TypeScript/React, Prettier for formatting.
 -   **Error Tracking**: Sentry or a similar service for real-time error monitoring.
@@ -39,7 +40,7 @@ The CI/CD pipeline for ΛΞVON OS is structured into distinct, automated stages 
         -   **Action**: Execute unit and integration tests.
         -   **Outcome**: Validates individual components and service interactions.
     3.  **Build Application**:
-        -   **Action**: Run `pnpm build` to compile the Next.js application.
+        -   **Action**: Run `npm run build` to compile the Next.js application.
         -   **Outcome**: Ensures the application builds successfully without errors.
     4.  **Security Static Analysis (SAST)**:
         -   **Action**: Run static code analysis tools (e.g., Snyk, CodeQL) to identify common security vulnerabilities.

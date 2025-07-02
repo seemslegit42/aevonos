@@ -3,7 +3,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import type { PulseProfile, UserPsyche } from '@prisma/client';
+import { type PulseProfile, UserPsyche } from '@prisma/client';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 

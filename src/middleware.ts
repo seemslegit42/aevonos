@@ -1,10 +1,9 @@
 
-import NextAuth from 'next-auth';
-import { authConfig } from './auth.config';
- 
-export default NextAuth(authConfig).auth;
- 
+// This middleware is intentionally left empty.
+// The mock authentication system in `src/lib/auth.ts` handles session logic
+// without the need for NextAuth middleware, which was causing build conflicts.
+export function middleware() {}
+
 export const config = {
-  // By setting the matcher to an empty array, the middleware will not run on any route.
   matcher: [],
 };

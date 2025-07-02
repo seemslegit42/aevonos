@@ -1,3 +1,4 @@
+
 'use client';
 
 import React from 'react';
@@ -6,6 +7,7 @@ import MicroAppGrid from '@/components/micro-app-grid';
 import { useAppStore } from '@/store/app-store';
 import SystemWeave from '@/components/dashboard/system-weave';
 import { type Agent as AgentData } from '@prisma/client';
+import PulseNarrativeDisplay from './pulse-narrative-display';
 
 interface DashboardClientProps {
     initialAgents: AgentData[];
@@ -29,6 +31,7 @@ export default function DashboardClient({ initialAgents }: DashboardClientProps)
             >
                 <MicroAppGrid apps={apps} />
             </DndContext>
+            <PulseNarrativeDisplay />
         </div>
     );
 }

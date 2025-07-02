@@ -3,10 +3,10 @@
 
 import { redirect } from 'next/navigation';
 import prisma from '@/lib/prisma';
-import { auth, signIn, signOut } from '@/auth';
+import { getServerActionSession } from '@/lib/auth';
 
 export async function logout() {
-  await signOut({ redirectTo: '/login' });
+  redirect('/login');
 }
 
 export async function deleteAccount() {
@@ -15,14 +15,14 @@ export async function deleteAccount() {
 }
 
 export async function acceptReclamationGift(): Promise<{ success: boolean; error?: string }> {
-  const session = await auth();
-  if (!session?.user?.id) {
+  const session = await getServerActionSession();
+  if (!session?.id) {
     return { success: false, error: 'Unauthorized' };
   }
 
   try {
     const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
+      where: { id: session.id },
       select: { reclamationGraceUntil: true },
     });
 
@@ -37,7 +37,7 @@ export async function acceptReclamationGift(): Promise<{ success: boolean; error
     const gracePeriodEnds = new Date(Date.now() + 33 * 24 * 60 * 60 * 1000); // 33 days from now
 
     await prisma.user.update({
-      where: { id: session.user.id },
+      where: { id: session.id },
       data: {
         reclamationGraceUntil: gracePeriodEnds,
       },
