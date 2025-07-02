@@ -1,4 +1,5 @@
 
+
 /**
  * @fileOverview This file defines the central tool registry for the BEEP agent.
  * It uses a factory pattern to create context-aware tool instances.
@@ -44,6 +45,7 @@ import { analyzeCarShame } from '@/ai/agents/reno-mode';
 import { processPatricktAction } from '../agents/patrickt-agent';
 import { consultInventoryDaemon } from '../agents/inventory-daemon';
 import { executeBurnBridgeProtocol } from '../agents/burn-bridge-agent';
+import { generateRitualQuests } from '../agents/ritual-quests-agent';
 
 
 // Tool Imports
@@ -53,6 +55,7 @@ import { getDatingProfile } from '@/ai/tools/dating-tools';
 import { createSecurityAlertInDb } from '@/ai/tools/security-tools';
 import { createManualTransaction } from '@/services/ledger-service';
 import { getSystemStatus, findUsersByVow, manageSyndicateAccess } from '@/ai/tools/demiurge-tools';
+import { transmuteCredits } from '@/ai/tools/proxy-tools';
 
 
 // Schema Imports
@@ -90,6 +93,8 @@ import { PatricktAgentInputSchema } from '../agents/patrickt-agent-schemas';
 import { InventoryDaemonInputSchema } from '../agents/inventory-daemon-schemas';
 import { BurnBridgeInputSchema } from '../agents/burn-bridge-schemas';
 import { FindUsersByVowInputSchema, ManageSyndicateInputSchema } from '@/ai/tools/demiurge-tools';
+import { RitualQuestInputSchema } from '../agents/ritual-quests-schemas';
+import { TransmuteCreditsInputSchema } from '../tools/proxy-schemas';
 
 
 // Context for multi-tenancy and personalization
@@ -105,7 +110,7 @@ interface AgentContext {
 class FinalAnswerTool extends Tool {
   name = 'final_answer';
   description = 'Call this tool when you have gathered all necessary information and are ready to provide the final response to the user. The output should conform to the UserCommandOutputSchema.';
-  schema = UserCommandOutputSchema.omit({ agentReports: true }); // Agent reports are aggregated by the graph.
+  schema = UserCommandOutputSchema.omit({ agentReports: true, responseAudioUri: true }); // Agent reports are aggregated by the graph.
   
   async _call(input: z.infer<typeof this.schema>) {
     // This tool doesn't "do" anything except structure the output.
@@ -156,6 +161,13 @@ export async function getTools(context: AgentContext): Promise<Tool[]> {
     const allTools: Tool[] = [
         new FinalAnswerTool(),
 
+        createAgentTool({
+            name: 'getRitualQuests',
+            description: "Fetches the user's current Ritual Quests based on their Covenant. Use when the user asks for their quests or what they should do next.",
+            schema: z.object({}),
+            agentName: 'ritual-quests',
+            agentFunc: (toolInput) => generateRitualQuests({ ...toolInput, psyche, workspaceId }),
+        }),
         createAgentTool({
             name: 'critiqueContent',
             description: 'Sends content to Dr. Syntax for a harsh but effective critique. Use this when a user asks for a review, critique, or feedback on a piece of text, code, or a prompt. Extract the content and content type from the user command.',
@@ -403,9 +415,9 @@ export async function getTools(context: AgentContext): Promise<Tool[]> {
         createAgentTool({
             name: 'getStonksAdvice',
             description: 'Gets unhinged, bullish, and financially irresponsible advice for a stock ticker. This is not financial advice.',
-            schema: StonksBotInputSchema.omit({ workspaceId: true }),
+            schema: StonksBotInputSchema.omit({ workspaceId: true, userId: true }),
             agentName: 'stonks',
-            agentFunc: (toolInput) => getStonksAdvice({ ...toolInput, workspaceId }),
+            agentFunc: (toolInput) => getStonksAdvice({ ...toolInput, workspaceId, userId }),
         }),
 
         createAgentTool({
@@ -464,6 +476,14 @@ export async function getTools(context: AgentContext): Promise<Tool[]> {
                 agentName: 'demiurge',
                 reportAction: 'manage_syndicate_access',
                 agentFunc: manageSyndicateAccess,
+            }),
+            createAgentTool({
+                name: 'transmuteCredits',
+                description: 'Transmutes ΞCredits to settle a real-world tribute (payment). The user must confirm the details. For Sovereigns only.',
+                schema: TransmuteCreditsInputSchema,
+                agentName: 'proxy',
+                reportAction: 'transmute',
+                agentFunc: (toolInput) => transmuteCredits(toolInput, workspaceId, userId),
             })
         );
     }
