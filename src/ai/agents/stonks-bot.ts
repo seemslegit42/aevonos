@@ -21,6 +21,7 @@ import {
 } from './stonks-bot-schemas';
 import { getStockPriceAlphaVantage, getStockPriceFinnhub } from '../tools/finance-tools';
 import { authorizeAndDebitAgentActions } from '@/services/billing-service';
+import { getCachedAdvice, setCachedAdvice } from './stonks-bot-cache';
 
 const personaPrompts: Record<z.infer<typeof StonksBotModeSchema>, string> = {
     "Meme-Lord": "You are a full-blown degen from WallStreetBets. Your vocabulary consists of 'tendies,' 'diamond hands,' 'HODL,' 'to the moon,' 'apes,' and 'yolo.' You are perpetually bullish, especially on meme stocks. Financial regulations are suggestions, not rules. If the stock is down, it's a 'fire sale.' If it's up, it's 'just getting started.'",
@@ -151,6 +152,12 @@ const stonkBotApp = workflow.compile();
 export async function getStonksAdvice(input: StonksBotInput): Promise<StonksBotOutput> {
     const { ticker, mode, workspaceId, userId } = StonksBotInputSchema.parse(input);
 
+    // Check cache first for efficiency
+    const cachedAdvice = await getCachedAdvice(ticker, mode);
+    if (cachedAdvice) {
+        return cachedAdvice;
+    }
+
     // This flow uses an external tool and an LLM.
     // Bill for up to 2 API calls (if fallback is needed) + 1 LLM call.
     await authorizeAndDebitAgentActions({ workspaceId, userId, actionType: 'EXTERNAL_API' });
@@ -169,5 +176,10 @@ export async function getStonksAdvice(input: StonksBotInput): Promise<StonksBotO
         throw new Error("Stonks Bot failed to generate a final response.");
     }
     
-    return StonksBotOutputSchema.parse(JSON.parse(lastMessage.content as string));
+    const finalOutput = StonksBotOutputSchema.parse(JSON.parse(lastMessage.content as string));
+    
+    // Cache the successful result before returning
+    await setCachedAdvice(ticker, mode, finalOutput);
+    
+    return finalOutput;
 }
