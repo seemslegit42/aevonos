@@ -42,10 +42,23 @@ export default function Terminal() {
         const command = inputRef.current?.value;
         if (!command || isLoading) return;
 
-        setLines(prev => [...prev, { type: 'command', content: command }]);
+        const lowerCaseCommand = command.toLowerCase().trim();
+
+        if (lowerCaseCommand === 'clear') {
+            setLines([]);
+        } else if (lowerCaseCommand === 'help') {
+            setLines(prev => [
+                ...prev,
+                { type: 'command', content: command },
+                { type: 'response', content: 'Available local commands:\n  clear - Clears the terminal screen.\n  help  - Shows this help message.\n\nAll other commands are sent to BEEP.' }
+            ]);
+        } else {
+            setLines(prev => [...prev, { type: 'command', content: command }]);
+            handleCommandSubmit(command);
+        }
+
         setHistory(prev => [command, ...prev]);
         setHistoryIndex(-1);
-        handleCommandSubmit(command);
 
         if (inputRef.current) {
             inputRef.current.value = '';
