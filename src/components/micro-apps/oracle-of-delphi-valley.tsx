@@ -87,9 +87,8 @@ export default function OracleOfDelphiValley() {
         const tributeResult = await makeFollyTribute('ORACLE_OF_DELPHI_VALLEY', amount);
 
         if (tributeResult.success) {
-            if (tributeResult.outcome!.includes('win') || tributeResult.outcome === 'pity_boon') {
-                const echoAmount = tributeResult.boonAmount! * (Math.random() * 1.5 + 1.2);
-                setEcho({ amount: echoAmount, key: Date.now() });
+            if (tributeResult.aethericEcho && tributeResult.aethericEcho > 0) {
+                setEcho({ amount: tributeResult.aethericEcho, key: Date.now() });
             }
 
             spinReels(tributeResult.outcome!, tributeResult.boonAmount!);
