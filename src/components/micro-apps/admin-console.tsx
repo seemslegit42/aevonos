@@ -10,6 +10,8 @@ import { type User, type Workspace, UserRole } from '@prisma/client';
 import { Skeleton } from '../ui/skeleton';
 import { ShieldAlert } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
+import SacredVowsTab from './admin-console/SacredVowsTab';
+import CovenantsTab from './admin-console/CovenantsTab';
 
 export default function AdminConsole() {
   const [isOwner, setIsOwner] = useState(false);
@@ -23,7 +25,7 @@ export default function AdminConsole() {
             fetch('/api/workspaces/me')
         ]);
         if (!userRes.ok || !workspaceRes.ok) {
-          throw new Error('Could not fetch user permissions');
+          throw new Error('Could not verify user permissions');
         }
         const userData: User = await userRes.json();
         const workspaceData: Workspace = await workspaceRes.json();
@@ -65,10 +67,12 @@ export default function AdminConsole() {
   return (
     <div className="p-2 h-full">
       <Tabs defaultValue="dashboard" className="h-full flex flex-col">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="dashboard">Overlook</TabsTrigger>
           <TabsTrigger value="pantheon">Pantheon</TabsTrigger>
           <TabsTrigger value="muster">Agent Muster</TabsTrigger>
+          <TabsTrigger value="vows">Sacred Vows</TabsTrigger>
+          <TabsTrigger value="covenants">Covenants</TabsTrigger>
         </TabsList>
         <TabsContent value="dashboard" className="flex-grow mt-2 overflow-y-auto">
           <AdminDashboardTab />
@@ -78,6 +82,12 @@ export default function AdminConsole() {
         </TabsContent>
         <TabsContent value="muster" className="flex-grow mt-2 overflow-y-auto">
           <SystemMonitoringTab />
+        </TabsContent>
+        <TabsContent value="vows" className="flex-grow mt-2 overflow-y-auto">
+          <SacredVowsTab />
+        </TabsContent>
+        <TabsContent value="covenants" className="flex-grow mt-2 overflow-y-auto">
+          <CovenantsTab />
         </TabsContent>
       </Tabs>
     </div>
