@@ -19,6 +19,7 @@ import {
     checkEmailBreaches,
     checkBurnerPhoneNumber,
     searchIntelX,
+    scrapeSocialMediaProfile,
 } from '../tools/osint-tools';
 import { runFirecrawlerScan } from '../tools/firecrawler-tools';
 import { authorizeAndDebitAgentActions } from '@/services/billing-service';
@@ -48,7 +49,7 @@ interface OsintAgentState {
   context: string;
 }
 
-const osintTools = [checkEmailBreaches, checkBurnerPhoneNumber, searchIntelX, runFirecrawlerScan];
+const osintTools = [checkEmailBreaches, checkBurnerPhoneNumber, searchIntelX, runFirecrawlerScan, scrapeSocialMediaProfile];
 const modelWithTools = langchainGroqComplex.bind({
     tools: osintTools.map(tool => ({
         type: 'function',
@@ -71,12 +72,13 @@ const callPlanner = async (state: OsintAgentState) => {
   Target Name: "${targetName}"
   Context: "${context}"
 
-  Available tools: checkEmailBreaches, checkBurnerPhoneNumber, searchIntelXLeaks, runFirecrawlerScan.
+  Available tools: checkEmailBreaches, checkBurnerPhoneNumber, searchIntelXLeaks, runFirecrawlerScan, scrapeSocialMediaProfile.
   
   Based on the context, decide which tools to call. For example:
   - If an email is present, call checkEmailBreaches and searchIntelXLeaks.
   - If a phone number is present, call checkBurnerPhoneNumber.
-  - If URLs are present, call runFirecrawlerScan for each URL.
+  - If a social media URL (LinkedIn, Instagram, X/Twitter, TikTok, GitHub) is present, use the 'scrapeSocialMediaProfile' tool.
+  - For any other generic URL, use the 'runFirecrawlerScan' tool.
 
   Formulate your plan as a series of tool calls.`;
 

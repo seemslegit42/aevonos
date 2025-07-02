@@ -8,6 +8,7 @@ import {
   PwnedCheckInputSchema, PwnedCheckOutputSchema,
   BurnerCheckInputSchema, BurnerCheckOutputSchema,
   IntelXSearchInputSchema, IntelXSearchOutputSchema,
+  SocialScrapeInputSchema, SocialScrapeOutputSchema,
 } from './osint-schemas';
 
 // HaveIBeenPwned Tool
@@ -130,5 +131,60 @@ export const searchIntelX = ai.defineTool(
             ]
         }
         return [];
+    }
+);
+
+// Social Media Scraper Tool
+export const scrapeSocialMediaProfile = ai.defineTool(
+    {
+        name: 'scrapeSocialMediaProfile',
+        description: 'Scrapes a known social media profile URL (LinkedIn, Instagram, X/Twitter, TikTok, GitHub) to extract key profile information.',
+        inputSchema: SocialScrapeInputSchema,
+        outputSchema: SocialScrapeOutputSchema,
+    },
+    async ({ profileUrl }) => {
+        // This is a mock implementation. A real one would use a web scraping service.
+        console.log(`[OSINT Tool] Mock scraping social media profile: ${profileUrl}`);
+        
+        const url = new URL(profileUrl);
+        const hostname = url.hostname;
+        
+        if (hostname.includes('linkedin.com')) {
+            return {
+                platform: 'LinkedIn',
+                username: 'johndoe-professional',
+                fullName: 'John Doe',
+                bio: 'Senior Synergy Architect at Vandelay Industries | Specializing in latex products and strategic importing/exporting.',
+                recentPosts: [
+                    "Thrilled to announce our Q3 results exceeded all expectations.",
+                    "The future of agentic workflows is bright. #AI #SaaS"
+                ],
+                followerCount: 500
+            };
+        }
+        
+        if (hostname.includes('instagram.com')) {
+            return {
+                platform: 'Instagram',
+                username: 'johndoe_travels',
+                fullName: 'John D.',
+                bio: 'Just a guy, a dog, and a van. DM for collabs.',
+                recentPosts: [
+                    "Golden hour at the Grand Canyon was unreal!",
+                    "My dog, Chewbarka, enjoying a pup-cup."
+                ],
+                followerCount: 1245
+            };
+        }
+        
+        // Default fallback
+        return {
+            platform: 'Unknown',
+            username: 'unknown_user',
+            fullName: 'Unknown User',
+            bio: 'A generic bio from a scraped profile.',
+            recentPosts: ["Posted about something interesting."],
+            followerCount: 100,
+        };
     }
 );

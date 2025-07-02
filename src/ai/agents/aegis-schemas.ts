@@ -1,5 +1,6 @@
+
 import {z} from 'zod';
-import { SecurityRiskLevel } from '@prisma/client';
+import { SecurityRiskLevel, UserRole, UserPsyche } from '@prisma/client';
 
 export const AegisAnomalyScanInputSchema = z.object({
   activityDescription: z
@@ -7,6 +8,8 @@ export const AegisAnomalyScanInputSchema = z.object({
     .describe('Description of user activity, including commands and data access.'),
   workspaceId: z.string().describe('The ID of the workspace performing the action.'),
   userId: z.string().describe('The ID of the user performing the action.'),
+  userRole: z.nativeEnum(UserRole).describe("The role of the user performing the action (e.g., ADMIN, OPERATOR)."),
+  userPsyche: z.nativeEnum(UserPsyche).describe("The psychological profile of the user."),
 });
 export type AegisAnomalyScanInput = z.infer<typeof AegisAnomalyScanInputSchema>;
 

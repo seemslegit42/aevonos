@@ -49,6 +49,8 @@ interface AgentState {
   messages: BaseMessage[];
   workspaceId: string;
   userId: string;
+  role: UserRole;
+  psyche: UserPsyche;
   aegisReport: AegisAnomalyScanOutput | null;
 }
 
@@ -88,7 +90,7 @@ class SafeToolExecutor extends Runnable<AgentState, Partial<AgentState>> {
 }
 
 const callAegis = async (state: AgentState): Promise<Partial<AgentState>> => {
-    const { messages, workspaceId, userId } = state;
+    const { messages, workspaceId, userId, role, psyche } = state;
     const humanMessage = messages.find(m => m instanceof HumanMessage);
     if (!humanMessage) {
         throw new Error("Could not find user command for Aegis scan.");
@@ -101,6 +103,8 @@ const callAegis = async (state: AgentState): Promise<Partial<AgentState>> => {
             activityDescription: `User command: "${userCommand}"`,
             workspaceId,
             userId,
+            userRole: role,
+            userPsyche: psyche,
         });
     } catch (error: any) {
         console.error(`[Aegis Node] Anomaly scan failed:`, error);
@@ -242,6 +246,14 @@ const workflow = new StateGraph<AgentState>({
         value: (x, y) => y,
         default: () => '',
     },
+    role: {
+        value: (x, y) => y,
+        default: () => UserRole.OPERATOR,
+    },
+    psyche: {
+        value: (x, y) => y,
+        default: () => UserPsyche.ZEN_ARCHITECT,
+    },
     aegisReport: {
         value: (x, y) => y,
         default: () => null,
@@ -359,6 +371,8 @@ export async function processUserCommand(input: UserCommandInput): Promise<UserC
     messages: [...history, new HumanMessage(initialPrompt)],
     workspaceId: input.workspaceId,
     userId: input.userId,
+    role: input.role,
+    psyche: input.psyche,
   }).catch(error => {
       // Catch errors from the graph execution itself.
       if (error instanceof InsufficientCreditsError) {
