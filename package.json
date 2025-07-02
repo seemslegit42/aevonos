@@ -1,3 +1,4 @@
+
 {
   "name": "nextn",
   "version": "0.1.0",
@@ -72,7 +73,7 @@
     "lucide-react": "0.480.0",
     "md-to-pdf": "5.2.4",
     "next": "14.2.4",
-    "next-auth": "5.0.0-beta.19",
+    "next-auth": "canary",
     "patch-package": "8.0.0",
     "react": "18.3.1",
     "react-dom": "18.3.1",
