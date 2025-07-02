@@ -23,7 +23,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { updateAgentStatus, deleteAgent } from '@/app/admin/actions';
 import { cn } from '@/lib/utils';
-import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 const statusConfig: Record<AgentStatus, { icon: React.ElementType, color: string, text: string }> = {
   [AgentStatus.active]: { icon: CheckCircle, color: 'text-accent', text: 'Active' },

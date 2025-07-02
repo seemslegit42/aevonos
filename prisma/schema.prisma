@@ -115,7 +115,7 @@ model WorkflowRun {
   workflowId     String
   workflow       Workflow          @relation(fields: [workflowId], references: [id], onDelete: Cascade)
   workspaceId    String
-  workspace      Workspace         @relation(fields: [workspaceId], references: [id], onDelete: NoAction) // Avoid cascading delete cycles
+  workspace      Workspace         @relation(fields: [workspaceId], references: [id], onDelete: Restrict) // Avoid cascading delete cycles
 
   @@index([workflowId])
   @@index([workspaceId])

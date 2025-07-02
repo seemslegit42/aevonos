@@ -21,7 +21,7 @@ import { Loader2 } from 'lucide-react';
 import type { User, UserPsyche, PulseProfile } from '@prisma/client';
 import { useAppStore } from '@/store/app-store';
 import { handleLogout, handleDeleteAccount, acceptReclamationGift } from '@/app/actions';
-import { Separator } from '../ui/separator';
+import { Separator } from '@/components/ui/separator';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -32,8 +32,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import PsycheMatrix from '../profile/psyche-matrix';
-import { Skeleton } from '../ui/skeleton';
+import PsycheMatrix from '@/components/profile/psyche-matrix';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const profileFormSchema = z.object({
   firstName: z.string().optional(),
@@ -161,7 +161,7 @@ export default function UserProfileSettings({ id, user }: UserProfileSettingsPro
                                 <FormItem>
                                     <FormLabel>First Name</FormLabel>
                                     <FormControl>
-                                        <Input placeholder="The" {...field} disabled={isSubmitting} className="bg-background/80" />
+                                        <Input placeholder="The" {...field} disabled={isSubmitting} className="bg-background" />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
@@ -174,7 +174,7 @@ export default function UserProfileSettings({ id, user }: UserProfileSettingsPro
                                 <FormItem>
                                     <FormLabel>Last Name</FormLabel>
                                     <FormControl>
-                                        <Input placeholder="Architect" {...field} disabled={isSubmitting} className="bg-background/80" />
+                                        <Input placeholder="Architect" {...field} disabled={isSubmitting} className="bg-background" />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
@@ -187,7 +187,7 @@ export default function UserProfileSettings({ id, user }: UserProfileSettingsPro
                                 <FormItem>
                                     <FormLabel>Agent Alias</FormLabel>
                                     <FormControl>
-                                        <Input placeholder="BEEP" {...field} disabled={isSubmitting} className="bg-background/80" />
+                                        <Input placeholder="BEEP" {...field} disabled={isSubmitting} className="bg-background" />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>

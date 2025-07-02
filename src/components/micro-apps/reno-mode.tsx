@@ -9,11 +9,11 @@ import { Loader2, Camera, Sparkles, UserCheck, HeartHand, Flame, Wind, Droplets 
 import { useAppStore } from '@/store/app-store';
 import type { RenoModeAnalysisOutput } from '@/ai/agents/reno-mode-schemas';
 import { useToast } from '@/hooks/use-toast';
-import { Progress } from '../ui/progress';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../ui/accordion';
+import { Progress } from '@/components/ui/progress';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import Image from 'next/image';
-import { ScrollArea } from '../ui/scroll-area';
-import { Badge } from '../ui/badge';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 
 // Mock Data for Filthmatch™ and Guide

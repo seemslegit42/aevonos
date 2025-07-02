@@ -9,7 +9,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import type { User, Workspace } from '@prisma/client';
 import { useAppStore } from '@/store/app-store';
 import { cn } from '@/lib/utils';
-import { Button } from '../ui/button';
+import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 type UserProp = Pick<User, 'id' | 'email' | 'firstName' | 'lastName' | 'role' | 'agentAlias'> | null;
@@ -85,7 +85,7 @@ export default function TopBar({ user, workspace }: TopBarProps) {
             type="text"
             placeholder={placeholderText}
             className={cn(
-              "w-full bg-background/80 text-foreground placeholder:text-muted-foreground border-border/50 h-10",
+              "w-full bg-background text-foreground placeholder:text-muted-foreground border-border/50 h-10",
               "focus-visible:ring-1 focus-visible:ring-roman-aqua",
               isLoading && "ring-1 ring-inset ring-roman-aqua animate-pulse"
             )}

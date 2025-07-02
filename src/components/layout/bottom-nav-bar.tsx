@@ -10,8 +10,8 @@ import { cn } from '@/lib/utils';
 import { LayoutGrid, LucideProps } from 'lucide-react';
 import { LoomIcon } from '@/components/icons/LoomIcon';
 import { ArmoryIcon } from '@/components/icons/ArmoryIcon';
-import { AegisThreatScopeIcon } from '../icons/AegisThreatScopeIcon';
-import { BeepIcon } from '../icons/BeepIcon';
+import { AegisThreatScopeIcon } from '@/components/icons/AegisThreatScopeIcon';
+import { BeepIcon } from '@/components/icons/BeepIcon';
 import type { MicroAppType } from '@/store/app-store';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
