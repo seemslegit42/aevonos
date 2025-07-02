@@ -49,6 +49,7 @@ export const artifactManifests: ArtifactManifest[] = [
     imageHint: 'library crystal knowledge',
     defaultSize: { width: 550, height: 400 },
     permissionsRequired: [],
+    tags: ['core', 'utility', 'data'],
   },
   {
     id: 'terminal',
@@ -62,6 +63,7 @@ export const artifactManifests: ArtifactManifest[] = [
     imageHint: 'code command line',
     defaultSize: { width: 500, height: 350 },
     permissionsRequired: [],
+    tags: ['core', 'utility', 'developer'],
   },
   {
     id: 'admin-console',
@@ -89,6 +91,20 @@ export const artifactManifests: ArtifactManifest[] = [
     defaultSize: { width: 700, height: 550 },
     permissionsRequired: ['ADMIN'],
     tags: ["security", "ritual", "automation", "enterprise", "api"],
+  },
+  {
+    id: 'integration-nexus',
+    type: 'MICRO_APP',
+    name: 'Integration Nexus',
+    author: 'ΛΞVON OS',
+    description: 'The Conductor of Worlds. Connect, configure, and manage data flows with external services like Slack, Google, and Stripe.',
+    creditCost: 0,
+    priceModel: 'included',
+    imageUrl: 'https://placehold.co/600x400.png',
+    imageHint: 'nodes connections api',
+    defaultSize: { width: 450, height: 500 },
+    permissionsRequired: ['ADMIN'],
+    tags: ['core', 'utility', 'api', 'integrations'],
   },
   {
     id: 'contact-list',

@@ -43,6 +43,8 @@ import { MerchantOfCabbageIcon } from './icons/MerchantOfCabbageIcon';
 import { FileExplorerIcon } from './icons/FileExplorerIcon';
 import Terminal from './micro-apps/terminal';
 import { ObeliskMarketplaceIcon } from './icons/ObeliskMarketplaceIcon';
+import { CommandAndCauldronIcon } from './icons/CommandAndCauldronIcon';
+import { IntegrationNexusIcon } from './icons/IntegrationNexusIcon';
 
 import { type MicroAppType } from '@/store/app-store';
 import ContactList from './micro-apps/contact-list';
@@ -86,6 +88,8 @@ import PatricktApp from './micro-apps/patrickt';
 import HowardsSidekick from './micro-apps/howards-sidekick';
 import ScribesArchive from './micro-apps/file-explorer';
 import ObeliskMarketplace from './micro-apps/obelisk-marketplace';
+import CommandAndCauldron from './micro-apps/command-and-cauldron';
+import IntegrationNexus from './micro-apps/integration-nexus';
 
 
 type ComponentRegistry = {
@@ -264,6 +268,14 @@ export const microAppRegistry: Record<MicroAppType, ComponentRegistry> = {
   'obelisk-marketplace': {
     icon: ObeliskMarketplaceIcon,
     content: ObeliskMarketplace,
+  },
+  'command-and-cauldron': {
+    icon: CommandAndCauldronIcon,
+    content: CommandAndCauldron,
+  },
+  'integration-nexus': {
+      icon: IntegrationNexusIcon,
+      content: IntegrationNexus,
   },
 };
 
