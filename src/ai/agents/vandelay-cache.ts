@@ -1,30 +1,38 @@
 
 import type { VandelayAlibiOutput } from './vandelay-schemas';
 
-/**
- * A pre-computed cache for common Vandelay Industries alibi requests.
- * This demonstrates a simple caching strategy to reduce LLM calls for frequent, deterministic inputs.
- * In a production system, this would be replaced by a proper external cache (e.g., Redis).
- */
-export const vandelayCache: Record<string, VandelayAlibiOutput> = {
-  'generic-false': {
-    title: 'Synergy Deep Dive (Q3 Alignment)',
-    attendees: [],
-  },
-  'generic-true': {
-    title: 'Cross-Functional Touchpoint on Strategic Verticals',
-    attendees: ['jen@synergyconsulting.io', 'Dr. Alistair Finch (Compliance)'],
-  },
-  'design review-false': {
-    title: 'Async Design Review & Heuristics Alignment',
-    attendees: [],
-  },
-  'design review-true': {
-    title: 'Stakeholder Feedback Session: UI/UX Heuristics',
-    attendees: ['susan.g@megacorp.com', 'Mark (Third-Party Vendor)'],
-  },
-  'urgent call-false': {
-    title: 'Critical Path Debrief: Tactical Response Sync',
-    attendees: [],
-  },
-};
+const CACHE_TTL_MINUTES = 60; // Alibis can be cached for longer
+
+interface CachedAlibi {
+  alibi: VandelayAlibiOutput;
+  timestamp: number;
+}
+
+const alibiCache: Record<string, CachedAlibi> = {};
+
+export function getCachedAlibi(cacheKey: string): VandelayAlibiOutput | null {
+  const cached = alibiCache[cacheKey];
+  if (!cached) {
+    return null;
+  }
+
+  const now = Date.now();
+  const ageInMinutes = (now - cached.timestamp) / (1000 * 60);
+
+  if (ageInMinutes > CACHE_TTL_MINUTES) {
+    console.log(`[Vandelay Cache] Stale entry for ${cacheKey}. Ignoring.`);
+    delete alibiCache[cacheKey];
+    return null;
+  }
+
+  console.log(`[Vandelay Cache] Cache hit for ${cacheKey}.`);
+  return cached.alibi;
+}
+
+export function setCachedAlibi(cacheKey: string, alibi: VandelayAlibiOutput): void {
+  console.log(`[Vandelay Cache] Caching alibi for ${cacheKey}.`);
+  alibiCache[cacheKey] = {
+    alibi,
+    timestamp: Date.now(),
+  };
+}

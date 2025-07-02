@@ -5,7 +5,7 @@
  * Validates VINs with speed and swagger by connecting to the live NHTSA API.
  */
 
-import { ai } from '@/ai/genkit';
+import { ai } from '@/ai/genkit'; 
 import { 
     VinDieselInputSchema, 
     VinDieselOutputSchema, 
@@ -14,7 +14,7 @@ import {
 } from './vin-diesel-schemas';
 import { z } from 'zod';
 import { authorizeAndDebitAgentActions } from '@/services/billing-service';
-import { vinDieselCache } from './vin-diesel-cache';
+import { getCachedValidation, setCachedValidation } from './vin-diesel-cache';
 
 const vinDieselValidationFlow = ai.defineFlow(
   {
@@ -23,17 +23,19 @@ const vinDieselValidationFlow = ai.defineFlow(
     outputSchema: VinDieselOutputSchema,
   },
   async ({ vin, workspaceId }) => {
+    // --- CACHING LOGIC ---
+    const cachedResult = getCachedValidation(vin);
+    if (cachedResult) {
+        // Even with a cache hit, we bill for the action. The value is in the result.
+        await authorizeAndDebitAgentActions({ workspaceId, actionType: 'TOOL_USE' }); // Simplified billing
+        return cachedResult;
+    }
+    // --- END CACHING LOGIC ---
+    
     // This action involves an external API call and an LLM call.
     // Bill for both upfront to simplify the logic.
     await authorizeAndDebitAgentActions({ workspaceId, actionType: 'EXTERNAL_API' });
     await authorizeAndDebitAgentActions({ workspaceId, actionType: 'SIMPLE_LLM' });
-    
-    // --- CACHING LOGIC ---
-    if (vinDieselCache[vin]) {
-        console.log(`[VIN Diesel Agent] Cache hit for key: ${vin}.`);
-        return vinDieselCache[vin];
-    }
-    // --- END CACHING LOGIC ---
 
     // --- NHTSA API Integration ---
     const url = `https://vpic.nhtsa.dot.gov/api/vehicles/decodevin/${vin}?format=json`;
@@ -53,13 +55,15 @@ const vinDieselValidationFlow = ai.defineFlow(
 
     } catch (error) {
         console.error(`[VIN Diesel Agent] NHTSA API Error for VIN ${vin}:`, error);
-        return {
+        const errorResult = {
             vin,
             isValid: false,
             statusMessage: "That VIN's a ghost. Came up with nothing but static. Check your numbers.",
             decodedInfo: {},
             complianceReport: { registration: 'Unknown', customs: 'Unknown', inspection: 'Unknown' }
         };
+        setCachedValidation(vin, errorResult); // Cache failures too to prevent repeated failed requests
+        return errorResult;
     }
 
     const results = apiData.Results;
@@ -70,13 +74,15 @@ const vinDieselValidationFlow = ai.defineFlow(
     const yearStr = findValue('Model Year');
 
     if (!make || !model || !yearStr) {
-        return {
+        const invalidDataResult = {
             vin,
             isValid: false,
             statusMessage: "This ride's papers are forged. The VIN came up empty.",
             decodedInfo: {},
             complianceReport: { registration: 'Flagged', customs: 'Flagged', inspection: 'Failed - Incomplete Data' }
         };
+        setCachedValidation(vin, invalidDataResult);
+        return invalidDataResult;
     }
 
     const decodedInfo = {
@@ -115,12 +121,15 @@ const vinDieselValidationFlow = ai.defineFlow(
         throw new Error("VIN Diesel's comms are down. Couldn't generate response.");
     }
     
-    return {
+    const finalResult = {
       vin,
       isValid: true,
       decodedInfo,
       ...output
     };
+    
+    setCachedValidation(vin, finalResult);
+    return finalResult;
   }
 );
 

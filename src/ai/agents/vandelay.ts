@@ -12,7 +12,7 @@ import {
     type VandelayAlibiOutput
 } from './vandelay-schemas';
 import { authorizeAndDebitAgentActions } from '@/services/billing-service';
-import { vandelayCache } from './vandelay-cache';
+import { getCachedAlibi, setCachedAlibi } from './vandelay-cache';
 
 const generateAlibiFlow = ai.defineFlow(
   {
@@ -23,12 +23,13 @@ const generateAlibiFlow = ai.defineFlow(
   async ({ topicHint, addAttendees, workspaceId }) => {
     // --- CACHING LOGIC ---
     const cacheKey = `${topicHint?.toLowerCase().trim() || 'generic'}-${!!addAttendees}`;
-    if (vandelayCache[cacheKey]) {
+    const cachedAlibi = getCachedAlibi(cacheKey);
+    if (cachedAlibi) {
       console.log(`[Vandelay Agent] Cache hit for key: ${cacheKey}. Returning pre-computed response.`);
       // IMPORTANT: Even with a cache hit, we must bill for the action.
       // The value is in the result, not just the computation.
       await authorizeAndDebitAgentActions({ workspaceId, actionType: 'SIMPLE_LLM' });
-      return vandelayCache[cacheKey];
+      return cachedAlibi;
     }
     console.log(`[Vandelay Agent] Cache miss for key: ${cacheKey}. Calling LLM.`);
     // --- END CACHING_LOGIC ---
@@ -63,6 +64,10 @@ const generateAlibiFlow = ai.defineFlow(
       output: { schema: VandelayAlibiOutputSchema },
       model: 'googleai/gemini-1.5-flash-latest',
     });
+    
+    if (output) {
+        setCachedAlibi(cacheKey, output);
+    }
 
     return output!;
   }
