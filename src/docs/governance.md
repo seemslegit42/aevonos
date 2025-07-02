@@ -1,3 +1,4 @@
+
 # ΛΞVON OS: Governance - Security Practices
 
 ## 1. Core Philosophy: Security-by-Design
@@ -11,7 +12,7 @@ Security in ΛΞVON OS is a foundational, pervasive layer woven into the very fa
 -   **Principle**: No user, device, or system is inherently trusted. All access requests are continuously verified.
 -   **Implementation**:
     -   **Authentication**: All API routes and protected pages are secured by `middleware.ts`, which validates a JWT `session` cookie. Unauthenticated access is rejected or redirected.
-    -   **Authorization**: API routes check the `UserRole` (e.g., `ADMIN`, `MANAGER`, `OPERATOR`, `AUDITOR`) from the validated session to authorize sensitive actions like creating workflows or deleting agents.
+    -   **Authorization**: API routes check the `UserRole` (e.g., `ADMIN`, `MANAGER`, `OPERATOR`, `AUDITOR`) from the validated session to authorize sensitive actions like creating workflows, deleting agents, or managing integrations.
 
 ### 2.2. Data Protection & Isolation
 

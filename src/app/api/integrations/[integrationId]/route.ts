@@ -3,7 +3,7 @@ import { NextResponse, NextRequest } from 'next/server';
 import { z } from 'zod';
 import prisma from '@/lib/prisma';
 import { getServerActionSession } from '@/lib/auth';
-import { IntegrationStatus } from '@prisma/client';
+import { IntegrationStatus, UserRole } from '@prisma/client';
 
 
 interface RouteParams {
@@ -46,6 +46,11 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 export async function PUT(request: NextRequest, { params }: RouteParams) {
     try {
         const sessionUser = await getServerActionSession();
+        const user = await prisma.user.findUnique({ where: { id: sessionUser.id }});
+        if (!user || (user.role !== UserRole.ADMIN && user.role !== UserRole.MANAGER)) {
+            return NextResponse.json({ error: 'Permission denied. Administrator or Manager access required.' }, { status: 403 });
+        }
+
         const { integrationId } = params;
         const body = await request.json();
         const validation = IntegrationUpdateRequestSchema.safeParse(body);
@@ -82,6 +87,11 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
     try {
         const sessionUser = await getServerActionSession();
+        const user = await prisma.user.findUnique({ where: { id: sessionUser.id }});
+        if (!user || (user.role !== UserRole.ADMIN && user.role !== UserRole.MANAGER)) {
+            return NextResponse.json({ error: 'Permission denied. Administrator or Manager access required.' }, { status: 403 });
+        }
+
         const { integrationId } = params;
         
         const result = await prisma.integration.deleteMany({
