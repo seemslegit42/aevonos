@@ -1,4 +1,5 @@
 
+
 // src/config/artifacts.ts
 
 export type ArtifactType = 'MICRO_APP' | 'CHAOS_CARD';
@@ -77,6 +78,20 @@ export const artifactManifests: ArtifactManifest[] = [
     imageHint: 'dashboard settings users',
     defaultSize: { width: 700, height: 550 },
     permissionsRequired: ['OWNER_ONLY'],
+  },
+  {
+    id: 'ritual-quests',
+    type: 'MICRO_APP',
+    name: 'Ritual Quests',
+    author: 'The Chronicler',
+    description: 'Accept personalized challenges from the OS to guide your journey and increase your Vow Alignment Score.',
+    creditCost: 0,
+    priceModel: 'included',
+    imageUrl: 'https://placehold.co/600x400.png',
+    imageHint: 'scroll quest star',
+    defaultSize: { width: 380, height: 450 },
+    permissionsRequired: [],
+    tags: ['core', 'utility', 'gamification', 'covenant'],
   },
   {
     id: 'command-and-cauldron',

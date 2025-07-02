@@ -35,6 +35,7 @@ import { RenoModeAnalysisOutputSchema } from './reno-mode-schemas';
 import { PatricktAgentOutputSchema } from './patrickt-agent-schemas';
 import { InventoryDaemonOutputSchema } from './inventory-daemon-schemas';
 import { SystemStatusSchema, FindUsersByVowOutputSchema, ManageSyndicateOutputSchema } from '@/ai/tools/demiurge-schemas';
+import { RitualQuestOutputSchema } from './ritual-quests-schemas';
 
 
 // Schemas from the original BEEP agent, preserved for the public contract.
@@ -81,6 +82,7 @@ const LaunchableAppTypeSchema = z.enum([
   'obelisk-marketplace',
   'command-and-cauldron',
   'integration-nexus',
+  'ritual-quests',
 ]);
 
 export const AppToLaunchSchema = z.object({
@@ -313,6 +315,10 @@ export const AgentReportSchema = z.discriminatedUnion('agent', [
     agent: z.literal('demiurge'),
     report: DemiurgeAgentReportSchema,
   }),
+  z.object({
+      agent: z.literal('ritual-quests'),
+      report: RitualQuestOutputSchema,
+  })
 ]);
 
 export const UserCommandInputSchema = z.object({

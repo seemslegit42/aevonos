@@ -1,4 +1,5 @@
 
+
 import { config } from 'dotenv';
 config();
 
@@ -45,3 +46,4 @@ import '@/ai/tools/demiurge-tools.ts';
 import '@/services/pulse-engine-service.ts';
 import '@/ai/agents/burn-bridge-agent.ts';
 import '@/ai/tools/slack-tools.ts';
+import '@/ai/agents/ritual-quests-agent.ts';

@@ -45,6 +45,7 @@ import { analyzeCarShame } from '@/ai/agents/reno-mode';
 import { processPatricktAction } from '../agents/patrickt-agent';
 import { consultInventoryDaemon } from '../agents/inventory-daemon';
 import { executeBurnBridgeProtocol } from '../agents/burn-bridge-agent';
+import { generateRitualQuests } from '../agents/ritual-quests-agent';
 
 
 // Tool Imports
@@ -91,6 +92,7 @@ import { PatricktAgentInputSchema } from '../agents/patrickt-agent-schemas';
 import { InventoryDaemonInputSchema } from '../agents/inventory-daemon-schemas';
 import { BurnBridgeInputSchema } from '../agents/burn-bridge-schemas';
 import { FindUsersByVowInputSchema, ManageSyndicateInputSchema } from '@/ai/tools/demiurge-tools';
+import { RitualQuestInputSchema } from '../agents/ritual-quests-schemas';
 
 
 // Context for multi-tenancy and personalization
@@ -157,6 +159,13 @@ export async function getTools(context: AgentContext): Promise<Tool[]> {
     const allTools: Tool[] = [
         new FinalAnswerTool(),
 
+        createAgentTool({
+            name: 'getRitualQuests',
+            description: "Fetches the user's current Ritual Quests based on their Covenant. Use when the user asks for their quests or what they should do next.",
+            schema: z.object({}),
+            agentName: 'ritual-quests',
+            agentFunc: (toolInput) => generateRitualQuests({ ...toolInput, psyche, workspaceId }),
+        }),
         createAgentTool({
             name: 'critiqueContent',
             description: 'Sends content to Dr. Syntax for a harsh but effective critique. Use this when a user asks for a review, critique, or feedback on a piece of text, code, or a prompt. Extract the content and content type from the user command.',

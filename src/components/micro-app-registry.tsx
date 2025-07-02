@@ -1,4 +1,5 @@
 
+
 import React from 'react';
 import { TerminalIcon } from '@/components/icons/TerminalIcon';
 import { CrystalIcon } from '@/components/icons/CrystalIcon';
@@ -45,6 +46,7 @@ import Terminal from './micro-apps/terminal';
 import { ObeliskMarketplaceIcon } from './icons/ObeliskMarketplaceIcon';
 import { CommandAndCauldronIcon } from './icons/CommandAndCauldronIcon';
 import { IntegrationNexusIcon } from './icons/IntegrationNexusIcon';
+import { RitualQuestsIcon } from './icons/RitualQuestsIcon';
 
 import { type MicroAppType } from '@/store/app-store';
 import ContactList from './micro-apps/contact-list';
@@ -90,6 +92,7 @@ import ScribesArchive from './micro-apps/file-explorer';
 import ObeliskMarketplace from './micro-apps/obelisk-marketplace';
 import CommandAndCauldron from './micro-apps/command-and-cauldron';
 import IntegrationNexus from './micro-apps/integration-nexus';
+import RitualQuests from './micro-apps/ritual-quests';
 
 
 type ComponentRegistry = {
@@ -277,6 +280,10 @@ export const microAppRegistry: Record<MicroAppType, ComponentRegistry> = {
       icon: IntegrationNexusIcon,
       content: IntegrationNexus,
   },
+  'ritual-quests': {
+    icon: RitualQuestsIcon,
+    content: RitualQuests,
+  }
 };
 
 export const getAppIcon = (type: MicroAppType) => {

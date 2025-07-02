@@ -1,4 +1,5 @@
 
+
 import { create } from 'zustand';
 import type { DragEndEvent } from '@dnd-kit/core';
 import React from 'react';
@@ -35,6 +36,7 @@ import { StonksBotOutput } from '@/ai/agents/stonks-bot-schemas';
 import { RenoModeAnalysisOutput } from '@/ai/agents/reno-mode-schemas';
 import type { PatricktAgentOutput } from '@/ai/agents/patrickt-agent-schemas';
 import type { VinDieselOutput } from '@/ai/agents/vin-diesel-schemas';
+import type { RitualQuestOutput } from '@/ai/agents/ritual-quests-schemas';
 
 // Define the types of MicroApps available in the OS
 export type MicroAppType = 
@@ -82,7 +84,8 @@ export type MicroAppType =
   | 'merchant-of-cabbage'
   | 'obelisk-marketplace'
   | 'command-and-cauldron'
-  | 'integration-nexus';
+  | 'integration-nexus'
+  | 'ritual-quests';
 
 // Define the shape of a MicroApp instance
 export interface MicroApp {
@@ -206,6 +209,9 @@ export const useAppStore = create<AppState>((set, get) => {
     // Each handler defines how the UI should react to a specific agent's output.
     // =================================================================
     const agentReportHandlerRegistry: AppState['agentReportHandlerRegistry'] = {
+        'ritual-quests': (report: RitualQuestOutput) => {
+            upsertApp('ritual-quests', { id: 'singleton-ritual-quests', contentProps: { quests: report.quests } });
+        },
         'aegis': (report) => {
             launchApp('aegis-control', { contentProps: { ...report } });
             if (report.isAnomalous) {
