@@ -1,5 +1,4 @@
 
-
 // src/config/artifacts.ts
 
 export type ArtifactType = 'MICRO_APP' | 'CHAOS_CARD';
