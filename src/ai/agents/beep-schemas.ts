@@ -83,6 +83,7 @@ const LaunchableAppTypeSchema = z.enum([
   'command-and-cauldron',
   'integration-nexus',
   'ritual-quests',
+  'proxy-agent',
 ]);
 
 export const AppToLaunchSchema = z.object({

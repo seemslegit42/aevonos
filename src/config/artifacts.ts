@@ -242,6 +242,20 @@ export const artifactManifests: ArtifactManifest[] = [
     tags: ["economy", "sovereignty", "premium"]
   },
   {
+    id: 'proxy-agent',
+    type: 'MICRO_APP',
+    name: "Proxy.Agent",
+    author: 'The Pantheon',
+    description: 'The transmutation layer. Authorize real-world tributes using your ΞCredit balance. Summoned, not launched.',
+    creditCost: 0,
+    priceModel: 'included',
+    imageUrl: 'https://placehold.co/600x400.png',
+    imageHint: 'sigil payment command',
+    defaultSize: { width: 380, height: 450 },
+    permissionsRequired: ['OWNER_ONLY'],
+    tags: ["economy", "sovereignty", "ritual"]
+  },
+  {
     id: 'howards-sidekick',
     type: 'MICRO_APP',
     name: "Howard's Sidekick",

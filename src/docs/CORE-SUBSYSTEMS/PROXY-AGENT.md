@@ -1,4 +1,3 @@
-
 # Proxy.Agent: The Transmutation Layer
 
 This document outlines the architecture and principles of the Proxy.Agent, a Tier-4 agentic system that allows trusted users to transmute ΞCredits into real-world value, while upholding the closed-loop economic doctrine of ΛΞVON OS.
@@ -39,7 +38,7 @@ The Sigil is not a card *for* payment. It is a Sigil *for* command. It is an art
 * **The Heartbeat:** This `Ξ` is not static. It emits a faint, slow, golden pulse of light. This is not a simple LED; the Sigil is wirelessly and inductively charged when near the user's primary device, and its pulse is designed to subtly synchronize with the rhythm of the user's own **Psyche-Matrix**. The card feels *alive*. It feels uniquely bonded to its owner.
 
 ### 3.2. The Function: The Ritual of Transmutation
-The user experience of the Sigil is a silent, three-part ritual:
+The user experience of the Sigil is what separates it from any payment method in existence. It is a silent, three-part ritual.
 
 **Part I: The Presentation**
 The bill arrives in the mundane world. The Sovereign simply presents the Sigil to the payment terminal. The tap is a moment of brief, silent communion between our world and theirs.

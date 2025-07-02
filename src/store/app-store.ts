@@ -32,7 +32,8 @@ export type MicroAppType =
   | 'file-explorer'
   | 'loom'
   | 'winston-wolfe'
-  | 'obelisk-marketplace';
+  | 'obelisk-marketplace'
+  | 'proxy-agent';
 
 export interface MicroApp {
   id: string;

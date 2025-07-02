@@ -11,6 +11,7 @@ import { LayoutGrid, AppWindow, Cog, Shield, LifeBuoy, ShoppingCart } from 'luci
 import { LoomIcon } from './icons/LoomIcon';
 import { WinstonWolfeIcon } from './icons/WinstonWolfeIcon';
 import { ObeliskMarketplaceIcon } from './icons/ObeliskMarketplaceIcon';
+import { ProxyAgentIcon } from './icons/ProxyAgentIcon';
 
 import Terminal from './micro-apps/terminal';
 import AegisReport from './micro-apps/aegis-report';
@@ -28,6 +29,7 @@ import ScribesArchive from './micro-apps/file-explorer';
 import LoomPage from '@/app/loom/page';
 import TheWinstonWolfe from './micro-apps/winston-wolfe';
 import ObeliskMarketplace from './micro-apps/obelisk-marketplace';
+import ProxyAgent from './micro-apps/proxy-agent';
 
 import { type MicroAppType } from '@/store/app-store';
 
@@ -103,6 +105,10 @@ export const microAppRegistry: Record<MicroAppType, ComponentRegistry> = {
   'obelisk-marketplace': {
     icon: ObeliskMarketplaceIcon,
     content: ObeliskMarketplace,
+  },
+  'proxy-agent': {
+    icon: ProxyAgentIcon,
+    content: ProxyAgent,
   }
 };
 
