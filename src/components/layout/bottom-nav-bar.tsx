@@ -13,12 +13,10 @@ import { ArmoryIcon } from '@/components/icons/ArmoryIcon';
 import { AegisThreatScopeIcon } from '../icons/AegisThreatScopeIcon';
 import { BeepIcon } from '../icons/BeepIcon';
 import type { MicroAppType } from '@/store/app-store';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 type NavItem = {
     label: string;
     icon: React.ComponentType<LucideProps> | React.FC<React.SVGProps<SVGSVGElement>>;
-    tooltipContent: string;
 } & ({
     href: string;
     appType?: never;
@@ -28,13 +26,13 @@ type NavItem = {
 });
 
 const leftNavItems: NavItem[] = [
-    { label: 'Canvas', href: '/', icon: LayoutGrid, tooltipContent: "Return to the main Canvas" },
-    { label: 'Loom', href: '/loom', icon: LoomIcon, tooltipContent: "Orchestrate agentic workflows" },
+    { label: 'Canvas', href: '/', icon: LayoutGrid },
+    { label: 'Loom', href: '/loom', icon: LoomIcon },
 ];
 
 const rightNavItems: NavItem[] = [
-    { label: 'Armory', appType: 'armory', icon: ArmoryIcon, tooltipContent: "Acquire new tools & artifacts" },
-    { label: 'Threats', appType: 'aegis-threatscope', icon: AegisThreatScopeIcon, tooltipContent: "View security alerts" },
+    { label: 'Armory', appType: 'armory', icon: ArmoryIcon },
+    { label: 'Threats', appType: 'aegis-threatscope', icon: AegisThreatScopeIcon },
 ];
 
 
@@ -72,12 +70,7 @@ const NavButton = ({ item }: { item: NavItem }) => {
 
     return (
          <div className="flex-1">
-            <Tooltip>
-                <TooltipTrigger asChild>{buttonElement}</TooltipTrigger>
-                <TooltipContent side="top">
-                    <p>{item.tooltipContent}</p>
-                </TooltipContent>
-            </Tooltip>
+            {buttonElement}
         </div>
     )
 }
@@ -94,26 +87,17 @@ export default function BottomNavBar() {
             transition={{ type: "spring", stiffness: 100, damping: 20, delay: 0.2 }}
             className="fixed bottom-4 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-sm h-16 md:hidden z-50"
         >
-            <TooltipProvider>
-                <div className="relative w-full h-full flex items-center justify-around bg-background/70 backdrop-blur-xl border border-border/20 shadow-lg rounded-2xl">
-                    {leftNavItems.map((item) => <NavButton key={item.label} item={item} />)}
+            <div className="relative w-full h-full flex items-center justify-around bg-background/70 backdrop-blur-xl border border-border/20 shadow-lg rounded-2xl">
+                {leftNavItems.map((item) => <NavButton key={item.label} item={item} />)}
 
-                    <div className="relative -top-5">
-                        <Tooltip>
-                            <TooltipTrigger asChild>
-                                 <button onClick={handleBeepFocus} className="group relative w-16 h-16 flex items-center justify-center bg-gradient-to-r from-primary to-roman-aqua rounded-full border-4 border-background shadow-lg transition-transform duration-200 hover:scale-110 active:scale-100 focus:outline-none focus:ring-4 focus:ring-primary/50">
-                                    <BeepIcon className="w-14 h-14 text-primary-foreground group-hover:animate-pulse" />
-                                </button>
-                            </TooltipTrigger>
-                            <TooltipContent side="top">
-                                <p>Summon BEEP</p>
-                            </TooltipContent>
-                        </Tooltip>
-                    </div>
-                    
-                    {rightNavItems.map((item) => <NavButton key={item.label} item={item} />)}
+                <div className="relative -top-5">
+                     <button onClick={handleBeepFocus} className="group relative w-16 h-16 flex items-center justify-center bg-gradient-to-r from-primary to-roman-aqua rounded-full border-4 border-background shadow-lg transition-transform duration-200 hover:scale-110 active:scale-100 focus:outline-none focus:ring-4 focus:ring-primary/50" aria-label="Summon BEEP">
+                        <BeepIcon className="w-14 h-14 text-primary-foreground group-hover:animate-pulse" />
+                    </button>
                 </div>
-            </TooltipProvider>
+                
+                {rightNavItems.map((item) => <NavButton key={item.label} item={item} />)}
+            </div>
         </motion.div>
     );
 }
