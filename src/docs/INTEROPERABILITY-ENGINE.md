@@ -7,7 +7,7 @@ The Interoperability Engine is a core subsystem designed to facilitate seamless 
 
 ## 2. Key Capabilities
 
-*   **Built-in iPaaS Layer**: Provides pre-built connectors for common systems (ERPs, CRMs, payment APIs, communication platforms, productivity suites), abstracting away the complexity of authentication and data mapping.
+*   **Built-in iPaaS Layer**: Provides pre-built connectors for common systems (ERPs, CRMs, payment APIs, communication platforms, productivity suites), abstracting away the complexity of authentication and data mapping. This has been implemented via the `Integration Nexus` Micro-App and its backend APIs.
 *   **Custom Connector SDK**: A future development path will provide a Software Development Kit for developers to build and submit their own connectors to The Armory.
 *   **API Management**: Enables the definition, publishing, versioning, and securing of custom APIs that expose core ΛΞVON OS functionalities to the outside world, managed via the `api-spec.md`.
 
