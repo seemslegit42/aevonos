@@ -406,6 +406,23 @@ This document provides the formal OpenAPI 3.0 specification for the ΛΞVON OS P
         }
       }
     },
+    "/billing/transactions/{transactionId}/confirm": {
+      "post": {
+        "tags": ["Billing"],
+        "summary": "Confirm a pending credit transaction.",
+        "operationId": "confirmTransaction",
+        "description": "Allows an administrator to confirm a pending credit transaction, such as one from an e-Transfer. This updates the transaction status to COMPLETED and applies the credits to the workspace balance.",
+        "parameters": [{ "name": "transactionId", "in": "path", "required": true, "schema": { "type": "string" }, "description": "The ID of the pending transaction to confirm." }],
+        "responses": {
+          "200": {
+            "description": "Transaction confirmed successfully.",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Transaction" } } }
+          },
+          "403": { "description": "Forbidden. Administrator access required." },
+          "404": { "description": "Pending transaction not found." }
+        }
+      }
+    },
      "/billing/usage/agent-actions": {
       "get": {
         "tags": ["Billing"],
