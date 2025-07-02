@@ -5,7 +5,7 @@ import React, { useRef, useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Input } from '@/components/ui/input';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { useIsMobile } from '@/hooks/use-is-mobile';
 import type { User, Workspace } from '@prisma/client';
 import { useAppStore } from '@/store/app-store';
 import { cn } from '@/lib/utils';
@@ -48,16 +48,6 @@ export default function TopBar({ user, workspace }: TopBarProps) {
     formRef.current?.reset();
   };
   
-  const handleProfileClick = () => {
-    if (user) {
-        upsertApp('user-profile-settings', {
-            id: 'singleton-user-profile',
-            title: `Profile: ${user.firstName || user.email}`,
-            contentProps: { user }
-        });
-    }
-  };
-  
   const handleBillingClick = () => {
       upsertApp('usage-monitor', { 
         id: 'singleton-usage-monitor',
@@ -96,36 +86,31 @@ export default function TopBar({ user, workspace }: TopBarProps) {
       </div>
 
       <div className="flex items-center gap-2 sm:gap-4 text-sm text-foreground">
-        <TooltipProvider>
-          <div className="hidden md:flex items-center gap-4 text-sm font-lexend">
+        <div className="hidden md:flex items-center gap-4 text-sm font-lexend">
             <CurrentTime />
             <div className="h-6 w-px bg-border/30" />
-            <Tooltip>
-                <TooltipTrigger asChild>
-                    <Button variant="ghost" className="p-0 h-auto hover:bg-transparent text-foreground" onClick={handleProfileClick}>
-                        <span>{displayName} | {roleText}</span>
-                    </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                    <p>Manage Your Profile</p>
-                </TooltipContent>
-            </Tooltip>
+            <UserNav user={user} workspace={workspace}>
+                <Button variant="ghost" className="p-0 h-auto hover:bg-transparent text-foreground">
+                    <span>{displayName} | {roleText}</span>
+                </Button>
+            </UserNav>
             <div className="h-6 w-px bg-border/30" />
-            <Tooltip>
-                <TooltipTrigger asChild>
-                    <Button variant="ghost" className="p-0 h-auto hover:bg-transparent text-foreground" onClick={handleBillingClick}>
-                        <span>
-                        Ξ <span className="text-gilded-accent font-bold">{workspace?.credits ? Number(workspace.credits).toFixed(2) : '0.00'}</span>
-                        </span>
-                    </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                    <p>View Usage & Manage Billing</p>
-                </TooltipContent>
-            </Tooltip>
-          </div>
-        </TooltipProvider>
-         <div className="md:hidden">
+            <TooltipProvider>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <Button variant="ghost" className="p-0 h-auto hover:bg-transparent text-foreground" onClick={handleBillingClick}>
+                            <span>
+                            Ξ <span className="text-gilded-accent font-bold">{workspace?.credits ? Number(workspace.credits).toFixed(2) : '0.00'}</span>
+                            </span>
+                        </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                        <p>View Usage & Manage Billing</p>
+                    </TooltipContent>
+                </Tooltip>
+            </TooltipProvider>
+        </div>
+        <div className="md:hidden">
             <UserNav user={user} workspace={workspace} />
         </div>
       </div>

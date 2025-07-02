@@ -23,9 +23,10 @@ type UserProp = Pick<User, 'id' | 'email' | 'firstName' | 'lastName' | 'role' | 
 interface UserNavProps {
   user: UserProp;
   workspace: Workspace | null;
+  children?: React.ReactNode;
 }
 
-export function UserNav({ user, workspace }: UserNavProps) {
+export function UserNav({ user, workspace, children }: UserNavProps) {
     const { upsertApp } = useAppStore();
 
     if (!user) {
@@ -53,36 +54,40 @@ export function UserNav({ user, workspace }: UserNavProps) {
         });
     }
 
-    return (
-        <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+    const trigger = children ?? (
+        <Button variant="ghost" className="relative h-8 w-8 rounded-full">
             <Avatar className="h-8 w-8">
                 <AvatarFallback>{getInitials()}</AvatarFallback>
             </Avatar>
-            </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent className="w-56" align="end" forceMount>
-            <DropdownMenuLabel className="font-normal">
-            <div className="flex flex-col space-y-1">
-                <p className="text-sm font-medium leading-none">{user.firstName} {user.lastName}</p>
-                <p className="text-xs leading-none text-muted-foreground">
-                {user.email}
-                </p>
-            </div>
-            </DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleProfileClick}>
-                Profile
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={handleBillingClick}>
-                Billing & Usage
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => handleLogout()}>
-                Log out
-            </DropdownMenuItem>
-        </DropdownMenuContent>
+        </Button>
+    );
+
+    return (
+        <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+                {trigger}
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-56" align="end" forceMount>
+                <DropdownMenuLabel className="font-normal">
+                <div className="flex flex-col space-y-1">
+                    <p className="text-sm font-medium leading-none">{user.firstName} {user.lastName}</p>
+                    <p className="text-xs leading-none text-muted-foreground">
+                    {user.email}
+                    </p>
+                </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleProfileClick}>
+                    Profile
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleBillingClick}>
+                    Billing & Usage
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => handleLogout()}>
+                    Log out
+                </DropdownMenuItem>
+            </DropdownMenuContent>
         </DropdownMenu>
     )
 }
