@@ -141,9 +141,9 @@ export default function LoginPage() {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.7, ease: 'easeOut' }}
-            className="relative w-full max-w-sm"
+            className="relative w-full max-w-sm group"
         >
-            <div className="absolute inset-0.5 -z-10 rounded-2xl bg-gradient-to-r from-primary via-accent to-roman-aqua blur-lg opacity-30 group-hover:opacity-50 transition duration-1000 animate-pulse" />
+            <div className="absolute -inset-0.5 -z-10 rounded-2xl bg-gradient-to-r from-primary via-accent to-roman-aqua blur-lg opacity-30 group-hover:opacity-50 transition duration-1000 animate-pulse" />
             <div className="relative p-6 sm:p-8 rounded-2xl bg-background/70 backdrop-blur-xl border border-border/20 shadow-lg text-center space-y-4">
                 
                 <div className="relative">
