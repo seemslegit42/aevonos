@@ -175,5 +175,4 @@ export async function getUserPulseState(userId: string) {
         value: pulseValue
     };
 }
-
       
