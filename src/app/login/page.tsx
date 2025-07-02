@@ -6,12 +6,14 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { BeepIcon } from '@/components/icons/BeepIcon';
 
 export default function LoginPage() {
   return (
     <div className="flex h-screen w-screen items-center justify-center p-4">
       <Card className="w-full max-w-sm">
-        <CardHeader className="text-center">
+        <CardHeader className="text-center space-y-2">
+          <BeepIcon className="w-16 h-16 mx-auto text-primary" />
           <CardTitle className="text-2xl font-headline text-primary">Invocation Chamber</CardTitle>
           <CardDescription>Your will, made manifest.</CardDescription>
         </CardHeader>

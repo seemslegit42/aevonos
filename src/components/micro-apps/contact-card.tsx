@@ -62,38 +62,38 @@ export default function ContactCard({ contact }: ContactCardProps) {
                         <p>Edit Contact</p>
                     </TooltipContent>
                 </Tooltip>
-                 <AlertDialog>
-                    <TooltipProvider>
-                        <Tooltip>
-                             <TooltipTrigger asChild>
-                                <AlertDialogTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="h-8 w-8">
-                                        <Trash2 className="h-4 w-4 text-muted-foreground hover:text-destructive" />
-                                    </Button>
-                                </AlertDialogTrigger>
-                             </TooltipTrigger>
-                             <TooltipContent>
-                                <p>Delete Contact</p>
-                             </TooltipContent>
-                        </Tooltip>
-                    </TooltipProvider>
-                    <AlertDialogContent>
-                        <AlertDialogHeader>
-                            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                                This will permanently delete the contact for <strong className="text-foreground">{contact.firstName} {contact.lastName}</strong>. This action cannot be undone.
-                            </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90" disabled={isDeleting}>
-                                {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                Delete
-                            </AlertDialogAction>
-                        </AlertDialogFooter>
-                    </AlertDialogContent>
-                </AlertDialog>
             </TooltipProvider>
+            <AlertDialog>
+                <TooltipProvider>
+                    <Tooltip>
+                            <TooltipTrigger asChild>
+                            <AlertDialogTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-8 w-8">
+                                    <Trash2 className="h-4 w-4 text-muted-foreground hover:text-destructive" />
+                                </Button>
+                            </AlertDialogTrigger>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                            <p>Delete Contact</p>
+                            </TooltipContent>
+                    </Tooltip>
+                </TooltipProvider>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            This will permanently delete the contact for <strong className="text-foreground">{contact.firstName} {contact.lastName}</strong>. This action cannot be undone.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90" disabled={isDeleting}>
+                            {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            Delete
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </CardFooter>
     </Card>
   );
