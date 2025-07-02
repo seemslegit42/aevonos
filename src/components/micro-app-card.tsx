@@ -1,8 +1,6 @@
-
 'use client';
 
 import React from 'react';
-import 'react-resizable/css/styles.css';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { type MicroApp, useAppStore } from '@/store/app-store';
 import { useDraggable } from '@dnd-kit/core';
