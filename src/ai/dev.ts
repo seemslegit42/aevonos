@@ -49,3 +49,4 @@ import '@/ai/tools/slack-tools.ts';
 import '@/ai/agents/ritual-quests-agent.ts';
 import '@/services/global-event-service.ts';
 import '@/ai/tools/proxy-tools.ts';
+import '@/services/vas-service.ts';
