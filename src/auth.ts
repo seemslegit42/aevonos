@@ -86,6 +86,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             role: user.role,
             psyche: user.psyche,
             agentAlias: user.agentAlias,
+            firstWhisper: user.firstWhisper,
+            unlockedChaosCardKeys: user.unlockedChaosCardKeys,
           };
         }
         return null;
@@ -103,6 +105,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         token.role = (user as User).role;
         token.psyche = (user as User).psyche;
         token.agentAlias = (user as User).agentAlias;
+        token.firstWhisper = (user as User).firstWhisper;
+        token.unlockedChaosCardKeys = (user as User).unlockedChaosCardKeys;
       }
       
       // On every invocation (sign-in or session validation), re-fetch user's workspace
@@ -130,6 +134,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         session.user.psyche = token.psyche as UserPsyche;
         session.user.agentAlias = token.agentAlias as string | null;
         session.user.workspaceId = token.workspaceId as string;
+        session.user.firstWhisper = token.firstWhisper as string | null;
+        session.user.unlockedChaosCardKeys = token.unlockedChaosCardKeys as string[];
       }
       return session;
     },
