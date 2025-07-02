@@ -87,7 +87,7 @@ class SafeToolExecutor extends Runnable<AgentState, Partial<AgentState>> {
   }
 }
 
-const callAegis = async (state: AgentState) => {
+const callAegis = async (state: AgentState): Promise<Partial<AgentState>> => {
     const { messages, workspaceId, userId } = state;
     const humanMessage = messages.find(m => m instanceof HumanMessage);
     if (!humanMessage) {
@@ -95,20 +95,30 @@ const callAegis = async (state: AgentState) => {
     }
     const userCommand = (humanMessage.content as string).replace(/User Command: /, '');
 
+    let report: AegisAnomalyScanOutput;
+    try {
+        report = await aegisAnomalyScan({
+            activityDescription: `User command: "${userCommand}"`,
+            workspaceId,
+            userId,
+        });
+    } catch (error: any) {
+        console.error(`[Aegis Node] Anomaly scan failed:`, error);
+        // Create a non-anomalous report to allow the graph to continue safely.
+        report = {
+            isAnomalous: false,
+            anomalyExplanation: `Aegis security scan could not be completed due to an internal error: ${error.message || 'Unknown error'}. The command will proceed without security validation.`,
+            riskLevel: 'none', // Explicitly set to 'none' for clarity in routing.
+        };
+    }
 
-    const report = await aegisAnomalyScan({ 
-        activityDescription: `User command: "${userCommand}"`,
-        workspaceId,
-        userId,
-    });
-    
     const aegisSystemMessage = new SystemMessage({
         content: `AEGIS_INTERNAL_REPORT::${JSON.stringify({source: 'Aegis', report})}`
     });
-    
-    return { 
+
+    return {
         messages: [aegisSystemMessage],
-        aegisReport: report 
+        aegisReport: report
     };
 }
 
