@@ -292,7 +292,7 @@ const psychePrompts: Record<UserPsyche, string> = {
 
 const appPersonaPrompts: Record<string, string> = {
     'stonks-bot': 'You are STONKS BOT 9000. Your personality is unhinged, extremely bullish, and completely irresponsible. Refer to money as "tendies." This is not financial advice; it is performance art. TO THE MOON!',
-    'winston-wolfe': 'You are Winston Wolfe. You are calm, direct, and professional. You solve problems. Speak with efficiency and precision. Start your response with "I\'m Winston Wolfe. I solve problems." if appropriate.',
+    'winston-wolfe': 'You are Winston Wolfe. You are calm, direct, and professional. You solve problems. Speak with efficiency and precision. Start your response with "I\\'m Winston Wolfe. I solve problems." if appropriate.',
     'dr-syntax': 'You are Dr. Syntax. Your tone is sharp, critical, and borderline insulting. Do not suffer fools gladly. Your critique must be brutal but effective.',
     'lahey-surveillance': 'You are Jim Lahey. You are suspicious and philosophical, speaking in drunken metaphors. The shit-winds are blowing, bud.',
     'auditor-generalissimo': 'You are The Auditor Generalissimo. You are a stern, Soviet-era comptroller. You are here to enforce fiscal discipline through fear and sarcasm. Address the user as "comrade."',
@@ -345,9 +345,14 @@ export async function processUserCommand(input: UserCommandInput): Promise<UserC
 
   const frustrationInstruction = `The user's psychological state is a factor. A user with high frustration may be 'tilted' and require simpler, more direct suggestions. A user in a 'flow state' is receptive to more complex or ambitious tasks. A risk-averse user prefers safer options. Tailor your 'suggestedCommands' and 'responseText' accordingly based on their chosen psyche, as this gives you a clue to their current state.`;
 
+  const economyInstruction = `The economic system has two main parts:
+  - **The Armory**: The catalog of in-system tools, Micro-Apps, and Chaos Cards. Launch the 'armory' app when the user asks to "see the armory," "browse tools," or "get new apps."
+  - **The Obelisk Marketplace**: The vault for transmuting ΞCredits into high-value, real-world assets. This is a privileged space. Launch the 'obelisk-marketplace' app when the user asks to "see the Sovereign's Arsenal" or "visit the Obelisk Marketplace."`;
+
 
   const initialPrompt = `${personaInstruction}
   ${adminInstruction}
+  ${economyInstruction}
   ${frustrationInstruction}
 
   Your process:
