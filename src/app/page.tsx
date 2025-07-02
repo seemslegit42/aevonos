@@ -1,6 +1,7 @@
+
 import React from 'react';
 import prisma from '@/lib/prisma';
-import { getServerActionSession } from '@/lib/auth';
+import { getSession } from '@/lib/auth';
 import DashboardClient from '@/components/dashboard/dashboard-client';
 
 async function getAgents(workspaceId: string) {
@@ -16,7 +17,7 @@ async function getAgents(workspaceId: string) {
 }
 
 export default async function Home() {
-    const session = await getServerActionSession();
+    const session = await getSession();
     // Fetch initial agents server-side.
     // If there's no session, we'll pass an empty array, and the client will show the empty state.
     const agents = session?.workspaceId ? await getAgents(session.workspaceId) : [];

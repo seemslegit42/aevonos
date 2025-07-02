@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation';
 import TopBar from '@/components/layout/top-bar';
 import type { User, Workspace, UserPsyche } from '@prisma/client';
 import BottomNavBar from './bottom-nav-bar';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { useIsMobile } from '@/hooks/use-is-mobile';
 import { cn } from '@/lib/utils';
 import { useAppStore } from '@/store/app-store';
 import TendyRain from '@/components/effects/TendyRain';
@@ -19,7 +19,7 @@ export function MainLayout({ children, user, workspace }: { children: React.Reac
   const isMobile = useIsMobile();
   const { tendyRainActive, screenShakeActive } = useAppStore();
 
-  const publicPaths = ['/login', '/register', '/validator', '/pricing', '/subscribe'];
+  const publicPaths = ['/login', '/register', '/pricing'];
   const isPublicPage = publicPaths.some(p => pathname.startsWith(p));
 
   // If it's a public page like login, just render the content without the main app layout
