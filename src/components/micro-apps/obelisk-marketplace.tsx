@@ -9,6 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { motion } from 'framer-motion';
 import { Badge } from '../ui/badge';
 import { cn } from '@/lib/utils';
+import { Separator } from '../ui/separator';
 
 const offerings = [
     {
@@ -79,8 +80,22 @@ const OfferingCard = ({ offering, index }: { offering: typeof offerings[0], inde
                     </div>
                     <CardDescription>{offering.description}</CardDescription>
                 </CardHeader>
-                <CardContent className="flex-grow flex items-center justify-center">
-                    <p className="text-xs text-muted-foreground">{offering.availability}</p>
+                <CardContent className="flex-grow flex flex-col justify-end p-6 pt-0">
+                    <div className="flex-grow flex items-center justify-center">
+                        <p className="text-xs text-muted-foreground">{offering.availability}</p>
+                    </div>
+                    <Separator className="my-2 bg-border/20"/>
+                    <div className="text-xs text-muted-foreground space-y-1">
+                        <div className="flex items-center gap-2">
+                            <Shield size={14} />
+                            <span>Aegis-Enforced Provenance</span>
+                        </div>
+                        <ul className="list-disc pl-6 text-foreground/70">
+                            <li>Digitally-signed certificate of ownership</li>
+                            <li>Transaction recorded on immutable Scroll</li>
+                            <li>Bound to a unique Ritual ID</li>
+                        </ul>
+                    </div>
                 </CardContent>
                 <CardFooter className="flex justify-between items-center">
                     <p className="text-2xl font-bold font-headline text-gilded-accent">{offering.price}</p>
