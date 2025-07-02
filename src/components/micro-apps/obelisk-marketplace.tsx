@@ -2,38 +2,55 @@
 'use client';
 
 import React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Award, Shield, Briefcase, Gem } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { motion } from 'framer-motion';
+import { Badge } from '../ui/badge';
+import { cn } from '@/lib/utils';
 
 const offerings = [
     {
         icon: Briefcase,
         title: "Perpetual License: Arcane IDE",
         description: "A lifetime license for the industry's most powerful code editor, forged for agents.",
-        price: "150,000 Ξ"
+        price: "150,000 Ξ",
+        scarcity: 'Ethereal',
+        availability: 'Always Available'
     },
     {
         icon: Shield,
         title: "Forged Artifact: The Aegis Node",
         description: "A pre-configured, obsidian-cased private server for running your own secure daemons.",
-        price: "750,000 Ξ"
+        price: "750,000 Ξ",
+        scarcity: 'Rare',
+        availability: '18 of 200 Remaining this Cycle'
     },
     {
         icon: Award,
         title: "Sovereign Counsel: One Hour with The Architect",
         description: "A one-on-one strategic consultation on automation and system design with the core ΛΞVON OS team.",
-        price: "1,250,000 Ξ"
+        price: "1,250,000 Ξ",
+        scarcity: 'Mythic',
+        availability: '2 of 5 Remaining this Epoch'
     },
     {
         icon: Gem,
         title: "A Seat in the Pantheon",
-        description: "Transmute an astronomical sum of Ξ into a token fraction of actual equity in the ΛΞVON OS company.",
-        price: "1,000,000,000 Ξ"
+        description: "Transmute an astronomical sum of ΞCredits into a token fraction of actual equity in the ΛΞVON OS company.",
+        price: "1,000,000,000 Ξ",
+        scarcity: 'Divine',
+        availability: 'One Sovereign may wield this.'
     }
 ];
+
+const scarcityStyles: Record<string, string> = {
+    Ethereal: 'border-muted-foreground/50 text-muted-foreground',
+    Rare: 'border-blue-400/50 text-blue-400',
+    Mythic: 'border-purple-400/50 text-purple-400',
+    Divine: 'border-gilded-accent/50 text-gilded-accent',
+};
 
 const OfferingCard = ({ offering, index }: { offering: typeof offerings[0], index: number }) => {
     const { toast } = useToast();
@@ -43,6 +60,7 @@ const OfferingCard = ({ offering, index }: { offering: typeof offerings[0], inde
             description: `Your request to acquire "${offering.title}" has been sent to the Proxy.Agent for review.`,
         });
     }
+    const cardClass = scarcityStyles[offering.scarcity] || 'border-primary/30';
 
     return (
         <motion.div
@@ -50,19 +68,24 @@ const OfferingCard = ({ offering, index }: { offering: typeof offerings[0], inde
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: index * 0.1 }}
         >
-            <Card className="bg-background/50 border-primary/30 h-full flex flex-col">
+            <Card className={cn("bg-background/50 h-full flex flex-col", cardClass)}>
                 <CardHeader>
-                    <div className="flex items-center gap-3">
-                        <offering.icon className="w-8 h-8 text-primary" />
-                        <CardTitle className="text-lg">{offering.title}</CardTitle>
+                    <div className="flex justify-between items-start">
+                        <div className="flex items-center gap-3">
+                            <offering.icon className="w-8 h-8 text-primary" />
+                            <CardTitle className="text-lg">{offering.title}</CardTitle>
+                        </div>
+                        <Badge variant="outline" className={cn("capitalize", cardClass)}>{offering.scarcity}</Badge>
                     </div>
                     <CardDescription>{offering.description}</CardDescription>
                 </CardHeader>
-                <CardContent className="flex-grow"></CardContent>
-                <CardContent className="flex justify-between items-center">
+                <CardContent className="flex-grow flex items-center justify-center">
+                    <p className="text-xs text-muted-foreground">{offering.availability}</p>
+                </CardContent>
+                <CardFooter className="flex justify-between items-center">
                     <p className="text-2xl font-bold font-headline text-gilded-accent">{offering.price}</p>
                     <Button onClick={handleAcquire}>Propose Tribute</Button>
-                </CardContent>
+                </CardFooter>
             </Card>
         </motion.div>
     );
