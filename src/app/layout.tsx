@@ -1,5 +1,4 @@
 
-
 import type { Metadata } from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster"
@@ -9,7 +8,6 @@ import prisma from '@/lib/prisma';
 import { type User, type Workspace, UserPsyche } from '@prisma/client';
 import { cn } from '@/lib/utils';
 import { FirstWhisperHandler } from '@/components/layout/FirstWhisperHandler';
-import { motion } from 'framer-motion';
 import Image from 'next/image';
 
 export const metadata: Metadata = {
