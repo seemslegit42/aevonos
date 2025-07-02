@@ -130,29 +130,54 @@ const callAegis = async (state: AgentState): Promise<Partial<AgentState>> => {
 const fastModelWithTools = langchainGroqFast.bind({ tools: [] });
 const complexModelWithTools = langchainGroqComplex.bind({ tools: [] });
 
-// The agent node now has routing logic inside it.
-const callModel = async (state: AgentState) => {
-  const { messages } = state;
-  const lastMessage = messages[messages.length - 1];
-
-  let modelToUse = fastModelWithTools; // Default to the fast model
-  
-  // Only check for complexity on human messages, not tool responses.
-  if (lastMessage instanceof HumanMessage) {
-    const commandText = lastMessage.content as string;
-    const complexKeywords = ['analyze', 'summarize', 'create a plan', 'generate', 'critique', 'investigate', 'audit', 'explain', 'dossier', 'roast', 'write a', 'what is', 'how to'];
+// The Router node decides which model to use based on the query.
+const router = async (state: AgentState) => {
+    const { messages } = state;
+    const lastMessage = messages[messages.length - 1];
     
-    if (complexKeywords.some(kw => commandText.toLowerCase().includes(kw))) {
-        console.log('[BEEP] Routing to Complex model for reasoning.');
-        modelToUse = complexModelWithTools;
-    } else {
-        console.log('[BEEP] Routing to Fast model for dispatch.');
+    // If the last message is not a HumanMessage, it's likely a tool output.
+    // Route to the reasoner to process the tool output.
+    if (!(lastMessage instanceof HumanMessage)) {
+        console.log("[BEEP Router] Tool output received, routing to reasoner.");
+        return 'reasoner';
     }
-  }
+    
+    const routingSchema = z.object({
+        route: z.enum(["dispatcher", "reasoner"]).describe("Choose 'dispatcher' for simple app launches, greetings, or direct commands. Choose 'reasoner' for complex requests involving analysis, multi-step tool use, or generation.")
+    });
+    
+    const routingModel = langchainGroqFast.withStructuredOutput(routingSchema);
+    
+    const routingPrompt = `You are an expert at routing a user's request. A "simple" request can be handled by a fast, cheap model, such as launching a single app or a simple greeting. A "complex" request requires a powerful model for analysis, multi-step reasoning, or content generation.
+    
+    Based on the conversation so far, classify the user's latest request as "dispatcher" (for simple tasks) or "reasoner" (for complex tasks).
 
-  const response = await modelToUse.invoke(messages);
-  return { messages: [response] };
+    Conversation History:
+    ${messages.map(m => `${m._getType()}: ${m.content}`).join('\n')}
+    `;
+
+    try {
+        const { route } = await routingModel.invoke(routingPrompt);
+        console.log(`[BEEP Router] Decision: ${route}`);
+        return route;
+    } catch (e) {
+        console.error("[BEEP Router] Routing failed, defaulting to reasoner:", e);
+        return 'reasoner'; // Default to the more powerful model on failure
+    }
 };
+
+const callDispatcherModel = async (state: AgentState) => {
+    console.log('[BEEP] Invoking Dispatcher (fast model).');
+    const response = await fastModelWithTools.invoke(state.messages);
+    return { messages: [response] };
+};
+
+const callReasonerModel = async (state: AgentState) => {
+    console.log('[BEEP] Invoking Reasoner (complex model).');
+    const response = await complexModelWithTools.invoke(state.messages);
+    return { messages: [response] };
+};
+
 
 const handleThreat = async (state: AgentState) => {
     const { aegisReport } = state;
@@ -261,8 +286,11 @@ const workflow = new StateGraph<AgentState>({
     },
   },
 });
+
 workflow.addNode('aegis', callAegis);
-workflow.addNode('agent', callModel);
+workflow.addNode('router', router as any); // The router itself decides the next step, so it doesn't return state
+workflow.addNode('agent_dispatcher', callDispatcherModel);
+workflow.addNode('agent_reasoner', callReasonerModel);
 workflow.addNode('handle_threat', handleThreat);
 workflow.addNode('warn_and_continue', warnAndContinue);
 workflow.addNode('tools', new ToolNode<AgentState>([])); 
@@ -272,17 +300,27 @@ workflow.setEntryPoint('aegis');
 workflow.addConditionalEdges('aegis', routeAfterAegis, {
   threat: 'handle_threat',
   warn_and_continue: 'warn_and_continue',
-  continue: 'agent',
+  continue: 'router',
 });
 
 workflow.addEdge('handle_threat', 'tools');
-workflow.addEdge('warn_and_continue', 'agent');
+workflow.addEdge('warn_and_continue', 'router');
 
-workflow.addConditionalEdges('agent', shouldContinue, {
+workflow.addConditionalEdges('router', (state: AgentState) => router(state), {
+    dispatcher: 'agent_dispatcher',
+    reasoner: 'agent_reasoner',
+});
+
+workflow.addConditionalEdges('agent_dispatcher', shouldContinue, {
   tools: 'tools',
   end: END,
 });
-workflow.addEdge('tools', 'agent');
+workflow.addConditionalEdges('agent_reasoner', shouldContinue, {
+  tools: 'tools',
+  end: END,
+});
+
+workflow.addEdge('tools', 'router'); // Loop back to the router after tool execution
 const app = workflow.compile();
 
 const psychePrompts: Record<UserPsyche, string> = {
