@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { getServerActionSession } from '@/lib/auth';
 import { UserPsyche, UserRole } from '@prisma/client';
+import { calculateVasForUser } from '@/services/vas-service';
 
 interface RouteParams {
   params: {
@@ -42,15 +43,16 @@ export async function GET(request: Request, { params }: RouteParams) {
         email: true,
         firstName: true,
         lastName: true,
-        corePainIndex: true, // Use this as a proxy for VAS calculation
       },
     });
 
-    // Mock Vow Alignment Score (VAS) calculation
-    const leaderboard = members.map(member => ({
-        ...member,
-        vas: Math.floor(Math.random() * 500) + (100 - (member.corePainIndex || 50)) * 5, // A mock score
-    })).sort((a, b) => b.vas - a.vas);
+    // Calculate VAS for each member
+    const leaderboardPromises = members.map(async (member) => {
+        const vas = await calculateVasForUser(member.id);
+        return { ...member, vas };
+    });
+
+    const leaderboard = (await Promise.all(leaderboardPromises)).sort((a, b) => b.vas - a.vas);
 
     return NextResponse.json(leaderboard);
 
