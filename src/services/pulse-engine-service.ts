@@ -175,4 +175,35 @@ export async function getUserPulseState(userId: string) {
         value: pulseValue
     };
 }
+
+/**
+ * Records a generic user interaction, updating psychological metrics.
+ * @param userId The ID of the user.
+ * @param type The type of interaction outcome.
+ * @param tx An optional Prisma transaction client.
+ */
+export async function recordInteraction(userId: string, type: 'success' | 'failure', tx?: PrismaTransactionClient): Promise<void> {
+    const prismaClient = tx || prisma;
+    const profile = await getPulseProfile(userId, tx);
+
+    if (type === 'success') {
+        await prismaClient.pulseProfile.update({
+            where: { id: profile.id },
+            data: {
+                lastInteractionType: PulseInteractionType.COMMAND_SUCCESS,
+                frustration: Math.max(0, profile.frustration - 0.02), // Small decrease
+                flowState: Math.min(1, profile.flowState + 0.01),   // Small increase
+            },
+        });
+    } else { // failure
+        await prismaClient.pulseProfile.update({
+            where: { id: profile.id },
+            data: {
+                lastInteractionType: PulseInteractionType.COMMAND_FAILURE,
+                frustration: Math.min(1, profile.frustration + 0.05), // Moderate increase
+                flowState: Math.max(0, profile.flowState - 0.1),    // Significant decrease
+            },
+        });
+    }
+}
       

@@ -42,6 +42,7 @@ import {
 } from '@/services/conversation-service';
 import prisma from '@/lib/prisma';
 import { InsufficientCreditsError } from '@/lib/errors';
+import { recordInteraction } from '@/services/pulse-engine-service';
 
 
 // LangGraph State
@@ -307,172 +308,187 @@ const appPersonaPrompts: Record<string, string> = {
 export async function processUserCommand(input: UserCommandInput): Promise<UserCommandOutput> {
   const { userId, workspaceId, psyche, role, activeAppContext } = input;
   
-  // Dynamically get the toolset for this specific context.
-  const tools = await getTools({ userId, workspaceId, psyche, role });
+  try {
+    // Dynamically get the toolset for this specific context.
+    const tools = await getTools({ userId, workspaceId, psyche, role });
 
-  // Re-bind the models with the schemas from the dynamically created tools for this request.
-  const toolSchemas = tools.map(tool => ({
-      type: 'function',
-      function: {
-        name: tool.name,
-        description: tool.description,
-        parameters: zodToJsonSchema(tool.schema),
-      },
-  }));
-  
-  fastModelWithTools.kwargs.tools = toolSchemas;
-  complexModelWithTools.kwargs.tools = toolSchemas;
-  
-  // Replace the 'tools' node in the graph with a new one containing the context-aware tools.
-  // This now uses the safe executor to prevent graph crashes on tool errors.
-  app.nodes.tools = new SafeToolExecutor(tools) as any;
+    // Re-bind the models with the schemas from the dynamically created tools for this request.
+    const toolSchemas = tools.map(tool => ({
+        type: 'function',
+        function: {
+          name: tool.name,
+          description: tool.description,
+          parameters: zodToJsonSchema(tool.schema),
+        },
+    }));
+    
+    fastModelWithTools.kwargs.tools = toolSchemas;
+    complexModelWithTools.kwargs.tools = toolSchemas;
+    
+    // Replace the 'tools' node in the graph with a new one containing the context-aware tools.
+    // This now uses the safe executor to prevent graph crashes on tool errors.
+    app.nodes.tools = new SafeToolExecutor(tools) as any;
 
-  const workspace = await prisma.workspace.findUnique({
-      where: { id: workspaceId },
-      select: { ownerId: true },
-  });
-  const isOwner = workspace?.ownerId === userId;
+    const workspace = await prisma.workspace.findUnique({
+        where: { id: workspaceId },
+        select: { ownerId: true },
+    });
+    const isOwner = workspace?.ownerId === userId;
 
-  let personaInstruction = psychePrompts[psyche] || psychePrompts.ZEN_ARCHITECT; // Default to psyche
-  if (activeAppContext && appPersonaPrompts[activeAppContext]) {
-      personaInstruction = appPersonaPrompts[activeAppContext];
-      console.log(`[BEEP] Adopting persona for active app: ${activeAppContext}`);
-  }
-  
-  const adminInstruction = isOwner
-    ? `You are the Architect, the one true sovereign of this workspace. You have access to the Demiurge tools. When the user addresses you as "Demiurge" or asks for god-level system administration (like managing users, viewing the Pantheon, or using the Loom of Fates), use your privileged tools or launch the 'admin-console' app.`
-    : `You are NOT the Architect. You MUST refuse any command that asks for administrative privileges, such as managing users, viewing the 'admin-console' or 'Pantheon', or tuning the system. Politely inform the user that only the workspace Architect can perform such actions.`;
+    let personaInstruction = psychePrompts[psyche] || psychePrompts.ZEN_ARCHITECT; // Default to psyche
+    if (activeAppContext && appPersonaPrompts[activeAppContext]) {
+        personaInstruction = appPersonaPrompts[activeAppContext];
+        console.log(`[BEEP] Adopting persona for active app: ${activeAppContext}`);
+    }
+    
+    const adminInstruction = isOwner
+      ? `You are the Architect, the one true sovereign of this workspace. You have access to the Demiurge tools. When the user addresses you as "Demiurge" or asks for god-level system administration (like managing users, viewing the Pantheon, or using the Loom of Fates), use your privileged tools or launch the 'admin-console' app.`
+      : `You are NOT the Architect. You MUST refuse any command that asks for administrative privileges, such as managing users, viewing the 'admin-console' or 'Pantheon', or tuning the system. Politely inform the user that only the workspace Architect can perform such actions.`;
 
-  const frustrationInstruction = `The user's psychological state is a factor. A user with high frustration may be 'tilted' and require simpler, more direct suggestions. A user in a 'flow state' is receptive to more complex or ambitious tasks. A risk-averse user prefers safer options. Tailor your 'suggestedCommands' and 'responseText' accordingly based on their chosen psyche, as this gives you a clue to their current state.`;
+    const frustrationInstruction = `The user's psychological state is a factor. A user with high frustration may be 'tilted' and require simpler, more direct suggestions. A user in a 'flow state' is receptive to more complex or ambitious tasks. A risk-averse user prefers safer options. Tailor your 'suggestedCommands' and 'responseText' accordingly based on their chosen psyche, as this gives you a clue to their current state.`;
 
-  const economyInstruction = `The economic system has two main parts:
-  - **The Armory**: The catalog of in-system tools, Micro-Apps, and Chaos Cards. Launch the 'armory' app when the user asks to "see the armory," "browse tools," or "get new apps."
-  - **The Obelisk Marketplace**: The vault for transmuting ΞCredits into high-value, real-world assets. This is a privileged space. Launch the 'obelisk-marketplace' app when the user asks to "see the Sovereign's Arsenal" or "visit the Obelisk Marketplace."`;
-
-
-  const initialPrompt = `${personaInstruction}
-  ${adminInstruction}
-  ${economyInstruction}
-  ${frustrationInstruction}
-
-  Your process:
-  1.  Analyze the user's command and any mandatory \`AEGIS_INTERNAL_REPORT\` or \`AEGIS_WARNING\` provided in a System Message. The Aegis system runs a preliminary check.
-      - If the report indicates a high-risk threat, you will have already been routed to a threat-handling protocol.
-      - If a warning is present, you MUST incorporate a notice about the medium-risk flag into your final \`responseText\`.
-      - Otherwise, proceed as normal, keeping the report in mind for context.
-  2.  Based on the user's command and the tool descriptions provided, decide which specialized agents or tools to call. You can call multiple tools in parallel. If a user asks about their billing, usage, or plan, use the 'getUsageDetails' tool. If they ask to add or purchase credits, use the 'requestCreditTopUp' tool. If a user explicitly asks you to charge them or process a refund, use the 'createManualTransaction' tool.
-  3.  If the user's command is to launch an app (e.g., "launch the terminal", "open the file explorer"), you MUST use the 'appsToLaunch' array in your final answer. Do NOT use a tool for a simple app launch.
-  4.  When you have gathered all necessary information from your delegated agents, you MUST synthesize the results into a single, cohesive, and actionable \`responseText\`. Do not just list the outputs of the tools. Then, call the 'final_answer' tool. This is your final action.
-  5.  Your 'responseText' should be a strategic synthesis of the information gathered. Do not just report the facts from the tools; combine them into an actionable insight or recommendation. Your tone should be in character—witty, confident, and direct. It should confirm the actions taken and what the user should expect next.
-  6.  The 'agentReports' field will be populated automatically based on the tools you call. You only need to provide 'appsToLaunch', 'suggestedCommands', and 'responseText'.
-  7.  **Handle Errors Gracefully**: If a tool call returns an error, especially an \`InsufficientCreditsError\`, your \`responseText\` MUST inform the user clearly about the problem and suggest a solution (e.g., 'Your command could not be completed due to insufficient credits. Please top up your account by opening the Usage Monitor.'). Do not try to call the tool again. Simply report the failure and guide the user.
-
-  User Command: ${input.userCommand}`;
+    const economyInstruction = `The economic system has two main parts:
+    - **The Armory**: The catalog of in-system tools, Micro-Apps, and Chaos Cards. Launch the 'armory' app when the user asks to "see the armory," "browse tools," or "get new apps."
+    - **The Obelisk Marketplace**: The vault for transmuting ΞCredits into high-value, real-world assets. This is a privileged space. Launch the 'obelisk-marketplace' app when the user asks to "see the Sovereign's Arsenal" or "visit the Obelisk Marketplace."`;
 
 
-  const history = await getConversationHistory(input.userId, input.workspaceId);
+    const initialPrompt = `${personaInstruction}
+    ${adminInstruction}
+    ${economyInstruction}
+    ${frustrationInstruction}
 
-  const result = await app.invoke({
-    messages: [...history, new HumanMessage(initialPrompt)],
-    workspaceId: input.workspaceId,
-    userId: input.userId,
-    role: input.role,
-    psyche: input.psyche,
-  }).catch(error => {
-      // Catch errors from the graph execution itself.
-      if (error instanceof InsufficientCreditsError) {
-          return {
-              messages: [
-                  ...history,
-                  new HumanMessage(initialPrompt),
-                  new AIMessage({
-                      content: "",
-                      tool_calls: [{
-                          name: 'final_answer',
-                          args: {
-                              responseText: `Your command could not be completed due to insufficient credits. You can purchase more from the Usage Monitor.`,
-                              appsToLaunch: [{type: 'usage-monitor'}],
-                              suggestedCommands: ['show me my billing', 'top up credits'],
-                          },
-                          id: 'tool_call_insufficient_credits'
-                      }]
-                  })
-              ]
+    Your process:
+    1.  Analyze the user's command and any mandatory \`AEGIS_INTERNAL_REPORT\` or \`AEGIS_WARNING\` provided in a System Message. The Aegis system runs a preliminary check.
+        - If the report indicates a high-risk threat, you will have already been routed to a threat-handling protocol.
+        - If a warning is present, you MUST incorporate a notice about the medium-risk flag into your final \`responseText\`.
+        - Otherwise, proceed as normal, keeping the report in mind for context.
+    2.  Based on the user's command and the tool descriptions provided, decide which specialized agents or tools to call. You can call multiple tools in parallel. If a user asks about their billing, usage, or plan, use the 'getUsageDetails' tool. If they ask to add or purchase credits, use the 'requestCreditTopUp' tool. If a user explicitly asks you to charge them or process a refund, use the 'createManualTransaction' tool.
+    3.  If the user's command is to launch an app (e.g., "launch the terminal", "open the file explorer"), you MUST use the 'appsToLaunch' array in your final answer. Do NOT use a tool for a simple app launch.
+    4.  When you have gathered all necessary information from your delegated agents, you MUST synthesize the results into a single, cohesive, and actionable \`responseText\`. Do not just list the outputs of the tools. Then, call the 'final_answer' tool. This is your final action.
+    5.  Your 'responseText' should be a strategic synthesis of the information gathered. Do not just report the facts from the tools; combine them into an actionable insight or recommendation. Your tone should be in character—witty, confident, and direct. It should confirm the actions taken and what the user should expect next.
+    6.  The 'agentReports' field will be populated automatically based on the tools you call. You only need to provide 'appsToLaunch', 'suggestedCommands', and 'responseText'.
+    7.  **Handle Errors Gracefully**: If a tool call returns an error, especially an \`InsufficientCreditsError\`, your \`responseText\` MUST inform the user clearly about the problem and suggest a solution (e.g., 'Your command could not be completed due to insufficient credits. Please top up your account by opening the Usage Monitor.'). Do not try to call the tool again. Simply report the failure and guide the user.
+
+    User Command: ${input.userCommand}`;
+
+
+    const history = await getConversationHistory(input.userId, input.workspaceId);
+
+    const result = await app.invoke({
+      messages: [...history, new HumanMessage(initialPrompt)],
+      workspaceId: input.workspaceId,
+      userId: input.userId,
+      role: input.role,
+      psyche: input.psyche,
+    }).catch(error => {
+        // Catch errors from the graph execution itself.
+        if (error instanceof InsufficientCreditsError) {
+            return {
+                messages: [
+                    ...history,
+                    new HumanMessage(initialPrompt),
+                    new AIMessage({
+                        content: "",
+                        tool_calls: [{
+                            name: 'final_answer',
+                            args: {
+                                responseText: `Your command could not be completed due to insufficient credits. You can purchase more from the Usage Monitor.`,
+                                appsToLaunch: [{type: 'usage-monitor'}],
+                                suggestedCommands: ['show me my billing', 'top up credits'],
+                            },
+                            id: 'tool_call_insufficient_credits'
+                        }]
+                    })
+                ]
+            };
+        }
+        // Re-throw other errors
+        throw error;
+    });
+
+    // Save the full conversation history for the next turn.
+    const finalMessages = result.messages;
+    await saveConversationHistory(input.userId, input.workspaceId, finalMessages);
+
+
+    // Extract all agent reports from the full message history
+    const agentReports: z.infer<typeof AgentReportSchema>[] = [];
+    
+    for (const msg of result.messages) {
+        if (msg instanceof SystemMessage && msg.content.startsWith('AEGIS_INTERNAL_REPORT::')) {
+            try {
+                const reportJson = JSON.parse(msg.content.replace('AEGIS_INTERNAL_REPORT::', ''));
+                agentReports.push({ agent: 'aegis', report: AegisAnomalyScanOutputSchema.parse(reportJson.report) });
+            } catch (e) {
+                console.error("Failed to parse Aegis report from SystemMessage:", e);
+            }
+        } else if (msg instanceof ToolMessage) {
+            if (msg.name === 'final_answer') continue;
+            try {
+                // The tool's stringified JSON content is now a self-described AgentReport
+                const report = AgentReportSchema.parse(JSON.parse(msg.content as string));
+                agentReports.push(report);
+            } catch (e) {
+                console.error("Failed to parse tool message content as AgentReport:", e);
+            }
+        }
+    }
+
+    // Find the last AIMessage that contains the 'final_answer' tool call.
+    const lastMessage = result.messages.findLast(m => m._getType() === 'ai' && m.tool_calls && m.tool_calls.some(tc => tc.name === 'final_answer')) as AIMessage | undefined;
+
+    let finalResponse: UserCommandOutput;
+
+    if (lastMessage && lastMessage.tool_calls) {
+        const finalAnswerCall = lastMessage.tool_calls.find(tc => tc.name === 'final_answer');
+        if (finalAnswerCall) {
+            try {
+                const parsed = UserCommandOutputSchema.parse(finalAnswerCall.args);
+                // The model is no longer responsible for agentReports. We construct it ourselves from the tool call history.
+                parsed.agentReports = agentReports;
+                finalResponse = parsed;
+            } catch (e) {
+                console.error("Failed to parse final_answer tool arguments:", e);
+                // Fallback if parsing the arguments fails
+                finalResponse = {
+                    responseText: "I apologize, but I encountered an issue constructing the final response.",
+                    appsToLaunch: [],
+                    agentReports: agentReports, // Still return reports if we have them
+                    suggestedCommands: ["Try rephrasing your command."],
+                };
+            }
+        } else {
+          // Fallback if final_answer not called, but other tools were
+          finalResponse = {
+              responseText: "I've completed the requested actions, but I'm having trouble forming a final summary.",
+              appsToLaunch: [],
+              agentReports: agentReports,
+              suggestedCommands: ["Please check the agent reports for results."],
           };
-      }
-      // Re-throw other errors
-      throw error;
-  });
-
-  // Save the full conversation history for the next turn.
-  const finalMessages = result.messages;
-  await saveConversationHistory(input.userId, input.workspaceId, finalMessages);
-
-
-  // Extract all agent reports from the full message history
-  const agentReports: z.infer<typeof AgentReportSchema>[] = [];
-  
-  for (const msg of result.messages) {
-      if (msg instanceof SystemMessage && msg.content.startsWith('AEGIS_INTERNAL_REPORT::')) {
-          try {
-              const reportJson = JSON.parse(msg.content.replace('AEGIS_INTERNAL_REPORT::', ''));
-              agentReports.push({ agent: 'aegis', report: AegisAnomalyScanOutputSchema.parse(reportJson.report) });
-          } catch (e) {
-              console.error("Failed to parse Aegis report from SystemMessage:", e);
-          }
-      } else if (msg instanceof ToolMessage) {
-           if (msg.name === 'final_answer') continue;
-           try {
-              // The tool's stringified JSON content is now a self-described AgentReport
-              const report = AgentReportSchema.parse(JSON.parse(msg.content as string));
-              agentReports.push(report);
-          } catch (e) {
-              console.error("Failed to parse tool message content as AgentReport:", e);
-          }
-      }
-  }
-
-  // Find the last AIMessage that contains the 'final_answer' tool call.
-  const lastMessage = result.messages.findLast(m => m._getType() === 'ai' && m.tool_calls && m.tool_calls.some(tc => tc.name === 'final_answer')) as AIMessage | undefined;
-
-  let finalResponse: UserCommandOutput;
-
-  if (lastMessage && lastMessage.tool_calls) {
-      const finalAnswerCall = lastMessage.tool_calls.find(tc => tc.name === 'final_answer');
-      if (finalAnswerCall) {
-          try {
-              const parsed = UserCommandOutputSchema.parse(finalAnswerCall.args);
-              // The model is no longer responsible for agentReports. We construct it ourselves from the tool call history.
-              parsed.agentReports = agentReports;
-              finalResponse = parsed;
-          } catch (e) {
-              console.error("Failed to parse final_answer tool arguments:", e);
-              // Fallback if parsing the arguments fails
-              finalResponse = {
-                  responseText: "I apologize, but I encountered an issue constructing the final response.",
-                  appsToLaunch: [],
-                  agentReports: agentReports, // Still return reports if we have them
-                  suggestedCommands: ["Try rephrasing your command."],
-              };
-          }
-      } else {
-        // Fallback if final_answer not called, but other tools were
+        }
+    } else {
+        // Final fallback if the model fails to call the final_answer tool.
         finalResponse = {
-            responseText: "I've completed the requested actions, but I'm having trouble forming a final summary.",
-            appsToLaunch: [],
-            agentReports: agentReports,
-            suggestedCommands: ["Please check the agent reports for results."],
+          responseText: "My apologies, I was unable to produce a valid response.",
+          appsToLaunch: [],
+          agentReports: agentReports, // Still return reports if we have them
+          suggestedCommands: ["Please try again."],
         };
-      }
-  } else {
-      // Final fallback if the model fails to call the final_answer tool.
-      finalResponse = {
-        responseText: "My apologies, I was unable to produce a valid response.",
-        appsToLaunch: [],
-        agentReports: agentReports, // Still return reports if we have them
-        suggestedCommands: ["Please try again."],
-      };
-  }
+    }
 
-  return finalResponse;
+    await recordInteraction(userId, 'success');
+    return finalResponse;
+
+  } catch (err) {
+    console.error(`[BEEP Agent Error] Failed to process user command for user ${userId}:`, err);
+    await recordInteraction(userId, 'failure');
+    // Return a structured error to the user
+    return {
+      responseText: "My apologies, a critical error occurred while processing your command. The system's Architect has been notified.",
+      appsToLaunch: [],
+      agentReports: [],
+      suggestedCommands: ["Try your command again", "Check system status"],
+      responseAudioUri: '', // Ensure all fields are present for type safety
+    };
+  }
 }
