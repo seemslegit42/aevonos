@@ -85,7 +85,7 @@ export default function TopBar({ user, workspace }: TopBarProps) {
             type="text"
             placeholder={placeholderText}
             className={cn(
-              "w-full bg-background text-foreground placeholder:text-muted-foreground border-border/50 h-10",
+              "w-full bg-background/80 text-foreground placeholder:text-muted-foreground border-border/50 h-10",
               "focus-visible:ring-1 focus-visible:ring-roman-aqua",
               isLoading && "ring-1 ring-inset ring-roman-aqua animate-pulse"
             )}
@@ -95,10 +95,10 @@ export default function TopBar({ user, workspace }: TopBarProps) {
       </div>
 
       <div className="flex items-center gap-2 sm:gap-4 text-sm text-foreground">
-        <div className="hidden md:flex items-center gap-4 text-sm font-lexend">
-          <CurrentTime />
-          <div className="h-6 w-px bg-border/30" />
-           <TooltipProvider>
+        <TooltipProvider>
+          <div className="hidden md:flex items-center gap-4 text-sm font-lexend">
+            <CurrentTime />
+            <div className="h-6 w-px bg-border/30" />
             <Tooltip>
                 <TooltipTrigger asChild>
                     <Button variant="ghost" className="p-0 h-auto hover:bg-transparent text-foreground" onClick={handleProfileClick}>
@@ -109,9 +109,7 @@ export default function TopBar({ user, workspace }: TopBarProps) {
                     <p>Manage Your Profile</p>
                 </TooltipContent>
             </Tooltip>
-           </TooltipProvider>
-           <div className="h-6 w-px bg-border/30" />
-           <TooltipProvider>
+            <div className="h-6 w-px bg-border/30" />
             <Tooltip>
                 <TooltipTrigger asChild>
                     <Button variant="ghost" className="p-0 h-auto hover:bg-transparent text-foreground" onClick={handleBillingClick}>
@@ -124,8 +122,8 @@ export default function TopBar({ user, workspace }: TopBarProps) {
                     <p>View Usage & Manage Billing</p>
                 </TooltipContent>
             </Tooltip>
-           </TooltipProvider>
-        </div>
+          </div>
+        </TooltipProvider>
       </div>
     </header>
   );

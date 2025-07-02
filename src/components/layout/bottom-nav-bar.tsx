@@ -10,8 +10,8 @@ import { cn } from '@/lib/utils';
 import { LayoutGrid, LucideProps } from 'lucide-react';
 import { LoomIcon } from '@/components/icons/LoomIcon';
 import { ArmoryIcon } from '@/components/icons/ArmoryIcon';
-import { AegisThreatScopeIcon } from '@/components/icons/AegisThreatScopeIcon';
-import { BeepIcon } from '@/components/icons/BeepIcon';
+import { AegisThreatScopeIcon } from '../icons/AegisThreatScopeIcon';
+import { BeepIcon } from '../icons/BeepIcon';
 import type { MicroAppType } from '@/store/app-store';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
@@ -72,14 +72,12 @@ const NavButton = ({ item }: { item: NavItem }) => {
 
     return (
          <div className="flex-1">
-            <TooltipProvider>
-                <Tooltip>
-                    <TooltipTrigger asChild>{buttonElement}</TooltipTrigger>
-                    <TooltipContent side="top">
-                        <p>{item.tooltipContent}</p>
-                    </TooltipContent>
-                </Tooltip>
-            </TooltipProvider>
+            <Tooltip>
+                <TooltipTrigger asChild>{buttonElement}</TooltipTrigger>
+                <TooltipContent side="top">
+                    <p>{item.tooltipContent}</p>
+                </TooltipContent>
+            </Tooltip>
         </div>
     )
 }
@@ -96,11 +94,11 @@ export default function BottomNavBar() {
             transition={{ type: "spring", stiffness: 100, damping: 20, delay: 0.2 }}
             className="fixed bottom-4 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-sm h-16 md:hidden z-50"
         >
-            <div className="relative w-full h-full flex items-center justify-around bg-background/70 backdrop-blur-xl border border-border/20 shadow-lg rounded-2xl">
-                {leftNavItems.map((item) => <NavButton key={item.label} item={item} />)}
+            <TooltipProvider>
+                <div className="relative w-full h-full flex items-center justify-around bg-background/70 backdrop-blur-xl border border-border/20 shadow-lg rounded-2xl">
+                    {leftNavItems.map((item) => <NavButton key={item.label} item={item} />)}
 
-                <div className="relative -top-5">
-                    <TooltipProvider>
+                    <div className="relative -top-5">
                         <Tooltip>
                             <TooltipTrigger asChild>
                                  <button onClick={handleBeepFocus} className="group relative w-16 h-16 flex items-center justify-center bg-gradient-to-r from-primary to-roman-aqua rounded-full border-4 border-background shadow-lg transition-transform duration-200 hover:scale-110 active:scale-100 focus:outline-none focus:ring-4 focus:ring-primary/50">
@@ -111,11 +109,11 @@ export default function BottomNavBar() {
                                 <p>Summon BEEP</p>
                             </TooltipContent>
                         </Tooltip>
-                    </TooltipProvider>
+                    </div>
+                    
+                    {rightNavItems.map((item) => <NavButton key={item.label} item={item} />)}
                 </div>
-                
-                {rightNavItems.map((item) => <NavButton key={item.label} item={item} />)}
-            </div>
+            </TooltipProvider>
         </motion.div>
     );
 }
