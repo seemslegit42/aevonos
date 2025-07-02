@@ -45,6 +45,7 @@ export default function OracleOfDelphiValley() {
     const [tributeAmount, setTributeAmount] = useState('25');
     const [reels, setReels] = useState<SymbolKey[][]>([['ROCKS'], ['ROCKS'], ['ROCKS']]);
     const [result, setResult] = useState<{ outcome: string, boonAmount: number } | null>(null);
+    const [echo, setEcho] = useState<{ amount: number; key: number } | null>(null);
     const { toast } = useToast();
 
     const spinReels = (outcome: string, boonAmount: number) => {
@@ -86,6 +87,11 @@ export default function OracleOfDelphiValley() {
         const tributeResult = await makeFollyTribute('ORACLE_OF_DELPHI_VALLEY', amount);
 
         if (tributeResult.success) {
+            if (tributeResult.outcome!.includes('win') || tributeResult.outcome === 'pity_boon') {
+                const echoAmount = tributeResult.boonAmount! * (Math.random() * 1.5 + 1.2);
+                setEcho({ amount: echoAmount, key: Date.now() });
+            }
+
             spinReels(tributeResult.outcome!, tributeResult.boonAmount!);
             setTimeout(() => {
                 setResult({ outcome: tributeResult.outcome!, boonAmount: tributeResult.boonAmount! });
@@ -127,12 +133,28 @@ export default function OracleOfDelphiValley() {
                     <CardTitle className="text-base font-headline">The Loom of Folly</CardTitle>
                     <CardDescription className="text-xs">"Make your offering. Learn your fate."</CardDescription>
                 </CardHeader>
-                <CardContent className="p-2">
+                <CardContent className="p-2 relative">
                     <div className="flex justify-center gap-3 py-4">
                         <Reel symbols={reels[0]} duration={2} />
                         <Reel symbols={reels[1]} duration={2.5} />
                         <Reel symbols={reels[2]} duration={3} />
                     </div>
+                    <AnimatePresence>
+                        {echo && (
+                            <motion.div
+                                key={echo.key}
+                                initial={{ opacity: 0, y: 0, scale: 0.8 }}
+                                animate={{ opacity: [0, 0.7, 0.7, 0], y: -40, scale: 1.1 }}
+                                exit={{ opacity: 0 }}
+                                transition={{ duration: 2.5, ease: "easeOut", times: [0, 0.1, 0.8, 1] }}
+                                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-3xl font-bold font-mono text-roman-aqua pointer-events-none"
+                                style={{ textShadow: '0 0 15px hsl(var(--roman-aqua))' }}
+                                onAnimationComplete={() => setEcho(null)}
+                            >
+                                + {echo.amount.toFixed(2)} Ξ
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
                      <div className="flex gap-2">
                         <Input 
                             type="number"
