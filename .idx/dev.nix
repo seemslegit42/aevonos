@@ -49,6 +49,7 @@
       onCreate = {
         default.openFiles = [
           "src/app/page.tsx"
+          "src/app/login/page.tsx"
         ];
       };
     };
