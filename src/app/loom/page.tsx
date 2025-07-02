@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useCallback, useRef, useEffect } from 'react';
@@ -13,7 +12,7 @@ import WorkflowRunHistory from '@/components/loom/workflow-run-history';
 import { useToast } from '@/hooks/use-toast';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import type { User, Workspace, UserRole } from '@prisma/client';
-import { useIsMobile } from '@/hooks/use-is-mobile';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import type { Node, Edge, Workflow, NodeType } from '@/components/loom/types';
 import LoomMobileToolbar from '@/components/loom/loom-mobile-toolbar';
@@ -442,7 +441,7 @@ export default function LoomPage() {
                     <AlertDialogHeader>
                     <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                     <AlertDialogDescription>
-                        This action cannot be undone. This will permanently delete the
+                        This will permanently delete the
                         workflow "{activeWorkflow?.name || 'this workflow'}".
                     </AlertDialogDescription>
                     </AlertDialogHeader>
