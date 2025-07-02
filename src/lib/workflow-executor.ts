@@ -28,12 +28,15 @@ import { analyzeCarShame } from '@/ai/agents/reno-mode';
 import { processPatricktAction } from '@/ai/agents/patrickt-agent';
 import { validateVin } from '@/ai/agents/vin-diesel';
 import { consultInventoryDaemon } from '@/ai/agents/inventory-daemon';
-import { getServerActionSession } from './auth';
+import { UserRole } from '@prisma/client';
+import { aegisAnomalyScan } from '@/ai/agents/aegis';
+import { createSecurityAlertInDb } from '@/ai/tools/security-tools';
 
 interface ExecutionContext {
     workspaceId: string;
     userId: string;
     psyche: PrismaWorkflow['psyche'];
+    role: UserRole;
 }
 
 // A map of node types to their corresponding agent/tool functions.
@@ -143,16 +146,40 @@ export async function executeWorkflow(
     context: ExecutionContext
 ): Promise<{ finalPayload: any; executionLog: any[] }> {
     const definition = workflow.definition as unknown as Workflow['definition'];
-    if (!definition || !definition.nodes || !definition.edges) {
-        throw new Error('Invalid workflow definition.');
-    }
-
-    const { nodes, edges } = definition;
-    const nodeMap = new Map(nodes.map(n => [n.id, n]));
     const executionLog: any[] = [];
     const log = (entry: any) => executionLog.push(entry);
 
     try {
+        // Run Aegis scan before any execution
+        const anomalyReport = await aegisAnomalyScan({
+            activityDescription: `User triggered workflow '${workflow.name}'.`,
+            workspaceId: context.workspaceId,
+            userId: context.userId,
+            userRole: context.role,
+            userPsyche: context.psyche,
+        });
+
+        if (anomalyReport.isAnomalous) {
+            log({ nodeId: 'aegis-pre-scan', type: 'security', label: 'Aegis Anomaly Scan', result: anomalyReport });
+
+            if (anomalyReport.riskLevel === 'high' || anomalyReport.riskLevel === 'critical') {
+                await createSecurityAlertInDb({
+                    type: `High-Risk Workflow Blocked: ${anomalyReport.anomalyType || 'Unknown Anomaly'}`,
+                    explanation: anomalyReport.anomalyExplanation,
+                    riskLevel: anomalyReport.riskLevel,
+                }, context.workspaceId, context.userId);
+                
+                throw new Error(`Workflow execution blocked by Aegis. Reason: ${anomalyReport.anomalyExplanation}`);
+            }
+        }
+        
+        if (!definition || !definition.nodes || !definition.edges) {
+            throw new Error('Invalid workflow definition.');
+        }
+
+        const { nodes, edges } = definition;
+        const nodeMap = new Map(nodes.map(n => [n.id, n]));
+        
         const graph = new StateGraph<WorkflowState>({
             channels: {
                 payload: { value: (x, y) => ({ ...x, ...y }), default: () => ({}) },

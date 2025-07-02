@@ -14,12 +14,12 @@ This is not a dashboard for viewing alerts; that is the function of `Aegis-Threa
 
 ## 2. Core Components & Implementation
 
-### 2.1. The `Aegis-Command` Micro-App (`micro-apps/aegis-command.tsx`)
+### 2.1. The `Aegis-Command` Micro-App (`components/micro-apps/aegis-command.tsx`)
 The UI is a simple, direct interface for managing a list of threat intelligence feed URLs.
 - **Feed Management**: Allows users to add, edit, and remove URLs pointing to external threat intelligence feeds (e.g., lists of malicious IPs, known phishing domains).
 - **Secure Submission**: All changes are submitted via a secure API endpoint that requires `ADMIN` or `MANAGER` privileges.
 
-### 2.2. Backend API (`api/security/threat-feeds/route.ts`)
+### 2.2. Backend API (`app/api/security/threat-feeds/route.ts`)
 - **`GET /api/security/threat-feeds`**: Retrieves the current list of configured feeds for the workspace.
 - **`PUT /api/security/threat-feeds`**: Atomically replaces the existing list of feeds with the new one provided by the user.
 

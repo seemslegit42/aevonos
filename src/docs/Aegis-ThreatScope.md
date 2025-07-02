@@ -14,13 +14,13 @@ This is the designated "pane of glass" through which an operator observes the ac
 
 ## 2. Core Components & Implementation
 
-### 2.1. The `Aegis-ThreatScope` Micro-App (`micro-apps/aegis-threatscope.tsx`)
+### 2.1. The `Aegis-ThreatScope` Micro-App (`components/micro-apps/aegis-threatscope.tsx`)
 The UI is designed to be a clean, easily scannable feed of security events.
 - **Alert Feed**: Displays a list of `SecurityAlert` cards, each showing the alert type, risk level, a human-readable explanation, and a timestamp.
 - **Real-Time Updates**: The component is designed to poll the backend API periodically to refresh the alert list, ensuring the operator has the most current view of the system's security status.
 - **Risk-Based Styling**: Alerts are color-coded based on their `riskLevel` (`low`, `medium`, `high`, `critical`) to allow for immediate visual triage.
 
-### 2.2. Backend API (`api/security/alerts/route.ts`)
+### 2.2. Backend API (`app/api/security/alerts/route.ts`)
 - **`GET /api/security/alerts`**: A secure endpoint that retrieves all `SecurityAlert` records associated with the authenticated user's workspace, ordered from most to least recent.
 
 ### 2.3. Aegis Subsystem Integration

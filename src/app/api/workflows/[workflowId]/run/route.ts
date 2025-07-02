@@ -52,7 +52,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
             const { finalPayload, executionLog } = await executeWorkflow(
                 workflow, 
                 trigger_payload, 
-                { workspaceId: sessionUser.workspaceId, userId: sessionUser.id, psyche: sessionUser.psyche }
+                { workspaceId: sessionUser.workspaceId, userId: sessionUser.id, psyche: sessionUser.psyche, role: sessionUser.role }
             );
 
             await prisma.workflowRun.update({
