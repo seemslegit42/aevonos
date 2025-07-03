@@ -34,6 +34,7 @@ interface StonksAgentState {
   messages: BaseMessage[];
   ticker: string;
   mode: z.infer<typeof StonksBotModeSchema>;
+  fallbackAttempts: number;
 }
 
 // 2. Define Tools and Model
@@ -48,7 +49,23 @@ const modelWithTools = langchainGroqComplex.bind({
         },
     })),
 });
-const toolsNode = new ToolNode<StonksAgentState>(tools);
+
+// A safe tool node that catches errors and returns them as a ToolMessage
+const safeToolsNode = async (state: StonksAgentState): Promise<Partial<StonksAgentState>> => {
+    const toolsNode = new ToolNode<StonksAgentState>(tools);
+    try {
+        return await toolsNode.invoke(state);
+    } catch (error: any) {
+        console.error(`[Stonks Bot] Tool execution failed:`, error);
+        const lastMessage = state.messages[state.messages.length - 1];
+        const tool_call_id = lastMessage.tool_calls?.[0]?.id ?? "error_tool_call";
+        const errorMessage = new ToolMessage({
+            content: `Error: ${error.message}`,
+            tool_call_id,
+        });
+        return { messages: [errorMessage] };
+    }
+};
 
 // 3. Define Agent Nodes
 // This node plans the primary tool call.
@@ -61,11 +78,14 @@ const callPlanner = async (state: StonksAgentState) => {
 
 // This node plans the fallback tool call if the first one fails.
 const callFallback = async (state: StonksAgentState) => {
-    const { messages } = state;
+    const { messages, ticker } = state;
     const lastMessage = messages[messages.length - 1];
-    const fallbackPrompt = new HumanMessage(`The previous tool call failed with the following error: "${lastMessage.content}". Please call the alternative financial data source, getStockPriceFinnhub, to get the stock price.`);
+    const fallbackPrompt = new HumanMessage(`The previous tool call failed with the following error: "${lastMessage.content}". Please call the alternative financial data source, getStockPriceFinnhub, to get the stock price for ${ticker}.`);
     const response = await modelWithTools.invoke(messages.concat(fallbackPrompt));
-    return { messages: [response] };
+    return { 
+        messages: [response],
+        fallbackAttempts: state.fallbackAttempts + 1,
+    };
 };
 
 
@@ -111,13 +131,33 @@ const callSynthesizer = async (state: StonksAgentState) => {
     return { messages: [new AIMessage({ content: JSON.stringify(finalResponse) })] };
 };
 
+const handleFailure = async (state: StonksAgentState): Promise<Partial<StonksAgentState>> => {
+    const { ticker } = state;
+    
+    const finalResponse = {
+        ticker: ticker.toUpperCase(),
+        priceInfo: { symbol: ticker.toUpperCase(), price: 'N/A', change: 'N/A', changePercent: 'N/A', source: 'Data Unavailable' },
+        advice: `The prophecy is clouded. Both primary and secondary data feeds for ${ticker} have failed. The market spirits are displeased.`,
+        confidence: "The runes are unclear",
+        rating: "Sell to the fools",
+        horoscope: `A dark omen hangs over ${ticker}. Financial data sources have gone silent, suggesting a major disruption in the stock's cosmic alignment. Avoid this ticker until the stars are right again.`
+    };
+
+    return { messages: [new AIMessage({ content: JSON.stringify(finalResponse) })] };
+};
+
+
 // Conditional Edge Logic
-const shouldFallback = (state: StonksAgentState): "fallback" | "synthesize" => {
+const shouldFallback = (state: StonksAgentState): "fallback" | "synthesize" | "handle_failure" => {
     const lastMessage = state.messages[state.messages.length - 1];
     // Check if the last message is a ToolMessage and its content indicates an error
     if (lastMessage instanceof ToolMessage && lastMessage.content.includes("Error:")) {
-        console.log("[Stonks Bot] Tool failed. Attempting fallback.");
-        return "fallback";
+        if (state.fallbackAttempts < 1) {
+            console.log("[Stonks Bot] Tool failed. Attempting fallback.");
+            return "fallback";
+        }
+        console.error("[Stonks Bot] Fallback tool also failed. Terminating.");
+        return "handle_failure";
     }
     console.log("[Stonks Bot] Tool succeeded. Synthesizing report.");
     return "synthesize";
@@ -129,22 +169,26 @@ const workflow = new StateGraph<StonksAgentState>({
         messages: { value: (x, y) => x.concat(y), default: () => [] },
         ticker: { value: (x, y) => y, default: () => "" },
         mode: { value: (x, y) => y, default: () => "Meme-Lord" },
+        fallbackAttempts: { value: (x, y) => y, default: () => 0 },
     },
 });
 
 workflow.addNode('planner', callPlanner);
-workflow.addNode('tools', toolsNode);
+workflow.addNode('tools', safeToolsNode);
 workflow.addNode('fallback', callFallback);
 workflow.addNode('synthesizer', callSynthesizer);
+workflow.addNode('handle_failure', handleFailure);
 
 workflow.setEntryPoint('planner');
 workflow.addEdge('planner', 'tools');
 workflow.addConditionalEdges('tools', shouldFallback, {
     fallback: 'fallback',
     synthesize: 'synthesizer',
+    handle_failure: 'handle_failure',
 });
 workflow.addEdge('fallback', 'tools');
 workflow.addEdge('synthesizer', END);
+workflow.addEdge('handle_failure', END);
 
 const stonkBotApp = workflow.compile();
 
@@ -168,6 +212,7 @@ export async function getStonksAdvice(input: StonksBotInput): Promise<StonksBotO
         ticker,
         mode,
         messages: [],
+        fallbackAttempts: 0,
     });
     
     const lastMessage = result.messages.findLast(m => m._getType() === 'ai' && !m.tool_calls);

@@ -70,7 +70,23 @@ const callModel = async (state: OsintAgentState) => {
     return { messages: [response] };
 };
 
-const safeToolsNode = new ToolNode<OsintAgentState>(osintTools);
+// A safe tool node that catches errors and returns them as a ToolMessage
+const safeToolsNode = async (state: OsintAgentState): Promise<Partial<OsintAgentState>> => {
+    const toolsNode = new ToolNode<OsintAgentState>(osintTools);
+    try {
+        return await toolsNode.invoke(state);
+    } catch (error: any) {
+        console.error(`[OSINT Agent] Tool execution failed:`, error);
+        const lastMessage = state.messages[state.messages.length - 1];
+        // Attribute the error to the first tool call for simplicity.
+        const tool_call_id = lastMessage.tool_calls?.[0]?.id ?? "error_tool_call";
+        const errorMessage = new ToolMessage({
+            content: `Tool execution failed with error: ${error.message}. You MUST inform the user about this failure and suggest a next step. Do not try to call the tool again. Synthesize your existing findings and call final_answer_osint.`,
+            tool_call_id,
+        });
+        return { messages: [errorMessage] };
+    }
+};
 
 
 // 5. Define Graph Logic
