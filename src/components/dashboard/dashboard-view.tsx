@@ -24,7 +24,7 @@ export default function DashboardView({ initialAgents, user }: DashboardViewProp
 
   return (
     <div className="relative h-full w-full">
-      <SystemWeave initialAgents={initialAgents} />
+      {!isMobile && <SystemWeave initialAgents={initialAgents} />}
       {isMobile ? (
         grid
       ) : (
@@ -36,5 +36,3 @@ export default function DashboardView({ initialAgents, user }: DashboardViewProp
     </div>
   );
 }
-
-    
