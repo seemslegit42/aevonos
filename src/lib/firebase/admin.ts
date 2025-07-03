@@ -1,9 +1,9 @@
-
 // src/lib/firebase/admin.ts
 import admin from 'firebase-admin';
 import { cookies } from 'next/headers';
 import { prisma } from '@/lib/prisma';
 import type { User as PrismaUser, Workspace as PrismaWorkspace } from '@prisma/client';
+import redis from '@/lib/redis';
 
 const serviceAccount = JSON.parse(
   process.env.FIREBASE_SERVICE_ACCOUNT_KEY as string
@@ -21,6 +21,8 @@ type AuthenticatedUser = {
   workspace: PrismaWorkspace | null;
 }
 
+const CACHE_TTL_SECONDS = 60; // Cache user/workspace data for 1 minute
+
 /**
  * A server-side helper to get the authenticated user and their workspace.
  * It verifies the Firebase session cookie and fetches corresponding Prisma records if they exist.
@@ -37,15 +39,39 @@ export async function getAuthenticatedUser(): Promise<AuthenticatedUser> {
   try {
     const decodedToken = await admin.auth().verifySessionCookie(sessionCookie, true);
     
-    // Now, finding the user is optional. It might not exist yet if they are onboarding.
-    const user = await prisma.user.findUnique({
-      where: { id: decodedToken.uid },
-    });
+    // --- User Caching ---
+    const userCacheKey = `user:${decodedToken.uid}`;
+    let user: PrismaUser | null = null;
+    const cachedUser = await redis.get(userCacheKey);
 
-    // Only look for a workspace if the user exists in our DB.
-    const workspace = user ? await prisma.workspace.findFirst({
-        where: { members: { some: { id: user.id } } },
-    }) : null;
+    if (cachedUser) {
+      user = JSON.parse(cachedUser);
+    } else {
+      user = await prisma.user.findUnique({
+        where: { id: decodedToken.uid },
+      });
+      if (user) {
+        await redis.set(userCacheKey, JSON.stringify(user), 'EX', CACHE_TTL_SECONDS);
+      }
+    }
+
+    // --- Workspace Caching ---
+    let workspace: PrismaWorkspace | null = null;
+    if (user) {
+        const workspaceCacheKey = `workspace:user:${user.id}`;
+        const cachedWorkspace = await redis.get(workspaceCacheKey);
+
+        if (cachedWorkspace) {
+            workspace = JSON.parse(cachedWorkspace);
+        } else {
+            workspace = await prisma.workspace.findFirst({
+                where: { members: { some: { id: user.id } } },
+            });
+            if (workspace) {
+                await redis.set(workspaceCacheKey, JSON.stringify(workspace), 'EX', CACHE_TTL_SECONDS);
+            }
+        }
+    }
 
     return { user, workspace, firebaseUser: decodedToken };
 

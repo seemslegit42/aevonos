@@ -2,6 +2,7 @@
 'use server';
 
 import prisma from '@/lib/prisma';
+import redis from '@/lib/redis';
 import { AgentStatus, UserRole } from '@prisma/client';
 import { getAuthenticatedUser } from '@/lib/firebase/admin';
 import { revalidatePath } from 'next/cache';
@@ -45,6 +46,10 @@ export async function updateUserRole(formData: FormData) {
       where: { id: userId },
       data: { role },
     });
+    
+    // Invalidate user cache
+    await redis.del(`user:${userId}`);
+    
     revalidatePath('/'); // Revalidate to update the admin console
     return { success: true, message: 'User role updated.' };
   } catch (error) {
@@ -92,6 +97,10 @@ export async function removeUserFromWorkspace(formData: FormData) {
                 },
             },
         });
+        
+        // Invalidate both user and workspace cache for the removed user
+        await redis.del(`user:${userId}`, `workspace:user:${userId}`);
+
         revalidatePath('/');
         return { success: true, message: 'User removed from workspace.' };
     } catch (error) {
@@ -196,6 +205,10 @@ export async function confirmPendingTransactionAction(transactionId: string) {
 
     try {
         await confirmTxService(transactionId, workspace.id);
+        
+        // Invalidate workspace cache to reflect new credit balance
+        await redis.del(`workspace:user:${user.id}`);
+        
         revalidatePath('/');
         return { success: true, message: 'Transaction confirmed.' };
     } catch (e) {

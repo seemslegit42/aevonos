@@ -1,8 +1,8 @@
-
 import { NextResponse, NextRequest } from 'next/server';
 import { z } from 'zod';
 import { getAuthenticatedUser } from '@/lib/firebase/admin';
 import prisma from '@/lib/prisma';
+import redis from '@/lib/redis';
 import { PlanTier } from '@prisma/client';
 
 const WorkspaceUpdateSchema = z.object({
@@ -33,9 +33,9 @@ export async function GET(request: NextRequest) {
 // Corresponds to an extension of `getCurrentWorkspace` for updates
 export async function PUT(request: NextRequest) {
   try {
-    const { workspace } = await getAuthenticatedUser();
-    if (!workspace) {
-      return NextResponse.json({ error: 'Workspace not found.' }, { status: 404 });
+    const { user, workspace } = await getAuthenticatedUser();
+    if (!user || !workspace) {
+      return NextResponse.json({ error: 'User or workspace not found.' }, { status: 404 });
     }
     const body = await request.json();
     const validation = WorkspaceUpdateSchema.safeParse(body);
@@ -53,6 +53,9 @@ export async function PUT(request: NextRequest) {
         where: { id: workspace.id },
         data: validation.data
     });
+
+    // Invalidate the cache for this user's workspace
+    await redis.del(`workspace:user:${user.id}`);
 
     return NextResponse.json(updatedWorkspace);
 

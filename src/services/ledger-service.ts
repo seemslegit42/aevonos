@@ -6,6 +6,7 @@
  */
 
 import prisma from '@/lib/prisma';
+import redis from '@/lib/redis';
 import { z } from 'zod';
 import { Prisma, Transaction, TransactionStatus, TransactionType, UserPsyche } from '@prisma/client';
 import { InsufficientCreditsError } from '@/lib/errors';
@@ -73,6 +74,11 @@ async function createTransaction(input: CreateTransactionInput) {
             
             return transaction;
         });
+        
+        // Invalidate workspace cache on any transaction
+        if (userId) {
+            await redis.del(`workspace:user:${userId}`);
+        }
 
         return result;
 
@@ -138,6 +144,9 @@ export async function processMicroAppPurchase(
         unlockedAppIds: { push: appId },
       },
     });
+
+    // Invalidate workspace cache
+    await redis.del(`workspace:user:${userId}`);
 
     // 3. Create the transaction log
     await tx.transaction.create({
@@ -229,6 +238,12 @@ export async function confirmPendingTransaction(transactionId: string, workspace
 
         return confirmedTx;
     });
+
+    // Invalidate workspace cache on confirmation
+    if (result.userId) {
+        await redis.del(`workspace:user:${result.userId}`);
+    }
+
 
     return result;
 }
