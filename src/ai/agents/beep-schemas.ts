@@ -37,6 +37,7 @@ import { InventoryDaemonOutputSchema } from './inventory-daemon-schemas';
 import { SystemStatusSchema, FindUsersByVowOutputSchema, ManageSyndicateOutputSchema } from '@/ai/tools/demiurge-schemas';
 import { RitualQuestOutputSchema } from './ritual-quests-schemas';
 import { TransmuteCreditsOutputSchema } from '@/ai/tools/proxy-schemas';
+import { VaultAnalysisOutputSchema } from './vault-daemon-schemas';
 
 
 // Schemas from the original BEEP agent, preserved for the public contract.
@@ -330,6 +331,10 @@ export const AgentReportSchema = z.discriminatedUnion('agent', [
   z.object({
     agent: z.literal('proxy'),
     report: ProxyAgentReportSchema,
+  }),
+  z.object({
+    agent: z.literal('vault'),
+    report: VaultAnalysisOutputSchema.describe('The full report from the Vault Daemon.'),
   })
 ]);
 

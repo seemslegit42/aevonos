@@ -6,6 +6,7 @@
 import { z } from 'zod';
 import { ai } from '@/ai/genkit';
 import 'dotenv/config';
+import { FinancialSummarySchema } from '../agents/vault-daemon-schemas';
 
 // Define the schema for the tool input
 export const GetStockPriceInputSchema = z.object({
@@ -123,5 +124,34 @@ export const getStockPriceFinnhub = ai.defineTool(
       console.error(`[Finance Tool] Error fetching stock price from Finnhub for ${ticker}:`, error);
       throw new Error(`Could not fetch stock price for ${ticker} from Finnhub. The market might be closed or the symbol is invalid.`);
     }
+  }
+);
+
+export const getFinancialSummary = ai.defineTool(
+  {
+    name: 'getFinancialSummary',
+    description: 'Retrieves a comprehensive financial summary for the workspace over the last quarter.',
+    inputSchema: z.object({ workspaceId: z.string() }),
+    outputSchema: FinancialSummarySchema,
+  },
+  async ({ workspaceId }) => {
+    // In a real app, this would query a database or accounting software.
+    // For now, return mock data.
+    console.log(`[Finance Tool] Fetching financial summary for workspace ${workspaceId}`);
+    return {
+      totalRevenue: 157340.50,
+      netProfit: 22890.75,
+      profitMargin: 0.145,
+      majorExpenses: [
+        { category: 'SaaS Subscriptions', amount: 8500 },
+        { category: 'Cloud Hosting', amount: 12000 },
+        { category: 'Contractor Payouts', amount: 45000 },
+      ],
+      topRevenueStreams: [
+        { source: 'Product A Subscriptions', revenue: 95000 },
+        { source: 'Consulting Services', revenue: 45000 },
+        { source: 'Support Contracts', revenue: 17340.50 },
+      ]
+    };
   }
 );

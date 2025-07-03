@@ -33,6 +33,8 @@ import { consultInventoryDaemon, type InventoryDaemonInput } from '@/ai/agents/i
 import { InventoryDaemonInputSchema } from './inventory-daemon-schemas';
 import { executeBurnBridgeProtocol, type BurnBridgeInput } from '@/ai/agents/burn-bridge-agent';
 import { BurnBridgeInputSchema } from './burn-bridge-schemas';
+import { consultVaultDaemon, type VaultQueryInput } from './vault-daemon';
+import { VaultQueryInputSchema } from './vault-daemon-schemas';
 
 
 import {
@@ -188,11 +190,12 @@ const router = async (state: AgentState) => {
     }
     
     const routingSchema = z.object({
-        route: z.enum(["dispatcher", "reasoner", "inventory_daemon", "burn_bridge_protocol"])
+        route: z.enum(["dispatcher", "reasoner", "inventory_daemon", "burn_bridge_protocol", "vault_daemon"])
             .describe(`Choose 'dispatcher' for simple app launches, greetings, or direct commands.
 Choose 'reasoner' for complex requests involving analysis or multi-step tool use.
 Choose 'inventory_daemon' for any request about stock levels, product inventory, or purchase orders.
-Choose 'burn_bridge_protocol' for explicit requests to "burn the bridge" or conduct a full-spectrum investigation on a person.`)
+Choose 'burn_bridge_protocol' for explicit requests to "burn the bridge" or conduct a full-spectrum investigation on a person.
+Choose 'vault_daemon' for any request about finances, revenue, profit, spending, or where money is being wasted.`)
     });
     
     const routingModel = langchainGroqFast.withStructuredOutput(routingSchema);
@@ -285,6 +288,39 @@ const callBurnBridgeProtocol = async (state: AgentState): Promise<Partial<AgentS
 
     const response = new AIMessage({
         content: "The Burn Bridge Protocol has concluded.",
+        tool_calls: [finalAnswerToolCall],
+    });
+
+    return { messages: [response] };
+};
+
+// New node to call the Vault Daemon specialist agent
+const callVaultDaemon = async (state: AgentState): Promise<Partial<AgentState>> => {
+    console.log('[BEEP] Delegating to Vault Daemon.');
+    const { messages, workspaceId, userId } = state;
+    const lastMessage = messages[messages.length - 1];
+
+    const daemonInput: VaultQueryInput = {
+        query: lastMessage.content as string,
+        workspaceId,
+        userId
+    };
+
+    const daemonResponse = await consultVaultDaemon(daemonInput);
+
+    const finalAnswerToolCall = {
+        name: 'final_answer',
+        args: {
+            responseText: daemonResponse.summary,
+            appsToLaunch: [],
+            suggestedCommands: ["show me my top expenses", "forecast our cash flow"],
+            agentReports: [{ agent: 'vault', report: daemonResponse }]
+        },
+        id: 'tool_call_vault_daemon_final'
+    };
+    
+    const response = new AIMessage({
+        content: "The Vault Daemon has delivered its analysis.",
         tool_calls: [finalAnswerToolCall],
     });
 
@@ -405,6 +441,7 @@ workflow.addNode('agent_dispatcher', callDispatcherModel);
 workflow.addNode('agent_reasoner', callReasonerModel);
 workflow.addNode('inventory_daemon_node', callInventoryDaemon);
 workflow.addNode('burn_bridge_protocol_node', callBurnBridgeProtocol);
+workflow.addNode('vault_daemon_node', callVaultDaemon);
 workflow.addNode('handle_threat', handleThreat);
 workflow.addNode('warn_and_continue', warnAndContinue);
 workflow.addNode('tools', new ToolNode<AgentState>([])); 
@@ -425,7 +462,8 @@ workflow.addConditionalEdges('router', (state: AgentState) => router(state), {
     dispatcher: 'agent_dispatcher',
     reasoner: 'agent_reasoner',
     inventory_daemon: 'inventory_daemon_node',
-    burn_bridge_protocol: 'burn_bridge_protocol_node'
+    burn_bridge_protocol: 'burn_bridge_protocol_node',
+    vault_daemon: 'vault_daemon_node',
 });
 
 workflow.addConditionalEdges('agent_dispatcher', shouldContinue, {
@@ -441,6 +479,10 @@ workflow.addConditionalEdges('inventory_daemon_node', shouldContinue, {
   end: END,
 });
 workflow.addConditionalEdges('burn_bridge_protocol_node', shouldContinue, {
+  tools: 'tools',
+  end: END,
+});
+workflow.addConditionalEdges('vault_daemon_node', shouldContinue, {
   tools: 'tools',
   end: END,
 });
