@@ -22,8 +22,7 @@ import {
 } from '@langchain/core/messages';
 import { zodToJsonSchema } from 'zod-to-json-schema';
 import { UserPsyche, UserRole } from '@prisma/client';
-import { Runnable, type RunnableConfig } from "@langchain/core/runnables";
-import type { Tool } from '@langchain/core/tools';
+import type { RunnableConfig } from "@langchain/core/runnables";
 
 import { langchainGroqFast, langchainGroqComplex } from '@/ai/genkit';
 import { aegisAnomalyScan } from '@/ai/agents/aegis';
@@ -60,41 +59,7 @@ interface AgentState {
   role: UserRole;
   psyche: UserPsyche;
   aegisReport: AegisAnomalyScanOutput | null;
-}
-
-/**
- * A safe wrapper around the ToolNode that catches errors during tool execution
- * and returns them as a ToolMessage, allowing the graph to continue.
- */
-class SafeToolExecutor extends Runnable<AgentState, Partial<AgentState>> {
-  private toolNode: ToolNode<AgentState>;
-
-  constructor(tools: Tool[]) {
-    super();
-    // The tools are passed in during the invocation of the BEEP agent
-    this.toolNode = new ToolNode(tools);
-  }
-
-  async invoke(state: AgentState, config?: RunnableConfig): Promise<Partial<AgentState>> {
-    try {
-      // Delegate the actual tool invocation to the original ToolNode.
-      return await this.toolNode.invoke(state, config);
-    } catch (error: any) {
-      console.error(`[SafeToolExecutor] Tool execution failed:`, error);
-      const lastMessage = state.messages[state.messages.length - 1];
-      
-      // We may not know exactly which tool call failed, so we'll attribute
-      // the error to the first tool call in the list. The LLM is instructed
-      // to handle the failure gracefully.
-      const tool_call_id = lastMessage.tool_calls?.[0]?.id ?? "error_tool_call";
-      
-      const errorMessage = new ToolMessage({
-        content: `Tool execution failed with error: ${error.message}. You MUST inform the user about this failure and suggest a next step. Do not try to call the tool again.`,
-        tool_call_id,
-      });
-      return { messages: [errorMessage] };
-    }
-  }
+  agentReports: z.infer<typeof AgentReportSchema>[];
 }
 
 const callAegis = async (state: AgentState): Promise<Partial<AgentState>> => {
@@ -127,10 +92,16 @@ const callAegis = async (state: AgentState): Promise<Partial<AgentState>> => {
     const aegisSystemMessage = new SystemMessage({
         content: `AEGIS_INTERNAL_REPORT::${JSON.stringify({source: 'Aegis', report})}`
     });
+    
+    const aegisReportForState: z.infer<typeof AgentReportSchema> = {
+        agent: 'aegis',
+        report: report,
+    };
 
     return {
         messages: [aegisSystemMessage],
-        aegisReport: report
+        aegisReport: report,
+        agentReports: [aegisReportForState],
     };
 }
 
@@ -171,8 +142,16 @@ const callAegisOnToolOutput = async (state: AgentState): Promise<Partial<AgentSt
     const aegisSystemMessage = new SystemMessage({
         content: `AEGIS_INTERNAL_REPORT::(Tool Output Scan)::${JSON.stringify({source: 'Aegis', report})}`
     });
+    
+    const aegisReportForState: z.infer<typeof AgentReportSchema> = {
+        agent: 'aegis',
+        report: report,
+    };
 
-    return { messages: [aegisSystemMessage] };
+    return { 
+        messages: [aegisSystemMessage],
+        agentReports: [aegisReportForState],
+    };
 };
 
 
@@ -386,6 +365,52 @@ const routeAfterAegis = (state: AgentState) => {
     return 'continue';
 }
 
+const executeTools = async (state: AgentState): Promise<Partial<AgentState>> => {
+    console.log("[BEEP] Executing tools...");
+    const { messages } = state;
+    const lastMessage = messages[messages.length - 1];
+
+    if (!lastMessage || !lastMessage.tool_calls) {
+        return {};
+    }
+
+    const tools = await getTools(state);
+    const toolNode = new ToolNode(tools);
+    
+    let toolNodeResult: Partial<AgentState>;
+    try {
+        toolNodeResult = await toolNode.invoke(state);
+    } catch (error: any) {
+         console.error(`[BEEP Tool Executor] Tool execution failed:`, error);
+        const tool_call_id = lastMessage.tool_calls?.[0]?.id ?? "error_tool_call";
+      
+        const errorMessage = new ToolMessage({
+            content: `Tool execution failed with error: ${error.message}. You MUST inform the user about this failure and suggest a next step. Do not try to call the tool again.`,
+            tool_call_id,
+        });
+        return { messages: [errorMessage] };
+    }
+
+
+    const toolMessages = toolNodeResult.messages as ToolMessage[];
+    
+    const agentReports: z.infer<typeof AgentReportSchema>[] = [];
+    for (const toolMessage of toolMessages) {
+        if (toolMessage.name === 'final_answer') continue;
+        try {
+            const report = AgentReportSchema.parse(JSON.parse(toolMessage.content as string));
+            agentReports.push(report);
+        } catch (e) {
+            console.error(`[BEEP Tool Executor] Failed to parse tool message content for tool "${toolMessage.name}":`, e);
+        }
+    }
+    
+    return {
+        messages: toolMessages,
+        agentReports: agentReports,
+    };
+};
+
 const shouldContinue = (state: AgentState) => {
   const { messages } = state;
   const lastMessage = messages[messages.length - 1];
@@ -432,6 +457,10 @@ const workflow = new StateGraph<AgentState>({
         value: (x, y) => y,
         default: () => null,
     },
+    agentReports: {
+        value: (x, y) => x.concat(y),
+        default: () => [],
+    },
   },
 });
 
@@ -444,7 +473,7 @@ workflow.addNode('burn_bridge_protocol_node', callBurnBridgeProtocol);
 workflow.addNode('vault_daemon_node', callVaultDaemon);
 workflow.addNode('handle_threat', handleThreat);
 workflow.addNode('warn_and_continue', warnAndContinue);
-workflow.addNode('tools', new ToolNode<AgentState>([])); 
+workflow.addNode('tools', executeTools); 
 workflow.addNode('scan_tool_output', callAegisOnToolOutput);
 
 workflow.setEntryPoint('aegis');
@@ -533,10 +562,6 @@ export async function processUserCommand(input: UserCommandInput): Promise<UserC
     fastModelWithTools.kwargs.tools = toolSchemas;
     complexModelWithTools.kwargs.tools = toolSchemas;
     
-    // Replace the 'tools' node in the graph with a new one containing the context-aware tools.
-    // This now uses the safe executor to prevent graph crashes on tool errors.
-    app.nodes.tools = new SafeToolExecutor(tools) as any;
-
     const workspace = await prisma.workspace.findUnique({
         where: { id: workspaceId },
         select: { ownerId: true },
@@ -587,6 +612,7 @@ export async function processUserCommand(input: UserCommandInput): Promise<UserC
       userId: input.userId,
       role: input.role,
       psyche: input.psyche,
+      agentReports: [],
     }).catch(error => {
         // Catch errors from the graph execution itself.
         if (error instanceof InsufficientCreditsError) {
@@ -606,7 +632,8 @@ export async function processUserCommand(input: UserCommandInput): Promise<UserC
                             id: 'tool_call_insufficient_credits'
                         }]
                     })
-                ]
+                ],
+                agentReports: [],
             };
         }
         // Re-throw other errors
@@ -617,29 +644,7 @@ export async function processUserCommand(input: UserCommandInput): Promise<UserC
     const finalMessages = result.messages;
     await saveConversationHistory(input.userId, input.workspaceId, finalMessages);
 
-
-    // Extract all agent reports from the full message history
-    const agentReports: z.infer<typeof AgentReportSchema>[] = [];
-    
-    for (const msg of result.messages) {
-        if (msg instanceof SystemMessage && msg.content.startsWith('AEGIS_INTERNAL_REPORT::')) {
-            try {
-                const reportJson = JSON.parse(msg.content.replace(/^AEGIS_INTERNAL_REPORT::(?:\(Tool Output Scan\)::)?/, ''));
-                agentReports.push({ agent: 'aegis', report: AegisAnomalyScanOutputSchema.parse(reportJson.report) });
-            } catch (e) {
-                console.error("Failed to parse Aegis report from SystemMessage:", e);
-            }
-        } else if (msg instanceof ToolMessage) {
-            if (msg.name === 'final_answer') continue;
-            try {
-                // The tool's stringified JSON content is now a self-described AgentReport
-                const report = AgentReportSchema.parse(JSON.parse(msg.content as string));
-                agentReports.push(report);
-            } catch (e) {
-                console.error("Failed to parse tool message content as AgentReport:", e);
-            }
-        }
-    }
+    const agentReports = result.agentReports || [];
 
     // Find the last AIMessage that contains the 'final_answer' tool call.
     const lastMessage = result.messages.findLast(m => m._getType() === 'ai' && m.tool_calls && m.tool_calls.some(tc => tc.name === 'final_answer')) as AIMessage | undefined;
@@ -651,8 +656,7 @@ export async function processUserCommand(input: UserCommandInput): Promise<UserC
         if (finalAnswerCall) {
             try {
                 const parsed = UserCommandOutputSchema.parse(finalAnswerCall.args);
-                // The model is no longer responsible for agentReports. We construct it ourselves from the tool call history.
-                // We also merge any reports that were part of the final answer args (from specialist agents)
+                // Combine reports from tool execution with reports from specialist agents (like from the final answer tool call)
                 parsed.agentReports = [...(parsed.agentReports || []), ...agentReports];
                 finalResponse = parsed;
             } catch (e) {

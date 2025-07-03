@@ -39,7 +39,6 @@ interface AegisAgentState {
 
 // 2. Define Agent Nodes
 
-// Node to fetch threat intelligence
 const fetchThreatIntelligence = async (state: AegisAgentState): Promise<Partial<AegisAgentState>> => {
   const { input } = state;
   let threatIntelBlock = "No external threat intelligence feeds configured.";
@@ -61,7 +60,6 @@ ${intelContents.map((intel, i) => `--- Feed: ${feeds[i].url} ---\n${intel.conten
   return { threatIntelContent: threatIntelBlock };
 };
 
-// Node to fetch security edicts from the database
 const fetchSecurityEdicts = async (state: AegisAgentState): Promise<Partial<AegisAgentState>> => {
   const { input } = state;
   try {
@@ -74,6 +72,16 @@ const fetchSecurityEdicts = async (state: AegisAgentState): Promise<Partial<Aegi
       console.error("[Aegis Agent] Failed to fetch security edicts:", e);
       return { securityEdicts: ["Warning: Could not retrieve security edicts. Proceeding with caution."] };
   }
+};
+
+// New parallel data fetching node
+const fetchContextData = async (state: AegisAgentState): Promise<Partial<AegisAgentState>> => {
+    console.log('[Aegis Agent] Fetching threat intel and security edicts in parallel...');
+    const [intelResult, edictsResult] = await Promise.all([
+        fetchThreatIntelligence(state),
+        fetchSecurityEdicts(state)
+    ]);
+    return { ...intelResult, ...edictsResult };
 };
 
 // New Node to categorize the activity for more focused analysis
@@ -151,14 +159,12 @@ const workflow = new StateGraph<AegisAgentState>({
   },
 });
 
-workflow.addNode('fetch_intel', fetchThreatIntelligence);
-workflow.addNode('fetch_edicts', fetchSecurityEdicts);
+workflow.addNode('fetch_context_data', fetchContextData);
 workflow.addNode('categorize', categorizeActivity);
 workflow.addNode('analyze', analyzeActivity);
 
-workflow.setEntryPoint('fetch_intel');
-workflow.addEdge('fetch_intel', 'fetch_edicts');
-workflow.addEdge('fetch_edicts', 'categorize');
+workflow.setEntryPoint('fetch_context_data');
+workflow.addEdge('fetch_context_data', 'categorize');
 workflow.addEdge('categorize', 'analyze');
 workflow.addEdge('analyze', END);
 
