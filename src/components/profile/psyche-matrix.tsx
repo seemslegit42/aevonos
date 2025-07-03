@@ -82,3 +82,5 @@ export default function PsycheMatrix({ profile, psyche }: PsycheMatrixProps) {
     </TooltipProvider>
   );
 }
+
+    

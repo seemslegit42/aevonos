@@ -1,13 +1,19 @@
 
+'use client';
+
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerActionSession } from '@/lib/auth';
+import { getAuthenticatedUser } from '@/lib/firebase/admin';
 import prisma from '@/lib/prisma';
 
 export async function GET(request: NextRequest) {
   try {
-    const sessionUser = await getServerActionSession();
+    const { user } = await getAuthenticatedUser();
+    if (!user) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    
     const pulseProfile = await prisma.pulseProfile.findUnique({
-        where: { userId: sessionUser.id }
+        where: { userId: user.id }
     });
     
     if (!pulseProfile) {
@@ -25,3 +31,5 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Failed to retrieve pulse profile.' }, { status: 500 });
   }
 }
+
+    

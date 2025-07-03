@@ -1,3 +1,4 @@
+
 'use server';
 import { getAuthenticatedUser } from '@/lib/firebase/admin';
 import { calculateVasForUser } from '@/services/vas-service';
@@ -9,3 +10,5 @@ export async function getUserVas(): Promise<number> {
     }
     return calculateVasForUser(user.id);
 }
+
+    

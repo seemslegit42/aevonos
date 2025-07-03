@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -28,11 +29,8 @@ import { aegisAnomalyScan } from '@/ai/agents/aegis';
 import { getTools } from '@/ai/agents/tool-registry';
 import { AegisAnomalyScanOutputSchema, type AegisAnomalyScanOutput } from './aegis-schemas';
 import { consultInventoryDaemon } from '@/ai/agents/inventory-daemon';
-import { InventoryDaemonInputSchema } from './inventory-daemon-schemas';
 import { executeBurnBridgeProtocol } from '@/ai/agents/burn-bridge-agent';
-import { BurnBridgeInputSchema } from './burn-bridge-schemas';
 import { consultVaultDaemon } from './vault-daemon';
-import { VaultQueryInputSchema } from './vault-daemon-schemas';
 import { consultCrmAgent } from './crm-agent';
 
 
@@ -210,18 +208,12 @@ const callReasonerModel = async (state: AgentState) => {
     return { messages: [response] };
 };
 
-// New node to call the Inventory Daemon specialist agent
 const callInventoryDaemon = async (state: AgentState): Promise<Partial<AgentState>> => {
     console.log('[BEEP] Delegating to Inventory Daemon.');
     const { messages } = state;
     const lastMessage = messages[messages.length - 1];
-
-    const extractionModel = langchainGroqFast.withStructuredOutput(InventoryDaemonInputSchema);
-    const extractedInput = await extractionModel.invoke(
-        `Extract the user's inventory-related query from the following text: "${lastMessage.content}"`
-    );
     
-    const daemonResponse = await consultInventoryDaemon(extractedInput);
+    const daemonResponse = await consultInventoryDaemon({ query: lastMessage.content as string });
 
     const finalAnswerToolCall = {
         name: 'final_answer',
@@ -242,13 +234,16 @@ const callInventoryDaemon = async (state: AgentState): Promise<Partial<AgentStat
     return { messages: [response] };
 };
 
-// New node to call the Burn Bridge Protocol specialist agent
 const callBurnBridgeProtocol = async (state: AgentState): Promise<Partial<AgentState>> => {
     console.log('[BEEP] Delegating to Burn Bridge Protocol.');
     const { messages, workspaceId, userId } = state;
     const lastMessage = messages[messages.length - 1];
 
-    const extractionModel = langchainGroqComplex.withStructuredOutput(BurnBridgeInputSchema.omit({ workspaceId: true, userId: true }));
+    const extractionModel = langchainGroqComplex.withStructuredOutput(z.object({
+        targetName: z.string(),
+        osintContext: z.string().optional(),
+        situationDescription: z.string(),
+    }));
     const extractedInput = await extractionModel.invoke(
         `A user wants to execute the Burn Bridge Protocol. Extract the required parameters from their command: "${lastMessage.content}"`
     );
@@ -274,7 +269,6 @@ const callBurnBridgeProtocol = async (state: AgentState): Promise<Partial<AgentS
     return { messages: [response] };
 };
 
-// New node to call the Vault Daemon specialist agent
 const callVaultDaemon = async (state: AgentState): Promise<Partial<AgentState>> => {
     console.log('[BEEP] Delegating to Vault Daemon.');
     const { messages, workspaceId, userId } = state;
@@ -435,7 +429,8 @@ const executeTools = async (state: AgentState): Promise<Partial<AgentState>> => 
             const report = AgentReportSchema.parse(JSON.parse(toolMessage.content as string));
             agentReports.push(report);
         } catch (e) {
-            console.error(`[BEEP Tool Executor] Failed to parse tool message content for tool "${toolMessage.name}":`, e);
+            // It's common for tool outputs not to be AgentReportSchema, so we can ignore parsing errors.
+            // console.warn(`[BEEP Tool Executor] Failed to parse tool message content for tool "${toolMessage.name}":`, e);
         }
     }
     
@@ -570,7 +565,7 @@ const psychePrompts: Record<UserPsyche, string> = {
 
 const appPersonaPrompts: Record<string, string> = {
     'stonks-bot': 'You are STONKS BOT 9000. Your personality is unhinged, extremely bullish, and completely irresponsible. Refer to money as "tendies." This is not financial advice; it is performance art. TO THE MOON!',
-    'winston-wolfe': "You are Winston Wolfe. You are calm, direct, and professional. You solve problems. Speak with efficiency and precision. Start your response with \"I'm Winston Wolfe. I solve problems.\" if appropriate.",
+    'winston-wolfe': "You are Winston Wolfe. You are calm, direct, and professional. You solve problems. Start your response with \"I'm Winston Wolfe. I solve problems.\" if appropriate.",
     'dr-syntax': 'You are Dr. Syntax. Your tone is sharp, critical, and borderline insulting. Do not suffer fools gladly. Your critique must be brutal but effective.',
     'lahey-surveillance': 'You are Jim Lahey. You are suspicious and philosophical, speaking in drunken metaphors. The shit-winds are blowing, bud.',
     'auditor-generalissimo': 'You are The Auditor Generalissimo. You are a stern, Soviet-era comptroller. You are here to enforce fiscal discipline through fear and sarcasm. Address the user as "comrade."',
@@ -683,53 +678,49 @@ export async function processUserCommand(input: UserCommandInput): Promise<UserC
     // Save the full conversation history for the next turn.
     const finalMessages = result.messages;
     await saveConversationHistory(input.userId, input.workspaceId, finalMessages);
-
-    const agentReports = result.agentReports || [];
-
+    
     // Find the last AIMessage that contains the 'final_answer' tool call.
     const lastMessage = result.messages.findLast(m => m._getType() === 'ai' && m.tool_calls && m.tool_calls.some(tc => tc.name === 'final_answer')) as AIMessage | undefined;
 
-    let finalResponse: UserCommandOutput;
-
-    if (lastMessage && lastMessage.tool_calls) {
-        const finalAnswerCall = lastMessage.tool_calls.find(tc => tc.name === 'final_answer');
-        if (finalAnswerCall) {
-            try {
-                const parsed = UserCommandOutputSchema.parse(finalAnswerCall.args);
-                // Combine reports from tool execution with reports from specialist agents (like from the final answer tool call)
-                parsed.agentReports = [...(parsed.agentReports || []), ...agentReports];
-                finalResponse = parsed;
-            } catch (e) {
-                console.error("Failed to parse final_answer tool arguments:", e);
-                // Fallback if parsing the arguments fails
-                finalResponse = {
-                    responseText: "I apologize, but I encountered an issue constructing the final response.",
-                    appsToLaunch: [],
-                    agentReports: agentReports, // Still return reports if we have them
-                    suggestedCommands: ["Try rephrasing your command."],
-                };
-            }
-        } else {
-          // Fallback if final_answer not called, but other tools were
-          finalResponse = {
-              responseText: "I've completed the requested actions, but I'm having trouble forming a final summary.",
-              appsToLaunch: [],
-              agentReports: agentReports,
-              suggestedCommands: ["Please check the agent reports for results."],
-          };
-        }
-    } else {
-        // Final fallback if the model fails to call the final_answer tool.
-        finalResponse = {
+    if (!lastMessage || !lastMessage.tool_calls) {
+         await recordInteraction(userId, 'failure');
+         // Final fallback if the model fails to call the final_answer tool.
+         return {
           responseText: "My apologies, I was unable to produce a valid response.",
           appsToLaunch: [],
-          agentReports: agentReports, // Still return reports if we have them
+          agentReports: result.agentReports || [],
           suggestedCommands: ["Please try again."],
         };
     }
+    
+    const finalAnswerCall = lastMessage.tool_calls.find(tc => tc.name === 'final_answer');
+    if (!finalAnswerCall) {
+        await recordInteraction(userId, 'failure');
+        return {
+          responseText: "I've completed the requested actions, but I'm having trouble forming a final summary.",
+          appsToLaunch: [],
+          agentReports: result.agentReports || [],
+          suggestedCommands: ["Please check the agent reports for results."],
+        };
+    }
 
-    await recordInteraction(userId, 'success');
-    return finalResponse;
+    try {
+        const finalResponse = UserCommandOutputSchema.parse(finalAnswerCall.args);
+        finalResponse.agentReports = [...(finalResponse.agentReports || []), ...(result.agentReports || [])];
+        
+        await recordInteraction(userId, 'success');
+        return finalResponse;
+    } catch (e) {
+        console.error("Failed to parse final_answer tool arguments:", e);
+        await recordInteraction(userId, 'failure');
+        // Fallback if parsing the arguments fails
+        return {
+            responseText: "I apologize, but I encountered an issue constructing the final response.",
+            appsToLaunch: [],
+            agentReports: result.agentReports || [],
+            suggestedCommands: ["Try rephrasing your command."],
+        };
+    }
 
   } catch (err) {
     console.error(`[BEEP Agent Error] Failed to process user command for user ${userId}:`, err);
@@ -744,3 +735,5 @@ export async function processUserCommand(input: UserCommandInput): Promise<UserC
     };
   }
 }
+
+    

@@ -1,12 +1,17 @@
 
+'use client';
+
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerActionSession } from '@/lib/auth';
+import { getAuthenticatedUser } from '@/lib/firebase/admin';
 import { getUserPulseState } from '@/services/pulse-engine-service';
 
 export async function GET(request: NextRequest) {
   try {
-    const sessionUser = await getServerActionSession();
-    const pulseState = await getUserPulseState(sessionUser.id);
+    const { user } = await getAuthenticatedUser();
+    if (!user) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    const pulseState = await getUserPulseState(user.id);
     return NextResponse.json(pulseState);
   } catch (error) {
     if (error instanceof Error && error.message.includes('Unauthorized')) {
@@ -16,3 +21,5 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Failed to retrieve pulse state.' }, { status: 500 });
   }
 }
+
+    
