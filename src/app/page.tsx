@@ -1,10 +1,9 @@
 
 import DashboardView from '@/components/dashboard/dashboard-view';
-import { type User, type Workspace, type Agent, type Transaction } from '@prisma/client';
+import { type Agent } from '@prisma/client';
 import { getAuthenticatedUser } from '@/lib/firebase/admin';
 import { redirect } from 'next/navigation';
 import prisma from '@/lib/prisma';
-import { Prisma } from '@prisma/client';
 
 export default async function Home() {
     const { user, workspace } = await getAuthenticatedUser().catch((err) => {
@@ -16,33 +15,12 @@ export default async function Home() {
         redirect('/login');
     }
     
-    // Fetch agents and transactions directly on the server.
-    const [agents, transactions] = await Promise.all([
-        prisma.agent.findMany({ where: { workspaceId: workspace.id } }),
-        prisma.transaction.findMany({ 
-            where: { workspaceId: workspace.id }, 
-            orderBy: { createdAt: 'desc' }, 
-            take: 20 
-        })
-    ]);
-
-    const serializedTransactions = transactions.map(tx => ({
-        ...tx,
-        amount: Number(tx.amount),
-        tributeAmount: tx.tributeAmount ? Number(tx.tributeAmount) : null,
-        boonAmount: tx.boonAmount ? Number(tx.boonAmount) : null,
-    }));
-    
-    const initialData = {
-        user: user,
-        workspace: { ...workspace, credits: Number(workspace.credits) },
-        agents,
-        transactions: serializedTransactions,
-    };
+    // Fetch only the agents needed for the SystemWeave background.
+    const agents = await prisma.agent.findMany({ where: { workspaceId: workspace.id } });
     
     return (
         <div className="h-full">
-            <DashboardView initialData={initialData} />
+            <DashboardView initialAgents={agents} />
         </div>
     );
 }
