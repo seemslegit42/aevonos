@@ -62,8 +62,7 @@ export async function authorizeAndDebitAgentActions(input: AuthorizeAndDebitInpu
         throw new Error("[Billing Service] Attempted to authorize agent actions without a workspaceId.");
     }
     
-    const baseCost = ActionCostRegistry[actionType];
-    let cost = Math.ceil(baseCost * (costMultiplier || 1));
+    let cost = Math.ceil(ActionCostRegistry[actionType] * (costMultiplier || 1));
 
     try {
         // If a userId is provided, first check for the reclamation grace period.
@@ -213,12 +212,17 @@ export async function getUsageDetailsForAgent(workspaceId: string, userId: strin
  */
 export async function requestCreditTopUpInDb(input: RequestCreditTopUpInput, userId: string, workspaceId: string): Promise<RequestCreditTopUpOutput> {
   const { amount } = input;
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user) throw new Error("User not found.");
+
   // This is a free action for the user, but we can still run a security check.
   try {
     const anomalyReport = await aegisAnomalyScan({
       activityDescription: `User initiated a credit top-up request of ${amount.toLocaleString()} ΞCredits.`,
       workspaceId,
       userId,
+      userRole: user.role,
+      userPsyche: user.psyche,
     });
 
     if (anomalyReport.isAnomalous) {
