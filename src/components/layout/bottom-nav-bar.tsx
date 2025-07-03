@@ -58,19 +58,17 @@ const NavButton = ({ item }: { item: NavItem }) => {
 
     const buttonClasses = "group flex flex-col items-center justify-center h-full w-16 focus:outline-none focus:ring-2 focus:ring-primary rounded-lg";
     
-    const buttonElement = item.href ? (
-        <Link href={item.href} className={buttonClasses}>
-            {content}
-        </Link>
-    ) : (
-        <button onClick={() => handleAppLaunch(item as any)} className={buttonClasses}>
-            {content}
-        </button>
-    );
-
     return (
          <div className="flex-1">
-            {buttonElement}
+            {item.href ? (
+                <Link href={item.href} className={buttonClasses}>
+                    {content}
+                </Link>
+            ) : (
+                <button onClick={() => handleAppLaunch(item as any)} className={buttonClasses}>
+                    {content}
+                </button>
+            )}
         </div>
     )
 }

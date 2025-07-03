@@ -3,7 +3,7 @@
 
 import prisma from '@/lib/prisma';
 import { AgentStatus, UserRole } from '@prisma/client';
-import { getServerActionSession } from '@/lib/auth';
+import { getAuthenticatedUser } from '@/lib/firebase/admin';
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { confirmPendingTransaction as confirmTxService } from '@/services/ledger-service';
@@ -14,12 +14,7 @@ const UpdateUserRoleSchema = z.object({
 });
 
 export async function updateUserRole(formData: FormData) {
-  const sessionUser = await getServerActionSession();
-
-  const workspace = await prisma.workspace.findUnique({
-    where: { id: sessionUser.workspaceId },
-    select: { ownerId: true }
-  });
+  const { user: sessionUser, workspace } = await getAuthenticatedUser();
 
   if (!workspace || sessionUser.id !== workspace.ownerId) {
     return { success: false, error: 'Forbidden: Only the workspace Architect can perform this action.' };
@@ -63,13 +58,8 @@ const RemoveUserSchema = z.object({
 });
 
 export async function removeUserFromWorkspace(formData: FormData) {
-    const sessionUser = await getServerActionSession();
+    const { user: sessionUser, workspace } = await getAuthenticatedUser();
     
-    const workspace = await prisma.workspace.findUnique({
-      where: { id: sessionUser.workspaceId },
-      select: { ownerId: true }
-    });
-
     if (!workspace || sessionUser.id !== workspace.ownerId) {
         return { success: false, error: 'Forbidden: Only the workspace Architect can perform this action.' };
     }
@@ -95,7 +85,7 @@ export async function removeUserFromWorkspace(formData: FormData) {
 
     try {
         await prisma.workspace.update({
-            where: { id: sessionUser.workspaceId },
+            where: { id: workspace.id },
             data: {
                 members: {
                     disconnect: { id: userId },
@@ -116,12 +106,7 @@ const UpdateAgentStatusSchema = z.object({
 });
 
 export async function updateAgentStatus(formData: FormData) {
-  const sessionUser = await getServerActionSession();
-
-  const workspace = await prisma.workspace.findUnique({
-    where: { id: sessionUser.workspaceId },
-    select: { ownerId: true }
-  });
+  const { user: sessionUser, workspace } = await getAuthenticatedUser();
 
   if (!workspace || sessionUser.id !== workspace.ownerId) {
     return { success: false, error: 'Forbidden: Only the workspace Architect can perform this action.' };
@@ -140,7 +125,7 @@ export async function updateAgentStatus(formData: FormData) {
 
   try {
     const agent = await prisma.agent.findFirst({
-        where: { id: agentId, workspaceId: sessionUser.workspaceId },
+        where: { id: agentId, workspaceId: workspace.id },
     });
 
     if (!agent) {
@@ -164,13 +149,8 @@ const DeleteAgentSchema = z.object({
 });
 
 export async function deleteAgent(formData: FormData) {
-    const sessionUser = await getServerActionSession();
+    const { user: sessionUser, workspace } = await getAuthenticatedUser();
     
-    const workspace = await prisma.workspace.findUnique({
-      where: { id: sessionUser.workspaceId },
-      select: { ownerId: true }
-    });
-
     if (!workspace || sessionUser.id !== workspace.ownerId) {
         return { success: false, error: 'Forbidden: Only the workspace Architect can perform this action.' };
     }
@@ -187,7 +167,7 @@ export async function deleteAgent(formData: FormData) {
 
     try {
         const agent = await prisma.agent.findFirst({
-            where: { id: agentId, workspaceId: sessionUser.workspaceId },
+            where: { id: agentId, workspaceId: workspace.id },
         });
 
         if (!agent) {
@@ -208,22 +188,14 @@ export async function deleteAgent(formData: FormData) {
 
 
 export async function confirmPendingTransactionAction(transactionId: string) {
-    const sessionUser = await getServerActionSession();
+    const { user, workspace } = await getAuthenticatedUser();
     
-    const user = await prisma.user.findFirst({
-        where: {
-            id: sessionUser.id,
-            workspaces: { some: { id: sessionUser.workspaceId }}
-        },
-        select: { role: true }
-    });
-
     if (!user || user.role !== UserRole.ADMIN) {
         return { success: false, error: 'Forbidden: Administrator access required for this action.' };
     }
 
     try {
-        await confirmTxService(transactionId, sessionUser.workspaceId);
+        await confirmTxService(transactionId, workspace.id);
         revalidatePath('/');
         return { success: true, message: 'Transaction confirmed.' };
     } catch (e) {

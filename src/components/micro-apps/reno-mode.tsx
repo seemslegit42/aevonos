@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useRef } from 'react';
@@ -6,12 +7,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Loader2, Camera, Sparkles, UserCheck, HeartHand, Flame, Wind, Droplets } from 'lucide-react';
 import { useAppStore } from '@/store/app-store';
-import { UserPsyche } from '@prisma/client';
-enum UserPsyche {
-  ZEN_ARCHITECT = 'ZEN_ARCHITECT',
-  SYNDICATE_ENFORCER = 'SYNDICATE_ENFORCER',
-  RISK_AVERSE_ARTISAN = 'RISK_AVERSE_ARTISAN',
-}
 import type { RenoModeAnalysisOutput } from '@/ai/agents/reno-mode-schemas';
 
 import { useToast } from '@/hooks/use-toast';

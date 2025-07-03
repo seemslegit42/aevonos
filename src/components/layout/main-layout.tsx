@@ -6,7 +6,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import TopBar from '@/components/layout/top-bar';
 import type { User, Workspace } from '@prisma/client';
 import BottomNavBar from './bottom-nav-bar';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { useIsMobile } from '@/hooks/use-is-mobile';
 import { cn } from '@/lib/utils';
 import { NudgeHandler } from './NudgeHandler';
 import { useAuth } from '@/context/AuthContext';
