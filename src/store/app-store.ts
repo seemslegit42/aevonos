@@ -308,18 +308,38 @@ export const useAppStore = create<AppStore>()((set, get) => ({
             zIndex,
           };
         } else {
-          const defaults = {
-            id: `app-${Date.now()}`,
-            type: type,
-            title: `New ${type}`,
-            description: `A new ${type} app.`,
-            position: { x: Math.random() * 200 + 100, y: Math.random() * 200 + 50 },
-            size: getAppDefaultSize(type),
-            zIndex: zIndex,
-          };
-          state.apps.push({ ...defaults, ...partialApp });
+            const isClient = typeof window !== 'undefined';
+            const defaultSize = getAppDefaultSize(type);
+
+            let position = { x: 150, y: 100 };
+            let size = defaultSize;
+
+            if (isClient) {
+                const isMobile = window.innerWidth < 768;
+                if (isMobile) {
+                    size = { width: window.innerWidth - 32, height: window.innerHeight * 0.7 };
+                    position = { x: 16, y: 80 };
+                } else {
+                    const topBarHeight = 80; // Approximate height of top bar + padding
+                    position = { 
+                        x: Math.random() * (window.innerWidth - defaultSize.width - 100) + 50, 
+                        y: Math.random() * (window.innerHeight - defaultSize.height - topBarHeight - 50) + topBarHeight 
+                    };
+                }
+            }
+
+            const defaults = {
+                id: `app-${Date.now()}`,
+                type: type,
+                title: artifactManifests.find(a => a.id === type)?.name || `New ${type}`,
+                description: artifactManifests.find(a => a.id === type)?.description || `A new ${type} app.`,
+                position,
+                size,
+                zIndex: zIndex,
+            };
+            state.apps.push({ ...defaults, ...partialApp });
         }
-        state.activeAppId = partialApp.id || `app-${Date.now()}`;
+        state.activeAppId = partialApp.id || state.apps[state.apps.length - 1].id;
         state.nextZIndex = zIndex;
       })
     );
