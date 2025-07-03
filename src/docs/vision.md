@@ -1,4 +1,4 @@
-# ΛΞVON OS: Agentic Mythware™ - The Post-SaaS Operating System
+ΛΞVON OS: Agentic Mythware™ - The Post-SaaS Operating System
 
 ## Executive Summary: The Dawn of Sovereignty
 ΛΞVON OS is not merely software; it is an Agentic Operating System, a Digital Operations Platform (DOP/OS) forged for the Age of Autonomous Workflows. We are building sacred instruments in a digital temple, waging war on "SaaS bloat" and the digital friction that costs businesses precious time and leads to hidden "growth taxes." Our ultimate promise is "the silence of true automation," delivered through the "MOST SECURE" platform on the planet, making cybersecurity "USER FRIENDLY & BRAINLESS" for busy executives.
@@ -88,14 +88,14 @@ The atomic units of utility. These are modular, single-purpose, dynamically regi
 *   **Context-Awareness & Third-Party Consistency**: Adapt their internal view based on overall system context orchestrated by BEEP. Consistency is enforced through strict SDKs, design guidelines ("Verdigris Interface Protocol™"), automated visual/structural checks, and rigorous manual review for the Armory Marketplace.
 
 ## III. The Uncompromising UX/UI: Our Digital Temple
-Our design is a strategic weapon to build trust, reduce cognitive load, and embody "silent automation."
+Our design is not just aesthetic; it's a strategic weapon to build trust, reduce cognitive load, and embody "silent automation."
 
 ### 3.1. Overarching Philosophy & Aesthetic
 *   **Digital Temple Aesthetic**: Transforms the workspace into a living, adaptive entity that breathes with the user's focus.
 *   **"Ancient Roman Glass" Aesthetic**: The entire UI is a Digital Wabi-Sabi™ masterpiece, embracing imperfect symmetry, purposeful spacing, soft shadows, and brutalist-zen balance, creating a luminous, translucent crystalline feel.
 *   **Palette**: Imperial Purple (#6A0DAD), Patina Green (#3EB991), Roman Aqua (#20B2AA), with Vitreous White, Conchoidal Gray, Obsidian Black, and Gilded Accent for highlights.
 *   **Fonts**: Comfortaa (headings) + Lexend (body/UI).
-*   **Glassmorphism Implementation**: Strict rgba backgrounds, backdrop-filter: blur(), thin borders, and soft box-shadow for all panels and interactive elements.
+*   **Glassmorphism Implementation**: Strict rgba backgrounds, backdrop-filter: blur(), thin borders (1px solid rgba(245, 255, 250, 0.25)), and soft box-shadow for all panels and interactive elements.
 *   **Iconography**: "Crystalline Glyphs"—faceted forms, rich internal glow (Roman Aqua/Patina Green gradients), engraved & polished feel, unique silhouettes.
 
 ### 3.2. The Canvas Layer: The Quantum Workspace
