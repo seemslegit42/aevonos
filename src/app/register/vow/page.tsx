@@ -14,7 +14,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Loader2, Sparkles, Wand2 } from 'lucide-react';
+import { Loader2, Sparkles } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { UserPsyche } from '@prisma/client';
 import { signInWithEmailAndPassword } from 'firebase/auth';
@@ -80,7 +80,6 @@ export default function VowPage() {
     const onSubmit = async (data: FormData) => {
         setIsSubmitting(true);
         try {
-            // Step 1: Register user and onboard in one go
             const response = await fetch('/api/auth/register', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -94,7 +93,6 @@ export default function VowPage() {
             
             const result = await response.json();
             
-            // Step 2: Sign in the new user
             if (!auth) throw new Error("Firebase Auth is not configured.");
             await signInWithEmailAndPassword(auth, data.email, data.password);
 
@@ -104,8 +102,6 @@ export default function VowPage() {
                 duration: 10000,
             });
 
-            // onAuthStateChanged in AuthContext will handle cookie creation.
-            // The MainLayout will then detect the new user and redirect to '/'.
             router.push('/');
             router.refresh();
 
@@ -121,7 +117,7 @@ export default function VowPage() {
 
     return (
         <div className="flex h-screen w-screen items-center justify-center p-4">
-            <Card className="w-full max-w-lg">
+            <Card className="w-full max-w-lg bg-background/70 backdrop-blur-xl border border-border/20 shadow-lg">
                 <CardHeader>
                     <CardTitle className="text-center font-headline text-2xl text-primary">The Rite of Invocation</CardTitle>
                 </CardHeader>
@@ -141,15 +137,15 @@ export default function VowPage() {
                                 </div>
                                 
                                 {currentStep === 0 && (
-                                     <Textarea {...form.register('whatMustEnd')} placeholder="e.g., The tyranny of dashboards and endless SaaS tabs." rows={4} />
+                                     <Textarea {...form.register('whatMustEnd')} placeholder="e.g., The tyranny of dashboards and endless SaaS tabs." rows={4} className="bg-background/50"/>
                                 )}
                                 {currentStep === 1 && (
-                                     <Textarea {...form.register('goal')} placeholder="e.g., An agentic operating system that anticipates, acts, and disappears." rows={4} />
+                                     <Textarea {...form.register('goal')} placeholder="e.g., An agentic operating system that anticipates, acts, and disappears." rows={4} className="bg-background/50"/>
                                 )}
                                 {currentStep === 2 && (
                                     <div className="space-y-4">
-                                        <Input {...form.register('workspaceName')} placeholder="Your Canvas Name" />
-                                        <Input {...form.register('agentAlias')} placeholder="Your Agent's Name" />
+                                        <Input {...form.register('workspaceName')} placeholder="Your Canvas Name" className="bg-background/50"/>
+                                        <Input {...form.register('agentAlias')} placeholder="Your Agent's Name" className="bg-background/50"/>
                                     </div>
                                 )}
                                 {currentStep === 3 && (
@@ -159,7 +155,7 @@ export default function VowPage() {
                                         className="gap-4"
                                     >
                                         {psycheOptions.map(option => (
-                                            <Label key={option.value} className="flex items-center space-x-3 rounded-md border p-4 cursor-pointer hover:bg-accent hover:text-accent-foreground">
+                                            <Label key={option.value} className="flex items-center space-x-3 rounded-md border p-4 cursor-pointer hover:bg-accent/10 bg-background/50">
                                                 <RadioGroupItem value={option.value} />
                                                 <div>
                                                     <p className="font-semibold">{option.label}</p>
@@ -171,8 +167,8 @@ export default function VowPage() {
                                 )}
                                  {currentStep === 4 && (
                                     <div className="space-y-4">
-                                        <Input {...form.register('email')} type="email" placeholder="Your Email" />
-                                        <Input {...form.register('password')} type="password" placeholder="Your Password" />
+                                        <Input {...form.register('email')} type="email" placeholder="Your Email" className="bg-background/50"/>
+                                        <Input {...form.register('password')} type="password" placeholder="Your Password" className="bg-background/50"/>
                                     </div>
                                 )}
                                 <AnimatePresence>
@@ -190,7 +186,7 @@ export default function VowPage() {
                                     {currentStep < steps.length - 1 ? (
                                         <Button type="button" onClick={handleNext}>Next</Button>
                                     ) : (
-                                        <Button type="submit" disabled={isSubmitting}>
+                                        <Button type="submit" disabled={isSubmitting} variant="summon">
                                             {isSubmitting ? <Loader2 className="animate-spin" /> : <><Sparkles className="mr-2 h-4 w-4" />Forge the Pact</>}
                                         </Button>
                                     )}
