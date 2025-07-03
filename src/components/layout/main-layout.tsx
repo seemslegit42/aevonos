@@ -16,6 +16,7 @@ interface MainLayoutProps {
   children: React.ReactNode;
   user: User | null;
   workspace: Workspace | null;
+  initialVas: number | null;
 }
 
 const psycheToTheme: Record<UserPsyche, string> = {
@@ -30,7 +31,7 @@ const effectToTheme: Record<string, string> = {
 };
 
 
-export function MainLayout({ children, user: dbUser, workspace }: MainLayoutProps) {
+export function MainLayout({ children, user: dbUser, workspace, initialVas }: MainLayoutProps) {
   const pathname = usePathname();
   const router = useRouter();
   const { user: firebaseUser, loading: authLoading } = useAuth();
@@ -110,7 +111,7 @@ export function MainLayout({ children, user: dbUser, workspace }: MainLayoutProp
   return (
     <div className="flex flex-col h-screen overflow-hidden">
       <div className="flex-shrink-0 p-2 sm:p-4">
-        <TopBar user={dbUser} workspace={workspace} />
+        <TopBar user={dbUser} workspace={workspace} initialVas={initialVas} />
       </div>
       <main className={cn(
         "flex-grow flex flex-col min-h-0",

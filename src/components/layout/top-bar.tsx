@@ -30,6 +30,7 @@ type UserProp = Pick<User, 'id' | 'email' | 'firstName' | 'lastName' | 'role' | 
 interface TopBarProps {
   user: UserProp;
   workspace: Workspace | null;
+  initialVas: number | null;
 }
 
 const psycheToCovenantMap = {
@@ -51,12 +52,12 @@ const CurrentTime = () => {
   return <span className="hidden lg:inline">{time}</span>;
 }
 
-export default function TopBar({ user, workspace }: TopBarProps) {
+export default function TopBar({ user, workspace, initialVas }: TopBarProps) {
   const formRef = useRef<HTMLFormElement>(null);
   const isMobile = useIsMobile();
   const { handleCommandSubmit, isLoading, beepOutput, upsertApp, activeAppId, apps } = useAppStore();
   const [inputValue, setInputValue] = useState('');
-  const [vas, setVas] = useState<number | null>(null);
+  const [vas, setVas] = useState<number | null>(initialVas);
 
   useEffect(() => {
     async function fetchVas() {
@@ -68,8 +69,8 @@ export default function TopBar({ user, workspace }: TopBarProps) {
         }
     }
     if (user) {
-        fetchVas();
-        const interval = setInterval(fetchVas, 30000); // Periodically refresh VAS
+        // We still periodically refresh the VAS score
+        const interval = setInterval(fetchVas, 30000); 
         return () => clearInterval(interval);
     }
   }, [user]);
@@ -233,5 +234,3 @@ export default function TopBar({ user, workspace }: TopBarProps) {
     </header>
   );
 }
-
-    

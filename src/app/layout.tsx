@@ -6,6 +6,7 @@ import { MainLayout } from '@/components/layout/main-layout';
 import Image from 'next/image';
 import { AuthProvider } from '@/context/AuthContext';
 import { getAuthenticatedUser } from '@/lib/firebase/admin';
+import { getUserVas } from './user/actions';
 
 
 export const metadata: Metadata = {
@@ -21,6 +22,11 @@ export default async function RootLayout({
 }>) {
   
   const { user, workspace } = await getAuthenticatedUser().catch(() => ({ user: null, workspace: null }));
+  
+  let initialVas: number | null = null;
+  if (user) {
+    initialVas = await getUserVas().catch(() => null);
+  }
 
   return (
     <html lang="en" className="dark">
@@ -51,7 +57,7 @@ export default async function RootLayout({
             </div>
             </div>
             
-            <MainLayout user={user} workspace={workspace}>
+            <MainLayout user={user} workspace={workspace} initialVas={initialVas}>
                 {children}
             </MainLayout>
             <Toaster />
