@@ -12,6 +12,10 @@ const QuerySchema = z.object({
 export async function GET(request: NextRequest) {
   try {
     const { workspace } = await getAuthenticatedUser();
+    
+    if (!workspace) {
+      return NextResponse.json({ error: 'Workspace not found.' }, { status: 404 });
+    }
 
     const { searchParams } = new URL(request.url);
     const queryParams = Object.fromEntries(searchParams.entries());

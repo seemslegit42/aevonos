@@ -20,6 +20,9 @@ interface RouteParams {
 export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
     const { workspace } = await getAuthenticatedUser();
+     if (!workspace) {
+      return NextResponse.json({ error: 'Workspace not found.' }, { status: 404 });
+    }
     const { contactId } = params;
     const contact = await prisma.contact.findFirst({
       where: { id: contactId, workspaceId: workspace.id },
@@ -42,6 +45,9 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 export async function PUT(request: NextRequest, { params }: RouteParams) {
   try {
     const { workspace } = await getAuthenticatedUser();
+    if (!workspace) {
+      return NextResponse.json({ error: 'Workspace not found.' }, { status: 404 });
+    }
     const { contactId } = params;
     const body = await request.json();
     const validation = ContactUpdateRequestSchema.safeParse(body);
@@ -79,6 +85,9 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
     try {
         const { workspace } = await getAuthenticatedUser();
+        if (!workspace) {
+          return NextResponse.json({ error: 'Workspace not found.' }, { status: 404 });
+        }
         const { contactId } = params;
 
         // Verify the contact belongs to the user's workspace before deleting

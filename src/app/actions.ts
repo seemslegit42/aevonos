@@ -19,6 +19,10 @@ import prisma from '@/lib/prisma';
 export async function handleCommand(command: string, activeAppContext?: string): Promise<UserCommandOutput> {
   const { user, workspace } = await getAuthenticatedUser();
   
+  if (!user || !workspace) {
+    throw new Error('User or workspace not found. Onboarding may be incomplete.');
+  }
+
   if (command.toLowerCase().trim() === 'the tendies are coming') {
     return {
         appsToLaunch: [{ type: 'stonks-bot', title: 'STONKSBOT 9000 (POSSESSED)' }],
@@ -58,6 +62,9 @@ export async function handleCommand(command: string, activeAppContext?: string):
 // The BEEP agent's text-based command stream is not suitable for high-bandwidth data.
 export async function scanEvidence(input: Omit<PaperTrailScanInput, 'workspaceId'>): Promise<PaperTrailScanOutput> {
   const { workspace } = await getAuthenticatedUser();
+  if (!workspace) {
+      throw new Error('Workspace not found.');
+  }
   
   try {
     const result = await scanEvidenceFlow({...input, workspaceId: workspace.id });
@@ -81,6 +88,9 @@ const TopUpRequestSchema = z.object({
 
 export async function requestCreditTopUp(amount: number) {
     const { user, workspace } = await getAuthenticatedUser();
+    if (!user || !workspace) {
+        return { success: false, error: 'User or workspace not found.' };
+    }
     
     const validatedFields = TopUpRequestSchema.safeParse({ amount });
 
@@ -105,6 +115,9 @@ export async function requestCreditTopUp(amount: number) {
 
 export async function purchaseMicroApp(appId: string) {
   const { user, workspace } = await getAuthenticatedUser();
+   if (!user || !workspace) {
+        return { success: false, error: 'User or workspace not found.' };
+    }
 
   const appManifest = artifactManifests.find(artifact => artifact.id === appId && artifact.type === 'MICRO_APP');
   if (!appManifest) {
@@ -136,6 +149,9 @@ export async function purchaseMicroApp(appId: string) {
 
 export async function makeFollyTribute(instrumentId: string, tributeAmount?: number) {
   const { user, workspace } = await getAuthenticatedUser();
+   if (!user || !workspace) {
+        return { success: false, error: 'User or workspace not found.' };
+    }
   
   try {
     const { outcome, boonAmount, aethericEcho } = await processFollyTribute(
@@ -176,6 +192,9 @@ export async function makeFollyTribute(instrumentId: string, tributeAmount?: num
 
 export async function logInstrumentDiscovery(instrumentId: string) {
   const { user, workspace } = await getAuthenticatedUser();
+   if (!user || !workspace) {
+        return; // Fail silently
+    }
 
   try {
     const existingDiscovery = await prisma.instrumentDiscovery.findFirst({
@@ -201,6 +220,7 @@ export async function logInstrumentDiscovery(instrumentId: string) {
 
 export async function getNudges() {
   const { user } = await getAuthenticatedUser();
+  if (!user) return [];
 
   const twelveMinutesAgo = new Date(Date.now() - 12 * 60 * 1000);
 
@@ -244,6 +264,7 @@ export async function getNudges() {
 }
 export async function clearFirstWhisper() {
   const { user } = await getAuthenticatedUser();
+  if (!user) return;
   try {
     await prisma.user.update({
       where: { id: user.id },

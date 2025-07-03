@@ -15,7 +15,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     try {
         const { user: sessionUser, workspace } = await getAuthenticatedUser();
         
-        if (sessionUser.role !== UserRole.ADMIN) {
+        if (!sessionUser || !workspace || sessionUser.role !== UserRole.ADMIN) {
             return NextResponse.json({ error: 'Forbidden: Administrator access required for this action.' }, { status: 403 });
         }
         

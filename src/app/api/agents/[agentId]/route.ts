@@ -20,6 +20,9 @@ interface RouteParams {
 export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
     const { workspace } = await getAuthenticatedUser();
+    if (!workspace) {
+      return NextResponse.json({ error: 'Workspace not found.' }, { status: 404 });
+    }
     const { agentId } = params;
     const agent = await prisma.agent.findFirst({
       where: { id: agentId, workspaceId: workspace.id },
@@ -42,7 +45,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 export async function PUT(request: NextRequest, { params }: RouteParams) {
   try {
     const { user, workspace } = await getAuthenticatedUser();
-    if (!user || (user.role !== UserRole.ADMIN && user.role !== UserRole.MANAGER)) {
+    if (!user || !workspace || (user.role !== UserRole.ADMIN && user.role !== UserRole.MANAGER)) {
         return NextResponse.json({ error: 'Permission denied. Administrator or Manager access required.' }, { status: 403 });
     }
     
@@ -83,7 +86,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
     try {
         const { user, workspace } = await getAuthenticatedUser();
-        if (!user || (user.role !== UserRole.ADMIN && user.role !== UserRole.MANAGER)) {
+        if (!user || !workspace || (user.role !== UserRole.ADMIN && user.role !== UserRole.MANAGER)) {
             return NextResponse.json({ error: 'Permission denied. Administrator or Manager access required.' }, { status: 403 });
         }
         

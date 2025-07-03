@@ -4,7 +4,7 @@
 import React, { useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import TopBar from '@/components/layout/top-bar';
-import type { User, Workspace } from '@prisma/client';
+import type { User, Workspace, UserPsyche } from '@prisma/client';
 import BottomNavBar from './bottom-nav-bar';
 import { useIsMobile } from '@/hooks/use-is-mobile';
 import { cn } from '@/lib/utils';
@@ -60,6 +60,27 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
         fetchUserData();
     }
   }, [firebaseUser, loading, pathname, router]);
+
+  useEffect(() => {
+    const psycheToTheme: Record<UserPsyche, string> = {
+      SYNDICATE_ENFORCER: 'theme-covenant-motion',
+      RISK_AVERSE_ARTISAN: 'theme-covenant-worship',
+      ZEN_ARCHITECT: 'theme-covenant-silence',
+    };
+    
+    if (dbUser?.psyche) {
+      const themeClass = psycheToTheme[dbUser.psyche];
+      document.documentElement.className = `dark ${themeClass}`;
+    } else {
+      document.documentElement.className = 'dark'; // Default theme
+    }
+
+    // Cleanup function to reset theme on component unmount is not strictly necessary
+    // as the effect will re-run on user change, but it's good practice.
+    return () => {
+      document.documentElement.className = 'dark';
+    };
+}, [dbUser]);
 
 
   const isMobile = useIsMobile();

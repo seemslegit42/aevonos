@@ -13,6 +13,10 @@ const BeepCommandRequestSchema = z.object({
 export async function POST(request: NextRequest) {
   try {
     const { user, workspace } = await getAuthenticatedUser();
+    
+    if (!user || !workspace) {
+      return NextResponse.json({ error: 'User or workspace not found. Onboarding may be incomplete.' }, { status: 404 });
+    }
 
     const body = await request.json();
     const validation = BeepCommandRequestSchema.safeParse(body);

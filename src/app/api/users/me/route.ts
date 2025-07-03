@@ -36,6 +36,9 @@ export async function GET(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   try {
     const { user: sessionUser } = await getAuthenticatedUser();
+    if (!sessionUser) {
+      return NextResponse.json({ error: 'User not found.' }, { status: 404 });
+    }
     const body = await request.json();
     const validation = UserUpdateRequestSchema.safeParse(body);
 

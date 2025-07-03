@@ -19,14 +19,12 @@ const OnboardingRequestSchema = z.object({
 
 export async function POST(request: Request) {
   try {
-    const { user: firebaseUser } = await getAuthenticatedUser();
+    // This route is special. It's the only one where a firebaseUser can exist without a prisma user.
+    const { firebaseUser, user: existingUser } = await getAuthenticatedUser();
+
     if (!firebaseUser) {
         return NextResponse.json({ error: 'Unauthorized. No authenticated user found.' }, { status: 401 });
     }
-
-    const existingUser = await prisma.user.findUnique({
-      where: { id: firebaseUser.id },
-    });
 
     if (existingUser) {
       return NextResponse.json({ error: 'User has already been onboarded.' }, { status: 409 });
@@ -44,7 +42,7 @@ export async function POST(request: Request) {
     // We already have the Firebase User ID, so we use that.
     const newUser = await prisma.user.create({
         data: {
-            id: firebaseUser.id, // Use Firebase UID as the primary key
+            id: firebaseUser.uid, // Use Firebase UID as the primary key
             email: firebaseUser.email!,
             agentAlias: agentAlias || 'BEEP',
             psyche: psyche || UserPsyche.ZEN_ARCHITECT,

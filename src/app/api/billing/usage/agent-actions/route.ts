@@ -9,6 +9,10 @@ import { getAuthenticatedUser } from '@/lib/firebase/admin';
 export async function GET(request: NextRequest) {
   try {
     const { workspace } = await getAuthenticatedUser();
+    
+    if (!workspace) {
+      return NextResponse.json({ error: 'Workspace not found.' }, { status: 404 });
+    }
 
     // Call the non-billable version for UI display
     const usageDetails = await getUsageDetails(workspace.id);

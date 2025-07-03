@@ -16,7 +16,7 @@ const UpdateUserRoleSchema = z.object({
 export async function updateUserRole(formData: FormData) {
   const { user: sessionUser, workspace } = await getAuthenticatedUser();
 
-  if (!workspace || sessionUser.id !== workspace.ownerId) {
+  if (!workspace || !sessionUser || sessionUser.id !== workspace.ownerId) {
     return { success: false, error: 'Forbidden: Only the workspace Architect can perform this action.' };
   }
 
@@ -60,7 +60,7 @@ const RemoveUserSchema = z.object({
 export async function removeUserFromWorkspace(formData: FormData) {
     const { user: sessionUser, workspace } = await getAuthenticatedUser();
     
-    if (!workspace || sessionUser.id !== workspace.ownerId) {
+    if (!workspace || !sessionUser || sessionUser.id !== workspace.ownerId) {
         return { success: false, error: 'Forbidden: Only the workspace Architect can perform this action.' };
     }
     
@@ -108,7 +108,7 @@ const UpdateAgentStatusSchema = z.object({
 export async function updateAgentStatus(formData: FormData) {
   const { user: sessionUser, workspace } = await getAuthenticatedUser();
 
-  if (!workspace || sessionUser.id !== workspace.ownerId) {
+  if (!workspace || !sessionUser || sessionUser.id !== workspace.ownerId) {
     return { success: false, error: 'Forbidden: Only the workspace Architect can perform this action.' };
   }
 
@@ -151,7 +151,7 @@ const DeleteAgentSchema = z.object({
 export async function deleteAgent(formData: FormData) {
     const { user: sessionUser, workspace } = await getAuthenticatedUser();
     
-    if (!workspace || sessionUser.id !== workspace.ownerId) {
+    if (!workspace || !sessionUser || sessionUser.id !== workspace.ownerId) {
         return { success: false, error: 'Forbidden: Only the workspace Architect can perform this action.' };
     }
     
@@ -190,7 +190,7 @@ export async function deleteAgent(formData: FormData) {
 export async function confirmPendingTransactionAction(transactionId: string) {
     const { user, workspace } = await getAuthenticatedUser();
     
-    if (!user || user.role !== UserRole.ADMIN) {
+    if (!user || !workspace || user.role !== UserRole.ADMIN) {
         return { success: false, error: 'Forbidden: Administrator access required for this action.' };
     }
 
