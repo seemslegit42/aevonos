@@ -2,7 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { z } from 'zod';
-import { getServerActionSession } from '@/lib/auth';
+import { getAuthenticatedUser } from '@/lib/firebase/admin';
 import { AgentStatus, UserRole } from '@prisma/client';
 
 const AgentUpdateSchema = z.object({
@@ -19,10 +19,10 @@ interface RouteParams {
 
 export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
-    const sessionUser = await getServerActionSession();
+    const { workspace } = await getAuthenticatedUser();
     const { agentId } = params;
     const agent = await prisma.agent.findFirst({
-      where: { id: agentId, workspaceId: sessionUser.workspaceId },
+      where: { id: agentId, workspaceId: workspace.id },
     });
 
     if (!agent) {
@@ -31,7 +31,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     return NextResponse.json(agent);
   } catch (error) {
-    if (error instanceof Error && error.message.includes('Unauthorized')) {
+    if (error instanceof Error && (error.message.includes('token expired') || error.message.includes('no token'))) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     console.error(`[API /agents/{agentId} GET]`, error);
@@ -41,8 +41,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
 export async function PUT(request: NextRequest, { params }: RouteParams) {
   try {
-    const sessionUser = await getServerActionSession();
-    const user = await prisma.user.findUnique({ where: { id: sessionUser.id }});
+    const { user, workspace } = await getAuthenticatedUser();
     if (!user || (user.role !== UserRole.ADMIN && user.role !== UserRole.MANAGER)) {
         return NextResponse.json({ error: 'Permission denied. Administrator or Manager access required.' }, { status: 403 });
     }
@@ -57,7 +56,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 
     // Verify the agent belongs to the user's workspace before updating
     const existingAgent = await prisma.agent.findFirst({
-        where: { id: agentId, workspaceId: sessionUser.workspaceId }
+        where: { id: agentId, workspaceId: workspace.id }
     });
     if (!existingAgent) {
         return NextResponse.json({ error: 'Agent not found.' }, { status: 404 });
@@ -70,7 +69,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 
     return NextResponse.json(updatedAgent);
   } catch (error) {
-    if (error instanceof Error && error.message.includes('Unauthorized')) {
+    if (error instanceof Error && (error.message.includes('token expired') || error.message.includes('no token'))) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     if (error instanceof SyntaxError) {
@@ -83,8 +82,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
     try {
-        const sessionUser = await getServerActionSession();
-        const user = await prisma.user.findUnique({ where: { id: sessionUser.id }});
+        const { user, workspace } = await getAuthenticatedUser();
         if (!user || (user.role !== UserRole.ADMIN && user.role !== UserRole.MANAGER)) {
             return NextResponse.json({ error: 'Permission denied. Administrator or Manager access required.' }, { status: 403 });
         }
@@ -93,7 +91,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
 
         // Verify the agent belongs to the user's workspace before deleting
         const existingAgent = await prisma.agent.findFirst({
-            where: { id: agentId, workspaceId: sessionUser.workspaceId }
+            where: { id: agentId, workspaceId: workspace.id }
         });
         if (!existingAgent) {
             return NextResponse.json({ error: 'Agent not found.' }, { status: 404 });
@@ -105,7 +103,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
 
         return new NextResponse(null, { status: 204 });
     } catch (error) {
-        if (error instanceof Error && error.message.includes('Unauthorized')) {
+        if (error instanceof Error && (error.message.includes('token expired') || error.message.includes('no token'))) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
         console.error(`[API /agents/{agentId} DELETE]`, error);

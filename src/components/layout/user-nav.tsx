@@ -16,7 +16,8 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { useAppStore } from "@/store/app-store";
 import type { User, Workspace } from "@prisma/client";
-import { handleLogout } from "@/app/actions";
+import { handleLogout } from "@/app/auth/actions";
+import { deleteAccount } from "@/app/auth/actions";
 
 type UserProp = Pick<User, 'id' | 'email' | 'firstName' | 'lastName' | 'role' | 'agentAlias'> | null;
 
@@ -36,7 +37,7 @@ export function UserNav({ user, workspace, children }: UserNavProps) {
     const getInitials = () => {
         const first = user?.firstName ? user.firstName.charAt(0) : '';
         const last = user?.lastName ? user.lastName.charAt(0) : '';
-        return `${first}${last}`.toUpperCase() || user.email.charAt(0).toUpperCase();
+        return `${first}${last}`.toUpperCase() || (user.email ? user.email.charAt(0).toUpperCase() : '');
     }
     
     const handleProfileClick = () => {

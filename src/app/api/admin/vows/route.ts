@@ -1,16 +1,11 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { getServerActionSession } from '@/lib/auth';
+import { getAuthenticatedUser } from '@/lib/firebase/admin';
 
 export async function GET(request: NextRequest) {
   try {
-    const sessionUser = await getServerActionSession();
-
-    const workspace = await prisma.workspace.findUnique({
-        where: { id: sessionUser.workspaceId },
-        select: { ownerId: true },
-    });
+    const { user: sessionUser, workspace } = await getAuthenticatedUser();
 
     if (!workspace || workspace.ownerId !== sessionUser.id) {
         return NextResponse.json({ error: 'Forbidden. Architect access required.' }, { status: 403 });
@@ -20,7 +15,7 @@ export async function GET(request: NextRequest) {
       where: {
         workspaces: {
           some: {
-            id: sessionUser.workspaceId,
+            id: workspace.id,
           },
         },
       },
@@ -40,7 +35,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(usersWithVows);
   } catch (error) {
-    if (error instanceof Error && error.message.includes('Unauthorized')) {
+    if (error instanceof Error && (error.message.includes('token expired') || error.message.includes('no token'))) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     console.error('[API /admin/vows GET]', error);

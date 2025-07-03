@@ -1,17 +1,12 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { getServerActionSession } from '@/lib/auth';
+import { getAuthenticatedUser } from '@/lib/firebase/admin';
 import { TransactionType } from '@prisma/client';
 
 export async function GET(request: NextRequest) {
   try {
-    const sessionUser = await getServerActionSession();
-
-    const workspace = await prisma.workspace.findUnique({
-        where: { id: sessionUser.workspaceId },
-        select: { ownerId: true },
-    });
+    const { user: sessionUser, workspace } = await getAuthenticatedUser();
 
     if (!workspace || workspace.ownerId !== sessionUser.id) {
         return NextResponse.json({ error: 'Forbidden. Architect access required.' }, { status: 403 });
@@ -22,7 +17,7 @@ export async function GET(request: NextRequest) {
 
     const transactions = await prisma.transaction.findMany({
         where: {
-            workspaceId: sessionUser.workspaceId,
+            workspaceId: workspace.id,
             createdAt: {
                 gte: thirtyDaysAgo,
             },
@@ -69,7 +64,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(sortedData);
 
   } catch (error) {
-    if (error instanceof Error && error.message.includes('Unauthorized')) {
+    if (error instanceof Error && (error.message.includes('token expired') || error.message.includes('no token'))) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     console.error('[API /admin/economic-pulse GET]', error);

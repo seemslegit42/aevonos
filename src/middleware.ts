@@ -1,10 +1,12 @@
 
-import NextAuth from 'next-auth';
-import { authConfig } from './auth.config';
- 
-export default NextAuth(authConfig).auth;
- 
+import { NextResponse, type NextRequest } from 'next/server';
+
+// This middleware function does nothing and allows all requests to pass through.
+// Route protection is now handled by the MainLayout component.
+export function middleware(request: NextRequest) {
+  return NextResponse.next();
+}
+
 export const config = {
-  // https://nextjs.org/docs/app/building-your-application/routing/middleware#matcher
   matcher: ['/((?!api|_next/static|_next/image|.*\\.png$).*)'],
 };

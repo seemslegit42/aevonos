@@ -2,7 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import prisma from '@/lib/prisma';
-import { getServerActionSession } from '@/lib/auth';
+import { getAuthenticatedUser } from '@/lib/firebase/admin';
 import { AgentStatus, UserRole } from '@prisma/client';
 
 const AgentDeploymentRequestSchema = z.object({
@@ -14,16 +14,16 @@ const AgentDeploymentRequestSchema = z.object({
 
 export async function GET(request: NextRequest) {
   try {
-    const sessionUser = await getServerActionSession();
+    const { workspace } = await getAuthenticatedUser();
     const agents = await prisma.agent.findMany({
         where: {
-            workspaceId: sessionUser.workspaceId,
+            workspaceId: workspace.id,
         }
     });
 
     return NextResponse.json(agents);
   } catch (error) {
-    if (error instanceof Error && error.message.includes('Unauthorized')) {
+    if (error instanceof Error && (error.message.includes('token expired') || error.message.includes('no token'))) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     console.error('[API /agents GET]', error);
@@ -33,8 +33,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const sessionUser = await getServerActionSession();
-    const user = await prisma.user.findUnique({ where: { id: sessionUser.id } });
+    const { user, workspace } = await getAuthenticatedUser();
 
     if (!user || (user.role !== UserRole.ADMIN && user.role !== UserRole.MANAGER)) {
         return NextResponse.json({ error: 'Permission denied. Administrator or Manager access required.' }, { status: 403 });
@@ -55,14 +54,14 @@ export async function POST(request: NextRequest) {
             type,
             description,
             status: AgentStatus.idle,
-            workspaceId: sessionUser.workspaceId,
+            workspaceId: workspace.id,
         }
     });
 
     return NextResponse.json(newAgent, { status: 201 });
 
   } catch (error) {
-    if (error instanceof Error && error.message.includes('Unauthorized')) {
+    if (error instanceof Error && (error.message.includes('token expired') || error.message.includes('no token'))) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     if (error instanceof SyntaxError) {

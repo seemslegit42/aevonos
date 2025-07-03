@@ -4,7 +4,9 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { signIn } from 'next-auth/react';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '@/lib/firebase/client';
+
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -26,20 +28,16 @@ export default function LoginPage() {
         setIsLoading(true);
 
         try {
-            const result = await signIn('credentials', {
-                redirect: false,
-                email,
-                password,
-            });
-
-            if (result?.error) {
+            await signInWithEmailAndPassword(auth, email, password);
+            // onAuthStateChanged in AuthContext will handle session cookie and redirect
+            router.push('/');
+            router.refresh();
+        } catch (err: any) {
+            if (['auth/invalid-credential', 'auth/user-not-found', 'auth/wrong-password'].includes(err.code)) {
                 setError('Invalid credentials. Please try again.');
             } else {
-                router.push('/');
-                router.refresh();
+                setError('An unexpected error occurred. Please try again.');
             }
-        } catch (err) {
-            setError('An unexpected error occurred. Please try again.');
         } finally {
             setIsLoading(false);
         }
@@ -50,19 +48,11 @@ export default function LoginPage() {
         setError(null);
         setIsLoading(true);
         try {
-            const result = await signIn('credentials', {
-                redirect: false,
-                email: 'architect@aevonos.com',
-                password: 'password123',
-            });
-            if (result?.error) {
-                setError('Demo user login failed. Please ensure the database is seeded.');
-            } else {
-                router.push('/');
-                router.refresh();
-            }
+            await signInWithEmailAndPassword(auth, 'architect@aevonos.com', 'password123');
+            router.push('/');
+            router.refresh();
         } catch (err) {
-             setError('An unexpected error occurred during demo login.');
+             setError('Demo user login failed. Please ensure the database is seeded.');
         } finally {
             setIsLoading(false);
         }

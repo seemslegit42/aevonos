@@ -1,7 +1,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { getServerActionSession } from '@/lib/auth';
+import { getAuthenticatedUser } from '@/lib/firebase/admin';
 import { UserRole } from '@prisma/client';
 import { confirmPendingTransaction as confirmTxService } from '@/services/ledger-service';
 
@@ -13,21 +13,14 @@ interface RouteParams {
 
 export async function POST(request: NextRequest, { params }: RouteParams) {
     try {
-        const sessionUser = await getServerActionSession();
-        const user = await prisma.user.findFirst({
-            where: {
-                id: sessionUser.id,
-                workspaces: { some: { id: sessionUser.workspaceId }}
-            },
-            select: { role: true }
-        });
-
-        if (!user || user.role !== UserRole.ADMIN) {
+        const { user: sessionUser, workspace } = await getAuthenticatedUser();
+        
+        if (sessionUser.role !== UserRole.ADMIN) {
             return NextResponse.json({ error: 'Forbidden: Administrator access required for this action.' }, { status: 403 });
         }
         
         const { transactionId } = params;
-        const confirmedTransaction = await confirmTxService(transactionId, sessionUser.workspaceId);
+        const confirmedTransaction = await confirmTxService(transactionId, workspace.id);
 
         return NextResponse.json(confirmedTransaction);
     } catch (error) {
