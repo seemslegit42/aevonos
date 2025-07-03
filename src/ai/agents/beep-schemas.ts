@@ -351,5 +351,4 @@ export const UserCommandOutputSchema = z.object({
   responseAudioUri: z.string().optional().describe('A data URI for the TTS audio of the responseText.'),
 });
 export type UserCommandOutput = z.infer<typeof UserCommandOutputSchema>;
-
     

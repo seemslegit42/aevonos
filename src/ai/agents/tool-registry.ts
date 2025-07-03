@@ -363,14 +363,6 @@ export async function getTools(context: AgentContext): Promise<Tool[]> {
             agentName: 'wingman',
             agentFunc: (toolInput) => generateWingmanMessage({ ...toolInput, workspaceId }),
         }),
-
-        createAgentTool({
-            name: 'executeBurnBridgeProtocol',
-            description: 'Executes the "Burn Bridge Protocol". This is a high-level, multi-agent process for comprehensive intelligence gathering on a target. It runs OSINT, behavioral analysis, deploys a decoy, and compiles a final dossier. Requires a target name, a situation description, and optional context.',
-            schema: BurnBridgeInputSchema.omit({ workspaceId: true, userId: true }),
-            agentName: 'dossier',
-            agentFunc: (toolInput) => executeBurnBridgeProtocol({ ...toolInput, workspaceId, userId }),
-        }),
         
         createAgentTool({
             name: 'getKendraTake',
@@ -434,14 +426,6 @@ export async function getTools(context: AgentContext): Promise<Tool[]> {
             schema: PatricktAgentInputSchema.omit({ workspaceId: true, userId: true }),
             agentName: 'patrickt-app',
             agentFunc: (toolInput) => processPatricktAction({ ...toolInput, workspaceId, userId }),
-        }),
-        
-        createAgentTool({
-            name: 'consultInventoryDaemon',
-            description: "Consults the specialist Inventory Daemon for any questions related to stock levels, purchase orders, or supply chain. Use for queries like 'How many Product X do we have?' or 'Reorder Product Y'.",
-            schema: InventoryDaemonInputSchema,
-            agentName: 'inventory-daemon',
-            agentFunc: (toolInput) => consultInventoryDaemon(toolInput),
         }),
     ];
 
