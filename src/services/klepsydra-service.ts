@@ -227,10 +227,11 @@ export async function processFollyTribute(
             boonAmount = calculatedBoon;
 
             // --- Aetheric Echo Calculation ---
-            const creditBoons = selectedTier.boons.filter(b => b.type === 'credits');
-            if (creditBoons.length > 1) {
-                const maxMultiplier = Math.max(...creditBoons.map(b => b.value as number));
+            const creditBoonsInTier = selectedTier.boons.filter(b => b.type === 'credits');
+            if (creditBoonsInTier.length > 1) {
+                const maxMultiplier = Math.max(...creditBoonsInTier.map(b => b.value as number));
                 const maxPossibleBoon = tributeAmount * maxMultiplier * psycheModifiers.boonFactor;
+                // aethericEcho is the difference between the best possible outcome and what was received
                 aethericEcho = Math.max(0, maxPossibleBoon - boonAmount);
             }
         } else if (selectedBoon.type === 'chaos_card') {
@@ -245,10 +246,10 @@ export async function processFollyTribute(
         
         // --- Judas Algorithm ---
         let judasFactor = null;
-        const isWin = outcome !== 'loss' && outcome !== 'common';
+        // Only apply Judas to credit wins, not card wins
+        const isCreditWin = (outcome !== 'loss' && outcome !== 'common' && selectedBoon.type === 'credits');
         const { flowState } = profile;
-        // At high confidence (flowState), introduce a chance of a "hollow win".
-        if (isWin && flowState > 0.75 && Math.random() < 0.33) { // 33% chance on high flow
+        if (isCreditWin && flowState > 0.75 && Math.random() < 0.33) {
             judasFactor = 1 - (Math.random() * 0.15 + 0.05); // Reduce boon by 5-20%
             boonAmount *= judasFactor;
             console.log(`[Judas Algorithm] Hollow win triggered. Boon reduced by ${((1 - (judasFactor || 1)) * 100).toFixed(2)}%`);
