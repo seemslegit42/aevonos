@@ -1,4 +1,3 @@
-
 /**
  * @fileOverview The Profit Pulse Engine (Codename: KLEPSYDRA) Configuration.
  * These values represent the "Profit Dials" that can be tuned by admins
@@ -6,12 +5,6 @@
  */
 
 export const pulseEngineConfig = {
-  /**
-   * The target percentage of all ΞCredits the system retains over a 24-hour cycle.
-   * The ultimate measure of profitability. Not directly used in calculations, but serves as a target for balancing.
-   */
-  BASE_RTR: 0.25,
-
   /**
    * The maximum number of consecutive losses a user can experience
    * before the system intervenes with a "Pity Boon".
