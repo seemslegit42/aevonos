@@ -1,7 +1,7 @@
 // src/lib/firebase/admin.ts
 import admin from 'firebase-admin';
 import { cookies } from 'next/headers';
-import { prisma } from '@/lib/prisma';
+import prisma from '@/lib/prisma';
 import type { User as PrismaUser, Workspace as PrismaWorkspace } from '@prisma/client';
 import redis from '@/lib/redis';
 
