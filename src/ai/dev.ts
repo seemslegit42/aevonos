@@ -54,3 +54,4 @@ import '@/services/global-event-service.ts';
 import '@/ai/tools/proxy-tools.ts';
 import '@/services/vas-service.ts';
 import '@/ai/tools/threat-intelligence-tools.ts';
+import '@/app/user/actions.ts';

@@ -12,6 +12,7 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { UserNav } from './user-nav';
+import { getUserVas } from '@/app/user/actions';
 
 type UserProp = Pick<User, 'id' | 'email' | 'firstName' | 'lastName' | 'role' | 'agentAlias'> | null;
 
@@ -39,6 +40,13 @@ export default function TopBar({ user, workspace }: TopBarProps) {
   const formRef = useRef<HTMLFormElement>(null);
   const isMobile = useIsMobile();
   const { handleCommandSubmit, isLoading, upsertApp } = useAppStore();
+  const [vas, setVas] = useState<number | null>(null);
+
+  useEffect(() => {
+      if (user) {
+          getUserVas().then(setVas).catch(err => console.error("Failed to fetch VAS", err));
+      }
+  }, [user]);
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -94,6 +102,19 @@ export default function TopBar({ user, workspace }: TopBarProps) {
                     <span>{displayName} | {roleText}</span>
                 </Button>
             </UserNav>
+            {vas !== null && (
+                <TooltipProvider>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <div className="font-mono text-primary font-bold cursor-help">VAS: {vas}</div>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                            <p className="font-bold">Vow Alignment Score</p>
+                            <p className="text-xs max-w-xs">A measure of how closely your actions align with your chosen Covenant, rewarding thematic consistency.</p>
+                        </TooltipContent>
+                    </Tooltip>
+                </TooltipProvider>
+            )}
             <div className="h-6 w-px bg-border/30" />
             <TooltipProvider>
                 <Tooltip>
