@@ -6,7 +6,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Input } from '@/components/ui/input';
 import { useIsMobile } from '@/hooks/use-is-mobile';
-import type { User, Workspace } from '@prisma/client';
+import { type User, type Workspace, UserPsyche } from '@prisma/client';
 import { useAppStore } from '@/store/app-store';
 import { cn } from '@/lib/utils';
 import { Button } from '../ui/button';
@@ -20,25 +20,31 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-  DropdownMenuGroup,
 } from "@/components/ui/dropdown-menu"
 import { handleLogout } from '@/app/auth/actions';
+import { getUserVas } from '@/app/user/actions';
+import { Tooltip, TooltipProvider, TooltipTrigger, TooltipContent } from '../ui/tooltip';
 
-type UserProp = Pick<User, 'id' | 'email' | 'firstName' | 'lastName' | 'role' | 'agentAlias'> | null;
+type UserProp = Pick<User, 'id' | 'email' | 'firstName' | 'lastName' | 'role' | 'agentAlias' | 'psyche'> | null;
 
 interface TopBarProps {
   user: UserProp;
   workspace: Workspace | null;
 }
 
+const psycheToCovenantMap = {
+  [UserPsyche.SYNDICATE_ENFORCER]: { name: 'Motion', symbol: '🜁' },
+  [UserPsyche.RISK_AVERSE_ARTISAN]: { name: 'Worship', symbol: '🜃' },
+  [UserPsyche.ZEN_ARCHITECT]: { name: 'Silence', symbol: '🜄' },
+};
+
 const CurrentTime = () => {
   const [time, setTime] = useState('');
 
   useEffect(() => {
-    // This logic ensures the time is only rendered on the client, avoiding hydration mismatches.
     const update = () => setTime(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
     update();
-    const timerId = setInterval(update, 1000 * 60); // Update every minute
+    const timerId = setInterval(update, 1000 * 60);
     return () => clearInterval(timerId);
   }, []);
 
@@ -50,6 +56,23 @@ export default function TopBar({ user, workspace }: TopBarProps) {
   const isMobile = useIsMobile();
   const { handleCommandSubmit, isLoading, beepOutput, upsertApp, activeAppId, apps } = useAppStore();
   const [inputValue, setInputValue] = useState('');
+  const [vas, setVas] = useState<number | null>(null);
+
+  useEffect(() => {
+    async function fetchVas() {
+        try {
+            const userVas = await getUserVas();
+            setVas(userVas);
+        } catch (error) {
+            console.error("Failed to fetch VAS", error);
+        }
+    }
+    if (user) {
+        fetchVas();
+        const interval = setInterval(fetchVas, 30000); // Periodically refresh VAS
+        return () => clearInterval(interval);
+    }
+  }, [user]);
 
   const activeApp = apps.find(app => app.id === activeAppId);
   const activeAppContext = activeApp?.type;
@@ -148,6 +171,25 @@ export default function TopBar({ user, workspace }: TopBarProps) {
           <Button variant="ghost" className="p-0 h-auto hover:bg-transparent text-foreground" onClick={handleProfileClick}>
             <span>{displayName} | {roleText}</span>
           </Button>
+           <div className="h-6 w-px bg-border/30" />
+            <TooltipProvider>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                         <Button variant="ghost" className="p-0 h-auto hover:bg-transparent text-foreground" onClick={() => upsertApp('ritual-quests', { id: 'singleton-ritual-quests' })}>
+                            <span className="flex items-center gap-1">
+                               {user?.psyche && psycheToCovenantMap[user.psyche] ? (
+                                    <span className="mr-1 text-lg">{psycheToCovenantMap[user.psyche].symbol}</span>
+                                ) : null}
+                                <span className="font-bold">{vas ?? '...'}</span>
+                                <span className="text-muted-foreground">VAS</span>
+                            </span>
+                        </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                        <p>Vow Alignment Score</p>
+                    </TooltipContent>
+                </Tooltip>
+            </TooltipProvider>
            <div className="h-6 w-px bg-border/30" />
           <Button variant="ghost" className="p-0 h-auto hover:bg-transparent text-foreground" onClick={handleBillingClick}>
             <span>
