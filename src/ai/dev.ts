@@ -59,3 +59,4 @@ import '@/app/api/user/pulse-profile/route.ts';
 import '@/app/api/workspaces/me/active-effects/route.ts';
 import '@/app/api/covenants/[covenantName]/leaderboard/route.ts';
 import '@/app/api/covenants/[covenantName]/members/route.ts';
+import '@/app/api/workspaces/me/economy-stats/route.ts';
