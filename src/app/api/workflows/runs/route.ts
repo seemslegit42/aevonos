@@ -2,7 +2,7 @@
 import { NextResponse, NextRequest } from 'next/server';
 import prisma from '@/lib/prisma';
 import { z } from 'zod';
-import { getServerActionSession } from '@/lib/auth';
+import { getAuthenticatedUser } from '@/lib/firebase/admin';
 import { WorkflowRunStatus } from '@prisma/client';
 
 
@@ -13,7 +13,10 @@ const FilterSchema = z.object({
 
 export async function GET(request: NextRequest) {
   try {
-    const sessionUser = await getServerActionSession();
+    const { workspace } = await getAuthenticatedUser();
+    if (!workspace) {
+        return NextResponse.json({ error: 'Workspace not found.' }, { status: 404 });
+    }
     const { searchParams } = new URL(request.url);
     const queryParams = Object.fromEntries(searchParams.entries());
     
@@ -24,7 +27,7 @@ export async function GET(request: NextRequest) {
     
     const { status, workflowId } = validation.data;
     const whereClause: any = {
-        workspaceId: sessionUser.workspaceId
+        workspaceId: workspace.id
     };
 
     if (status) {

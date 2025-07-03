@@ -1,7 +1,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { getServerActionSession } from '@/lib/auth';
+import { getAuthenticatedUser } from '@/lib/firebase/admin';
 import prisma from '@/lib/prisma';
 import { UserRole } from '@prisma/client';
 
@@ -12,10 +12,13 @@ const ThreatFeedsSchema = z.object({
 // Corresponds to operationId `getThreatFeeds`
 export async function GET(request: NextRequest) {
   try {
-    const sessionUser = await getServerActionSession();
+    const { workspace } = await getAuthenticatedUser();
+    if (!workspace) {
+        return NextResponse.json({ error: 'Workspace not found.' }, { status: 404 });
+    }
     const feeds = await prisma.threatFeed.findMany({
       where: {
-        workspaceId: sessionUser.workspaceId,
+        workspaceId: workspace.id,
       },
       select: {
         id: true,
@@ -35,9 +38,8 @@ export async function GET(request: NextRequest) {
 // Corresponds to operationId `configureThreatFeeds`
 export async function PUT(request: NextRequest) {
   try {
-    const sessionUser = await getServerActionSession();
-    const user = await prisma.user.findUnique({ where: { id: sessionUser.id }});
-    if (!user || (user.role !== UserRole.ADMIN && user.role !== UserRole.MANAGER)) {
+    const { user, workspace } = await getAuthenticatedUser();
+    if (!user || !workspace || (user.role !== UserRole.ADMIN && user.role !== UserRole.MANAGER)) {
         return NextResponse.json({ error: 'Permission denied. Administrator or Manager access required.' }, { status: 403 });
     }
 
@@ -52,17 +54,16 @@ export async function PUT(request: NextRequest) {
     }
 
     const { feeds } = validation.data;
-    const { workspaceId } = sessionUser;
-
+    
     // Use a transaction to ensure atomicity: delete old feeds and create new ones.
     await prisma.$transaction([
       prisma.threatFeed.deleteMany({
-        where: { workspaceId },
+        where: { workspaceId: workspace.id },
       }),
       prisma.threatFeed.createMany({
         data: feeds.map((url) => ({
           url: url,
-          workspaceId: workspaceId,
+          workspaceId: workspace.id,
         })),
       }),
     ]);

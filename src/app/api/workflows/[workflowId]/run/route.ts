@@ -3,7 +3,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { getServerActionSession } from '@/lib/auth';
+import { getAuthenticatedUser } from '@/lib/firebase/admin';
 import { UserRole, WorkflowRunStatus } from '@prisma/client';
 import { executeWorkflow } from '@/lib/workflow-executor';
 
@@ -15,8 +15,11 @@ interface RouteParams {
 
 export async function POST(request: NextRequest, { params }: RouteParams) {
   try {
-    const sessionUser = await getServerActionSession();
-    if (sessionUser.role === UserRole.AUDITOR) {
+    const { user, workspace } = await getAuthenticatedUser();
+    if (!user || !workspace) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    if (user.role === UserRole.AUDITOR) {
         return NextResponse.json({ error: 'Permission denied. This action is not available for auditors.' }, { status: 403 });
     }
     
@@ -24,7 +27,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     const trigger_payload = await request.json();
 
     const workflow = await prisma.workflow.findFirst({
-      where: { id: workflowId, workspaceId: sessionUser.workspaceId },
+      where: { id: workflowId, workspaceId: workspace.id },
     });
 
     if (!workflow) {
@@ -34,7 +37,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     const workflowRun = await prisma.workflowRun.create({
       data: {
         workflowId: workflow.id,
-        workspaceId: sessionUser.workspaceId,
+        workspaceId: workspace.id,
         status: WorkflowRunStatus.pending,
         triggerPayload: trigger_payload,
         startedAt: new Date(),
@@ -52,7 +55,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
             const { finalPayload, executionLog } = await executeWorkflow(
                 workflow, 
                 trigger_payload, 
-                { workspaceId: sessionUser.workspaceId, userId: sessionUser.id, psyche: sessionUser.psyche, role: sessionUser.role }
+                { workspaceId: workspace.id, userId: user.id, psyche: user.psyche, role: user.role }
             );
 
             await prisma.workflowRun.update({
@@ -101,4 +104,3 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     return NextResponse.json({ error: 'Failed to trigger workflow run.' }, { status: 500 });
   }
 }
-    

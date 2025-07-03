@@ -2,7 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { z } from 'zod';
-import { getServerActionSession } from '@/lib/auth';
+import { getAuthenticatedUser } from '@/lib/firebase/admin';
 import { UserRole } from '@prisma/client';
 
 const WorkflowUpdateSchema = z.object({
@@ -19,10 +19,13 @@ interface RouteParams {
 
 export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
-    const sessionUser = await getServerActionSession();
+    const { workspace } = await getAuthenticatedUser();
+    if (!workspace) {
+        return NextResponse.json({ error: 'Workspace not found.' }, { status: 404 });
+    }
     const { workflowId } = params;
     const workflow = await prisma.workflow.findFirst({
-      where: { id: workflowId, workspaceId: sessionUser.workspaceId },
+      where: { id: workflowId, workspaceId: workspace.id },
     });
 
     if (!workflow) {
@@ -41,9 +44,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
 export async function PUT(request: NextRequest, { params }: RouteParams) {
   try {
-    const sessionUser = await getServerActionSession();
-    const user = await prisma.user.findUnique({ where: { id: sessionUser.id } });
-    if (!user || (user.role !== UserRole.ADMIN && user.role !== UserRole.MANAGER)) {
+    const { user, workspace } = await getAuthenticatedUser();
+    if (!user || !workspace || (user.role !== UserRole.ADMIN && user.role !== UserRole.MANAGER)) {
         return NextResponse.json({ error: 'Permission denied. Administrator or Manager access required.' }, { status: 403 });
     }
     
@@ -56,7 +58,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     }
 
     const updatedWorkflow = await prisma.workflow.updateMany({
-      where: { id: workflowId, workspaceId: sessionUser.workspaceId },
+      where: { id: workflowId, workspaceId: workspace.id },
       data: validation.data,
     });
     
@@ -78,16 +80,15 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
   try {
-    const sessionUser = await getServerActionSession();
-    const user = await prisma.user.findUnique({ where: { id: sessionUser.id } });
-    if (!user || (user.role !== UserRole.ADMIN && user.role !== UserRole.MANAGER)) {
+    const { user, workspace } = await getAuthenticatedUser();
+    if (!user || !workspace || (user.role !== UserRole.ADMIN && user.role !== UserRole.MANAGER)) {
         return NextResponse.json({ error: 'Permission denied. Administrator or Manager access required.' }, { status: 403 });
     }
     
     const { workflowId } = params;
     
     const result = await prisma.workflow.deleteMany({
-      where: { id: workflowId, workspaceId: sessionUser.workspaceId },
+      where: { id: workflowId, workspaceId: workspace.id },
     });
 
     if (result.count === 0) {

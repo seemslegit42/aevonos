@@ -2,7 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import prisma from '@/lib/prisma';
-import { getServerActionSession } from '@/lib/auth';
+import { getAuthenticatedUser } from '@/lib/firebase/admin';
 import { integrationManifests } from '@/config/integration-manifests';
 import { IntegrationStatus, UserRole } from '@prisma/client';
 
@@ -16,10 +16,13 @@ const IntegrationConfigurationRequestSchema = z.object({
 // This now returns the *configured* integrations for a workspace, not just the available manifests.
 export async function GET(request: NextRequest) {
   try {
-    const sessionUser = await getServerActionSession();
+    const { workspace } = await getAuthenticatedUser();
+    if (!workspace) {
+        return NextResponse.json({ error: 'Workspace not found.' }, { status: 404 });
+    }
     const configuredIntegrations = await prisma.integration.findMany({
       where: {
-        workspaceId: sessionUser.workspaceId,
+        workspaceId: workspace.id,
       },
     });
 
@@ -43,9 +46,8 @@ export async function GET(request: NextRequest) {
 // Corresponds to operationId `createIntegration`
 export async function POST(request: NextRequest) {
   try {
-    const sessionUser = await getServerActionSession();
-    const user = await prisma.user.findUnique({ where: { id: sessionUser.id }});
-    if (!user || user.role !== UserRole.ADMIN) {
+    const { user, workspace } = await getAuthenticatedUser();
+    if (!user || !workspace || user.role !== UserRole.ADMIN) {
         return NextResponse.json({ error: 'Permission denied. Administrator access required.' }, { status: 403 });
     }
     
@@ -65,7 +67,7 @@ export async function POST(request: NextRequest) {
 
     const newInstance = await prisma.integration.create({
         data: {
-            workspaceId: sessionUser.workspaceId,
+            workspaceId: workspace.id,
             integrationManifestId: integrationTypeId,
             name: name,
             status: IntegrationStatus.active,

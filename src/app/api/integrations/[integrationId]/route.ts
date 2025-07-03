@@ -2,7 +2,7 @@
 import { NextResponse, NextRequest } from 'next/server';
 import { z } from 'zod';
 import prisma from '@/lib/prisma';
-import { getServerActionSession } from '@/lib/auth';
+import { getAuthenticatedUser } from '@/lib/firebase/admin';
 import { IntegrationStatus, UserRole } from '@prisma/client';
 
 
@@ -22,10 +22,13 @@ const IntegrationUpdateRequestSchema = z.object({
 // Corresponds to operationId `getIntegration`
 export async function GET(request: NextRequest, { params }: RouteParams) {
     try {
-        const sessionUser = await getServerActionSession();
+        const { workspace } = await getAuthenticatedUser();
+        if (!workspace) {
+            return NextResponse.json({ error: 'Workspace not found.' }, { status: 404 });
+        }
         const { integrationId } = params;
         const integration = await prisma.integration.findFirst({
-            where: { id: integrationId, workspaceId: sessionUser.workspaceId },
+            where: { id: integrationId, workspaceId: workspace.id },
         });
 
         if (!integration) {
@@ -45,9 +48,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 // Corresponds to operationId `updateIntegration`
 export async function PUT(request: NextRequest, { params }: RouteParams) {
     try {
-        const sessionUser = await getServerActionSession();
-        const user = await prisma.user.findUnique({ where: { id: sessionUser.id }});
-        if (!user || (user.role !== UserRole.ADMIN && user.role !== UserRole.MANAGER)) {
+        const { user, workspace } = await getAuthenticatedUser();
+        if (!user || !workspace || (user.role !== UserRole.ADMIN && user.role !== UserRole.MANAGER)) {
             return NextResponse.json({ error: 'Permission denied. Administrator or Manager access required.' }, { status: 403 });
         }
 
@@ -60,7 +62,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
         }
 
         const updatedIntegration = await prisma.integration.updateMany({
-            where: { id: integrationId, workspaceId: sessionUser.workspaceId },
+            where: { id: integrationId, workspaceId: workspace.id },
             data: validation.data,
         });
 
@@ -86,16 +88,15 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 // Corresponds to operationId `deleteIntegration`
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
     try {
-        const sessionUser = await getServerActionSession();
-        const user = await prisma.user.findUnique({ where: { id: sessionUser.id }});
-        if (!user || (user.role !== UserRole.ADMIN && user.role !== UserRole.MANAGER)) {
+        const { user, workspace } = await getAuthenticatedUser();
+        if (!user || !workspace || (user.role !== UserRole.ADMIN && user.role !== UserRole.MANAGER)) {
             return NextResponse.json({ error: 'Permission denied. Administrator or Manager access required.' }, { status: 403 });
         }
 
         const { integrationId } = params;
         
         const result = await prisma.integration.deleteMany({
-          where: { id: integrationId, workspaceId: sessionUser.workspaceId },
+          where: { id: integrationId, workspaceId: workspace.id },
         });
     
         if (result.count === 0) {

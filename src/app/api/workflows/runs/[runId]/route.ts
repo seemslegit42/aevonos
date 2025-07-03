@@ -1,7 +1,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { getServerActionSession } from '@/lib/auth';
+import { getAuthenticatedUser } from '@/lib/firebase/admin';
 
 interface RouteParams {
   params: {
@@ -12,13 +12,16 @@ interface RouteParams {
 // GET /api/workflows/runs/{runId}
 export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
-    const sessionUser = await getServerActionSession();
+    const { workspace } = await getAuthenticatedUser();
+    if (!workspace) {
+        return NextResponse.json({ error: 'Workspace not found.' }, { status: 404 });
+    }
     const { runId } = params;
 
     const workflowRun = await prisma.workflowRun.findFirst({
       where: {
         id: runId,
-        workspaceId: sessionUser.workspaceId,
+        workspaceId: workspace.id,
       },
       include: {
         workflow: {

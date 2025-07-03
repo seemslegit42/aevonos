@@ -1,7 +1,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { getServerActionSession } from '@/lib/auth';
+import { getAuthenticatedUser } from '@/lib/firebase/admin';
 import prisma from '@/lib/prisma';
 import { UserRole } from '@prisma/client';
 
@@ -15,9 +15,12 @@ const EdictUpdateSchema = z.object({
 // GET /api/security/edicts
 export async function GET(request: NextRequest) {
   try {
-    const sessionUser = await getServerActionSession();
+    const { workspace } = await getAuthenticatedUser();
+    if (!workspace) {
+        return NextResponse.json({ error: 'Workspace not found.' }, { status: 404 });
+    }
     const edicts = await prisma.securityEdict.findMany({
-      where: { workspaceId: sessionUser.workspaceId },
+      where: { workspaceId: workspace.id },
       orderBy: { createdAt: 'asc' },
     });
     return NextResponse.json(edicts);
@@ -33,9 +36,8 @@ export async function GET(request: NextRequest) {
 // PUT /api/security/edicts
 export async function PUT(request: NextRequest) {
   try {
-    const sessionUser = await getServerActionSession();
-    const user = await prisma.user.findUnique({ where: { id: sessionUser.id }});
-    if (!user || (user.role !== UserRole.ADMIN && user.role !== UserRole.MANAGER)) {
+    const { user, workspace } = await getAuthenticatedUser();
+    if (!user || !workspace || (user.role !== UserRole.ADMIN && user.role !== UserRole.MANAGER)) {
         return NextResponse.json({ error: 'Permission denied. Administrator or Manager access required.' }, { status: 403 });
     }
 
@@ -47,17 +49,16 @@ export async function PUT(request: NextRequest) {
     }
 
     const { edicts } = validation.data;
-    const { workspaceId } = sessionUser;
-
+    
     await prisma.$transaction([
       prisma.securityEdict.deleteMany({
-        where: { workspaceId },
+        where: { workspaceId: workspace.id },
       }),
       prisma.securityEdict.createMany({
         data: edicts.map(edict => ({
           description: edict.description,
           isActive: edict.isActive,
-          workspaceId: workspaceId,
+          workspaceId: workspace.id,
         })),
       }),
     ]);
