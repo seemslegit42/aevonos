@@ -5,8 +5,9 @@
  * This is the core logic that would power a GlobalEventManager kernel node.
  */
 import prisma from '@/lib/prisma';
-import { Prisma, EventStatus, TransactionType, artifactManifests } from '@prisma/client';
+import { Prisma, EventStatus, TransactionType } from '@prisma/client';
 import { InsufficientCreditsError } from '@/lib/errors';
+import { artifactManifests } from '@/config/artifacts';
 
 /**
  * Creates a new Black Wager event.
