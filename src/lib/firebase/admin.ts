@@ -5,15 +5,30 @@ import prisma from '@/lib/prisma';
 import type { User as PrismaUser, Workspace as PrismaWorkspace } from '@prisma/client';
 import redis from '@/lib/redis';
 
-const serviceAccount = JSON.parse(
-  process.env.FIREBASE_SERVICE_ACCOUNT_KEY as string
-);
+const serviceAccountKey = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
 
-if (!admin.apps.length) {
-  admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
-  });
+if (!serviceAccountKey) {
+  console.warn(
+    '\x1b[33m%s\x1b[0m', // Yellow text
+    'WARNING: FIREBASE_SERVICE_ACCOUNT_KEY is not set. Firebase Admin features will be disabled.'
+  );
 }
+
+// Initialize Firebase Admin only if the service account key is available.
+if (serviceAccountKey && !admin.apps.length) {
+  try {
+      const serviceAccount = JSON.parse(serviceAccountKey);
+      admin.initializeApp({
+        credential: admin.credential.cert(serviceAccount),
+      });
+  } catch(e) {
+      console.error(
+        '\x1b[31m%s\x1b[0m', // Red text
+        "ERROR: Failed to parse FIREBASE_SERVICE_ACCOUNT_KEY. Please ensure it is a valid JSON object.", e
+      );
+  }
+}
+
 
 type AuthenticatedUser = {
   firebaseUser: admin.auth.DecodedIdToken;
@@ -31,6 +46,11 @@ const CACHE_TTL_SECONDS = 60; // Cache user/workspace data for 1 minute
  * @returns An object containing the decoded Firebase token, and the (potentially null) Prisma user and workspace.
  */
 export async function getAuthenticatedUser(): Promise<AuthenticatedUser> {
+  // If admin is not initialized, we cannot authenticate the user.
+  if (!admin.apps.length) {
+      throw new Error('Unauthorized: Firebase Admin SDK not initialized. Cannot verify session.');
+  }
+
   const sessionCookie = cookies().get('session')?.value;
   if (!sessionCookie) {
     throw new Error('Unauthorized: No session cookie found.');

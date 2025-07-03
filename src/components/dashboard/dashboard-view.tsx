@@ -11,6 +11,8 @@ import AgentStatusList from './widgets/agent-status-list';
 import QuickAccess from './widgets/quick-access';
 import RecentActivityFeed from './widgets/recent-activity-feed';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import SystemWeave from './system-weave';
+import PulseNarrativeDisplay from './pulse-narrative-display';
 
 interface DashboardViewProps {
   initialData: {
@@ -27,6 +29,7 @@ export default function DashboardView({ initialData }: DashboardViewProps) {
 
   return (
     <div className="relative h-full w-full">
+      <SystemWeave initialAgents={initialData.agents} />
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
         {/* The grid for widgets and the main canvas */}
         <div className="absolute inset-0 grid grid-cols-12 grid-rows-6 gap-4 p-4">
@@ -63,6 +66,7 @@ export default function DashboardView({ initialData }: DashboardViewProps) {
           </div>
         </div>
       </DndContext>
+      <PulseNarrativeDisplay />
     </div>
   );
 }
