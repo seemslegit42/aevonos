@@ -37,7 +37,7 @@ export default function Obelisk({ totalCreditsBurned }: { totalCreditsBurned: nu
             <mesh position={[0, 7, 0]}>
                 <boxGeometry args={[1.5, 14, 1.5]} />
                 <meshStandardMaterial
-                    color="hsl(247, 30%, 90%)"
+                    color="hsl(247, 30%, 15%)"
                     metalness={0.1}
                     roughness={0.2}
                     transparent={true}
