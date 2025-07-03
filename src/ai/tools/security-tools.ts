@@ -35,5 +35,25 @@ export async function createSecurityAlertInDb(input: CreateSecurityAlertInput, w
 }
 
 
-
+export async function getSecurityEdicts(workspaceId: string): Promise<string[]> {
+  try {
+    const edicts = await prisma.securityEdict.findMany({
+      where: {
+        workspaceId,
+        isActive: true,
+      },
+      select: {
+        description: true,
+      },
+      orderBy: {
+        createdAt: 'asc',
+      },
+    });
+    return edicts.map((e) => e.description);
+  } catch (error) {
+    console.error(`[Security Tool Error] Failed to fetch security edicts for workspace ${workspaceId}:`, error);
+    // Return empty array on failure so agent can proceed with caution
+    return [];
+  }
+}
     

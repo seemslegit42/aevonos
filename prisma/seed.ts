@@ -121,6 +121,21 @@ async function main() {
   });
   console.log('Seeded genesis credit transaction log.');
 
+  const defaultEdicts = [
+    'Session integrity must be maintained (e.g., no unusual command sequences).',
+    'Agentic actions must remain within their designated purview.',
+    'Workflows must not exfiltrate data to unauthorized channels.',
+    'User commands must not resemble the trickery of a foreign agent (phishing).',
+    'Access boundaries must be respected at all times. An OPERATOR attempting to access administrative functions is a critical anomaly.',
+  ];
+
+  await prisma.securityEdict.createMany({
+    data: defaultEdicts.map((description) => ({
+      workspaceId: newWorkspace.id,
+      description: description,
+    })),
+  });
+  console.log('Seeded default security edicts.');
 
   const statuses: AgentStatus[] = [AgentStatus.active, AgentStatus.idle, AgentStatus.processing, AgentStatus.paused, AgentStatus.error];
   await prisma.agent.createMany({

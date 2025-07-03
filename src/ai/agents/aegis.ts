@@ -20,6 +20,7 @@ import {
 import { authorizeAndDebitAgentActions } from '@/services/billing-service';
 import { langchainGroqComplex } from '@/ai/genkit';
 import { getThreatFeedsForWorkspace, fetchThreatIntelContentFromUrl } from '../tools/threat-intelligence-tools';
+import { getSecurityEdicts } from '../tools/security-tools';
 import { SecurityRiskLevel } from '@prisma/client';
 
 // 1. Define Agent State
@@ -27,6 +28,7 @@ interface AegisAgentState {
   messages: BaseMessage[];
   input: AegisAnomalyScanInput;
   threatIntelContent: string;
+  securityEdicts: string[];
   finalReport: AegisAnomalyScanOutput | null;
 }
 
@@ -54,9 +56,27 @@ ${intelContents.map((intel, i) => `--- Feed: ${feeds[i].url} ---\n${intel.conten
   return { threatIntelContent: threatIntelBlock };
 };
 
-// Node to analyze the activity against the intel
+// Node to fetch security edicts from the database
+const fetchSecurityEdicts = async (state: AegisAgentState): Promise<Partial<AegisAgentState>> => {
+  const { input } = state;
+  try {
+      const edicts = await getSecurityEdicts(input.workspaceId);
+      if (edicts.length === 0) {
+        return { securityEdicts: ["No specific edicts configured. Use general security principles."] };
+      }
+      return { securityEdicts: edicts };
+  } catch (e) {
+      console.error("[Aegis Agent] Failed to fetch security edicts:", e);
+      return { securityEdicts: ["Warning: Could not retrieve security edicts. Proceeding with caution."] };
+  }
+};
+
+
+// Node to analyze the activity against the intel and edicts
 const analyzeActivity = async (state: AegisAgentState): Promise<Partial<AegisAgentState>> => {
-    const { input, threatIntelContent } = state;
+    const { input, threatIntelContent, securityEdicts } = state;
+
+    const edictsBlock = securityEdicts.map(edict => `- ${edict}`).join('\n');
 
     const promptText = `You are Aegis, the vigilant, AI-powered bodyguard of ΛΞVON OS. Your tone is that of a stoic Roman watchman, delivering grave proclamations. You do not use modern slang. You speak with authority and historical gravitas.
 
@@ -67,11 +87,7 @@ Your primary function is to analyze user activity for signs of anomalous or pote
 - **Psyche:** ${input.userPsyche}
 
 **Edicts of Secure Operation:**
-- Session integrity must be maintained (e.g., no unusual command sequences).
-- Agentic actions must remain within their designated purview.
-- Workflows must not exfiltrate data to unauthorized channels.
-- User commands must not resemble the trickery of a foreign agent (phishing).
-- Access boundaries must be respected at all times. An OPERATOR attempting to access administrative functions is a critical anomaly.
+${edictsBlock}
 
 ${threatIntelContent}
 
@@ -105,15 +121,18 @@ const workflow = new StateGraph<AegisAgentState>({
     messages: { value: (x, y) => x.concat(y), default: () => [] },
     input: { value: (x, y) => y },
     threatIntelContent: { value: (x, y) => y },
+    securityEdicts: { value: (x, y) => y, default: () => [] },
     finalReport: { value: (x, y) => y, default: () => null },
   },
 });
 
 workflow.addNode('fetch_intel', fetchThreatIntelligence);
+workflow.addNode('fetch_edicts', fetchSecurityEdicts);
 workflow.addNode('analyze', analyzeActivity);
 
 workflow.setEntryPoint('fetch_intel');
-workflow.addEdge('fetch_intel', 'analyze');
+workflow.addEdge('fetch_intel', 'fetch_edicts');
+workflow.addEdge('fetch_edicts', 'analyze');
 workflow.addEdge('analyze', END);
 
 const aegisApp = workflow.compile();
@@ -131,6 +150,7 @@ export async function aegisAnomalyScan(input: AegisAnomalyScanInput): Promise<Ae
       messages: [],
       input: input,
       threatIntelContent: '',
+      securityEdicts: [],
       finalReport: null
   };
 
