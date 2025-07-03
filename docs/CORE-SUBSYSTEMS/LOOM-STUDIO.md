@@ -1,4 +1,3 @@
-
 # ΛΞVON OS: Core Subsystems - Loom Studio
 1. Introduction: The Architect's Table of Automation
 Loom Studio is a native, privileged orchestration layer inside ΛΞVON OS. It is not a Micro-App [cite: previous user input]. It serves as the central creative, debugging, and agent orchestration workspace. Loom Studio is where the automation blueprints are assembled, tuned, and connected, providing the default interface for inspecting and manipulating agentic logic. It lives in the persistent Canvas layer, dictating how agents behave, not just how they look.

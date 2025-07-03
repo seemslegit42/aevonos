@@ -1,4 +1,3 @@
-
 # ΛΞVON OS: Loom Studio - Agent Orchestration Protocol
 1. Introduction: The Conductor of the Agentic Swarm
 The Agent Orchestration Protocol is central to Loom Studio's role as the visual command center for agentic intelligence. It defines how Loom Studio acts as the conductor of the Agentic Swarm, enabling users (and BEEP) to define, deploy, manage, and coordinate AI agents that execute complex tasks, collaborate, and interact with Micro-Apps across ΛΞVON OS. This protocol ensures the seamless flow of intelligence that underpins "silent automation."

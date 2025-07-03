@@ -1,4 +1,3 @@
-
 # ΛΞVON OS: Loom Studio - Workflow Designer Specification
 1. Introduction: The Agent Orchestration Canvas
 The Workflow Designer is the centerpiece of Loom Studio, providing the Agent Orchestration Canvas where users visually construct, layer, and interconnect prompt blocks, scripts, and workflows. It is a spatial, draggable canvas designed to simplify the creation of complex agentic automations, making them accessible even to non-technical users. This is where the "silence of true automation" is first architected.
