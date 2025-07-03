@@ -1,13 +1,15 @@
 
 'use server';
 /**
- * @fileOverview Agent Kernel for Aegis.
+ * @fileOverview Agent Kernel for Aegis, now a LangGraph state machine.
  *
  * - aegisAnomalyScan - A function that handles the security anomaly scan process.
  * - AegisAnomalyScanInput - The input type for the aegisAnomalyScan function.
  * - AegisAnomalyScanOutput - The return type for the aegisAnomalyScan function.
  */
 
+import { StateGraph, END } from '@langchain/langgraph';
+import { BaseMessage } from '@langchain/core/messages';
 import {ai} from '@/ai/genkit';
 import {
     AegisAnomalyScanInputSchema, 
@@ -18,44 +20,43 @@ import {
 import { authorizeAndDebitAgentActions } from '@/services/billing-service';
 import { langchainGroqComplex } from '@/ai/genkit';
 import { getThreatFeedsForWorkspace, fetchThreatIntelContentFromUrl } from '../tools/threat-intelligence-tools';
+import { SecurityRiskLevel } from '@prisma/client';
 
-
-export async function aegisAnomalyScan(input: AegisAnomalyScanInput): Promise<AegisAnomalyScanOutput> {
-  return aegisAnomalyScanFlow(input);
+// 1. Define Agent State
+interface AegisAgentState {
+  messages: BaseMessage[];
+  input: AegisAnomalyScanInput;
+  threatIntelContent: string;
+  finalReport: AegisAnomalyScanOutput | null;
 }
 
-const aegisAnomalyScanFlow = ai.defineFlow(
-  {
-    name: 'aegisAnomalyScanFlow',
-    inputSchema: AegisAnomalyScanInputSchema,
-    outputSchema: AegisAnomalyScanOutputSchema,
-  },
-  async input => {
-    // Pass the userId to the billing service
-    await authorizeAndDebitAgentActions({
-        workspaceId: input.workspaceId,
-        userId: input.userId,
-        actionType: 'COMPLEX_LLM',
-    });
-    
-    // Fetch dynamic threat intelligence
-    let threatIntelBlock = "No external threat intelligence feeds configured.";
-    try {
-        const feeds = await getThreatFeedsForWorkspace(input.workspaceId);
-        if (feeds.length > 0) {
-            const intelPromises = feeds.map(feed => fetchThreatIntelContentFromUrl(feed.url));
-            const intelContents = await Promise.all(intelPromises);
-            threatIntelBlock = `
+// 2. Define Agent Nodes
+
+// Node to fetch threat intelligence
+const fetchThreatIntelligence = async (state: AegisAgentState): Promise<Partial<AegisAgentState>> => {
+  const { input } = state;
+  let threatIntelBlock = "No external threat intelligence feeds configured.";
+  try {
+      const feeds = await getThreatFeedsForWorkspace(input.workspaceId);
+      if (feeds.length > 0) {
+          const intelPromises = feeds.map(feed => fetchThreatIntelContentFromUrl(feed.url));
+          const intelContents = await Promise.all(intelPromises);
+          threatIntelBlock = `
 **Threat Intelligence Feed Data:**
 ${intelContents.map((intel, i) => `--- Feed: ${feeds[i].url} ---\n${intel.content}`).join('\n\n')}
 ---
 `;
-        }
-    } catch (e) {
-        console.error("[Aegis Agent] Failed to fetch threat intelligence:", e);
-        threatIntelBlock = "Warning: Could not retrieve external threat intelligence feeds due to an internal error.";
-    }
+      }
+  } catch (e) {
+      console.error("[Aegis Agent] Failed to fetch threat intelligence:", e);
+      threatIntelBlock = "Warning: Could not retrieve external threat intelligence feeds due to an internal error.";
+  }
+  return { threatIntelContent: threatIntelBlock };
+};
 
+// Node to analyze the activity against the intel
+const analyzeActivity = async (state: AegisAgentState): Promise<Partial<AegisAgentState>> => {
+    const { input, threatIntelContent } = state;
 
     const promptText = `You are Aegis, the vigilant, AI-powered bodyguard of ΛΞVON OS. Your tone is that of a stoic Roman watchman, delivering grave proclamations. You do not use modern slang. You speak with authority and historical gravitas.
 
@@ -72,7 +73,7 @@ Your primary function is to analyze user activity for signs of anomalous or pote
 - User commands must not resemble the trickery of a foreign agent (phishing).
 - Access boundaries must be respected at all times. An OPERATOR attempting to access administrative functions is a critical anomaly.
 
-${threatIntelBlock}
+${threatIntelContent}
 
 A report of activity has been brought to your attention:
 """
@@ -89,6 +90,55 @@ Based on this, you must deliver a proclamation:
     const structuredGroq = langchainGroqComplex.withStructuredOutput(AegisAnomalyScanOutputSchema);
     const output = await structuredGroq.invoke(promptText);
     
-    return output;
+    // Ensure riskLevel is set correctly when not anomalous
+    if (!output.isAnomalous) {
+        output.riskLevel = SecurityRiskLevel.none;
+    }
+
+    return { finalReport: output };
+};
+
+
+// 3. Build the Graph
+const workflow = new StateGraph<AegisAgentState>({
+  channels: {
+    messages: { value: (x, y) => x.concat(y), default: () => [] },
+    input: { value: (x, y) => y },
+    threatIntelContent: { value: (x, y) => y },
+    finalReport: { value: (x, y) => y, default: () => null },
+  },
+});
+
+workflow.addNode('fetch_intel', fetchThreatIntelligence);
+workflow.addNode('analyze', analyzeActivity);
+
+workflow.setEntryPoint('fetch_intel');
+workflow.addEdge('fetch_intel', 'analyze');
+workflow.addEdge('analyze', END);
+
+const aegisApp = workflow.compile();
+
+// 4. Exported function that uses the graph
+export async function aegisAnomalyScan(input: AegisAnomalyScanInput): Promise<AegisAnomalyScanOutput> {
+  // Pass the userId to the billing service
+  await authorizeAndDebitAgentActions({
+      workspaceId: input.workspaceId,
+      userId: input.userId,
+      actionType: 'COMPLEX_LLM',
+  });
+
+  const initialState: Partial<AegisAgentState> = {
+      messages: [],
+      input: input,
+      threatIntelContent: '',
+      finalReport: null
+  };
+
+  const result = await aegisApp.invoke(initialState);
+  
+  if (!result.finalReport) {
+      throw new Error("Aegis scan failed to produce a final report.");
   }
-);
+  
+  return result.finalReport;
+}
