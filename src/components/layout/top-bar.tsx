@@ -48,18 +48,21 @@ const CurrentTime = () => {
 export default function TopBar({ user, workspace }: TopBarProps) {
   const formRef = useRef<HTMLFormElement>(null);
   const isMobile = useIsMobile();
-  const { handleCommandSubmit, isLoading, beepOutput, upsertApp } = useAppStore();
+  const { handleCommandSubmit, isLoading, beepOutput, upsertApp, activeAppId, apps } = useAppStore();
   const [inputValue, setInputValue] = useState('');
+
+  const activeApp = apps.find(app => app.id === activeAppId);
+  const activeAppContext = activeApp?.type;
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!inputValue.trim()) return;
-    handleCommandSubmit(inputValue);
+    handleCommandSubmit(inputValue, activeAppContext);
     setInputValue('');
   };
 
   const handleSuggestionClick = (command: string) => {
-    handleCommandSubmit(command);
+    handleCommandSubmit(command, activeAppContext);
     setInputValue('');
   }
   
