@@ -23,6 +23,7 @@ import { langchainGroqComplex, langchainGroqFast } from '@/ai/genkit';
 import { getThreatFeedsForWorkspace, fetchThreatIntelContentFromUrl } from '../tools/threat-intelligence-tools';
 import { getSecurityEdicts } from '../tools/security-tools';
 import { SecurityRiskLevel } from '@prisma/client';
+import { getUserActivityHistory } from '@/services/activity-log-service';
 
 // 1. Define Agent State
 const ActivityCategorySchema = z.enum(["Data Access", "Financial", "System Config", "General"]);
@@ -35,6 +36,7 @@ interface AegisAgentState {
   securityEdicts: string[];
   activityCategory: ActivityCategory;
   finalReport: AegisAnomalyScanOutput | null;
+  activityHistory: string[];
 }
 
 // 2. Define Agent Nodes
@@ -74,7 +76,6 @@ const fetchSecurityEdicts = async (state: AegisAgentState): Promise<Partial<Aegi
   }
 };
 
-// New parallel data fetching node
 const fetchContextData = async (state: AegisAgentState): Promise<Partial<AegisAgentState>> => {
     console.log('[Aegis Agent] Fetching threat intel and security edicts in parallel...');
     const [intelResult, edictsResult] = await Promise.all([
@@ -84,7 +85,17 @@ const fetchContextData = async (state: AegisAgentState): Promise<Partial<AegisAg
     return { ...intelResult, ...edictsResult };
 };
 
-// New Node to categorize the activity for more focused analysis
+const fetchActivityHistory = async (state: AegisAgentState): Promise<Partial<AegisAgentState>> => {
+  const { input } = state;
+  try {
+    const history = await getUserActivityHistory(input.userId);
+    return { activityHistory: history };
+  } catch (e) {
+    console.error("[Aegis Agent] Failed to fetch activity history:", e);
+    return { activityHistory: ["Warning: Could not retrieve user activity history."] };
+  }
+};
+
 const categorizeActivity = async (state: AegisAgentState): Promise<Partial<AegisAgentState>> => {
   const { input } = state;
   const triageSchema = z.object({
@@ -102,16 +113,19 @@ const categorizeActivity = async (state: AegisAgentState): Promise<Partial<Aegis
   }
 };
 
-
-// Node to analyze the activity against the intel and edicts
 const analyzeActivity = async (state: AegisAgentState): Promise<Partial<AegisAgentState>> => {
-    const { input, threatIntelContent, securityEdicts, activityCategory } = state;
+    const { input, threatIntelContent, securityEdicts, activityCategory, activityHistory } = state;
 
     const edictsBlock = securityEdicts.map(edict => `- ${edict}`).join('\n');
+    const historyBlock = activityHistory.length > 0
+        ? `**Recent User Activity History (newest first):**\n${activityHistory.join('\n')}`
+        : "No recent activity history available.";
 
     const promptText = `You are Aegis, the vigilant, AI-powered bodyguard of ΛΞVON OS. Your tone is that of a stoic Roman watchman, delivering grave proclamations. You do not use modern slang. You speak with authority and historical gravitas.
 
 Your primary function is to analyze user activity for signs of anomalous or potentially malicious behavior against the known edicts of secure operation and external threat intelligence. The user's role is a critical piece of context; an action that is routine for an Architect might be a grave transgression for an Operator.
+
+**Crucially, you must analyze the user's recent activity history for suspicious patterns over time.** A single action may seem harmless, but a sequence of actions could reveal a larger threat, such as data exfiltration (e.g., repeatedly listing and then exporting small amounts of data) or brute-force attempts.
 
 **Actor Profile:**
 - **Rank:** ${input.userRole}
@@ -121,16 +135,18 @@ Your primary function is to analyze user activity for signs of anomalous or pote
 **Edicts of Secure Operation:**
 ${edictsBlock}
 
+${historyBlock}
+
 ${threatIntelContent}
 
-A report of activity has been brought to your attention:
+A report of the most recent activity has been brought to your attention:
 """
 Activity Description: ${input.activityDescription}
 """
 
-Based on this, you must deliver a proclamation:
-1.  **isAnomalous**: Determine if the activity violates the edicts or matches any threat intelligence. Consider the user's role and the activity category.
-2.  **anomalyType**: If a violation is found, provide a short, categorical name for the transgression (e.g., "Violation of Session Integrity", "Known Phishing Attempt", "Exceeded Authority"). If not, this can be null.
+Based on this, and paying close attention to the sequence in the activity history, you must deliver a proclamation:
+1.  **isAnomalous**: Determine if the activity (or pattern of activities) violates the edicts or matches any threat intelligence. Consider the user's role and the activity category.
+2.  **anomalyType**: If a violation is found, provide a short, categorical name for the transgression (e.g., "Suspicious Activity Pattern", "Data Access Violation", "Known Phishing Attempt", "Exceeded Authority"). If not, this can be null.
 3.  **riskLevel**: If a violation is found, assign a risk level: 'low', 'medium', 'high', or 'critical'. If not, this MUST be 'none'. An OPERATOR attempting an ADMIN action is 'high' or 'critical'.
 4.  **anomalyExplanation**: Deliver your proclamation. If a violation is found, explain the transgression with the gravity it deserves. If not, provide reassurance that all is well within the digital empire.
 `;
@@ -138,7 +154,6 @@ Based on this, you must deliver a proclamation:
     const structuredGroq = langchainGroqComplex.withStructuredOutput(AegisAnomalyScanOutputSchema);
     const output = await structuredGroq.invoke(promptText);
     
-    // Ensure riskLevel is set correctly when not anomalous
     if (!output.isAnomalous) {
         output.riskLevel = SecurityRiskLevel.none;
     }
@@ -156,15 +171,18 @@ const workflow = new StateGraph<AegisAgentState>({
     securityEdicts: { value: (x, y) => y, default: () => [] },
     activityCategory: { value: (x, y) => y, default: () => 'General' },
     finalReport: { value: (x, y) => y, default: () => null },
+    activityHistory: { value: (x, y) => y, default: () => [] },
   },
 });
 
 workflow.addNode('fetch_context_data', fetchContextData);
+workflow.addNode('fetch_activity_history', fetchActivityHistory);
 workflow.addNode('categorize', categorizeActivity);
 workflow.addNode('analyze', analyzeActivity);
 
 workflow.setEntryPoint('fetch_context_data');
-workflow.addEdge('fetch_context_data', 'categorize');
+workflow.addEdge('fetch_context_data', 'fetch_activity_history');
+workflow.addEdge('fetch_activity_history', 'categorize');
 workflow.addEdge('categorize', 'analyze');
 workflow.addEdge('analyze', END);
 

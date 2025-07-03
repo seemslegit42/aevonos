@@ -47,6 +47,7 @@ import {
 import prisma from '@/lib/prisma';
 import { InsufficientCreditsError } from '@/lib/errors';
 import { recordInteraction } from '@/services/pulse-engine-service';
+import { logUserActivity } from '@/services/activity-log-service';
 
 
 // LangGraph State
@@ -67,6 +68,9 @@ const callAegis = async (state: AgentState): Promise<Partial<AgentState>> => {
         throw new Error("Could not find user command for Aegis scan.");
     }
     const userCommand = humanMessage.content as string;
+    
+    // Log the activity before scanning it
+    await logUserActivity(userId, userCommand);
 
     let report: AegisAnomalyScanOutput;
     try {

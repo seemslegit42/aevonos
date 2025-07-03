@@ -69,3 +69,4 @@ import '@/ai/agents/crm-agent.ts';
 import '@/ai/agents/crm-agent-schemas.ts';
 import '@/app/api/agents/route.ts';
 import '@/app/api/agents/[agentId]/route.ts';
+import '@/services/activity-log-service.ts';
