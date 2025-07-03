@@ -32,9 +32,9 @@ export default function DashboardView({ initialData }: DashboardViewProps) {
       <SystemWeave initialAgents={initialData.agents} />
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
         {/* The grid for widgets and the main canvas */}
-        <div className="absolute inset-0 grid grid-cols-12 grid-rows-6 gap-4 p-4">
-          <div className="col-span-12 row-span-6 lg:col-span-3 lg:row-span-6 z-10 pointer-events-auto">
-            <div className="h-full w-full grid grid-rows-3 gap-4">
+        <div className="absolute inset-0 grid grid-cols-12 grid-rows-12 lg:grid-rows-6 gap-4 p-4">
+          <div className="col-span-12 row-span-3 lg:col-span-3 lg:row-span-6 z-10 pointer-events-auto">
+            <div className="h-full w-full grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-1 lg:grid-rows-3 gap-4">
               <StatCard
                 icon={UserIcon}
                 title={initialData.user?.firstName || 'Operator'}
@@ -56,10 +56,10 @@ export default function DashboardView({ initialData }: DashboardViewProps) {
               <MicroAppGrid apps={apps} />
           </div>
 
-          <div className="col-span-12 row-span-6 lg:col-span-3 lg:row-span-6 z-10 pointer-events-auto">
-             <div className="h-full w-full grid grid-rows-3 gap-4">
+          <div className="col-span-12 row-span-3 lg:col-span-3 lg:row-span-6 z-10 pointer-events-auto">
+             <div className="h-full w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 lg:grid-rows-3 gap-4">
                 <QuickAccess />
-                <div className="row-span-2">
+                <div className="sm:col-span-2 lg:col-span-1 lg:row-span-2">
                     <RecentActivityFeed transactions={initialData.transactions} />
                 </div>
              </div>
