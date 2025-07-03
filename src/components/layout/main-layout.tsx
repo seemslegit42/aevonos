@@ -13,59 +13,37 @@ import { useAuth } from '@/context/AuthContext';
 import { FirstWhisperHandler } from './FirstWhisperHandler';
 import { Skeleton } from '../ui/skeleton';
 
-export function MainLayout({ children }: { children: React.ReactNode }) {
+interface MainLayoutProps {
+  children: React.ReactNode;
+  user: User | null;
+  workspace: Workspace | null;
+}
+
+export function MainLayout({ children, user: dbUser, workspace }: MainLayoutProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const { user: firebaseUser, loading } = useAuth();
+  const { user: firebaseUser, loading: authLoading } = useAuth();
   
-  const [dbUser, setDbUser] = React.useState<User | null>(null);
-  const [workspace, setWorkspace] = React.useState<Workspace | null>(null);
-  const [isDataLoading, setIsDataLoading] = React.useState(true);
+  const isPublicPage = ['/login', '/register', '/pricing'].some(p => pathname.startsWith(p));
+  const needsOnboarding = firebaseUser && !dbUser && !authLoading && pathname !== '/register/vow';
 
   useEffect(() => {
-    async function fetchUserData() {
-        if (firebaseUser) {
-            setIsDataLoading(true);
-            try {
-                const [userRes, workspaceRes] = await Promise.all([
-                    fetch('/api/users/me'),
-                    fetch('/api/workspaces/me')
-                ]);
-                
-                // If the user exists in Firebase but not in our DB, and they are not on the vow page,
-                // this means they need to complete onboarding.
-                if (userRes.status === 404 || workspaceRes.status === 404) {
-                    if (pathname !== '/register/vow') {
-                       router.push('/register/vow');
-                    }
-                } else if (userRes.ok && workspaceRes.ok) {
-                    const userData = await userRes.json();
-                    const workspaceData = await workspaceRes.json();
-                    setDbUser(userData);
-                    setWorkspace(workspaceData);
-                } else {
-                    throw new Error("Failed to fetch user or workspace data");
-                }
-            } catch (error) {
-                console.error("Failed to fetch user data:", error);
-                // Potentially handle error state, maybe logout
-            } finally {
-                setIsDataLoading(false);
-            }
-        } else {
-            setIsDataLoading(false);
-        }
+    // If the user is authenticated with Firebase but has no DB record, they need to complete the Rite.
+    if (needsOnboarding) {
+      router.push('/register/vow');
     }
-    if (!loading) {
-        fetchUserData();
+    // If the user isn't authenticated and is not on a public page, they need to sign in.
+    else if (!authLoading && !firebaseUser && !isPublicPage) {
+      router.push('/login');
     }
-  }, [firebaseUser, loading, pathname, router]);
+  }, [authLoading, firebaseUser, isPublicPage, needsOnboarding, pathname, router]);
+
 
   useEffect(() => {
     const psycheToTheme: Record<UserPsyche, string> = {
-      SYNDICATE_ENFORCER: 'theme-covenant-motion',
-      RISK_AVERSE_ARTISAN: 'theme-covenant-worship',
-      ZEN_ARCHITECT: 'theme-covenant-silence',
+      [UserPsyche.SYNDICATE_ENFORCER]: 'theme-covenant-motion',
+      [UserPsyche.RISK_AVERSE_ARTISAN]: 'theme-covenant-worship',
+      [UserPsyche.ZEN_ARCHITECT]: 'theme-covenant-silence',
     };
     
     if (dbUser?.psyche) {
@@ -74,61 +52,28 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
     } else {
       document.documentElement.className = 'dark'; // Default theme
     }
-
-    // Cleanup function to reset theme on component unmount is not strictly necessary
-    // as the effect will re-run on user change, but it's good practice.
-    return () => {
-      document.documentElement.className = 'dark';
-    };
-}, [dbUser]);
+  }, [dbUser]);
 
 
-  const isMobile = useIsMobile();
-  const publicPaths = ['/login', '/register', '/pricing'];
-  const isPublicPage = publicPaths.some(p => pathname.startsWith(p));
-  
-  useEffect(() => {
-    if (!loading && !firebaseUser && !isPublicPage) {
-        router.push('/login');
-    }
-  }, [loading, firebaseUser, isPublicPage, router, pathname]);
-
-  if (loading || (isDataLoading && !isPublicPage && pathname !== '/register/vow')) {
+  // While checking auth state, show a skeleton.
+  if (authLoading && !isPublicPage) {
       return (
           <div className="flex flex-col h-screen overflow-hidden">
             <div className="flex-shrink-0 p-2 sm:p-4">
                 <Skeleton className="h-14 w-full" />
             </div>
-            <main className="flex-grow p-4">
-                 <div className="absolute inset-0 grid grid-cols-12 grid-rows-6 gap-4 p-4 pt-20">
-                    <div className="col-span-12 row-span-6 lg:col-span-3 lg:row-span-6 z-10">
-                        <div className="h-full w-full grid grid-rows-3 gap-4">
-                        <Skeleton className="h-full w-full" />
-                        <Skeleton className="h-full w-full" />
-                        <Skeleton className="h-full w-full" />
-                        </div>
-                    </div>
-                    <div className="col-span-12 row-span-6 lg:col-span-6 lg:row-span-6" />
-                    <div className="col-span-12 row-span-6 lg:col-span-3 lg:row-span-6 z-10">
-                        <div className="h-full w-full grid grid-rows-3 gap-4">
-                            <Skeleton className="h-full w-full" />
-                            <div className="row-span-2"><Skeleton className="h-full w-full" /></div>
-                        </div>
-                    </div>
-                 </div>
-            </main>
+            <main className="flex-grow p-4"></main>
           </div>
       )
   }
-
-  if (isPublicPage || (loading && !firebaseUser)) {
+  
+  // If user is on a public page, or needs to onboard, or isn't signed in, render only the children (e.g., the login page)
+  if (isPublicPage || needsOnboarding || (!firebaseUser && !authLoading)) {
     return <>{children}</>;
   }
-
-  if (!firebaseUser && !loading) {
-      return null; // Redirect is happening
-  }
-
+  
+  const isMobile = useIsMobile();
+  
   return (
     <div className="flex flex-col h-screen overflow-hidden">
       <div className="flex-shrink-0 p-2 sm:p-4">
@@ -140,9 +85,9 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
       )}>
         {children}
       </main>
-      {isMobile && !isPublicPage && <BottomNavBar />}
-      {!isPublicPage && <FirstWhisperHandler user={dbUser} />}
-      {!isPublicPage && <NudgeHandler />}
+      {isMobile && <BottomNavBar />}
+      <FirstWhisperHandler user={dbUser} />
+      <NudgeHandler />
     </div>
   );
 }

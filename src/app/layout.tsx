@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster"
 import { MainLayout } from '@/components/layout/main-layout';
 import Image from 'next/image';
 import { AuthProvider } from '@/context/AuthContext';
+import { getAuthenticatedUser } from '@/lib/firebase/admin';
 
 
 export const metadata: Metadata = {
@@ -13,12 +14,14 @@ export const metadata: Metadata = {
 };
 
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   
+  const { user, workspace } = await getAuthenticatedUser().catch(() => ({ user: null, workspace: null }));
+
   return (
     <html lang="en" className="dark">
       <head>
@@ -48,7 +51,7 @@ export default function RootLayout({
             </div>
             </div>
             
-            <MainLayout>
+            <MainLayout user={user} workspace={workspace}>
                 {children}
             </MainLayout>
             <Toaster />
