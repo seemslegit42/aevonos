@@ -15,7 +15,7 @@ type InitialData = {
 };
 
 export default function Home() {
-    const { user, loading: authLoading } = useAuth();
+    const { user: firebaseUser, loading: authLoading } = useAuth();
     const [initialData, setInitialData] = useState<InitialData | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -24,7 +24,7 @@ export default function Home() {
         if (authLoading) {
             return;
         }
-        if (!user) {
+        if (!firebaseUser) {
             // This case should be handled by MainLayout redirecting, but as a fallback:
             setIsLoading(false);
             return;
@@ -72,7 +72,7 @@ export default function Home() {
         };
 
         fetchData();
-    }, [user, authLoading]);
+    }, [firebaseUser, authLoading]);
 
     if (isLoading || authLoading) {
         return (

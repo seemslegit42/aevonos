@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(agents);
   } catch (error) {
-    if (error instanceof Error && (error.message.includes('token expired') || error.message.includes('no token'))) {
+    if (error instanceof Error && (error.message.includes('Unauthorized') || error.message.includes('No session cookie'))) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     console.error('[API /agents GET]', error);
@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(newAgent, { status: 201 });
 
   } catch (error) {
-    if (error instanceof Error && (error.message.includes('token expired') || error.message.includes('no token'))) {
+    if (error instanceof Error && (error.message.includes('Unauthorized') || error.message.includes('No session cookie'))) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     if (error instanceof SyntaxError) {

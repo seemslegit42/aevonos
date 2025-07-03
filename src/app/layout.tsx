@@ -5,8 +5,6 @@ import { Toaster } from "@/components/ui/toaster"
 import { MainLayout } from '@/components/layout/main-layout';
 import Image from 'next/image';
 import { AuthProvider } from '@/context/AuthContext';
-import { NudgeHandler } from '@/components/layout/NudgeHandler';
-import { FirstWhisperHandler } from '@/components/layout/FirstWhisperHandler';
 
 
 export const metadata: Metadata = {

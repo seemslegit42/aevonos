@@ -29,7 +29,7 @@ export default function RegisterPage() {
               By beginning the Rite, you agree to the Covenant and the Doctrine of Sovereign Systems. Your will is the law, but the law is the system.
             </p>
             <Button asChild className="w-full" size="lg">
-                <Link href="/">Begin the Rite</Link>
+                <Link href="/register/vow">Begin the Rite</Link>
             </Button>
             <div className="mt-4 text-center text-sm">
             Already have a pact?{" "}

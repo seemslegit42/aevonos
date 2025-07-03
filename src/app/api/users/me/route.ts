@@ -1,7 +1,7 @@
 
 import { NextResponse, NextRequest } from 'next/server';
 import { z } from 'zod';
-import { getServerActionSession } from '@/lib/auth';
+import { getAuthenticatedUser } from '@/lib/firebase/admin';
 import prisma from '@/lib/prisma';
 
 // Schema from api-spec.md for updating a user
@@ -15,29 +15,16 @@ const UserUpdateRequestSchema = z.object({
 // Corresponds to operationId `getCurrentUser`
 export async function GET(request: NextRequest) {
   try {
-    const sessionUser = await getServerActionSession();
-    const user = await prisma.user.findUnique({
-      where: { id: sessionUser.id },
-      select: {
-        id: true,
-        email: true,
-        firstName: true,
-        lastName: true,
-        role: true,
-        agentAlias: true,
-        lastLoginAt: true,
-        unlockedChaosCardKeys: true,
-      },
-    });
-
-    if (!user) {
+    const { user: sessionUser } = await getAuthenticatedUser();
+    
+    if (!sessionUser) {
       return NextResponse.json({ error: 'User not found.' }, { status: 404 });
     }
 
     // The 'select' clause ensures we only get public fields, so this is safe.
-    return NextResponse.json(user);
+    return NextResponse.json(sessionUser);
   } catch (error) {
-     if (error instanceof Error && error.message.includes('Unauthorized')) {
+     if (error instanceof Error && (error.message.includes('Unauthorized') || error.message.includes('No session cookie'))) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     console.error('[API /users/me GET]', error);
@@ -48,7 +35,7 @@ export async function GET(request: NextRequest) {
 // Corresponds to an extension of `getCurrentWorkspace` for updates
 export async function PUT(request: NextRequest) {
   try {
-    const sessionUser = await getServerActionSession();
+    const { user: sessionUser } = await getAuthenticatedUser();
     const body = await request.json();
     const validation = UserUpdateRequestSchema.safeParse(body);
 

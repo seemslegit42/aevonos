@@ -1,15 +1,15 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { getServerActionSession } from '@/lib/auth';
+import { getAuthenticatedUser } from '@/lib/firebase/admin';
 import { SecurityRiskLevel } from '@prisma/client';
 
 export async function GET(request: NextRequest) {
   try {
-    const sessionUser = await getServerActionSession();
+    const { workspace } = await getAuthenticatedUser();
     const alerts = await prisma.securityAlert.findMany({
         where: {
-            workspaceId: sessionUser.workspaceId
+            workspaceId: workspace.id
         },
         orderBy: {
             timestamp: 'desc'
@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
     
     return NextResponse.json(alerts);
   } catch (error) {
-    if (error instanceof Error && error.message.includes('Unauthorized')) {
+    if (error instanceof Error && (error.message.includes('Unauthorized') || error.message.includes('No session cookie'))) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     console.error('[API /security/alerts GET]', error);

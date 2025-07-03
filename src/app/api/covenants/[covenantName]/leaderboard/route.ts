@@ -1,7 +1,7 @@
 
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { getServerActionSession } from '@/lib/auth';
+import { getAuthenticatedUser } from '@/lib/firebase/admin';
 import { UserPsyche, UserRole } from '@prisma/client';
 import { calculateVasForUser } from '@/services/vas-service';
 
@@ -22,7 +22,7 @@ const covenantNameToPsyche = (name: string): UserPsyche | null => {
 
 export async function GET(request: Request, { params }: RouteParams) {
   try {
-    const sessionUser = await getServerActionSession();
+    const { workspace } = await getAuthenticatedUser();
     
     // This is a public-facing endpoint for now, but could be restricted.
     
@@ -35,7 +35,7 @@ export async function GET(request: Request, { params }: RouteParams) {
       where: {
         psyche: psyche,
         workspaces: {
-          some: { id: sessionUser.workspaceId }
+          some: { id: workspace.id }
         }
       },
       select: {
@@ -57,7 +57,7 @@ export async function GET(request: Request, { params }: RouteParams) {
     return NextResponse.json(leaderboard);
 
   } catch (error) {
-    if (error instanceof Error && error.message.includes('Unauthorized')) {
+    if (error instanceof Error && (error.message.includes('Unauthorized') || error.message.includes('No session cookie'))) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     console.error(`[API /covenants/{covenantName}/leaderboard GET]`, error);

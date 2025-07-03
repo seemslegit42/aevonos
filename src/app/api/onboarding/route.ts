@@ -2,7 +2,6 @@
 'use server';
 
 import { NextResponse } from 'next/server';
-import admin from 'firebase-admin';
 import { z } from 'zod';
 import prisma from '@/lib/prisma';
 import { UserPsyche, PlanTier, TransactionType, TransactionStatus, UserRole, Prisma } from '@prisma/client';
@@ -42,52 +41,54 @@ export async function POST(request: Request) {
     
     const { workspaceName, agentAlias, psyche, whatMustEnd, goal } = validation.data;
     
-    const { user, workspace } = await prisma.$transaction(async (tx) => {
-        const newUser = await tx.user.create({
-            data: {
-                id: firebaseUser.id,
-                email: firebaseUser.email!,
-                agentAlias: agentAlias || 'BEEP',
-                psyche: psyche || UserPsyche.ZEN_ARCHITECT,
-                foundingVow: whatMustEnd,
-                foundingGoal: goal,
-                role: UserRole.ADMIN,
-            }
-        });
-        
-        const newWorkspace = await tx.workspace.create({
-            data: {
-                name: workspaceName,
-                ownerId: newUser.id,
-                planTier: PlanTier.Apprentice,
-                credits: new Prisma.Decimal(100.0),
-                members: {
-                    connect: { id: newUser.id }
-                }
-            }
-        });
-
-        await tx.pulseProfile.create({
-            data: {
-                userId: newUser.id,
-                phaseOffset: Math.random() * 2 * Math.PI,
-            }
-        });
-        
-        await tx.transaction.create({
-            data: {
-                workspaceId: newWorkspace.id,
-                type: TransactionType.CREDIT,
-                amount: new Prisma.Decimal(100.0),
-                description: "Initial Apprentice credit grant.",
-                userId: newUser.id,
-                status: TransactionStatus.COMPLETED
-            }
-        });
-
-        return { user: newUser, workspace: newWorkspace };
+    // We already have the Firebase User ID, so we use that.
+    const newUser = await prisma.user.create({
+        data: {
+            id: firebaseUser.id, // Use Firebase UID as the primary key
+            email: firebaseUser.email!,
+            agentAlias: agentAlias || 'BEEP',
+            psyche: psyche || UserPsyche.ZEN_ARCHITECT,
+            foundingVow: whatMustEnd,
+            foundingGoal: goal,
+            role: UserRole.ADMIN, // First user is always the Architect
+        }
     });
 
+    // Create the workspace and initial records in a single transaction
+    await prisma.$transaction(async (tx) => {
+      const newWorkspace = await tx.workspace.create({
+        data: {
+          name: workspaceName,
+          ownerId: newUser.id,
+          planTier: PlanTier.Apprentice,
+          credits: new Prisma.Decimal(100.0),
+          members: {
+            connect: { id: newUser.id },
+          },
+        },
+      });
+
+      await tx.pulseProfile.create({
+        data: {
+          userId: newUser.id,
+          phaseOffset: Math.random() * 2 * Math.PI,
+        },
+      });
+
+      await tx.transaction.create({
+        data: {
+          workspaceId: newWorkspace.id,
+          type: TransactionType.CREDIT,
+          amount: new Prisma.Decimal(100.0),
+          description: "Initial Apprentice credit grant.",
+          userId: newUser.id,
+          status: TransactionStatus.COMPLETED,
+        },
+      });
+    });
+
+
+    // Generate the founding benediction after the user is created
     let benediction = null;
     try {
         const invocationResult = await interpretVow({
@@ -97,7 +98,7 @@ export async function POST(request: Request) {
             agentAlias: agentAlias || 'BEEP',
         });
         await prisma.user.update({
-            where: { id: user.id },
+            where: { id: newUser.id },
             data: {
                 corePainIndex: invocationResult.corePainIndex,
                 foundingBenediction: invocationResult.foundingBenediction,
@@ -109,10 +110,10 @@ export async function POST(request: Request) {
         console.error('[Rite of Invocation AI Error]', aiError);
     }
     
-    return NextResponse.json({ success: true, userId: user.id, benediction }, { status: 201 });
+    return NextResponse.json({ success: true, userId: newUser.id, benediction }, { status: 201 });
 
   } catch (error) {
-    if (error instanceof Error && (error.message.includes('token expired') || error.message.includes('no token'))) {
+    if (error instanceof Error && error.message.includes('token expired')) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     console.error('[API /onboarding POST]', error);

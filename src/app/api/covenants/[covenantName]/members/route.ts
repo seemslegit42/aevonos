@@ -1,7 +1,7 @@
 
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { getServerActionSession } from '@/lib/auth';
+import { getAuthenticatedUser } from '@/lib/firebase/admin';
 import { UserPsyche, UserRole } from '@prisma/client';
 
 interface RouteParams {
@@ -21,14 +21,10 @@ const covenantNameToPsyche = (name: string): UserPsyche | null => {
 
 export async function GET(request: Request, { params }: RouteParams) {
   try {
-    const sessionUser = await getServerActionSession();
-    const workspace = await prisma.workspace.findUnique({
-      where: { id: sessionUser.workspaceId },
-      select: { ownerId: true }
-    });
+    const { user, workspace } = await getAuthenticatedUser();
     
     // This is an admin/owner-only endpoint
-    if (sessionUser.role !== UserRole.ADMIN || sessionUser.id !== workspace?.ownerId) {
+    if (user.role !== UserRole.ADMIN || user.id !== workspace?.ownerId) {
         return NextResponse.json({ error: 'Forbidden: Architect access required.' }, { status: 403 });
     }
 
@@ -41,7 +37,7 @@ export async function GET(request: Request, { params }: RouteParams) {
       where: {
         psyche: psyche,
         workspaces: {
-          some: { id: sessionUser.workspaceId }
+          some: { id: workspace.id }
         }
       },
       select: {
@@ -55,7 +51,7 @@ export async function GET(request: Request, { params }: RouteParams) {
     return NextResponse.json(members);
 
   } catch (error) {
-    if (error instanceof Error && error.message.includes('Unauthorized')) {
+    if (error instanceof Error && (error.message.includes('Unauthorized') || error.message.includes('No session cookie'))) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     console.error(`[API /covenants/{covenantName}/members GET]`, error);

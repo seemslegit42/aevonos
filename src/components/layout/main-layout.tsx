@@ -31,18 +31,24 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                     fetch('/api/users/me'),
                     fetch('/api/workspaces/me')
                 ]);
-                if (userRes.ok && workspaceRes.ok) {
+                
+                // If the user exists in Firebase but not in our DB, and they are not on the vow page,
+                // this means they need to complete onboarding.
+                if (userRes.status === 404 || workspaceRes.status === 404) {
+                    if (pathname !== '/register/vow') {
+                       router.push('/register/vow');
+                    }
+                } else if (userRes.ok && workspaceRes.ok) {
                     const userData = await userRes.json();
                     const workspaceData = await workspaceRes.json();
                     setDbUser(userData);
                     setWorkspace(workspaceData);
-                } else if (userRes.status === 404 && pathname !== '/register/vow') {
-                    // User exists in Firebase but not in our DB, and they are not on the vow page.
-                    // This means they need to complete onboarding.
-                    router.push('/register/vow');
+                } else {
+                    throw new Error("Failed to fetch user or workspace data");
                 }
             } catch (error) {
                 console.error("Failed to fetch user data:", error);
+                // Potentially handle error state, maybe logout
             } finally {
                 setIsDataLoading(false);
             }
@@ -64,9 +70,9 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
     if (!loading && !firebaseUser && !isPublicPage) {
         router.push('/login');
     }
-  }, [loading, firebaseUser, isPublicPage, router]);
+  }, [loading, firebaseUser, isPublicPage, router, pathname]);
 
-  if (loading || (isDataLoading && !isPublicPage)) {
+  if (loading || (isDataLoading && !isPublicPage && pathname !== '/register/vow')) {
       return (
           <div className="flex flex-col h-screen overflow-hidden">
             <div className="flex-shrink-0 p-2 sm:p-4">
@@ -94,8 +100,12 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
       )
   }
 
-  if (isPublicPage) {
+  if (isPublicPage || (loading && !firebaseUser)) {
     return <>{children}</>;
+  }
+
+  if (!firebaseUser && !loading) {
+      return null; // Redirect is happening
   }
 
   return (
@@ -109,9 +119,9 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
       )}>
         {children}
       </main>
-      {isMobile && <BottomNavBar />}
-      <FirstWhisperHandler user={dbUser} />
-      <NudgeHandler />
+      {isMobile && !isPublicPage && <BottomNavBar />}
+      {!isPublicPage && <FirstWhisperHandler user={dbUser} />}
+      {!isPublicPage && <NudgeHandler />}
     </div>
   );
 }

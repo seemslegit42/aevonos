@@ -1,6 +1,6 @@
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerActionSession } from '@/lib/auth';
+import { getAuthenticatedUser } from '@/lib/firebase/admin';
 import { getWorkspaceTransactions } from '@/services/ledger-service';
 import { z } from 'zod';
 
@@ -11,7 +11,7 @@ const QuerySchema = z.object({
 // GET /api/billing/transactions
 export async function GET(request: NextRequest) {
   try {
-    const sessionUser = await getServerActionSession();
+    const { workspace } = await getAuthenticatedUser();
 
     const { searchParams } = new URL(request.url);
     const queryParams = Object.fromEntries(searchParams.entries());
@@ -23,12 +23,12 @@ export async function GET(request: NextRequest) {
 
     const { limit } = validation.data;
 
-    const transactions = await getWorkspaceTransactions(sessionUser.workspaceId, limit);
+    const transactions = await getWorkspaceTransactions(workspace.id, limit);
     
     return NextResponse.json(transactions);
 
   } catch (error) {
-    if (error instanceof Error && error.message.includes('Unauthorized')) {
+    if (error instanceof Error && (error.message.includes('Unauthorized') || error.message.includes('No session cookie'))) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     console.error('[API /billing/transactions GET]', error);

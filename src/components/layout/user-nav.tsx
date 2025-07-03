@@ -17,7 +17,7 @@ import {
 import { useAppStore } from "@/store/app-store";
 import type { User, Workspace } from "@prisma/client";
 import { handleLogout } from "@/app/auth/actions";
-import { deleteAccount } from "@/app/auth/actions";
+import { useAuth } from "@/context/AuthContext";
 
 type UserProp = Pick<User, 'id' | 'email' | 'firstName' | 'lastName' | 'role' | 'agentAlias'> | null;
 
@@ -29,8 +29,9 @@ interface UserNavProps {
 
 export function UserNav({ user, workspace, children }: UserNavProps) {
     const { upsertApp } = useAppStore();
+    const { user: firebaseUser } = useAuth();
 
-    if (!user) {
+    if (!user || !firebaseUser) {
         return null;
     }
     
@@ -49,6 +50,7 @@ export function UserNav({ user, workspace, children }: UserNavProps) {
     };
     
     const handleBillingClick = () => {
+        if (!workspace) return;
         upsertApp('usage-monitor', { 
             id: 'singleton-usage-monitor',
             contentProps: { workspace, user }

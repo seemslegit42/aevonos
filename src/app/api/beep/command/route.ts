@@ -1,7 +1,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { processUserCommand } from '@/ai/agents/beep';
-import { getServerActionSession } from '@/lib/auth';
+import { getAuthenticatedUser } from '@/lib/firebase/admin';
 import { z } from 'zod';
 
 const BeepCommandRequestSchema = z.object({
@@ -12,7 +12,7 @@ const BeepCommandRequestSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
-    const sessionUser = await getServerActionSession();
+    const { user, workspace } = await getAuthenticatedUser();
 
     const body = await request.json();
     const validation = BeepCommandRequestSchema.safeParse(body);
@@ -25,10 +25,10 @@ export async function POST(request: NextRequest) {
 
     const beepResult = await processUserCommand({ 
         userCommand: command,
-        userId: sessionUser.id,
-        workspaceId: sessionUser.workspaceId,
-        psyche: sessionUser.psyche,
-        role: sessionUser.role,
+        userId: user.id,
+        workspaceId: workspace.id,
+        psyche: user.psyche,
+        role: user.role,
     });
 
     // Adapt the internal UserCommandOutput to the public API response schema from api-spec.md.
@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(apiResponse, { status: 200 });
 
   } catch (error) {
-    if (error instanceof Error && error.message.includes('Unauthorized')) {
+    if (error instanceof Error && (error.message.includes('Unauthorized') || error.message.includes('No session cookie'))) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     if (error instanceof SyntaxError) {

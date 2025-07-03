@@ -1,7 +1,7 @@
 
 import { NextResponse, NextRequest } from 'next/server';
 import { z } from 'zod';
-import { getServerActionSession } from '@/lib/auth';
+import { getAuthenticatedUser } from '@/lib/firebase/admin';
 import prisma from '@/lib/prisma';
 import { PlanTier } from '@prisma/client';
 
@@ -14,10 +14,7 @@ const WorkspaceUpdateSchema = z.object({
 // Corresponds to operationId `getCurrentWorkspace`
 export async function GET(request: NextRequest) {
   try {
-    const sessionUser = await getServerActionSession();
-    const workspace = await prisma.workspace.findUnique({
-      where: { id: sessionUser.workspaceId },
-    });
+    const { workspace } = await getAuthenticatedUser();
 
     if (!workspace) {
       return NextResponse.json({ error: 'Workspace not found.' }, { status: 404 });
@@ -25,7 +22,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(workspace);
   } catch (error) {
-    if (error instanceof Error && error.message.includes('Unauthorized')) {
+    if (error instanceof Error && (error.message.includes('Unauthorized') || error.message.includes('No session cookie'))) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     console.error('[API /workspaces/me GET]', error);
@@ -36,7 +33,7 @@ export async function GET(request: NextRequest) {
 // Corresponds to an extension of `getCurrentWorkspace` for updates
 export async function PUT(request: NextRequest) {
   try {
-    const sessionUser = await getServerActionSession();
+    const { workspace } = await getAuthenticatedUser();
     const body = await request.json();
     const validation = WorkspaceUpdateSchema.safeParse(body);
 
@@ -50,14 +47,14 @@ export async function PUT(request: NextRequest) {
     }
     
     const updatedWorkspace = await prisma.workspace.update({
-        where: { id: sessionUser.workspaceId },
+        where: { id: workspace.id },
         data: validation.data
     });
 
     return NextResponse.json(updatedWorkspace);
 
   } catch (error) {
-    if (error instanceof Error && error.message.includes('Unauthorized')) {
+     if (error instanceof Error && error.message.includes('Unauthorized')) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     if (error instanceof SyntaxError) {
