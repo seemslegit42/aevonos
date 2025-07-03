@@ -1,4 +1,3 @@
-
 'use server';
 
 /**
@@ -34,6 +33,7 @@ import { executeBurnBridgeProtocol } from '@/ai/agents/burn-bridge-agent';
 import { BurnBridgeInputSchema } from './burn-bridge-schemas';
 import { consultVaultDaemon } from './vault-daemon';
 import { VaultQueryInputSchema } from './vault-daemon-schemas';
+import { consultCrmAgent } from './crm-agent';
 
 
 import {
@@ -169,12 +169,13 @@ const router = async (state: AgentState) => {
     }
     
     const routingSchema = z.object({
-        route: z.enum(["dispatcher", "reasoner", "inventory_daemon", "burn_bridge_protocol", "vault_daemon"])
+        route: z.enum(["dispatcher", "reasoner", "inventory_daemon", "burn_bridge_protocol", "vault_daemon", "crm_agent"])
             .describe(`Choose 'dispatcher' for simple app launches, greetings, or direct commands.
 Choose 'reasoner' for complex requests involving analysis or multi-step tool use.
 Choose 'inventory_daemon' for any request about stock levels, product inventory, or purchase orders.
 Choose 'burn_bridge_protocol' for explicit requests to "burn the bridge" or conduct a full-spectrum investigation on a person.
-Choose 'vault_daemon' for any request about finances, revenue, profit, spending, or where money is being wasted.`)
+Choose 'vault_daemon' for any request about finances, revenue, profit, spending, or where money is being wasted.
+Choose 'crm_agent' for any request about contacts (creating, listing, updating, deleting).`)
     });
     
     const routingModel = langchainGroqFast.withStructuredOutput(routingSchema);
@@ -305,6 +306,39 @@ const callVaultDaemon = async (state: AgentState): Promise<Partial<AgentState>> 
 
     return { messages: [response] };
 };
+
+const callCrmAgent = async (state: AgentState): Promise<Partial<AgentState>> => {
+    console.log('[BEEP] Delegating to CRM Daemon.');
+    const { messages, workspaceId, userId } = state;
+    const lastMessage = messages[messages.length - 1];
+
+    const daemonInput = {
+        query: lastMessage.content as string,
+        workspaceId,
+        userId
+    };
+
+    const daemonResponse = await consultCrmAgent(daemonInput);
+    
+    const finalAnswerToolCall = {
+        name: 'final_answer',
+        args: {
+            responseText: `CRM Daemon has completed the operation.`,
+            appsToLaunch: [],
+            suggestedCommands: ["show me all contacts", "add a new contact"],
+            agentReports: [daemonResponse]
+        },
+        id: 'tool_call_crm_daemon_final'
+    };
+    
+    const response = new AIMessage({
+        content: "The CRM Daemon has responded.",
+        tool_calls: [finalAnswerToolCall],
+    });
+
+    return { messages: [response] };
+};
+
 
 const handleThreat = async (state: AgentState) => {
     const { aegisReport } = state;
@@ -471,6 +505,7 @@ workflow.addNode('agent_reasoner', callReasonerModel);
 workflow.addNode('inventory_daemon_node', callInventoryDaemon);
 workflow.addNode('burn_bridge_protocol_node', callBurnBridgeProtocol);
 workflow.addNode('vault_daemon_node', callVaultDaemon);
+workflow.addNode('crm_agent_node', callCrmAgent);
 workflow.addNode('handle_threat', handleThreat);
 workflow.addNode('warn_and_continue', warnAndContinue);
 workflow.addNode('tools', executeTools); 
@@ -493,6 +528,7 @@ workflow.addConditionalEdges('router', (state: AgentState) => router(state), {
     inventory_daemon: 'inventory_daemon_node',
     burn_bridge_protocol: 'burn_bridge_protocol_node',
     vault_daemon: 'vault_daemon_node',
+    crm_agent: 'crm_agent_node',
 });
 
 workflow.addConditionalEdges('agent_dispatcher', shouldContinue, {
@@ -512,6 +548,10 @@ workflow.addConditionalEdges('burn_bridge_protocol_node', shouldContinue, {
   end: END,
 });
 workflow.addConditionalEdges('vault_daemon_node', shouldContinue, {
+  tools: 'tools',
+  end: END,
+});
+workflow.addConditionalEdges('crm_agent_node', shouldContinue, {
   tools: 'tools',
   end: END,
 });

@@ -1,4 +1,3 @@
-
 import { config } from 'dotenv';
 config();
 
@@ -65,3 +64,5 @@ import '@/app/api/admin/economic-pulse/route.ts';
 import '@/ai/agents/vault-daemon.ts';
 import '@/app/api/security/edicts/route.ts';
 import '@/app/actions.ts';
+import '@/ai/agents/crm-agent.ts';
+import '@/ai/agents/crm-agent-schemas.ts';

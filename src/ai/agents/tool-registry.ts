@@ -48,7 +48,6 @@ import { generateRitualQuests } from '../agents/ritual-quests-agent';
 
 
 // Tool Imports
-import { createContactInDb, listContactsFromDb, deleteContactInDb, updateContactInDb } from '@/ai/tools/crm-tools';
 import { getUsageDetailsForAgent, requestCreditTopUpInDb } from '@/services/billing-service';
 import { getDatingProfile } from '@/ai/tools/dating-tools';
 import { createSecurityAlertInDb } from '@/ai/tools/security-tools';
@@ -59,7 +58,6 @@ import { transmuteCredits } from '@/ai/tools/proxy-tools';
 
 // Schema Imports
 import { DrSyntaxInputSchema } from '@/ai/agents/dr-syntax-schemas';
-import { CreateContactInputSchema, DeleteContactInputSchema, UpdateContactInputSchema } from '@/ai/tools/crm-schemas';
 import { RequestCreditTopUpInputSchema } from '@/ai/tools/billing-schemas';
 import { DatingProfileInputSchema } from '@/ai/tools/dating-schemas';
 import { CreateSecurityAlertInputSchema } from '@/ai/tools/security-schemas';
@@ -174,42 +172,6 @@ export async function getTools(context: AgentContext): Promise<Tool[]> {
             agentFunc: (toolInput) => drSyntaxCritique({ ...toolInput, workspaceId, psyche }),
         }),
         
-        createAgentTool({
-            name: 'createContact',
-            description: 'Creates a new contact in the system. Use this when the user asks to "add a contact", "new contact", etc. Extract their details like name, email, and phone from the user command.',
-            schema: CreateContactInputSchema,
-            agentName: 'crm',
-            reportAction: 'create',
-            agentFunc: (toolInput) => createContactInDb(toolInput, workspaceId, userId),
-        }),
-        
-        createAgentTool({
-            name: 'updateContact',
-            description: 'Updates an existing contact in the system. Use this when the user asks to "change a contact", "update details for", etc. You must provide the contact ID. If the user provides a name, use the listContacts tool first to find the correct ID.',
-            schema: UpdateContactInputSchema,
-            agentName: 'crm',
-            reportAction: 'update',
-            agentFunc: (toolInput) => updateContactInDb(toolInput, workspaceId, userId),
-        }),
-        
-        createAgentTool({
-            name: 'listContacts',
-            description: 'Lists all contacts in the system. Use this when the user asks to "show contacts", "list all contacts", "see my contacts", etc.',
-            schema: z.object({}),
-            agentName: 'crm',
-            reportAction: 'list',
-            agentFunc: () => listContactsFromDb(workspaceId, userId),
-        }),
-        
-        createAgentTool({
-            name: 'deleteContact',
-            description: 'Deletes a contact from the system by their ID. The user must provide the ID of the contact to delete. You should obtain this ID from a contact list if the user does not provide it.',
-            schema: DeleteContactInputSchema,
-            agentName: 'crm',
-            reportAction: 'delete',
-            agentFunc: (toolInput) => deleteContactInDb(toolInput, workspaceId, userId),
-        }),
-
         createAgentTool({
             name: 'getUsageDetails',
             description: 'Gets the current billing and agent action usage details. Use this when the user asks about their usage, limits, plan, or billing.',
