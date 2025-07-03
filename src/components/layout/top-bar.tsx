@@ -11,7 +11,6 @@ import { useAppStore } from '@/store/app-store';
 import { cn } from '@/lib/utils';
 import { Button } from '../ui/button';
 import { Popover, PopoverContent, PopoverAnchor } from '@/components/ui/popover';
-import { Command, Mic } from 'lucide-react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
   DropdownMenu,
@@ -129,7 +128,6 @@ export default function TopBar({ user, workspace, initialVas }: TopBarProps) {
          <Popover open={!!beepOutput?.suggestedCommands && beepOutput.suggestedCommands.length > 0 && !!inputValue}>
           <PopoverAnchor asChild>
             <form ref={formRef} onSubmit={handleSubmit} className="relative w-full group">
-              <Command className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground transition-colors group-focus-within:text-primary" />
               <Input
                 name="command"
                 type="text"
@@ -138,15 +136,12 @@ export default function TopBar({ user, workspace, initialVas }: TopBarProps) {
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 className={cn(
-                  "w-full bg-background/80 text-foreground placeholder:text-muted-foreground border-border/50 h-10 pl-10 pr-10",
+                  "w-full bg-background/80 text-foreground placeholder:text-muted-foreground border-border/50 h-10 pl-4 pr-4",
                   "focus-visible:ring-1 focus-visible:ring-roman-aqua",
                   isLoading && "ring-1 ring-inset ring-roman-aqua animate-pulse"
                 )}
                 disabled={isLoading}
               />
-              <button type="button" className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground transition-colors hover:text-primary" aria-label="Use microphone">
-                <Mic />
-              </button>
             </form>
           </PopoverAnchor>
           <PopoverContent className="p-1 w-[--radix-popover-trigger-width]">

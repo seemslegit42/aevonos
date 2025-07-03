@@ -108,7 +108,6 @@ export default function Terminal() {
                         ref={inputRef}
                         type="text"
                         className="bg-transparent w-full focus:outline-none"
-                        autoFocus
                         disabled={isLoading}
                         onKeyDown={handleKeyDown}
                     />
