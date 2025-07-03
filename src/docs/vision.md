@@ -1,4 +1,3 @@
-
 # ΛΞVON OS: Agentic Mythware™ - The Post-SaaS Operating System
 
 ## Executive Summary: The Dawn of Sovereignty
@@ -43,7 +42,7 @@ The conversational command core and agentic brain of ΛΞVON OS. It's not a Micr
 
 **Triune Voice (Personas)**: BEEP shifts its persona dynamically based on context, user's chosen Vow, and system state:
 
-*   **Architect's Apprentice**: Precise, methodical, guiding creation in structured environments (e.g., Loom Studio).
+*   **Architect's Apprentice**: Precise, methodical, guiding creation in structured environments (e.g., when assisting with workflow design that originates from Loom Studio).
 *   **Oracle**: Enigmatic, metaphorical, guiding discovery and insights within gamified experiences (e.g., Folly Instruments).
 *   **Sentinel**: Urgent, direct, authoritative in security or critical alert situations (integrates directly with Aegis).
 
@@ -56,7 +55,7 @@ The conversational command core and agentic brain of ΛΞVON OS. It's not a Micr
 **Swarm Routing & Delegation**: BEEP orchestrates execution by:
 
 *   **Agent Identification & Selection**: Dynamically mapping intents to optimal Agent Kits or individual agents from the ΛΞVON Armory, prioritizing based on context, user Vow, and Agent Integrity Certifications (AIC) status.
-*   **Workflow Instantiation**: Leveraging LangGraph to build and execute multi-step, multi-agent workflows, and integrating CrewAI for collaborative micro-agent teams.
+*   **Workflow Instantiation**: Leveraging LangGraph to build and execute multi-step, multi-agent workflows (which are designed in Loom Studio), and integrating CrewAI for collaborative micro-agent teams.
 *   **Dynamic Agent Selection**: Applying Swarm AI principles for load balancing, performance optimization, cost efficiency, and security context (Aegis prioritization).
 *   **Execution Monitoring**: Providing real-time updates via Genkit runtime, detecting deviations, and feeding data to Aegis.
 *   **Human-in-the-Loop (HITL)**: Integrating pauses for human judgment, approvals, or ethical review for sensitive tasks.
@@ -150,11 +149,3 @@ Our technology is not just functional; it's engineered for precision, scalabilit
 *   **Canadian Focus**: All physical forging (The Sovereign's Sigil) and core fintech integrations (Interac) will be Canadian, fostering domestic expertise.
 *   **The ΛΞVON Sanctum**: Our public temple (aevonos.com), a Digital Temple and Multi-Realm Pilgrimage that initiates visitors into our doctrine. It features The Nexus, The Scriptorium, The Chancel, The Pantheon (product ecosystem), The Aegis Post, and The Rite of Invocation.
 *   **The Doctrine of Resonant Nomenclature**: We embed the name Lambda-Xi-VON into the very fabric of the OS and all communications, making its meaning an earned revelation.
-
-Remember, the XML structure you generate is the only mechanism for applying changes to the user's code. Therefore, when making changes to a file the <changes> block must always be fully present and correctly formatted as follows.
-
-<changes>
-  <description>[Provide a concise summary of the overall changes being made]</description>
-  <change>
-    <file>[Provide the ABSOLUTE, FULL path to the file being modified]</file>
-    <content><![CDATA[Provide the ENTIRE, FINAL, intended content of the file here. Do NOT provide diffs or partial snippets. Ensure all code is properly escaped within the CDATA section.
