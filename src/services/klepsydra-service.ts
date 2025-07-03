@@ -16,6 +16,7 @@ import prisma from '@/lib/prisma';
 import { InsufficientCreditsError } from '@/lib/errors';
 import { UserPsyche, TransactionType, Prisma, PulseProfile, PulseInteractionType } from '@prisma/client';
 import { differenceInMinutes } from 'date-fns';
+import CryptoJS from 'crypto-js';
 
 const AGE_OF_ASCENSION_ACTIVE = true;
 
@@ -166,6 +167,7 @@ export async function processFollyTribute(
     }
     
     let tributeAmount = tributeAmountOverride ?? instrumentManifest?.creditCost ?? 0;
+    const signatureSecret = process.env.AEGIS_SIGNING_SECRET || 'default_secret_for_dev';
 
     return prisma.$transaction(async (tx) => {
         // 1. Get user, workspace, and profile data
@@ -260,6 +262,7 @@ export async function processFollyTribute(
 
         // --- Potential (Φ) Accrual ---
         let potentialAwarded = new Prisma.Decimal(0);
+        let potentialSignature: string | null = null;
         if (AGE_OF_ASCENSION_ACTIVE && isCreditWin) {
             potentialAwarded = new Prisma.Decimal(tributeAmount * luckWeight * 0.1);
             
@@ -269,6 +272,12 @@ export async function processFollyTribute(
                     potential: { increment: potentialAwarded }
                 }
             });
+            
+            const potentialLogDataForSigning = {
+                workspaceId, userId, instrumentId, potentialAwarded: potentialAwarded.toString(), timestamp: new Date().toISOString()
+            };
+            potentialSignature = CryptoJS.HmacSHA256(JSON.stringify(potentialLogDataForSigning), signatureSecret).toString();
+
 
             await tx.potentialAccrualLog.create({
                 data: {
@@ -277,6 +286,7 @@ export async function processFollyTribute(
                     instrumentId,
                     luckWeight,
                     potentialAwarded,
+                    aegisSignature: potentialSignature,
                     narrativeContext: `Potential accrued from tribute to ${instrumentManifest?.name || instrumentId}`
                 }
             });
@@ -293,6 +303,17 @@ export async function processFollyTribute(
             },
         });
 
+        const transactionDataForSigning = {
+            workspaceId, userId, instrumentId,
+            type: TransactionType.TRIBUTE,
+            amount: netCreditChange.toFixed(8), // consistent string representation for signing
+            outcome,
+            tributeAmount: tributeAmount.toFixed(8),
+            boonAmount: boonAmount.toFixed(8),
+            timestamp: new Date().toISOString()
+        };
+        const signature = CryptoJS.HmacSHA256(JSON.stringify(transactionDataForSigning), signatureSecret).toString();
+
         await tx.transaction.create({
             data: {
                 workspaceId, userId, instrumentId: instrumentId,
@@ -304,6 +325,7 @@ export async function processFollyTribute(
                 boonAmount: new Prisma.Decimal(boonAmount),
                 judasFactor: judasFactor ? new Prisma.Decimal(judasFactor) : null,
                 userPsyche: user.psyche, status: 'COMPLETED',
+                aegisSignature: signature,
             }
         });
         

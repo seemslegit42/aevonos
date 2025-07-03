@@ -22,6 +22,7 @@ These models form the basis of the system's multi-tenant architecture.
     -   `psyche`: (`ZEN_ARCHITECT`, `SYNDICATE_ENFORCER`, `RISK_AVERSE_ARTISAN`) - The user's chosen psychological archetype from the Rite of Invocation, used for personalization.
     -   `agentAlias`: The user's personalized name for BEEP.
     -   `unlockedChaosCardKeys`: An array of strings containing the keys of purchased Chaos Cards.
+    -   `hasAbyssalScar`: A boolean indicating if the user has made the irreversible choice to sacrifice their ΞVolution Daemon, unlocking the "Abyssal Form."
 -   **Relations**: A user can be a member of multiple `Workspace`s.
 
 ### `Workspace`
@@ -31,7 +32,8 @@ These models form the basis of the system's multi-tenant architecture.
     -   `name`: The user-defined name of the workspace.
     -   `ownerId`: A foreign key to the `User` who owns the workspace.
     -   `planTier`: (`Apprentice`, `Artisan`, `Priesthood`) - The current subscription plan.
-    -   `credits`: The current balance of ΞCredits.
+    -   `credits`: The current balance of spendable ΞCredits.
+    -   `potential`: The current balance of non-spendable Potential (Φ), accrued during the "Age of Ascension."
     -   `agentActionsUsed`: A counter for the number of agent actions consumed in the current billing cycle.
     -   `unlockedAppIds`: An array of strings containing the IDs of purchased Micro-Apps from The Armory.
 -   **Relations**: A workspace has one owner (`User`), multiple members (`User`), and contains all other data models like `Agent`, `Contact`, `SecurityAlert`, etc.
@@ -65,6 +67,7 @@ These models power the internal economy of ΛΞVON OS.
     -   `description`: A human-readable description of the transaction.
     -   `instrumentId`, `luckWeight`, `outcome`, `boonAmount`: Special fields to store rich metadata for `TRIBUTE` transactions from Folly Instruments.
     -   `judasFactor`: A decimal representing the reduction factor in a 'hollow win' scenario from the Judas Algorithm.
+    -   `aegisSignature`: A cryptographic hash of the transaction details, signed by Aegis to ensure integrity.
 
 ### `PulseProfile`
 -   **Purpose**: The core of the Klepsydra Engine. Stores each user's unique "luck" parameters and dynamic psychological state.
@@ -72,6 +75,15 @@ These models power the internal economy of ΛΞVON OS.
     -   `consecutiveLosses`: A counter used to trigger the Pity Boon protocol.
     -   `lastEventTimestamp`: Used to calculate time decay in the pulse wave.
     -   `frustration`, `flowState`, `riskAversion`: Floating-point values (0-1) representing the user's current psychological state, which dynamically modulate economic outcomes.
+
+### `PotentialAccrualLog`
+-   **Purpose**: A specialized, immutable log that records the accrual of Potential (Φ), the non-spendable meta-asset of the "Age of Ascension."
+-   **Key Fields**:
+    -   `instrumentId`: The ID of the Folly Instrument that generated the Potential.
+    -   `luckWeight`: The user's modulated luck value at the time of the event.
+    -   `potentialAwarded`: The amount of Φ awarded.
+    -   `narrativeContext`: A human-readable description of the accrual event.
+    -   `aegisSignature`: A cryptographic hash of the log entry, signed by Aegis to ensure integrity.
 
 ### `ChaosCard` & `ActiveSystemEffect`
 -   **Purpose**: `ChaosCard` is the manifest for acquirable Chaos Cards. It is not tied to a specific user. The `User.unlockedChaosCardKeys` field tracks ownership. `ActiveSystemEffect` tracks which temporary, system-wide effects (like theme changes from a card) are currently active for a workspace.
