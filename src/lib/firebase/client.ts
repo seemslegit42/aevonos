@@ -1,4 +1,3 @@
-
 // src/lib/firebase/client.ts
 import { initializeApp, getApps, getApp, type FirebaseApp } from 'firebase/app';
 import { getAuth, type Auth } from 'firebase/auth';
@@ -7,9 +6,10 @@ const firebaseConfig = {
   apiKey: "AIzaSyAH4TvptHv5O7t6ttcEbhFlxhHGdibXBLA",
   authDomain: "von-os-juooq.firebaseapp.com",
   projectId: "von-os-juooq",
-  storageBucket: "von-os-juooq.appspot.com",
+  storageBucket: "von-os-juooq.firebasestorage.app",
   messagingSenderId: "366247376303",
-  appId: "1:366247376303:web:ecd3c107653c668c81eb5a"
+  appId: "1:366247376303:web:ecd3c107653c668c81eb5a",
+  measurementId: "G-16X0Z7NPTJ"
 };
 
 
