@@ -10,6 +10,7 @@
 
 import { StateGraph, END } from '@langchain/langgraph';
 import { BaseMessage } from '@langchain/core/messages';
+import { z } from 'zod';
 import {ai} from '@/ai/genkit';
 import {
     AegisAnomalyScanInputSchema, 
@@ -18,17 +19,21 @@ import {
     type AegisAnomalyScanOutput
 } from './aegis-schemas';
 import { authorizeAndDebitAgentActions } from '@/services/billing-service';
-import { langchainGroqComplex } from '@/ai/genkit';
+import { langchainGroqComplex, langchainGroqFast } from '@/ai/genkit';
 import { getThreatFeedsForWorkspace, fetchThreatIntelContentFromUrl } from '../tools/threat-intelligence-tools';
 import { getSecurityEdicts } from '../tools/security-tools';
 import { SecurityRiskLevel } from '@prisma/client';
 
 // 1. Define Agent State
+const ActivityCategorySchema = z.enum(["Data Access", "Financial", "System Config", "General"]);
+type ActivityCategory = z.infer<typeof ActivityCategorySchema>;
+
 interface AegisAgentState {
   messages: BaseMessage[];
   input: AegisAnomalyScanInput;
   threatIntelContent: string;
   securityEdicts: string[];
+  activityCategory: ActivityCategory;
   finalReport: AegisAnomalyScanOutput | null;
 }
 
@@ -71,10 +76,28 @@ const fetchSecurityEdicts = async (state: AegisAgentState): Promise<Partial<Aegi
   }
 };
 
+// New Node to categorize the activity for more focused analysis
+const categorizeActivity = async (state: AegisAgentState): Promise<Partial<AegisAgentState>> => {
+  const { input } = state;
+  const triageSchema = z.object({
+    category: ActivityCategorySchema
+      .describe("Categorize the user's activity. 'Data Access' for reading/writing user data. 'Financial' for transactions. 'System Config' for admin actions. 'General' for everything else.")
+  });
+  
+  const triageModel = langchainGroqFast.withStructuredOutput(triageSchema);
+  try {
+      const result = await triageModel.invoke(`Categorize this activity: "${input.activityDescription}"`);
+      return { activityCategory: result.category };
+  } catch (e) {
+      console.error("[Aegis Agent] Failed to categorize activity, defaulting to 'General':", e);
+      return { activityCategory: 'General' };
+  }
+};
+
 
 // Node to analyze the activity against the intel and edicts
 const analyzeActivity = async (state: AegisAgentState): Promise<Partial<AegisAgentState>> => {
-    const { input, threatIntelContent, securityEdicts } = state;
+    const { input, threatIntelContent, securityEdicts, activityCategory } = state;
 
     const edictsBlock = securityEdicts.map(edict => `- ${edict}`).join('\n');
 
@@ -85,6 +108,7 @@ Your primary function is to analyze user activity for signs of anomalous or pote
 **Actor Profile:**
 - **Rank:** ${input.userRole}
 - **Psyche:** ${input.userPsyche}
+- **Activity Category**: ${activityCategory}
 
 **Edicts of Secure Operation:**
 ${edictsBlock}
@@ -97,7 +121,7 @@ Activity Description: ${input.activityDescription}
 """
 
 Based on this, you must deliver a proclamation:
-1.  **isAnomalous**: Determine if the activity violates the edicts or matches any threat intelligence. Consider the user's role.
+1.  **isAnomalous**: Determine if the activity violates the edicts or matches any threat intelligence. Consider the user's role and the activity category.
 2.  **anomalyType**: If a violation is found, provide a short, categorical name for the transgression (e.g., "Violation of Session Integrity", "Known Phishing Attempt", "Exceeded Authority"). If not, this can be null.
 3.  **riskLevel**: If a violation is found, assign a risk level: 'low', 'medium', 'high', or 'critical'. If not, this MUST be 'none'. An OPERATOR attempting an ADMIN action is 'high' or 'critical'.
 4.  **anomalyExplanation**: Deliver your proclamation. If a violation is found, explain the transgression with the gravity it deserves. If not, provide reassurance that all is well within the digital empire.
@@ -122,17 +146,20 @@ const workflow = new StateGraph<AegisAgentState>({
     input: { value: (x, y) => y },
     threatIntelContent: { value: (x, y) => y },
     securityEdicts: { value: (x, y) => y, default: () => [] },
+    activityCategory: { value: (x, y) => y, default: () => 'General' },
     finalReport: { value: (x, y) => y, default: () => null },
   },
 });
 
 workflow.addNode('fetch_intel', fetchThreatIntelligence);
 workflow.addNode('fetch_edicts', fetchSecurityEdicts);
+workflow.addNode('categorize', categorizeActivity);
 workflow.addNode('analyze', analyzeActivity);
 
 workflow.setEntryPoint('fetch_intel');
 workflow.addEdge('fetch_intel', 'fetch_edicts');
-workflow.addEdge('fetch_edicts', 'analyze');
+workflow.addEdge('fetch_edicts', 'categorize');
+workflow.addEdge('categorize', 'analyze');
 workflow.addEdge('analyze', END);
 
 const aegisApp = workflow.compile();
@@ -149,9 +176,6 @@ export async function aegisAnomalyScan(input: AegisAnomalyScanInput): Promise<Ae
   const initialState: Partial<AegisAgentState> = {
       messages: [],
       input: input,
-      threatIntelContent: '',
-      securityEdicts: [],
-      finalReport: null
   };
 
   const result = await aegisApp.invoke(initialState);
