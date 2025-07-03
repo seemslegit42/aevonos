@@ -10,7 +10,6 @@ import { useIsMobile } from '@/hooks/use-is-mobile';
 import { cn } from '@/lib/utils';
 import { NudgeHandler } from './NudgeHandler';
 import { useAuth } from '@/context/AuthContext';
-import { FirstWhisperHandler } from './FirstWhisperHandler';
 import { Skeleton } from '../ui/skeleton';
 
 interface MainLayoutProps {
@@ -120,7 +119,6 @@ export function MainLayout({ children, user: dbUser, workspace }: MainLayoutProp
         {children}
       </main>
       {isMobile && <BottomNavBar />}
-      <FirstWhisperHandler user={dbUser} />
       <NudgeHandler />
     </div>
   );

@@ -1,6 +1,6 @@
 
 import DashboardView from '@/components/dashboard/dashboard-view';
-import { type Agent } from '@prisma/client';
+import { type Agent, type User } from '@prisma/client';
 import { getAuthenticatedUser } from '@/lib/firebase/admin';
 import prisma from '@/lib/prisma';
 
@@ -19,7 +19,7 @@ export default async function Home() {
     
         return (
             <div className="h-full">
-                <DashboardView initialAgents={agents} />
+                <DashboardView initialAgents={agents} user={user} />
             </div>
         );
 
