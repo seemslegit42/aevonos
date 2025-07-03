@@ -96,3 +96,5 @@ export async function consultVaultDaemon(input: VaultQueryInput): Promise<VaultA
     
     return finalResult;
 }
+
+    
