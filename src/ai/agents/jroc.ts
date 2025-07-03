@@ -13,6 +13,7 @@ import {
 } from './jroc-schemas';
 import { z } from 'zod';
 import { authorizeAndDebitAgentActions } from '@/services/billing-service';
+import { getCachedBusinessKit, setCachedBusinessKit } from './jroc-cache';
 
 const generateBusinessKitFlow = ai.defineFlow(
   {
@@ -20,7 +21,19 @@ const generateBusinessKitFlow = ai.defineFlow(
     inputSchema: JrocInputSchema,
     outputSchema: JrocOutputSchema,
   },
-  async ({ businessType, logoStyle, workspaceId }) => {
+  async (input) => {
+    const { businessType, logoStyle, workspaceId } = input;
+
+    // --- CACHING LOGIC ---
+    const cachedKit = await getCachedBusinessKit(input);
+    if (cachedKit) {
+      // Even with a cache hit, we must bill for the action. The value is in the result.
+      await authorizeAndDebitAgentActions({ workspaceId, actionType: 'SIMPLE_LLM' });
+      await authorizeAndDebitAgentActions({ workspaceId, actionType: 'IMAGE_GENERATION' });
+      return cachedKit;
+    }
+    // --- END CACHING LOGIC ---
+
     // This flow has two LLM calls, one for text and one for image gen.
     // Bill for both actions.
     await authorizeAndDebitAgentActions({ workspaceId, actionType: 'SIMPLE_LLM' });
@@ -64,10 +77,15 @@ const generateBusinessKitFlow = ai.defineFlow(
     });
 
     // Step 3: Combine results.
-    return {
+    const finalResult = {
         ...textOutput,
         logoDataUri: media?.url,
     };
+
+    // Cache the result before returning
+    await setCachedBusinessKit(input, finalResult);
+
+    return finalResult;
   }
 );
 

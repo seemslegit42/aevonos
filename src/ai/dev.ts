@@ -20,6 +20,7 @@ import '@/ai/agents/kif-kroker.ts';
 import '@/ai/agents/vandelay.ts';
 import '@/ai/agents/paper-trail.ts';
 import '@/ai/agents/jroc.ts';
+import '@/ai/agents/jroc-cache.ts';
 import '@/ai/agents/lahey.ts';
 import '@/ai/agents/foremanator.ts';
 import '@/ai/agents/sterileish.ts';
