@@ -92,7 +92,7 @@ import { RenoModeAnalysisInputSchema } from '../agents/reno-mode-schemas';
 import { PatricktAgentInputSchema } from '../agents/patrickt-agent-schemas';
 import { InventoryDaemonInputSchema } from '../agents/inventory-daemon-schemas';
 import { BurnBridgeInputSchema } from '../agents/burn-bridge-schemas';
-import { FindUsersByVowInputSchema, ManageSyndicateInputSchema } from '@/ai/tools/demiurge-tools';
+import { FindUsersByVowInputSchema, ManageSyndicateInputSchema } from '@/ai/tools/demiurge-schemas';
 import { RitualQuestInputSchema } from '../agents/ritual-quests-schemas';
 import { TransmuteCreditsInputSchema } from '../tools/proxy-schemas';
 
@@ -164,7 +164,7 @@ export async function getTools(context: AgentContext): Promise<Tool[]> {
         createAgentTool({
             name: 'getRitualQuests',
             description: "Fetches the user's current Ritual Quests based on their Covenant. Use when the user asks for their quests or what they should do next.",
-            schema: z.object({}),
+            schema: RitualQuestInputSchema,
             agentName: 'ritual-quests',
             agentFunc: (toolInput) => generateRitualQuests({ ...toolInput, psyche, workspaceId }),
         }),
