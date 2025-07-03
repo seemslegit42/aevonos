@@ -1,10 +1,10 @@
 
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import TopBar from '@/components/layout/top-bar';
-import type { User, Workspace, UserPsyche } from '@prisma/client';
+import type { User, Workspace, UserPsyche, ActiveSystemEffect } from '@prisma/client';
 import BottomNavBar from './bottom-nav-bar';
 import { useIsMobile } from '@/hooks/use-is-mobile';
 import { cn } from '@/lib/utils';
@@ -19,10 +19,23 @@ interface MainLayoutProps {
   workspace: Workspace | null;
 }
 
+const psycheToTheme: Record<UserPsyche, string> = {
+  [UserPsyche.SYNDICATE_ENFORCER]: 'theme-covenant-motion',
+  [UserPsyche.RISK_AVERSE_ARTISAN]: 'theme-covenant-worship',
+  [UserPsyche.ZEN_ARCHITECT]: 'theme-covenant-silence',
+};
+
+const effectToTheme: Record<string, string> = {
+    'ACROPOLIS_MARBLE': 'theme-acropolis-marble',
+    // Future themes can be added here
+};
+
+
 export function MainLayout({ children, user: dbUser, workspace }: MainLayoutProps) {
   const pathname = usePathname();
   const router = useRouter();
   const { user: firebaseUser, loading: authLoading } = useAuth();
+  const [activeEffects, setActiveEffects] = useState<ActiveSystemEffect[]>([]);
   
   const isPublicPage = ['/login', '/register', '/pricing'].some(p => pathname.startsWith(p));
   const needsOnboarding = firebaseUser && !dbUser && !authLoading && pathname !== '/register/vow';
@@ -39,20 +52,41 @@ export function MainLayout({ children, user: dbUser, workspace }: MainLayoutProp
   }, [authLoading, firebaseUser, isPublicPage, needsOnboarding, pathname, router]);
 
 
+  // Effect for fetching active system effects
   useEffect(() => {
-    const psycheToTheme: Record<UserPsyche, string> = {
-      [UserPsyche.SYNDICATE_ENFORCER]: 'theme-covenant-motion',
-      [UserPsyche.RISK_AVERSE_ARTISAN]: 'theme-covenant-worship',
-      [UserPsyche.ZEN_ARCHITECT]: 'theme-covenant-silence',
+    if (!dbUser) return;
+
+    const fetchEffects = async () => {
+      try {
+        const res = await fetch('/api/workspaces/me/active-effects');
+        if (res.ok) {
+          const data = await res.json();
+          setActiveEffects(data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch system effects:", error);
+      }
     };
     
-    if (dbUser?.psyche) {
-      const themeClass = psycheToTheme[dbUser.psyche];
-      document.documentElement.className = `dark ${themeClass}`;
-    } else {
-      document.documentElement.className = 'dark'; // Default theme
-    }
+    fetchEffects();
+    const interval = setInterval(fetchEffects, 30000); // Check for effects every 30 seconds
+    return () => clearInterval(interval);
+
   }, [dbUser]);
+
+
+  useEffect(() => {
+    // Determine the active theme, with system effects taking priority
+    const activeEffectKey = activeEffects[0]?.cardKey; // Get the most recent active effect
+    const effectTheme = activeEffectKey ? effectToTheme[activeEffectKey] : null;
+
+    const covenantTheme = dbUser?.psyche ? psycheToTheme[dbUser.psyche] : null;
+    
+    const finalTheme = effectTheme || covenantTheme || '';
+
+    document.documentElement.className = `dark ${finalTheme}`.trim();
+    
+  }, [dbUser, activeEffects]);
 
 
   // While checking auth state, show a skeleton.

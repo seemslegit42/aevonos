@@ -56,4 +56,6 @@ import '@/services/vas-service.ts';
 import '@/ai/tools/threat-intelligence-tools.ts';
 import '@/app/user/actions.ts';
 import '@/app/api/user/pulse-profile/route.ts';
+import '@/app/api/workspaces/me/active-effects/route.ts';
+
 
