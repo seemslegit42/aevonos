@@ -4,7 +4,7 @@
 import React, { useEffect, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import TopBar from '@/components/layout/top-bar';
-import type { User, Workspace, UserPsyche, ActiveSystemEffect } from '@prisma/client';
+import { type User, type Workspace, UserPsyche, type ActiveSystemEffect } from '@prisma/client';
 import BottomNavBar from './bottom-nav-bar';
 import { useIsMobile } from '@/hooks/use-is-mobile';
 import { cn } from '@/lib/utils';

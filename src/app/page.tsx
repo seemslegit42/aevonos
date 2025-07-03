@@ -10,8 +10,8 @@ export default async function Home() {
         
         if (!user || !workspace) {
             // User is authenticated with Firebase but doesn't have a DB record yet.
-            // Returning null lets the client-side MainLayout handle the redirect to onboarding.
-            return null;
+            // Returning a placeholder div allows the client-side MainLayout to handle the redirect.
+            return <div className="h-full w-full" />;
         }
     
         // Fetch only the agents needed for the SystemWeave background.
@@ -25,7 +25,7 @@ export default async function Home() {
 
     } catch (error) {
         // This will catch the 'Unauthorized' error from getAuthenticatedUser if no session cookie exists.
-        // Returning null allows the client-side MainLayout to handle redirecting to /login.
-        return null;
+        // Returning a placeholder div allows the client-side MainLayout to handle redirecting to /login.
+        return <div className="h-full w-full" />;
     }
 }
