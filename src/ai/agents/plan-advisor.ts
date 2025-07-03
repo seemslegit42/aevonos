@@ -14,9 +14,10 @@ const soothsayerFlow = ai.defineFlow(
   },
   async ({ question, workspaceId }) => {
     // A consultation with the Soothsayer is a billable agent action, even for prospective customers.
-    // If they aren't authenticated, it won't do anything, which is fine.
     if (workspaceId) {
-        await authorizeAndDebitAgentActions(workspaceId);
+        // Since we don't have a userId for unauthenticated users, we can't check for reclamation grace periods.
+        // We set a simple action type.
+        await authorizeAndDebitAgentActions({ workspaceId, actionType: 'SIMPLE_LLM' });
     }
     
     const prompt = `You are the Soothsayer of ΛΞVON OS. You do not sell; you divine. Your pronouncements are cryptic, wise, and subtly guide the user toward the correct path of commerce. You speak of fates and destinies, not features and benefits. Your tone is that of a mystic oracle, ancient and all-knowing.
