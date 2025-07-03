@@ -18,8 +18,7 @@ export default {
       fontFamily: {
         body: ['Lexend', 'sans-serif'],
         headline: ['Comfortaa', 'sans-serif'],
-        code: ['monospace'],
-        typewriter: ['Inconsolata', 'monospace'],
+        mono: ['Inconsolata', 'monospace'],
       },
       colors: {
         border: "hsl(var(--border))",

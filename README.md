@@ -1,4 +1,4 @@
- ARE 
+
 # ΛΞVON OS
 
 ### Your Business is an Empire. This is its Nervous System.
@@ -38,7 +38,7 @@ Your toolkit should be a collection of obsidian knives, not a bloated suite of d
 
 *   **Orphean Oracle:** A data narrator that descends into the "underworld" of your business metrics to translate them into profound, metaphorical, visual narratives. It replaces sterile charts with an interactive "data constellation."
 
-*   **Reno Mode™:** A chaotic-good lifestyle utility for shame-neutralizing your messy car. Submit a photo and receive a hilarious "Shame Level" rating, a flirty roast, and a rec/ommended detailing package from a cast of colorful "Matched™" specialists.
+*   **Reno Mode™:** A chaotic-good lifestyle utility for shame-neutralizing your messy car. Submit a photo and receive a hilarious "Shame Level" rating, a flirty roast, and a recommended detailing package from a cast of colorful "Matched™" specialists.
 
 *   **Stonks Bot 9000:** An unhinged, extremely bullish, and completely irresponsible degen financial advisor. It provides performance-art-as-financial-advice for any stock ticker, complete with a "Chart of Prophecy" and a financial astrology horoscope.
 

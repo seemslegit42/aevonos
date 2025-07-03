@@ -27,7 +27,7 @@ export default async function RootLayout({
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@400;700&family=Inconsolata:wght@400;700&family=Lexend:wght@300;400;500&display=swap" rel="stylesheet" />
+        <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@400;700&family=Lexend:wght@300;400;500&display=swap" rel="stylesheet" />
       </head>
       <body className="font-body antialiased relative min-h-screen">
         <AuthProvider>
