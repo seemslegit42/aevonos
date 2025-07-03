@@ -57,5 +57,5 @@ import '@/ai/tools/threat-intelligence-tools.ts';
 import '@/app/user/actions.ts';
 import '@/app/api/user/pulse-profile/route.ts';
 import '@/app/api/workspaces/me/active-effects/route.ts';
-
-
+import '@/app/api/covenants/[covenantName]/leaderboard/route.ts';
+import '@/app/api/covenants/[covenantName]/members/route.ts';

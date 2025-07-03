@@ -2,7 +2,6 @@
 import DashboardView from '@/components/dashboard/dashboard-view';
 import { type Agent } from '@prisma/client';
 import { getAuthenticatedUser } from '@/lib/firebase/admin';
-import { redirect } from 'next/navigation';
 import prisma from '@/lib/prisma';
 
 export default async function Home() {
@@ -11,8 +10,10 @@ export default async function Home() {
         return { user: null, workspace: null };
     });
 
+    // If auth fails, return null. The client-side redirect in MainLayout will handle it.
+    // This prevents a server-side redirect from conflicting with the client-side auth flow.
     if (!user || !workspace) {
-        redirect('/login');
+        return null;
     }
     
     // Fetch only the agents needed for the SystemWeave background.
