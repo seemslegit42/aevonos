@@ -121,7 +121,7 @@ export async function processMicroAppPurchase(
   appName: string,
   creditCost: number
 ) {
-  return prisma.$transaction(async (tx) => {
+  await prisma.$transaction(async (tx) => {
     // 1. Validate credits and ownership
     const workspace = await tx.workspace.findUnique({
       where: { id: workspaceId },
@@ -144,9 +144,6 @@ export async function processMicroAppPurchase(
         unlockedAppIds: { push: appId },
       },
     });
-
-    // Invalidate workspace cache
-    await redis.del(`workspace:user:${userId}`);
 
     // 3. Create the transaction log
     await tx.transaction.create({
@@ -174,6 +171,9 @@ export async function processMicroAppPurchase(
       });
     }
   });
+
+  // Invalidate workspace cache after the transaction
+  await redis.del(`workspace:user:${userId}`);
 }
 
 /**

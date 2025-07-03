@@ -4,6 +4,7 @@
  * @fileOverview Service for handling billing and usage tracking.
  */
 import prisma from '@/lib/prisma';
+import redis from '@/lib/redis';
 import { Prisma, TransactionStatus, TransactionType, PlanTier } from '@prisma/client';
 import { aegisAnomalyScan } from '@/ai/agents/aegis';
 import { createSecurityAlertInDb } from '@/ai/tools/security-tools';
@@ -150,6 +151,11 @@ export async function authorizeAndDebitAgentActions(input: AuthorizeAndDebitInpu
             return { remainingBalance: Number(updatedWorkspace.credits), debitAmount: cost, message: `Action successful. ${cost} credits debited.` };
         });
 
+        // Invalidate cache AFTER the transaction is successful
+        if (userId) {
+            await redis.del(`workspace:user:${userId}`);
+        }
+
         return { success: true, remainingBalance, debitAmount, message };
     } catch (error) {
         if (error instanceof InsufficientCreditsError) {
@@ -259,5 +265,3 @@ export async function requestCreditTopUpInDb(input: RequestCreditTopUpInput, use
     return { success: false, message: 'Failed to log your top-up request.' };
   }
 }
-
-    

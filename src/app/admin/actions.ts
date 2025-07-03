@@ -205,10 +205,6 @@ export async function confirmPendingTransactionAction(transactionId: string) {
 
     try {
         await confirmTxService(transactionId, workspace.id);
-        
-        // Invalidate workspace cache to reflect new credit balance
-        await redis.del(`workspace:user:${user.id}`);
-        
         revalidatePath('/');
         return { success: true, message: 'Transaction confirmed.' };
     } catch (e) {
