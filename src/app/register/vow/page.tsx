@@ -6,7 +6,6 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useAuth } from '@/context/AuthContext';
 import { AnimatePresence, motion } from 'framer-motion';
 
 import { Button } from '@/components/ui/button';
@@ -18,6 +17,8 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Loader2, Sparkles, Wand2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { UserPsyche } from '@prisma/client';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '@/lib/firebase/client';
 
 const formSchema = z.object({
   whatMustEnd: z.string().min(10, { message: "Your sacrifice must have meaning. Be more descriptive."}),
@@ -25,6 +26,8 @@ const formSchema = z.object({
   workspaceName: z.string().min(2, { message: "Every empire needs a name." }),
   agentAlias: z.string().min(2, { message: "Your voice must have a name." }),
   psyche: z.nativeEnum(UserPsyche, { errorMap: () => ({ message: "You must choose a path." }) }),
+  email: z.string().email({ message: "A valid email is required." }),
+  password: z.string().min(8, { message: "Your password must be at least 8 characters." }),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -34,6 +37,7 @@ const steps = [
   { id: 'vow', fields: ['goal'], title: 'The Vow', description: "Tell me what you will build." },
   { id: 'naming', fields: ['workspaceName', 'agentAlias'], title: 'The Naming', description: "The system must be named to be commanded." },
   { id: 'covenant', fields: ['psyche'], title: 'The Covenant', description: "Choose your path. This choice is final." },
+  { id: 'key', fields: ['email', 'password'], title: 'The Key', description: "Forge the key to your new OS." },
 ];
 
 const psycheOptions = [
@@ -43,7 +47,6 @@ const psycheOptions = [
 ];
 
 export default function VowPage() {
-    const { user, loading } = useAuth();
     const router = useRouter();
     const { toast } = useToast();
     const [currentStep, setCurrentStep] = useState(0);
@@ -57,17 +60,10 @@ export default function VowPage() {
             workspaceName: '',
             agentAlias: 'BEEP',
             psyche: undefined,
+            email: '',
+            password: '',
         },
     });
-
-    if (loading) {
-        return <div className="flex h-screen w-screen items-center justify-center"><Loader2 className="animate-spin h-12 w-12" /></div>;
-    }
-
-    if (!user) {
-        router.push('/login');
-        return null;
-    }
 
     const handleNext = async () => {
         const fieldsToValidate = steps[currentStep].fields as (keyof FormData)[];
@@ -84,13 +80,10 @@ export default function VowPage() {
     const onSubmit = async (data: FormData) => {
         setIsSubmitting(true);
         try {
-            const token = await user.getIdToken();
-            const response = await fetch('/api/onboarding', {
+            // Step 1: Register user and onboard in one go
+            const response = await fetch('/api/auth/register', {
                 method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data),
             });
 
@@ -100,6 +93,10 @@ export default function VowPage() {
             }
             
             const result = await response.json();
+            
+            // Step 2: Sign in the new user
+            if (!auth) throw new Error("Firebase Auth is not configured.");
+            await signInWithEmailAndPassword(auth, data.email, data.password);
 
             toast({
                 title: "The Pact is Forged.",
@@ -107,7 +104,11 @@ export default function VowPage() {
                 duration: 10000,
             });
 
+            // onAuthStateChanged in AuthContext will handle cookie creation.
+            // The MainLayout will then detect the new user and redirect to '/'.
             router.push('/');
+            router.refresh();
+
         } catch (error) {
             toast({
                 variant: 'destructive',
@@ -167,6 +168,12 @@ export default function VowPage() {
                                             </Label>
                                         ))}
                                     </RadioGroup>
+                                )}
+                                 {currentStep === 4 && (
+                                    <div className="space-y-4">
+                                        <Input {...form.register('email')} type="email" placeholder="Your Email" />
+                                        <Input {...form.register('password')} type="password" placeholder="Your Password" />
+                                    </div>
                                 )}
                                 <AnimatePresence>
                                 {Object.values(form.formState.errors).length > 0 && (

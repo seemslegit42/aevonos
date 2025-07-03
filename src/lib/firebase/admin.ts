@@ -15,7 +15,7 @@ if (!serviceAccountKey) {
   );
 }
 
-// Initialize Firebase Admin only if the service account key is available.
+// Initialize Firebase Admin only if the service account key is available and valid.
 if (serviceAccountKey && !admin.apps.length) {
   try {
       const serviceAccount = JSON.parse(serviceAccountKey);
