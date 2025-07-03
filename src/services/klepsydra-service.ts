@@ -17,7 +17,7 @@ import { InsufficientCreditsError } from '@/lib/errors';
 import { UserPsyche, TransactionType, Prisma, PulseProfile, PulseInteractionType } from '@prisma/client';
 import { differenceInMinutes } from 'date-fns';
 
-const AGE_OF_ASCENSION_ACTIVE = false;
+const AGE_OF_ASCENSION_ACTIVE = true;
 
 const PSYCHE_MODIFIERS: Record<UserPsyche, { oddsFactor: number; boonFactor: number }> = {
     [UserPsyche.ZEN_ARCHITECT]: { oddsFactor: 1.0, boonFactor: 1.0 }, // The baseline experience
@@ -222,6 +222,8 @@ export async function processFollyTribute(
         let systemEffect: string | undefined = undefined;
         let aethericEcho = 0;
         
+        const isCreditWin = selectedBoon.type === 'credits' && (selectedTier.tier !== 'COMMON');
+
         if (selectedBoon.type === 'credits') {
             const calculatedBoon = tributeAmount * (selectedBoon.value as number) * psycheModifiers.boonFactor;
             boonAmount = calculatedBoon;
@@ -246,8 +248,6 @@ export async function processFollyTribute(
         
         // --- Judas Algorithm ---
         let judasFactor = null;
-        // Only apply Judas to credit wins, not card wins
-        const isCreditWin = (outcome !== 'loss' && outcome !== 'common' && selectedBoon.type === 'credits');
         const { flowState } = profile;
         if (isCreditWin && flowState > 0.75 && Math.random() < 0.33) {
             judasFactor = 1 - (Math.random() * 0.15 + 0.05); // Reduce boon by 5-20%
@@ -257,6 +257,31 @@ export async function processFollyTribute(
         // --- End Judas Algorithm ---
 
         const netCreditChange = boonAmount - tributeAmount;
+
+        // --- Potential (Φ) Accrual ---
+        let potentialAwarded = new Prisma.Decimal(0);
+        if (AGE_OF_ASCENSION_ACTIVE && isCreditWin) {
+            potentialAwarded = new Prisma.Decimal(tributeAmount * luckWeight * 0.1);
+            
+            await tx.workspace.update({
+                where: { id: workspaceId },
+                data: {
+                    potential: { increment: potentialAwarded }
+                }
+            });
+
+            await tx.potentialAccrualLog.create({
+                data: {
+                    workspaceId,
+                    userId,
+                    instrumentId,
+                    luckWeight,
+                    potentialAwarded,
+                    narrativeContext: `Potential accrued from tribute to ${instrumentManifest?.name || instrumentId}`
+                }
+            });
+        }
+        // --- End Potential Accrual ---
 
         // 5. ATOMIC DATABASE WRITES 
         (outcome === 'loss' || outcome === 'common') ? await recordLoss(userId, tx) : await recordWin(userId, tx);
