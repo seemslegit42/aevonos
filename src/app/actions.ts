@@ -56,7 +56,7 @@ export async function handleCommand(command: string, activeAppContext?: string):
 
 // Keeping this as a specialized action due to the file upload requirement.
 // The BEEP agent's text-based command stream is not suitable for high-bandwidth data.
-export async function scanEvidence(input: Omit<PaperTrailScanInput, 'workspaceId' | 'userId'>): Promise<PaperTrailScanOutput> {
+export async function scanEvidence(input: Omit<PaperTrailScanInput, 'workspaceId'>): Promise<PaperTrailScanOutput> {
   const { workspace } = await getAuthenticatedUser();
   
   try {
@@ -253,3 +253,5 @@ export async function clearFirstWhisper() {
     console.error(`[Action: clearFirstWhisper] for user ${user.id}:`, error);
   }
 }
+
+    

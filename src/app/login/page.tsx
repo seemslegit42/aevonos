@@ -27,6 +27,12 @@ export default function LoginPage() {
         setError(null);
         setIsLoading(true);
 
+        if (!auth) {
+            setError('Firebase is not configured. Please provide the required API keys in your environment file.');
+            setIsLoading(false);
+            return;
+        }
+
         try {
             await signInWithEmailAndPassword(auth, email, password);
             // onAuthStateChanged in AuthContext will handle session cookie and redirect
@@ -47,6 +53,11 @@ export default function LoginPage() {
     const handleDemoLogin = async () => {
         setError(null);
         setIsLoading(true);
+        if (!auth) {
+            setError('Firebase is not configured. Please provide the required API keys in your environment file.');
+            setIsLoading(false);
+            return;
+        }
         try {
             await signInWithEmailAndPassword(auth, 'architect@aevonos.com', 'password123');
             router.push('/');

@@ -1,7 +1,7 @@
 
 // src/lib/firebase/client.ts
-import { initializeApp, getApps } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
+import { initializeApp, getApps, getApp, type FirebaseApp } from 'firebase/app';
+import { getAuth, type Auth } from 'firebase/auth';
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -12,8 +12,22 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-// Initialize Firebase
-let firebase_app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+let firebase_app: FirebaseApp | null = null;
+let auth: Auth | null = null;
 
-export const auth = getAuth(firebase_app);
+if (firebaseConfig.apiKey && firebaseConfig.apiKey !== "YOUR_API_KEY_HERE") {
+    if (getApps().length === 0) {
+        firebase_app = initializeApp(firebaseConfig);
+    } else {
+        firebase_app = getApp();
+    }
+    auth = getAuth(firebase_app);
+} else {
+    console.warn(
+        '\x1b[33m%s\x1b[0m', // Yellow text
+        'WARNING: NEXT_PUBLIC_FIREBASE_API_KEY is not set. Firebase client features will be disabled.'
+    );
+}
+
+export { auth };
 export default firebase_app;
