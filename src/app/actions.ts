@@ -274,5 +274,3 @@ export async function clearFirstWhisper() {
     console.error(`[Action: clearFirstWhisper] for user ${user.id}:`, error);
   }
 }
-
-    
