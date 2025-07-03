@@ -1,5 +1,4 @@
 
-
 # The Klepsydra Engine: The Profit Pulse
 
 > “Time is not a river. It is a tide. And we are the moon.”
@@ -45,18 +44,16 @@ This is the server-side logic that determines the outcome of every tribute. It i
 3.  **Calculates** the current `luckWeight` based on a sinusoidal pulse wave, incorporating time decay, phase offset, and psychological modifiers (`frustration`, `flowState`).
 4.  **Applies Archetype Modifiers**: The user's chosen `psyche` (Zen Architect, etc.) applies a multiplier to the base odds and potential boon amount, tuning the risk/reward profile.
 5.  **Checks for Pity Boon**: If `consecutiveLosses` exceeds the `PITY_THRESHOLD`, it overrides the odds and forces a small win to prevent user burnout.
-6.  **Triggers Judas Algorithm**: If the user is in a high `flowState`, there is a chance to trigger a "hollow win"—a slightly reduced jackpot—to engineer superstition and prevent hubris.
+6.  **Triggers Judas Algorithm**: If the user's `flowState` is high (e.g., > 0.75), there is a chance (e.g., 33%) to trigger a "hollow win"—a slightly reduced jackpot (5-20% reduction)—to engineer superstition and prevent hubris. The reduction amount is logged as `judasFactor` in the transaction.
 7.  **Determines Outcome**: A random roll against the final, modulated odds determines a `win` or `loss`.
 8.  **Executes Atomic Transaction**: All database changes—updating the user's pulse profile, debiting the tribute, crediting any boon, and logging the immutable `TRIBUTE` transaction—are performed in a single, atomic database transaction to ensure perfect ledger consistency.
 
 ---
 
 ## 4. Integration with the Doctrine of Sovereign Systems
-
 The Klepsydra Engine is the primary driver of the **Tribute Velocity Index (TVI)**. By making economic participation a compelling, narrative-driven ritual rather than a simple purchase, it encourages deeper, more frequent engagement with the ΞCredit economy.
 
-The engine's ability to tune itself based on a user's `psyche` and dynamic psychological state is a direct implementation of the Doctrine's pillar of optimizing for **Return on Belief**. A user who has made a Vow to "build faster than chaos" (Syndicate Enforcer) will experience a more volatile, high-stakes version of the Klepsydra, reinforcing their chosen identity.
+- **BEEP Integration**: BEEP serves as the narrative voice of the Klepsydra Engine, delivering mythic explanations for wins and losses, and providing personalized suggestions based on the user's pulse state.
+- **PCE Integration**: The engine is deeply intertwined with the Psyche Engine. A user's `psyche` sets the baseline risk/reward profile, while their dynamic `frustration` and `flowState` constantly modulate their real-time luck.
 
 The Klepsydra Engine is not a slot machine. It is a carefully calibrated system designed to make **belief** the most valuable currency in ΛΞVON OS.
-
-      

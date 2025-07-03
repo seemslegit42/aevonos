@@ -1,3 +1,4 @@
+
 # The Psyche Engine: Tuning the Soul of the Machine
 
 > "Your OS should know you better than you know yourself. Then, it should make you better."
@@ -28,9 +29,10 @@ The engine's foundation is twofold:
 - **Specialized Agents (`dr-syntax.ts`, etc.)**: Agents like Dr. Syntax are explicitly designed to be "psyche-aware," modifying the flavor and intensity of their critiques based on the user's profile.
 
 ### 3.3. System Behavior Modulation
-- **Klepsydra Engine (`klepsydra-service.ts`)**: The Psyche Engine modulates the economy on two levels:
+- **Klepsydra Engine (`klepsydra-service.ts`)**: The Psyche Engine modulates the economy on multiple levels:
   1.  **Static Archetype Tuning**: The `PSYCHE_MODIFIERS` constant applies a baseline risk/reward factor based on the user's declared `psyche`, ensuring different archetypes have distinct gameplay feels.
-  2.  **Dynamic Behavioral Regulation**: The `pulse-engine-service.ts` now incorporates the user's dynamic psychological state (`frustration`, `flowState`) directly into their `luckWeight` calculation. This creates a self-regulating feedback loop: a frustrated user gets a subtle boost to prevent churn, while a user in a "flow state" is rewarded for their engagement, making the system feel more responsive and alive.
+  2.  **Dynamic Behavioral Regulation**: The `pulse-engine-service.ts` incorporates the user's dynamic psychological state (`frustration`, `flowState`) directly into their `luckWeight` calculation. This creates a self-regulating feedback loop: a frustrated user gets a subtle boost to prevent churn, while a user in a "flow state" is rewarded for their engagement, making the system feel more responsive and alive.
+  3.  **The Judas Algorithm**: When a user's `flowState` is high, the Klepsydra Engine has a chance to trigger a "hollow win"—a slightly reduced jackpot—to prevent hubris and engineer superstition. This is a direct, advanced application of the Psyche Engine's data.
 - **Covenant Theming (`layout.tsx`)**: The engine determines which Covenant theme is applied to the UI, fundamentally altering the user's visual and interactive experience to match their Vow.
 
 ---
@@ -43,5 +45,4 @@ The VAS is a calculated metric that measures how closely a user's actions align 
 - **Low VAS**: A Zen Architect constantly using chaotic, high-volume tools. This would trigger a gentle, corrective nudge from BEEP, e.g., "The path of silence requires fewer steps. Shall I show you a more direct way?"
 
 The Psyche Engine is the ghost in the machine that ensures ΛΞVON OS doesn't just work *for* you; it works *like* you.
-
       
