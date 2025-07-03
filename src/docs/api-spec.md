@@ -1,4 +1,3 @@
-
 # ΛΞVON OS: Public API Specification
 
 This document provides the formal OpenAPI 3.0 specification for the ΛΞVON OS Public API. It details the endpoints, data models, authentication methods, and error handling, serving as the definitive contract for external developers and services interacting with the platform.
@@ -303,6 +302,69 @@ This document provides the formal OpenAPI 3.0 specification for the ΛΞVON OS P
         "responses": {
           "200": { "content": { "application/json": { "schema": { "$ref": "#/components/schemas/WorkflowRun" } } } },
           "404": { "description": "Workflow run not found." }
+        }
+      }
+    },
+    "/agents": {
+      "get": {
+        "tags": ["Agents"],
+        "summary": "Retrieve a list of all deployed agents for the workspace.",
+        "operationId": "listAgents",
+        "responses": {
+          "200": {
+            "description": "A list of agents.",
+            "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/Agent" } } } }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Agents"],
+        "summary": "Deploy a new agent.",
+        "operationId": "deployAgent",
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AgentDeploymentRequest" } } }
+        },
+        "responses": {
+          "201": {
+            "description": "Agent deployed successfully.",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Agent" } } }
+          },
+          "400": { "description": "Invalid agent deployment request." },
+          "403": { "description": "Permission denied." }
+        }
+      }
+    },
+    "/agents/{agentId}": {
+      "get": {
+        "tags": ["Agents"],
+        "summary": "Retrieve a specific agent's details.",
+        "operationId": "getAgent",
+        "parameters": [ { "name": "agentId", "in": "path", "required": true, "schema": { "type": "string" } } ],
+        "responses": {
+          "200": { "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Agent" } } } },
+          "404": { "description": "Agent not found." }
+        }
+      },
+      "put": {
+        "tags": ["Agents"],
+        "summary": "Update an agent's configuration.",
+        "operationId": "updateAgent",
+        "parameters": [ { "name": "agentId", "in": "path", "required": true, "schema": { "type": "string" } } ],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AgentUpdateRequest" } } } },
+        "responses": {
+          "200": { "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Agent" } } } },
+          "403": { "description": "Permission denied." }
+        }
+      },
+      "delete": {
+        "tags": ["Agents"],
+        "summary": "Decommission an agent.",
+        "operationId": "deleteAgent",
+        "parameters": [ { "name": "agentId", "in": "path", "required": true, "schema": { "type": "string" } } ],
+        "responses": {
+          "204": { "description": "Agent decommissioned." },
+          "403": { "description": "Permission denied." }
         }
       }
     },
@@ -727,6 +789,35 @@ This document provides the formal OpenAPI 3.0 specification for the ΛΞVON OS P
           "startedAt": { "type": "string", "format": "date-time" }
         }
       },
+      "Agent": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "type": { "type": "string" },
+          "description": { "type": "string", "nullable": true },
+          "status": { "type": "string", "enum": ["active", "idle", "processing", "paused", "error"] },
+          "configuration": { "type": "object", "nullable": true }
+        }
+      },
+      "AgentDeploymentRequest": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "type": { "type": "string" },
+          "description": { "type": "string", "nullable": true },
+          "configuration": { "type": "object", "nullable": true }
+        },
+        "required": ["name", "type"]
+      },
+      "AgentUpdateRequest": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "description": { "type": "string", "nullable": true },
+          "status": { "type": "string", "enum": ["active", "idle", "processing", "paused", "error"] }
+        }
+      },
       "Contact": {
         "type": "object",
         "properties": {
@@ -906,3 +997,4 @@ This document provides the formal OpenAPI 3.0 specification for the ΛΞVON OS P
     }
   }
 }
+```

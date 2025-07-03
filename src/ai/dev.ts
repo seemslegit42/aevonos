@@ -66,3 +66,5 @@ import '@/app/api/security/edicts/route.ts';
 import '@/app/actions.ts';
 import '@/ai/agents/crm-agent.ts';
 import '@/ai/agents/crm-agent-schemas.ts';
+import '@/app/api/agents/route.ts';
+import '@/app/api/agents/[agentId]/route.ts';
