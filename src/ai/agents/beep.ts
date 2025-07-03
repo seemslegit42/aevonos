@@ -447,7 +447,7 @@ workflow.addConditionalEdges('burn_bridge_protocol_node', shouldContinue, {
 
 
 workflow.addEdge('tools', 'scan_tool_output');
-workflow.addEdge('scan_tool_output', 'router');
+workflow.addEdge('scan_tool_output', 'agent_reasoner'); // Always go to reasoner after tool output
 
 const app = workflow.compile();
 

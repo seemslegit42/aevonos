@@ -101,6 +101,7 @@ export async function POST(request: Request) {
                 corePainIndex: invocationResult.corePainIndex,
                 foundingBenediction: invocationResult.foundingBenediction,
                 firstWhisper: invocationResult.firstWhisper,
+                firstCommand: invocationResult.firstCommand,
             }
         });
         benediction = invocationResult.foundingBenediction;
@@ -118,3 +119,4 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'An internal server error occurred.' }, { status: 500 });
   }
 }
+```

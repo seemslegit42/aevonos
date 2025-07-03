@@ -1,14 +1,13 @@
-
 'use client';
 
 import { useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { clearFirstWhisper } from '@/app/actions';
-import type { User, UserPsyche } from '@prisma/client';
+import type { User } from '@prisma/client';
 import { Button } from '../ui/button';
 import { useAppStore } from '@/store/app-store';
 
-type UserProp = Pick<User, 'id' | 'email' | 'firstName' | 'lastName' | 'role' | 'agentAlias' | 'psyche' | 'firstWhisper'> | null;
+type UserProp = Pick<User, 'id' | 'email' | 'firstName' | 'lastName' | 'role' | 'agentAlias' | 'psyche' | 'firstWhisper' | 'firstCommand'> | null;
 
 export function FirstWhisperHandler({ user }: { user: UserProp }) {
   const { toast } = useToast();
@@ -23,7 +22,9 @@ export function FirstWhisperHandler({ user }: { user: UserProp }) {
         action: (
           <div className="flex flex-col gap-2">
             <Button size="sm" onClick={() => {
-              handleCommandSubmit("launch loom studio with a blank template");
+              if (user.firstCommand) {
+                  handleCommandSubmit(user.firstCommand);
+              }
               dismiss();
               clearFirstWhisper();
             }}>

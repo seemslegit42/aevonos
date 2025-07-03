@@ -44,7 +44,6 @@ import { getStonksAdvice } from '../agents/stonks-bot';
 import { analyzeCarShame } from '@/ai/agents/reno-mode';
 import { processPatricktAction } from '../agents/patrickt-agent';
 import { consultInventoryDaemon } from '../agents/inventory-daemon';
-import { executeBurnBridgeProtocol } from '../agents/burn-bridge-agent';
 import { generateRitualQuests } from '../agents/ritual-quests-agent';
 
 
@@ -91,7 +90,6 @@ import { StonksBotInputSchema } from '../agents/stonks-bot-schemas';
 import { RenoModeAnalysisInputSchema } from '../agents/reno-mode-schemas';
 import { PatricktAgentInputSchema } from '../agents/patrickt-agent-schemas';
 import { InventoryDaemonInputSchema } from '../agents/inventory-daemon-schemas';
-import { BurnBridgeInputSchema } from '../agents/burn-bridge-schemas';
 import { FindUsersByVowInputSchema, ManageSyndicateInputSchema } from '@/ai/tools/demiurge-schemas';
 import { RitualQuestInputSchema } from '../agents/ritual-quests-schemas';
 import { TransmuteCreditsInputSchema } from '../tools/proxy-schemas';

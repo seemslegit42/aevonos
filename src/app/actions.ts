@@ -1,4 +1,3 @@
-
 'use server';
 
 import { processUserCommand } from '@/ai/agents/beep';
@@ -268,7 +267,10 @@ export async function clearFirstWhisper() {
   try {
     await prisma.user.update({
       where: { id: user.id },
-      data: { firstWhisper: null },
+      data: { 
+        firstWhisper: null,
+        firstCommand: null,
+      },
     });
   } catch (error) {
     console.error(`[Action: clearFirstWhisper] for user ${user.id}:`, error);
