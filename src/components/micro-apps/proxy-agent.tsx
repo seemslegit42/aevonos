@@ -8,6 +8,7 @@ import { Fingerprint, Check, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Separator } from '../ui/separator';
 import { useAppStore } from '@/store/app-store';
+import { transmuteCreditsViaProxy } from '@/app/actions';
 
 const EXCHANGE_RATE = 10000;
 const TRANSMUTATION_TITHE = 0.15;
@@ -20,8 +21,9 @@ interface ProxyAgentProps {
 }
 
 export default function ProxyAgent({ id, vendor = 'The Alchemist Bar', amount = 175, currency = 'CAD' }: ProxyAgentProps) {
-  const { handleCommandSubmit, isLoading, closeApp } = useAppStore();
+  const { closeApp } = useAppStore();
   const { toast } = useToast();
+  const [isProcessing, setIsProcessing] = useState(false);
   const [isAuthorized, setIsAuthorized] = useState(false);
 
   const baseCost = amount * EXCHANGE_RATE;
@@ -29,22 +31,26 @@ export default function ProxyAgent({ id, vendor = 'The Alchemist Bar', amount = 
   const totalDebit = baseCost + tithe;
 
   const handleAuthorize = async () => {
-    const command = `transmute ${amount} ${currency} for ${vendor}`;
-    await handleCommandSubmit(command);
+    setIsProcessing(true);
     
-    // The store doesn't easily return success/failure here.
-    // We'll just assume success for the UI change for now.
-    // A more robust solution would listen for the specific agent report.
-    setIsAuthorized(true);
-    toast({
-        title: "Tribute Authorized",
-        description: `Your tribute of ${amount.toFixed(2)} ${currency} to ${vendor} has been sent for fulfillment.`,
-    });
+    const result = await transmuteCreditsViaProxy({ amount, vendor, currency });
 
-    // Close the app after a delay to show the success state.
-    setTimeout(() => {
-        closeApp(id);
-    }, 2000);
+    if (result.success) {
+        setIsAuthorized(true);
+        toast({
+            title: "Tribute Authorized",
+            description: result.message,
+        });
+        setTimeout(() => closeApp(id), 2000);
+    } else {
+        toast({
+            variant: 'destructive',
+            title: "Tribute Failed",
+            description: result.error,
+        });
+    }
+
+    setIsProcessing(false);
   };
 
   if (isAuthorized) {
@@ -87,8 +93,8 @@ export default function ProxyAgent({ id, vendor = 'The Alchemist Bar', amount = 
                          <span className="font-mono">{totalDebit.toLocaleString()} Ξ</span>
                      </div>
                 </div>
-                <Button size="lg" className="w-full mt-4" onClick={handleAuthorize} disabled={isLoading}>
-                    {isLoading ? <Loader2 className="animate-spin" /> : <Fingerprint className="mr-2" />}
+                <Button size="lg" className="w-full mt-4" onClick={handleAuthorize} disabled={isProcessing}>
+                    {isProcessing ? <Loader2 className="animate-spin" /> : <Fingerprint className="mr-2" />}
                     AUTHORIZE WITH BIOMETRIC SIGNATURE
                 </Button>
             </CardContent>

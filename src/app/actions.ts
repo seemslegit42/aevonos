@@ -6,7 +6,8 @@ import type { UserCommandOutput } from '@/ai/agents/beep-schemas';
 import { revalidatePath } from 'next/cache';
 import { scanEvidence as scanEvidenceFlow, type PaperTrailScanInput, type PaperTrailScanOutput } from '@/ai/agents/paper-trail';
 import { getAuthenticatedUser } from '@/lib/firebase/admin';
-import { processMicroAppPurchase } from '@/services/ledger-service';
+import { processMicroAppPurchase, transmuteCredits } from '@/services/ledger-service';
+import { TransmuteCreditsInputSchema } from '@/ai/tools/ledger-schemas';
 import { z } from 'zod';
 import { requestCreditTopUpInDb } from '@/services/billing-service';
 import { artifactManifests } from '@/config/artifacts';
@@ -187,6 +188,25 @@ export async function makeFollyTribute(instrumentId: string, tributeAmount?: num
     const errorMessage = error instanceof Error ? error.message : 'Failed to complete tribute.';
     return { success: false, error: errorMessage };
   }
+}
+
+export async function transmuteCreditsViaProxy(input: z.infer<typeof TransmuteCreditsInputSchema>) {
+    const { user, workspace } = await getAuthenticatedUser();
+    if (!user || !workspace) {
+        return { success: false, error: 'Authentication failed.' };
+    }
+    if (user.id !== workspace.ownerId) {
+        return { success: false, error: 'Forbidden: Only the workspace Architect can perform transmutations.' };
+    }
+    
+    try {
+        const result = await transmuteCredits(input, workspace.id, user.id);
+        revalidatePath('/'); // Revalidate to update credit balance
+        return { ...result };
+    } catch (error) {
+        const errorMessage = error instanceof InsufficientCreditsError ? error.message : 'Transmutation failed.';
+        return { success: false, error: errorMessage };
+    }
 }
 
 

@@ -63,4 +63,5 @@ import '@/app/api/workspaces/me/economy-stats/route.ts';
 import '@/app/api/admin/economic-pulse/route.ts';
 import '@/ai/agents/vault-daemon.ts';
 import '@/app/api/security/edicts/route.ts';
+import '@/app/actions.ts';
     
