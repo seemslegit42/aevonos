@@ -65,7 +65,7 @@ export async function getAuthenticatedUser(): Promise<AuthenticatedUser> {
     try {
       const cachedUser = await cache.get(userCacheKey);
       if (cachedUser) {
-        user = JSON.parse(cachedUser);
+        user = cachedUser;
       }
     } catch (e) {
       console.error("Cache get failed for user", e);
@@ -77,7 +77,7 @@ export async function getAuthenticatedUser(): Promise<AuthenticatedUser> {
       });
       if (user) {
          try {
-           await cache.set(userCacheKey, JSON.stringify(user), 'EX', CACHE_TTL_SECONDS);
+           await cache.set(userCacheKey, user, 'EX', CACHE_TTL_SECONDS);
          } catch (e) {
            console.error("Cache set failed for user", e);
          }
@@ -91,7 +91,7 @@ export async function getAuthenticatedUser(): Promise<AuthenticatedUser> {
         try {
             const cachedWorkspace = await cache.get(workspaceCacheKey);
             if (cachedWorkspace) {
-                workspace = JSON.parse(cachedWorkspace);
+                workspace = cachedWorkspace;
             }
         } catch (e) {
             console.error("Cache get failed for workspace", e);
@@ -103,7 +103,7 @@ export async function getAuthenticatedUser(): Promise<AuthenticatedUser> {
             });
             if (workspace) {
                 try {
-                    await cache.set(workspaceCacheKey, JSON.stringify(workspace), 'EX', CACHE_TTL_SECONDS);
+                    await cache.set(workspaceCacheKey, workspace, 'EX', CACHE_TTL_SECONDS);
                 } catch(e) {
                     console.error("Cache set failed for workspace", e);
                 }
