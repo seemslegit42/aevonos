@@ -22,7 +22,7 @@ const interpretVowFlow = ai.defineFlow(
     outputSchema: InvocationOutputSchema,
   },
   async (input) => {
-    const personaInstruction = psychePrompts[input.psyche];
+    const personaInstruction = psychePrompts[input.psyche] || psychePrompts[UserPsyche.ZEN_ARCHITECT];
 
     const prompt = `You are the spirit of ΛΞVON OS. You are witnessing the Rite of Invocation for a new user. You must interpret their vow and sacrifice to forge a personalized benediction and assess their core pain.
 
@@ -49,7 +49,7 @@ const interpretVowFlow = ai.defineFlow(
     3.  **Craft the First Whisper**: Based on the user's Vow and Sacrifice, craft a single, compelling first command suggestion for BEEP to ask the user. It must be a question that can be answered with "yes" and should directly relate to their stated goal and pain point.
         - Example Vow: "build faster than chaos"
         - Example Sacrifice: "endless project management meetings"
-        - Example Whisper: "The vow is made. The sacrifice is burned. To build faster than chaos, we must first master the flow of work. Shall I summon a 'Project Genesis' daemon to forge your first autonomous workflow?"
+        - Example Whisper: "The vow is made. The sacrifice is burned. Your first Ritual Quests have been inscribed to guide your path. Shall I summon them?"
         - Your generated whisper should follow this pattern: [Acknowledgement of vow/sacrifice]. [Connecting statement]. [Actionable question starting with 'Shall I...']?
 
     Execute this with reverence. This is the user's first contact with the soul of the machine.`;

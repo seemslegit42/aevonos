@@ -32,6 +32,7 @@ import { RenoModeAnalysisOutput } from '@/ai/agents/reno-mode-schemas';
 import { PatricktAgentOutput } from '@/ai/agents/patrickt-agent-schemas';
 import { VinDieselOutput } from '@/ai/agents/vin-diesel-schemas';
 import { InventoryDaemonOutput } from '@/ai/agents/inventory-daemon-schemas';
+import { RitualQuestOutput } from '@/ai/agents/ritual-quests-schemas';
 import { artifactManifests } from '@/config/artifacts';
 
 enableMapSet();
@@ -252,6 +253,12 @@ const agentReportHandlers: AgentReportHandlers = {
   },
   'inventory-daemon': (report: InventoryDaemonOutput, store) => {
       // The daemon's response is part of BEEP's responseText, not a new app
+  },
+  'ritual-quests': (report: RitualQuestOutput, store) => {
+    store.upsertApp('ritual-quests', {
+      id: 'singleton-ritual-quests',
+      contentProps: report,
+    });
   },
   'crm': (report: CrmAgentReport, store) => {
     if (report.action === 'list') {

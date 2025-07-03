@@ -30,6 +30,8 @@ const generateRitualQuestsFlow = ai.defineFlow(
     // This is a simple, low-cost generation.
     await authorizeAndDebitAgentActions({ workspaceId, actionType: 'SIMPLE_LLM' });
 
+    const psycheInstruction = psychePrompts[psyche] || psychePrompts[UserPsyche.ZEN_ARCHITECT];
+
     const prompt = `You are the Chronicler of Vows for ΛΞVON OS. Your purpose is to generate 3-4 personalized "Ritual Quests" for a user based on their chosen psychological path (their Covenant).
 
     The user's path is: **${psyche}**.

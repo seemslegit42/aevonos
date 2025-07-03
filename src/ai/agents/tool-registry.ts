@@ -164,7 +164,7 @@ export async function getTools(context: AgentContext): Promise<Tool[]> {
         createAgentTool({
             name: 'getRitualQuests',
             description: "Fetches the user's current Ritual Quests based on their Covenant. Use when the user asks for their quests or what they should do next.",
-            schema: RitualQuestInputSchema,
+            schema: RitualQuestInputSchema.omit({ psyche: true, workspaceId: true }),
             agentName: 'ritual-quests',
             agentFunc: (toolInput) => generateRitualQuests({ ...toolInput, psyche, workspaceId }),
         }),
