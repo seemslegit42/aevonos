@@ -38,6 +38,7 @@ import '@/ai/agents/kendra.ts';
 import '@/ai/agents/plan-advisor.ts';
 import '@/services/ledger-service.ts';
 import '@/ai/agents/stonks-bot.ts';
+import '@/ai/agents/stonks-bot-cache.ts';
 import '@/ai/tools/finance-tools.ts';
 import '@/ai/agents/reno-mode.ts';
 import '@/ai/agents/patrickt-agent.ts';
@@ -64,4 +65,3 @@ import '@/app/api/admin/economic-pulse/route.ts';
 import '@/ai/agents/vault-daemon.ts';
 import '@/app/api/security/edicts/route.ts';
 import '@/app/actions.ts';
-    

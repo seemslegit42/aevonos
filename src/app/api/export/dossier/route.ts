@@ -5,7 +5,7 @@ import { generateDossier } from '@/ai/agents/dossier-agent';
 import { DossierInputSchema } from '@/ai/agents/dossier-schemas';
 import { pdf } from 'md-to-pdf';
 import CryptoJS from 'crypto-js';
-import { getServerActionSession } from '@/lib/auth';
+import { getAuthenticatedUser } from '@/lib/firebase/admin';
 
 const ExportRequestSchema = z.object({
   format: z.enum(['pdf', 'json']),
@@ -17,7 +17,12 @@ const ExportRequestSchema = z.object({
 
 export async function POST(request: NextRequest) {
     try {
-        const sessionUser = await getServerActionSession();
+        const { user: sessionUser, workspace } = await getAuthenticatedUser();
+        
+        if (!sessionUser || !workspace) {
+            return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 });
+        }
+
         const body = await request.json();
         const validation = ExportRequestSchema.safeParse(body);
 
@@ -33,7 +38,7 @@ export async function POST(request: NextRequest) {
         
         const fullDossierInput = {
             ...dossierInput,
-            workspaceId: sessionUser.workspaceId,
+            workspaceId: workspace.id,
             userId: sessionUser.id,
         };
         

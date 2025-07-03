@@ -104,7 +104,7 @@ const vinDieselValidationFlow = ai.defineFlow(
     const { output } = await ai.generate({
         prompt: `You are VIN Diesel, the agentic compliance expert. Your job is to analyze a validated VIN and present the findings with swagger and confidence.
     
-        The decoded vehicle information is:
+        const decoded vehicle information is:
         - Make: ${decodedInfo.make}
         - Model: ${decodedInfo.model}
         - Year: ${decodedInfo.year}
