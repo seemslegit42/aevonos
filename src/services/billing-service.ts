@@ -12,6 +12,7 @@ import { PLAN_LIMITS } from '@/config/billing';
 import { InsufficientCreditsError } from '@/lib/errors';
 import type { BillingUsage, RequestCreditTopUpInput, RequestCreditTopUpOutput } from '@/ai/tools/billing-schemas';
 import { z } from 'zod';
+import CryptoJS from 'crypto-js';
 
 export const ActionTypeSchema = z.enum([
     'SIMPLE_LLM',
@@ -58,6 +59,7 @@ export type AuthorizeAndDebitOutput = z.infer<typeof AuthorizeAndDebitOutputSche
  */
 export async function authorizeAndDebitAgentActions(input: AuthorizeAndDebitInput): Promise<AuthorizeAndDebitOutput> {
     const { workspaceId, userId, actionType, costMultiplier } = AuthorizeAndDebitInputSchema.parse(input);
+    const signatureSecret = process.env.AEGIS_SIGNING_SECRET || 'default_secret_for_dev';
 
     if (!workspaceId) {
         throw new Error("[Billing Service] Attempted to authorize agent actions without a workspaceId.");
@@ -136,6 +138,14 @@ export async function authorizeAndDebitAgentActions(input: AuthorizeAndDebitInpu
                     },
                 },
             });
+            
+            const transactionDataForSigning = {
+                workspaceId, userId, type: TransactionType.DEBIT,
+                amount: new Prisma.Decimal(cost).toFixed(8),
+                description: `Agent Action: ${actionType} (x${costMultiplier || 1})`,
+                timestamp: new Date().toISOString()
+            };
+            const signature = CryptoJS.HmacSHA256(JSON.stringify(transactionDataForSigning), signatureSecret).toString();
 
             await tx.transaction.create({
                 data: {
@@ -145,6 +155,7 @@ export async function authorizeAndDebitAgentActions(input: AuthorizeAndDebitInpu
                     amount: new Prisma.Decimal(cost),
                     description: `Agent Action: ${actionType} (x${costMultiplier || 1})`,
                     status: TransactionStatus.COMPLETED,
+                    aegisSignature: signature,
                 },
             });
 
@@ -221,6 +232,8 @@ export async function requestCreditTopUpInDb(input: RequestCreditTopUpInput, use
   const user = await prisma.user.findUnique({ where: { id: userId } });
   if (!user) throw new Error("User not found.");
 
+  const signatureSecret = process.env.AEGIS_SIGNING_SECRET || 'default_secret_for_dev';
+
   // This is a free action for the user, but we can still run a security check.
   try {
     const anomalyReport = await aegisAnomalyScan({
@@ -243,6 +256,16 @@ export async function requestCreditTopUpInDb(input: RequestCreditTopUpInput, use
       );
     }
 
+    const description = `User-initiated e-Transfer top-up request for ${amount.toLocaleString()} credits.`;
+    const transactionDataForSigning = {
+        workspaceId, userId, type: TransactionType.CREDIT,
+        amount: new Prisma.Decimal(amount).toFixed(8),
+        description,
+        timestamp: new Date().toISOString()
+    };
+    const signature = CryptoJS.HmacSHA256(JSON.stringify(transactionDataForSigning), signatureSecret).toString();
+
+
     await prisma.transaction.create({
       data: {
         workspaceId,
@@ -250,7 +273,8 @@ export async function requestCreditTopUpInDb(input: RequestCreditTopUpInput, use
         type: TransactionType.CREDIT,
         status: TransactionStatus.PENDING,
         amount,
-        description: `User-initiated e-Transfer top-up request for ${amount.toLocaleString()} credits.`,
+        description,
+        aegisSignature: signature,
       },
     });
 

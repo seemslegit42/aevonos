@@ -13,6 +13,7 @@ import { InsufficientCreditsError } from '@/lib/errors';
 import { CreateManualTransactionInputSchema, TransmuteCreditsInputSchema } from '@/ai/tools/ledger-schemas';
 import { differenceInMinutes } from 'date-fns';
 import { artifactManifests } from '@/config/artifacts';
+import CryptoJS from 'crypto-js';
 
 const CreateTransactionInputSchema = z.object({
   workspaceId: z.string(),
@@ -38,6 +39,7 @@ const TRANSMUTATION_TITHE = 0.15; // 15%
  */
 async function createTransaction(input: CreateTransactionInput) {
     const { workspaceId, type, amount, description, userId, agentId, instrumentId } = CreateTransactionInputSchema.parse(input);
+    const signatureSecret = process.env.AEGIS_SIGNING_SECRET || 'default_secret_for_dev';
 
     try {
         const result = await prisma.$transaction(async (tx) => {
@@ -50,8 +52,7 @@ async function createTransaction(input: CreateTransactionInput) {
                     throw new InsufficientCreditsError('Insufficient credits for this transaction.');
                 }
             }
-
-            // 1. Update the workspace's credit balance.
+            
             await tx.workspace.update({
                 where: { id: workspaceId },
                 data: {
@@ -61,7 +62,15 @@ async function createTransaction(input: CreateTransactionInput) {
                 },
             });
 
-            // 2. Create the transaction log entry.
+            const transactionDataForSigning = {
+                workspaceId, type,
+                amount: new Prisma.Decimal(amount).toFixed(8),
+                description,
+                timestamp: new Date().toISOString(),
+                userId, instrumentId
+            };
+            const signature = CryptoJS.HmacSHA256(JSON.stringify(transactionDataForSigning), signatureSecret).toString();
+
             const transaction = await tx.transaction.create({
                 data: {
                     workspaceId,
@@ -72,13 +81,13 @@ async function createTransaction(input: CreateTransactionInput) {
                     agentId,
                     instrumentId,
                     status: TransactionStatus.COMPLETED,
+                    aegisSignature: signature,
                 },
             });
             
             return transaction;
         });
         
-        // Invalidate workspace cache on any transaction
         if (userId) {
             await redis.del(`workspace:user:${userId}`);
         }
@@ -103,8 +112,6 @@ export async function createManualTransaction(
   workspaceId: string,
   userId: string
 ): Promise<Transaction> {
-  // A manual transaction initiated by a user command shouldn't cost an extra agent action.
-  // The "cost" is the transaction itself.
   return createTransaction({
     ...input,
     workspaceId,
@@ -124,6 +131,8 @@ export async function processMicroAppPurchase(
   appName: string,
   creditCost: number
 ) {
+  const signatureSecret = process.env.AEGIS_SIGNING_SECRET || 'default_secret_for_dev';
+
   await prisma.$transaction(async (tx) => {
     // 1. Validate credits and ownership
     const workspace = await tx.workspace.findUnique({
@@ -147,6 +156,16 @@ export async function processMicroAppPurchase(
         unlockedAppIds: { push: appId },
       },
     });
+    
+    const description = `Micro-App Unlock: ${appName}`;
+    const transactionDataForSigning = {
+        workspaceId, userId, instrumentId: appId,
+        type: TransactionType.DEBIT,
+        amount: new Prisma.Decimal(creditCost).toFixed(8),
+        description,
+        timestamp: new Date().toISOString()
+    };
+    const signature = CryptoJS.HmacSHA256(JSON.stringify(transactionDataForSigning), signatureSecret).toString();
 
     // 3. Create the transaction log
     await tx.transaction.create({
@@ -155,9 +174,10 @@ export async function processMicroAppPurchase(
         userId,
         type: TransactionType.DEBIT,
         amount: creditCost,
-        description: `Micro-App Unlock: ${appName}`,
+        description,
         instrumentId: appId,
         status: 'COMPLETED',
+        aegisSignature: signature,
       },
     });
 
@@ -264,6 +284,7 @@ export async function transmuteCredits(
   userId: string
 ): Promise<z.infer<typeof TransmuteCreditsOutputSchema>> {
   const { amount, vendor, currency } = TransmuteCreditsInputSchema.parse(input);
+  const signatureSecret = process.env.AEGIS_SIGNING_SECRET || 'default_secret_for_dev';
 
   const baseCost = amount * EXCHANGE_RATE;
   const tithe = baseCost * TRANSMUTATION_TITHE;
@@ -285,15 +306,25 @@ export async function transmuteCredits(
         data: { credits: { decrement: totalDebit } },
       });
 
+      const description = `Transmuted ${amount.toFixed(2)} ${currency} for tribute to ${vendor}. Tithe: ${tithe.toLocaleString()} Ξ.`;
+      const transactionDataForSigning = {
+            workspaceId, userId, type: TransactionType.DEBIT,
+            amount: new Prisma.Decimal(totalDebit).toFixed(8),
+            description, instrumentId: 'PROXY_AGENT',
+            timestamp: new Date().toISOString()
+      };
+      const signature = CryptoJS.HmacSHA256(JSON.stringify(transactionDataForSigning), signatureSecret).toString();
+
       await tx.transaction.create({
         data: {
           workspaceId,
           userId,
           type: TransactionType.DEBIT,
           amount: new Prisma.Decimal(totalDebit),
-          description: `Transmuted ${amount.toFixed(2)} ${currency} for tribute to ${vendor}. Tithe: ${tithe.toLocaleString()} Ξ.`,
+          description,
           status: 'COMPLETED',
-          instrumentId: 'PROXY_AGENT'
+          instrumentId: 'PROXY_AGENT',
+          aegisSignature: signature,
         },
       });
 
