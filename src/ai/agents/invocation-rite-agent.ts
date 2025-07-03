@@ -65,4 +65,3 @@ const interpretVowFlow = ai.defineFlow(
 export async function interpretVow(input: InvocationInput): Promise<InvocationOutput> {
   return interpretVowFlow(input);
 }
-```

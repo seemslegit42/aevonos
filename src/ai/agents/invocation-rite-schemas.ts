@@ -17,4 +17,3 @@ export const InvocationOutputSchema = z.object({
   firstCommand: z.string().describe("The specific BEEP command to execute if the user accepts the whisper."),
 });
 export type InvocationOutput = z.infer<typeof InvocationOutputSchema>;
-```
