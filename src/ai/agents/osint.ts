@@ -140,7 +140,7 @@ export async function performOsintScan(input: OsintInput): Promise<OsintOutput> 
 - **Initial Context**: "${context || 'No additional context provided.'}"
 
 **Execution Plan:**
-1.  **Analyze** the initial context. Use the provided tools to gather intelligence. You can and should chain tool calls. For example, scrape a website, extract an email, then check that email for breaches.
+1.  **Analyze** the initial context. If the context contains URLs (like social media profiles or personal websites), use the \`runFirecrawlerScan\` tool to scrape their content for additional information like emails, phone numbers, or other associates. Then, use your other tools to investigate the information you find. You can and should chain tool calls.
 2.  **Reason** about the results of each tool call. Does the information from one tool open up new avenues for investigation with another tool?
 3.  **Synthesize** all gathered intelligence. Do not just list tool outputs. Create a coherent narrative.
 4.  **Conclude**: Once you are confident you have exhausted all leads or gathered sufficient intelligence, you MUST call the \`final_answer_osint\` tool with the complete, structured report. This is your final action.
