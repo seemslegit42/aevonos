@@ -19,8 +19,8 @@ The Pantheon is the visual embodiment of the principle that a workspace is not j
 The Pantheon is not a standalone app but the central, default tab within the `AdminConsole` Micro-App, summoned by the BEEP command, "reveal the Pantheon."
 
 ### 2.2. The `UserManagementTab` Component (`micro-apps/admin-console/UserManagementTab.tsx`)
-- **Soul Mapping**: The tab fetches and displays all users in the workspace as a dynamic, 3D "star-chart" or a grid of `UserCard` components.
-- **`UserCard` Component**: Each card is a rich summary of a user's identity within the OS, displaying their name, email, role, chosen psyche, and agent alias.
+- **Soul Mapping**: The tab fetches and displays all users in the workspace as a dynamic, interactive 3D "star-chart". Each star represents a user, color-coded by their chosen Covenant.
+- **`UserCard` Component**: Clicking on a star reveals a rich `UserCard`, which serves as a detailed summary of that user's identity within the OS. It displays their name, email, role, chosen psyche, and agent alias.
 - **Architectural Decrees**: The card contains a dropdown menu of privileged actions available only to the Architect:
   - **Bestow Rank**: Allows the Architect to change a user's `role` (e.g., from `OPERATOR` to `MANAGER`).
   - **Exile Soul**: Allows the Architect to remove a user from the workspace entirely.
