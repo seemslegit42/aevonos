@@ -1,6 +1,7 @@
+
 ---
 
-🪨 ΛΞVON OS: The Core Manifesto
+🪨 ΛΞVON OS: The Core Doctrine
 
 The Agentic OS for the Age of Autonomous Workflows
 
