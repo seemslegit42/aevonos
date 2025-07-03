@@ -15,7 +15,7 @@ This document provides a concise, high-level overview of the ΛΞVON OS codebase
     *   **AI/Agents**: Genkit, LangGraph, Groq (for LLM inference)
     *   **Database**: PostgreSQL (via Neon) with Prisma ORM
     *   **Authentication**: Firebase
-    *   **State Management**: Zustand (client-side), Redis (server-side caching)
+    *   **State Management**: Zustand (client-side), Memcached (server-side caching)
 *   **Deployment**: Production environment is Vercel. Firebase App Hosting is also configured.
 
 ---

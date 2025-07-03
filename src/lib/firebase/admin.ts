@@ -1,10 +1,9 @@
-
 // src/lib/firebase/admin.ts
 import admin from 'firebase-admin';
 import { cookies } from 'next/headers';
 import prisma from '@/lib/prisma';
 import type { User as PrismaUser, Workspace as PrismaWorkspace } from '@prisma/client';
-import redis from '@/lib/redis';
+import cache from '@/lib/redis';
 
 const serviceAccountKey = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
 
@@ -63,16 +62,25 @@ export async function getAuthenticatedUser(): Promise<AuthenticatedUser> {
     // --- User Caching ---
     const userCacheKey = `user:${decodedToken.uid}`;
     let user: PrismaUser | null = null;
-    const cachedUser = await redis.get(userCacheKey);
-
-    if (cachedUser) {
-      user = JSON.parse(cachedUser);
-    } else {
+    try {
+      const cachedUser = await cache.get(userCacheKey);
+      if (cachedUser) {
+        user = JSON.parse(cachedUser);
+      }
+    } catch (e) {
+      console.error("Cache get failed for user", e);
+    }
+    
+    if (!user) {
       user = await prisma.user.findUnique({
         where: { id: decodedToken.uid },
       });
       if (user) {
-        await redis.set(userCacheKey, JSON.stringify(user), 'EX', CACHE_TTL_SECONDS);
+         try {
+           await cache.set(userCacheKey, JSON.stringify(user), 'EX', CACHE_TTL_SECONDS);
+         } catch (e) {
+           console.error("Cache set failed for user", e);
+         }
       }
     }
 
@@ -80,16 +88,25 @@ export async function getAuthenticatedUser(): Promise<AuthenticatedUser> {
     let workspace: PrismaWorkspace | null = null;
     if (user) {
         const workspaceCacheKey = `workspace:user:${user.id}`;
-        const cachedWorkspace = await redis.get(workspaceCacheKey);
+        try {
+            const cachedWorkspace = await cache.get(workspaceCacheKey);
+            if (cachedWorkspace) {
+                workspace = JSON.parse(cachedWorkspace);
+            }
+        } catch (e) {
+            console.error("Cache get failed for workspace", e);
+        }
 
-        if (cachedWorkspace) {
-            workspace = JSON.parse(cachedWorkspace);
-        } else {
+        if (!workspace) {
             workspace = await prisma.workspace.findFirst({
                 where: { members: { some: { id: user.id } } },
             });
             if (workspace) {
-                await redis.set(workspaceCacheKey, JSON.stringify(workspace), 'EX', CACHE_TTL_SECONDS);
+                try {
+                    await cache.set(workspaceCacheKey, JSON.stringify(workspace), 'EX', CACHE_TTL_SECONDS);
+                } catch(e) {
+                    console.error("Cache set failed for workspace", e);
+                }
             }
         }
     }

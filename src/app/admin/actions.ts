@@ -2,7 +2,7 @@
 'use server';
 
 import prisma from '@/lib/prisma';
-import redis from '@/lib/redis';
+import cache from '@/lib/redis';
 import { AgentStatus, UserRole } from '@prisma/client';
 import { getAuthenticatedUser } from '@/lib/firebase/admin';
 import { revalidatePath } from 'next/cache';
@@ -48,7 +48,7 @@ export async function updateUserRole(formData: FormData) {
     });
     
     // Invalidate user cache
-    await redis.del(`user:${userId}`);
+    await cache.del(`user:${userId}`);
     
     revalidatePath('/'); // Revalidate to update the admin console
     return { success: true, message: 'User role updated.' };
@@ -99,7 +99,7 @@ export async function removeUserFromWorkspace(formData: FormData) {
         });
         
         // Invalidate both user and workspace cache for the removed user
-        await redis.del(`user:${userId}`, `workspace:user:${userId}`);
+        await cache.del(`user:${userId}`, `workspace:user:${userId}`);
 
         revalidatePath('/');
         return { success: true, message: 'User removed from workspace.' };
