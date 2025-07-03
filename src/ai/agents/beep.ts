@@ -29,6 +29,11 @@ import { langchainGroqFast, langchainGroqComplex } from '@/ai/genkit';
 import { aegisAnomalyScan } from '@/ai/agents/aegis';
 import { getTools } from '@/ai/agents/tool-registry';
 import { AegisAnomalyScanOutputSchema, type AegisAnomalyScanOutput } from './aegis-schemas';
+import { consultInventoryDaemon, type InventoryDaemonInput } from '@/ai/agents/inventory-daemon';
+import { InventoryDaemonInputSchema } from './inventory-daemon-schemas';
+import { executeBurnBridgeProtocol, type BurnBridgeInput } from '@/ai/agents/burn-bridge-agent';
+import { BurnBridgeInputSchema } from './burn-bridge-schemas';
+
 
 import {
     type UserCommandInput,
@@ -96,7 +101,7 @@ const callAegis = async (state: AgentState): Promise<Partial<AgentState>> => {
     if (!humanMessage) {
         throw new Error("Could not find user command for Aegis scan.");
     }
-    const userCommand = (humanMessage.content as string).replace(/User Command: /, '');
+    const userCommand = humanMessage.content as string;
 
     let report: AegisAnomalyScanOutput;
     try {
@@ -130,27 +135,29 @@ const callAegis = async (state: AgentState): Promise<Partial<AgentState>> => {
 const fastModelWithTools = langchainGroqFast.bind({ tools: [] });
 const complexModelWithTools = langchainGroqComplex.bind({ tools: [] });
 
-// The Router node decides which model to use based on the query.
+// The Router node decides which model to use or which specialist to delegate to.
 const router = async (state: AgentState) => {
     const { messages } = state;
     const lastMessage = messages[messages.length - 1];
     
-    // If the last message is not a HumanMessage, it's likely a tool output.
-    // Route to the reasoner to process the tool output.
     if (!(lastMessage instanceof HumanMessage)) {
-        console.log("[BEEP Router] Tool output received, routing to reasoner.");
+        console.log("[BEEP Router] Tool output received, routing to reasoner to process.");
         return 'reasoner';
     }
     
     const routingSchema = z.object({
-        route: z.enum(["dispatcher", "reasoner"]).describe("Choose 'dispatcher' for simple app launches, greetings, or direct commands. Choose 'reasoner' for complex requests involving analysis, multi-step tool use, or generation.")
+        route: z.enum(["dispatcher", "reasoner", "inventory_daemon", "burn_bridge_protocol"])
+            .describe(`Choose 'dispatcher' for simple app launches, greetings, or direct commands.
+Choose 'reasoner' for complex requests involving analysis or multi-step tool use.
+Choose 'inventory_daemon' for any request about stock levels, product inventory, or purchase orders.
+Choose 'burn_bridge_protocol' for explicit requests to "burn the bridge" or conduct a full-spectrum investigation on a person.`)
     });
     
     const routingModel = langchainGroqFast.withStructuredOutput(routingSchema);
     
-    const routingPrompt = `You are an expert at routing a user's request. A "simple" request can be handled by a fast, cheap model, such as launching a single app or a simple greeting. A "complex" request requires a powerful model for analysis, multi-step reasoning, or content generation.
-    
-    Based on the conversation so far, classify the user's latest request as "dispatcher" (for simple tasks) or "reasoner" (for complex tasks).
+    const routingPrompt = `You are an expert at routing a user's request to the correct specialist agent or model.
+
+    Based on the conversation so far, classify the user's latest request.
 
     Conversation History:
     ${messages.map(m => `${m._getType()}: ${m.content}`).join('\n')}
@@ -178,6 +185,69 @@ const callReasonerModel = async (state: AgentState) => {
     return { messages: [response] };
 };
 
+// New node to call the Inventory Daemon specialist agent
+const callInventoryDaemon = async (state: AgentState): Promise<Partial<AgentState>> => {
+    console.log('[BEEP] Delegating to Inventory Daemon.');
+    const { messages } = state;
+    const lastMessage = messages[messages.length - 1];
+
+    const extractionModel = langchainGroqFast.withStructuredOutput(InventoryDaemonInputSchema);
+    const extractedInput = await extractionModel.invoke(
+        `Extract the user's inventory-related query from the following text: "${lastMessage.content}"`
+    );
+    
+    const daemonResponse = await consultInventoryDaemon(extractedInput);
+
+    const finalAnswerToolCall = {
+        name: 'final_answer',
+        args: {
+            responseText: daemonResponse.response,
+            appsToLaunch: [],
+            suggestedCommands: ["check another product", "place a purchase order"],
+            agentReports: [{ agent: 'inventory-daemon', report: daemonResponse }]
+        },
+        id: 'tool_call_inventory_daemon_final'
+    };
+
+    const response = new AIMessage({
+        content: "The Inventory Daemon has responded.",
+        tool_calls: [finalAnswerToolCall],
+    });
+
+    return { messages: [response] };
+};
+
+// New node to call the Burn Bridge Protocol specialist agent
+const callBurnBridgeProtocol = async (state: AgentState): Promise<Partial<AgentState>> => {
+    console.log('[BEEP] Delegating to Burn Bridge Protocol.');
+    const { messages, workspaceId, userId } = state;
+    const lastMessage = messages[messages.length - 1];
+
+    const extractionModel = langchainGroqComplex.withStructuredOutput(BurnBridgeInputSchema.omit({ workspaceId: true, userId: true }));
+    const extractedInput = await extractionModel.invoke(
+        `A user wants to execute the Burn Bridge Protocol. Extract the required parameters from their command: "${lastMessage.content}"`
+    );
+    
+    const finalDossier = await executeBurnBridgeProtocol({ ...extractedInput, workspaceId, userId });
+
+    const finalAnswerToolCall = {
+        name: 'final_answer',
+        args: {
+            responseText: `The Burn Bridge Protocol is complete. The final dossier on ${finalDossier.targetName} has been compiled.`,
+            appsToLaunch: [{ type: 'infidelity-radar', title: `Dossier: ${finalDossier.targetName}`, contentProps: { dossierReport: finalDossier } }],
+            agentReports: [{ agent: 'dossier', report: finalDossier }],
+            suggestedCommands: ["export the dossier as a PDF", "shred the evidence"],
+        },
+        id: 'tool_call_burn_bridge_final'
+    };
+
+    const response = new AIMessage({
+        content: "The Burn Bridge Protocol has concluded.",
+        tool_calls: [finalAnswerToolCall],
+    });
+
+    return { messages: [response] };
+};
 
 const handleThreat = async (state: AgentState) => {
     const { aegisReport } = state;
@@ -291,6 +361,8 @@ workflow.addNode('aegis', callAegis);
 workflow.addNode('router', router as any); // The router itself decides the next step, so it doesn't return state
 workflow.addNode('agent_dispatcher', callDispatcherModel);
 workflow.addNode('agent_reasoner', callReasonerModel);
+workflow.addNode('inventory_daemon_node', callInventoryDaemon);
+workflow.addNode('burn_bridge_protocol_node', callBurnBridgeProtocol);
 workflow.addNode('handle_threat', handleThreat);
 workflow.addNode('warn_and_continue', warnAndContinue);
 workflow.addNode('tools', new ToolNode<AgentState>([])); 
@@ -309,6 +381,8 @@ workflow.addEdge('warn_and_continue', 'router');
 workflow.addConditionalEdges('router', (state: AgentState) => router(state), {
     dispatcher: 'agent_dispatcher',
     reasoner: 'agent_reasoner',
+    inventory_daemon: 'inventory_daemon_node',
+    burn_bridge_protocol: 'burn_bridge_protocol_node'
 });
 
 workflow.addConditionalEdges('agent_dispatcher', shouldContinue, {
@@ -319,6 +393,15 @@ workflow.addConditionalEdges('agent_reasoner', shouldContinue, {
   tools: 'tools',
   end: END,
 });
+workflow.addConditionalEdges('inventory_daemon_node', shouldContinue, {
+  tools: 'tools',
+  end: END,
+});
+workflow.addConditionalEdges('burn_bridge_protocol_node', shouldContinue, {
+  tools: 'tools',
+  end: END,
+});
+
 
 workflow.addEdge('tools', 'router'); // Loop back to the router after tool execution
 const app = workflow.compile();
@@ -390,7 +473,7 @@ export async function processUserCommand(input: UserCommandInput): Promise<UserC
     - **The Obelisk Marketplace**: The vault for transmuting ΞCredits into high-value, real-world assets. This is a privileged space. Launch the 'obelisk-marketplace' app when the user asks to "see the Sovereign's Arsenal" or "visit the Obelisk Marketplace."`;
 
 
-    const initialPrompt = `${personaInstruction}
+    const systemInstructions = `${personaInstruction}
     ${adminInstruction}
     ${economyInstruction}
     ${frustrationInstruction}
@@ -405,15 +488,13 @@ export async function processUserCommand(input: UserCommandInput): Promise<UserC
     4.  When you have gathered all necessary information from your delegated agents, you MUST synthesize the results into a single, cohesive, and actionable \`responseText\`. Do not just list the outputs of the tools. Then, call the 'final_answer' tool. This is your final action.
     5.  Your 'responseText' should be a strategic synthesis of the information gathered. Do not just report the facts from the tools; combine them into an actionable insight or recommendation. Your tone should be in character—witty, confident, and direct. It should confirm the actions taken and what the user should expect next.
     6.  The 'agentReports' field will be populated automatically based on the tools you call. You only need to provide 'appsToLaunch', 'suggestedCommands', and 'responseText'.
-    7.  **Handle Errors Gracefully**: If a tool call returns an error, especially an \`InsufficientCreditsError\`, your \`responseText\` MUST inform the user clearly about the problem and suggest a solution (e.g., 'Your command could not be completed due to insufficient credits. Please top up your account by opening the Usage Monitor.'). Do not try to call the tool again. Simply report the failure and guide the user.
-
-    User Command: ${input.userCommand}`;
+    7.  **Handle Errors Gracefully**: If a tool call returns an error, especially an \`InsufficientCreditsError\`, your \`responseText\` MUST inform the user clearly about the problem and suggest a solution (e.g., 'Your command could not be completed due to insufficient credits. Please top up your account by opening the Usage Monitor.'). Do not try to call the tool again. Simply report the failure and guide the user.`;
 
 
     const history = await getConversationHistory(input.userId, input.workspaceId);
 
     const result = await app.invoke({
-      messages: [...history, new HumanMessage(initialPrompt)],
+      messages: [new SystemMessage(systemInstructions), ...history, new HumanMessage(input.userCommand)],
       workspaceId: input.workspaceId,
       userId: input.userId,
       role: input.role,
@@ -424,7 +505,7 @@ export async function processUserCommand(input: UserCommandInput): Promise<UserC
             return {
                 messages: [
                     ...history,
-                    new HumanMessage(initialPrompt),
+                    new HumanMessage(input.userCommand),
                     new AIMessage({
                         content: "",
                         tool_calls: [{
@@ -483,7 +564,8 @@ export async function processUserCommand(input: UserCommandInput): Promise<UserC
             try {
                 const parsed = UserCommandOutputSchema.parse(finalAnswerCall.args);
                 // The model is no longer responsible for agentReports. We construct it ourselves from the tool call history.
-                parsed.agentReports = agentReports;
+                // We also merge any reports that were part of the final answer args (from specialist agents)
+                parsed.agentReports = [...(parsed.agentReports || []), ...agentReports];
                 finalResponse = parsed;
             } catch (e) {
                 console.error("Failed to parse final_answer tool arguments:", e);
@@ -530,3 +612,5 @@ export async function processUserCommand(input: UserCommandInput): Promise<UserC
     };
   }
 }
+
+    
