@@ -248,5 +248,3 @@ export default function UserProfileSettings({ id, user }: UserProfileSettingsPro
     </>
   );
 }
-
-    
