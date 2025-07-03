@@ -19,8 +19,8 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import type { User, UserPsyche, PulseProfile } from '@prisma/client';
-import { useAppStore } from '@/store/app-store'; // This import was already correct
-import { logout as handleLogout, deleteAccount as handleDeleteAccount, acceptReclamationGift } from '@/app/auth/actions';
+import { useAppStore } from '@/store/app-store';
+import { handleLogout, deleteAccount as handleWalkAway, acceptReclamationGift } from '@/app/auth/actions';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -33,6 +33,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import PsycheMatrix from '@/components/profile/psyche-matrix';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Separator } from '../ui/separator';
 
 const profileFormSchema = z.object({
   firstName: z.string().optional(),
@@ -119,9 +120,9 @@ export default function UserProfileSettings({ id, user }: UserProfileSettingsPro
     }
   };
 
-  const handleWalkAway = async () => {
+  const onWalkAway = async () => {
     setIsProcessing(true);
-    await handleDeleteAccount(); // This will log the user out and redirect
+    await handleWalkAway(); // This will log the user out and redirect
     setIsProcessing(false);
   }
 
@@ -232,7 +233,7 @@ export default function UserProfileSettings({ id, user }: UserProfileSettingsPro
             <p className="text-sm text-muted-foreground">But when the time ends… so does your seat at the table.</p>
             <AlertDialogFooter>
                 <AlertDialogCancel asChild>
-                    <Button variant="outline" onClick={handleWalkAway} disabled={isProcessing}>
+                    <Button variant="outline" onClick={onWalkAway} disabled={isProcessing}>
                         {isProcessing ? <Loader2 className="animate-spin" /> : 'Walk Away'}
                     </Button>
                 </AlertDialogCancel>
