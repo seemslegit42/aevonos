@@ -22,5 +22,6 @@ export const DossierOutputSchema = z.object({
   fileName: z.string().describe('A suggested filename for the export (e.g., dossier-jane-doe.pdf).'),
   reportHash: z.string().optional().describe('The SHA256 hash of the generated report for integrity verification.'),
   mode: z.enum(['standard', 'legal']).default('standard').describe('The dossier mode that was generated.'),
+  targetName: z.string().describe("The name of the target, carried over for context."),
 });
 export type DossierOutput = z.infer<typeof DossierOutputSchema>;

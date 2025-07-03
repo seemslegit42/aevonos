@@ -35,8 +35,8 @@ The suite is composed of several independent but interoperable agents, all orche
 - **Purpose**: Compiles all gathered intelligence into a formal report.
 - **Flow**: The `generateDossier` flow takes the outputs from the other agents and uses a Groq-powered LLM to format them into a professional Markdown document, available in a standard or "legal" format, in near real-time.
 
-### 2.5. The "Burn Bridge Protocol"
-- **Function**: A master sequence in the BEEP agent (`agents/beep.ts`) that orchestrates the entire suite. When a user issues the "burn the bridge" command, BEEP calls the OSINT, analysis, and decoy agents in parallel, then feeds their outputs into the dossier agent to generate the final, comprehensive report.
+### 2.5. The "Burn Bridge Protocol" (`agents/burn-bridge-agent.ts`)
+- **Function**: A master `LangGraph` agent that orchestrates the entire suite. When a user issues the "burn the bridge" command, BEEP delegates to this agent. The Burn Bridge agent then calls the OSINT, analysis, and decoy agents in parallel, then feeds their outputs into the dossier agent to generate the final, comprehensive report.
 
 ### 2.6. The `InfidelityRadar` Micro-App (`micro-apps/infidelity-radar.tsx`)
 - **Orchestration UI**: A single, tab-based interface that provides manual access to each agentic function (OSINT scan, behavioral analysis, decoy deployment, dossier export), allowing the user to run them individually or trigger the full "Burn Bridge Protocol".

@@ -199,6 +199,7 @@ The subject demonstrates a consistent pattern of concealment, behavioral inconsi
         fileName,
         reportHash: hash,
         mode: input.mode || 'standard',
+        targetName: input.targetName,
     };
   }
 );

@@ -29,11 +29,11 @@ import { langchainGroqFast, langchainGroqComplex } from '@/ai/genkit';
 import { aegisAnomalyScan } from '@/ai/agents/aegis';
 import { getTools } from '@/ai/agents/tool-registry';
 import { AegisAnomalyScanOutputSchema, type AegisAnomalyScanOutput } from './aegis-schemas';
-import { consultInventoryDaemon, type InventoryDaemonInput } from '@/ai/agents/inventory-daemon';
+import { consultInventoryDaemon } from '@/ai/agents/inventory-daemon';
 import { InventoryDaemonInputSchema } from './inventory-daemon-schemas';
-import { executeBurnBridgeProtocol, type BurnBridgeInput } from '@/ai/agents/burn-bridge-agent';
+import { executeBurnBridgeProtocol } from '@/ai/agents/burn-bridge-agent';
 import { BurnBridgeInputSchema } from './burn-bridge-schemas';
-import { consultVaultDaemon, type VaultQueryInput } from './vault-daemon';
+import { consultVaultDaemon } from './vault-daemon';
 import { VaultQueryInputSchema } from './vault-daemon-schemas';
 
 
@@ -300,7 +300,7 @@ const callVaultDaemon = async (state: AgentState): Promise<Partial<AgentState>> 
     const { messages, workspaceId, userId } = state;
     const lastMessage = messages[messages.length - 1];
 
-    const daemonInput: VaultQueryInput = {
+    const daemonInput = {
         query: lastMessage.content as string,
         workspaceId,
         userId
@@ -700,5 +700,3 @@ export async function processUserCommand(input: UserCommandInput): Promise<UserC
     };
   }
 }
-
-    
