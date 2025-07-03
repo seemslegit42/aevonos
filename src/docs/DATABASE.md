@@ -1,105 +1,16 @@
-
-# ΛΞVON OS: Database Schema Specification
-
-> "The architecture of truth is built on well-defined tables."
-
----
-
-## 1. Overview
-
-This document outlines the Prisma schema for ΛΞVON OS, which serves as the foundational data layer for the entire application. The schema is designed with multi-tenancy, security, and scalability in mind, using a PostgreSQL database. It provides the structure for all core entities, from users and workspaces to agentic workflows and the internal economy.
-
-## 2. Core Tenancy Models
-
-These models form the basis of the system's multi-tenant architecture.
-
-### `User`
--   **Purpose**: Represents an individual user account.
--   **Key Fields**:
-    -   `id`: Unique identifier for the user.
-    -   `email`, `password`: Standard authentication credentials.
-    -   `role`: (`ADMIN`, `MANAGER`, `OPERATOR`, `AUDITOR`) - Governs user permissions within a workspace.
-    -   `psyche`: (`ZEN_ARCHITECT`, `SYNDICATE_ENFORCER`, `RISK_AVERSE_ARTISAN`) - The user's chosen psychological archetype from the Rite of Invocation, used for personalization.
-    -   `agentAlias`: The user's personalized name for BEEP.
-    -   `unlockedChaosCardKeys`: An array of strings containing the keys of purchased Chaos Cards.
-    -   `hasAbyssalScar`: A boolean indicating if the user has made the irreversible choice to sacrifice their ΞVolution Daemon, unlocking the "Abyssal Form."
--   **Relations**: A user can be a member of multiple `Workspace`s.
-
-### `Workspace`
--   **Purpose**: The primary data container for a single tenant (an organization or an individual's "Canvas"). All other data is scoped to a workspace.
--   **Key Fields**:
-    -   `id`: Unique identifier for the workspace.
-    -   `name`: The user-defined name of the workspace.
-    -   `ownerId`: A foreign key to the `User` who owns the workspace.
-    -   `planTier`: (`Apprentice`, `Artisan`, `Priesthood`) - The current subscription plan.
-    -   `credits`: The current balance of spendable ΞCredits.
-    -   `potential`: The current balance of non-spendable Potential (Φ), accrued during the "Age of Ascension."
-    -   `agentActionsUsed`: A counter for the number of agent actions consumed in the current billing cycle.
-    -   `unlockedAppIds`: An array of strings containing the IDs of purchased Micro-Apps from The Armory.
--   **Relations**: A workspace has one owner (`User`), multiple members (`User`), and contains all other data models like `Agent`, `Contact`, `SecurityAlert`, etc.
-
-## 3. Agentic & Workflow Models
-
-These models support the Loom Studio and the agentic capabilities of the OS.
-
-### `Agent`
--   **Purpose**: Represents a deployed instance of a specialized AI agent (e.g., "Winston Wolfe", "Dr. Syntax").
--   **Key Fields**:
-    -   `type`: A string identifier for the agent's type, mapping to its code implementation.
-    -   `status`: The current operational status (`active`, `idle`, `error`).
-
-### `Workflow` & `WorkflowRun`
--   **Purpose**: `Workflow` stores the JSON definition of an automation created in Loom Studio. `WorkflowRun` stores the history, logs, and results of each execution of a workflow.
--   **Key Fields**:
-    -   `definition`: A JSONB field in `Workflow` containing the nodes and edges of the visual graph.
-    -   `log`: A JSONB field in `WorkflowRun` containing a step-by-step log of the execution for debugging.
-    -   `output`: The final JSON payload returned by a completed workflow run.
-
-## 4. Economic Engine Models (Obelisk Pay & Klepsydra)
-
-These models power the internal economy of ΛΞVON OS.
-
-### `Transaction`
--   **Purpose**: The immutable heart of the Obelisk Pay ledger. Records every single credit or debit to a workspace's balance.
--   **Key Fields**:
-    -   `type`: (`CREDIT`, `DEBIT`, `TRIBUTE`) - Defines the nature of the transaction.
-    -   `amount`: The net change to the balance.
-    -   `description`: A human-readable description of the transaction.
-    -   `instrumentId`, `luckWeight`, `outcome`, `boonAmount`: Special fields to store rich metadata for `TRIBUTE` transactions from Folly Instruments.
-    -   `judasFactor`: A decimal representing the reduction factor in a 'hollow win' scenario from the Judas Algorithm.
-    -   `aegisSignature`: A cryptographic hash of the transaction details, signed by Aegis to ensure integrity.
-
-### `PulseProfile`
--   **Purpose**: The core of the Klepsydra Engine. Stores each user's unique "luck" parameters and dynamic psychological state.
--   **Key Fields**:
-    -   `consecutiveLosses`: A counter used to trigger the Pity Boon protocol.
-    -   `lastEventTimestamp`: Used to calculate time decay in the pulse wave.
-    -   `frustration`, `flowState`, `riskAversion`: Floating-point values (0-1) representing the user's current psychological state, which dynamically modulate economic outcomes.
-
-### `PotentialAccrualLog`
--   **Purpose**: A specialized, immutable log that records the accrual of Potential (Φ), the non-spendable meta-asset of the "Age of Ascension."
--   **Key Fields**:
-    -   `instrumentId`: The ID of the Folly Instrument that generated the Potential.
-    -   `luckWeight`: The user's modulated luck value at the time of the event.
-    -   `potentialAwarded`: The amount of Φ awarded.
-    -   `narrativeContext`: A human-readable description of the accrual event.
-    -   `aegisSignature`: A cryptographic hash of the log entry, signed by Aegis to ensure integrity.
-
-### `ChaosCard` & `ActiveSystemEffect`
--   **Purpose**: `ChaosCard` is the manifest for acquirable Chaos Cards. It is not tied to a specific user. The `User.unlockedChaosCardKeys` field tracks ownership. `ActiveSystemEffect` tracks which temporary, system-wide effects (like theme changes from a card) are currently active for a workspace.
-
-## 5. Utility & Application Models
-
-These models support various Micro-Apps and core utilities.
-
-### `Contact`
--   **Purpose**: Stores contact information for the CRM suite. Scoped to a `Workspace`.
-
-### `SecurityAlert` & `ThreatFeed`
--   **Purpose**: `SecurityAlert` stores alerts generated by the Aegis subsystem. `ThreatFeed` stores the list of external threat intelligence URLs configured in the `Aegis-Command` app.
-
-### `Conversation`
--   **Purpose**: Stores the history of a user's interactions with the BEEP agent, providing context for future commands.
-
-### `InstrumentDiscovery`
--   **Purpose**: A crucial table for the Nudge Engine. It logs when a user first views an acquirable item in The Armory and tracks whether they eventually purchase it, allowing for the calculation of `Discovery-to-Tribute Time` (DTT).
+# ΛΞVON OS: Data Layer - Database Schema
+1. Database System & Core Principles
+ΛΞVON OS utilizes PostgreSQL as its primary database system, serving as the robust and scalable foundation for all operational data. Our database design is governed by the following core principles:
+Multi-Tenancy (Schema-per-Tenant): Every table includes a tenant_id column. This key is used in every query to ensure strict data isolation between workspaces. It is indexed on all tables for performance.
+UUIDs for Public IDs: Primary keys are standard auto-incrementing integers (id) for performance. However, a uuid column is included for any record that needs to be exposed externally via the API, preventing enumeration attacks.
+JSONB for Flexibility: JSONB data types are used for storing unstructured or semi-structured data like custom fields or workflow step parameters. This allows for flexibility without requiring schema migrations for minor changes.
+Timestamps: Standard created_at and updated_at columns are present on all tables for auditing and tracking.
+2. Database Stack
+ORM: Prisma is the chosen ORM for all TypeScript services, providing a type-safe client, powerful migrations, and excellent developer experience.
+Prisma Accelerate: This is active and mandated for use, providing managed connection pooling and global caching (edge caching with TTL and SWR per-query controls).
+Deployment: PostgreSQL is configured for a serverless environment, optimizing for scalability and cost-effectiveness on platforms like Vercel or GCP.
+Vector Search: The pgvector extension is enabled and utilized within PostgreSQL for storing and querying vector embeddings, essential for RAG (Retrieval Augmented Generation) and AI memory features.
+3. Schema Designs: Tables, Columns, and Constraints
+3.1. Workspace Service Schema
+This schema manages tenants, users, roles, and their relationships.
+tenants table: Stores the root workspace/organization for each customer.
