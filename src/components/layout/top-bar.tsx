@@ -10,9 +10,10 @@ import type { User, Workspace } from '@prisma/client';
 import { useAppStore } from '@/store/app-store';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { UserNav } from './user-nav';
 import { getUserVas } from '@/app/user/actions';
+import { Popover, PopoverContent, PopoverAnchor } from '@/components/ui/popover';
+import { Command, Mic } from 'lucide-react';
 
 type UserProp = Pick<User, 'id' | 'email' | 'firstName' | 'lastName' | 'role' | 'agentAlias'> | null;
 
@@ -21,27 +22,13 @@ interface TopBarProps {
   workspace: Workspace | null;
 }
 
-const CurrentTime = () => {
-  const [time, setTime] = useState('');
-
-  useEffect(() => {
-    // This logic ensures the time is only rendered on the client, avoiding hydration mismatches.
-    setTime(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
-    const timerId = setInterval(() => {
-        setTime(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
-    }, 1000 * 60); // Update every minute
-    return () => clearInterval(timerId);
-  }, []);
-
-  return <span className="hidden lg:inline">{time}</span>;
-}
-
 export default function TopBar({ user, workspace }: TopBarProps) {
   const formRef = useRef<HTMLFormElement>(null);
   const isMobile = useIsMobile();
-  const { handleCommandSubmit, isLoading, upsertApp } = useAppStore();
+  const { handleCommandSubmit, isLoading, beepOutput } = useAppStore();
   const [vas, setVas] = useState<number | null>(null);
-
+  const [inputValue, setInputValue] = useState('');
+  
   useEffect(() => {
       if (user) {
           getUserVas().then(setVas).catch(err => console.error("Failed to fetch VAS", err));
@@ -50,22 +37,16 @@ export default function TopBar({ user, workspace }: TopBarProps) {
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const formData = new FormData(event.currentTarget);
-    const command = formData.get('command') as string;
-    handleCommandSubmit(command);
-    formRef.current?.reset();
+    if (!inputValue.trim()) return;
+    handleCommandSubmit(inputValue);
+    setInputValue('');
   };
   
-  const handleBillingClick = () => {
-      upsertApp('usage-monitor', { 
-        id: 'singleton-usage-monitor',
-        contentProps: { workspace, user }
-      });
+  const handleSuggestionClick = (command: string) => {
+    handleCommandSubmit(command);
+    setInputValue('');
   }
 
-  const displayName = user ? (user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : user.email) : "Operator";
-  const roleText = user?.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1).toLowerCase() : 'Operator';
-  
   const agentName = user?.agentAlias || 'BEEP';
   const placeholderText = isMobile ? `${agentName} Command...` : `Ask ${agentName} to...`;
 
@@ -78,62 +59,47 @@ export default function TopBar({ user, workspace }: TopBarProps) {
       </div>
 
       <div className="flex-1 max-w-xl">
-        <form ref={formRef} onSubmit={handleSubmit} className="relative w-full">
-          <Input
-            name="command"
-            type="text"
-            placeholder={placeholderText}
-            className={cn(
-              "w-full bg-background/80 text-foreground placeholder:text-muted-foreground border-border/50 h-10",
-              "focus-visible:ring-1 focus-visible:ring-roman-aqua",
-              isLoading && "ring-1 ring-inset ring-roman-aqua animate-pulse"
-            )}
-            disabled={isLoading}
-          />
-        </form>
+         <Popover open={!!beepOutput?.suggestedCommands && beepOutput.suggestedCommands.length > 0 && !!inputValue}>
+          <PopoverAnchor asChild>
+            <form ref={formRef} onSubmit={handleSubmit} className="relative w-full group">
+              <Command className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground transition-colors group-focus-within:text-primary" />
+              <Input
+                name="command"
+                type="text"
+                placeholder={placeholderText}
+                autoComplete="off"
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                className={cn(
+                  "w-full bg-background/80 text-foreground placeholder:text-muted-foreground border-border/50 h-10 pl-10 pr-10",
+                  "focus-visible:ring-1 focus-visible:ring-roman-aqua",
+                  isLoading && "ring-1 ring-inset ring-roman-aqua animate-pulse"
+                )}
+                disabled={isLoading}
+              />
+              <button type="button" className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground transition-colors hover:text-primary" aria-label="Use microphone">
+                <Mic />
+              </button>
+            </form>
+          </PopoverAnchor>
+          <PopoverContent className="p-1 w-[--radix-popover-trigger-width]">
+            <p className="p-2 text-xs text-muted-foreground">Suggestions</p>
+            {beepOutput?.suggestedCommands?.map((cmd, i) => (
+              <Button
+                key={i}
+                variant="ghost"
+                className="w-full justify-start"
+                onClick={() => handleSuggestionClick(cmd)}
+              >
+                {cmd}
+              </Button>
+            ))}
+          </PopoverContent>
+        </Popover>
       </div>
 
       <div className="flex items-center gap-2 sm:gap-4 text-sm text-foreground">
-        <div className="hidden md:flex items-center gap-4 text-sm font-lexend">
-            <CurrentTime />
-            <div className="h-6 w-px bg-border/30" />
-            <UserNav user={user} workspace={workspace}>
-                <Button variant="ghost" className="p-0 h-auto hover:bg-transparent text-foreground">
-                    <span>{displayName} | {roleText}</span>
-                </Button>
-            </UserNav>
-            {vas !== null && (
-                <TooltipProvider>
-                    <Tooltip>
-                        <TooltipTrigger asChild>
-                            <div className="font-mono text-primary font-bold cursor-help">VAS: {vas}</div>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                            <p className="font-bold">Vow Alignment Score</p>
-                            <p className="text-xs max-w-xs">A measure of how closely your actions align with your chosen Covenant, rewarding thematic consistency.</p>
-                        </TooltipContent>
-                    </Tooltip>
-                </TooltipProvider>
-            )}
-            <div className="h-6 w-px bg-border/30" />
-            <TooltipProvider>
-                <Tooltip>
-                    <TooltipTrigger asChild>
-                        <Button variant="ghost" className="p-0 h-auto hover:bg-transparent text-foreground" onClick={handleBillingClick}>
-                            <span>
-                            Ξ <span className="text-gilded-accent font-bold">{workspace?.credits ? Number(workspace.credits).toFixed(2) : '0.00'}</span>
-                            </span>
-                        </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                        <p>View Usage & Manage Billing</p>
-                    </TooltipContent>
-                </Tooltip>
-            </TooltipProvider>
-        </div>
-        <div className="md:hidden">
-            <UserNav user={user} workspace={workspace} />
-        </div>
+        <UserNav user={user} workspace={workspace} vas={vas} />
       </div>
     </header>
   );
