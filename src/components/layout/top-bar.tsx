@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useRef, useState, useEffect } from 'react';
@@ -74,7 +73,10 @@ export default function TopBar({ user, workspace, initialVas }: TopBarProps) {
       if (!user) return;
       try {
         const res = await fetch('/api/user/pulse-profile');
-        if (!res.ok) return;
+        if (!res.ok) {
+            console.error('Failed to fetch pulse profile, it might not exist yet.');
+            return;
+        }
         const data = await res.json();
         setPulseProfile(data);
       } catch (error) {
