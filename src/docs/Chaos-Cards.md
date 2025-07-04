@@ -1,3 +1,4 @@
+
 # ΛΞVON OS: Economy - Chaos Card Deck Specification
 
 ## 1. Introduction: The Currency of Madness
@@ -25,11 +26,11 @@ Impact: Low cost, temporary UI/UX modifications. These are subtle shifts in real
 - **Card**: Acropolis Marble
   - **Cost**: 75 Ξ
   - **Description**: "Re-skin your digital architecture in the stone of the ancients. Clean, classical, eternal."
-  - **System Effect**: Applies a 'theme-acropolis-marble' class to the root element, rendering the UI in stark whites and greys with golden accents for one hour.
+  - **System Effect**: Applies a `theme-acropolis-marble` class to the root element, rendering the UI in stark whites and greys with golden accents for one hour.
 - **Card**: Noctua's Gaze
   - **Cost**: 75 Ξ
   - **Description**: "Adopt the vision of Athena's owl. See clarity in the darkness."
-  - **System Effect**: Activates a "dark mode" that is pure black, with text glowing in a soft, silver light. All non-essential UI elements fade unless hovered over.
+  - **System Effect**: Applies a `theme-noctuas-gaze` class to the root element, activating a "dark mode" that is pure black with text glowing in a soft, silver light.
 - **Card**: Fractal Bloom
   - **Cost**: 100 Ξ
   - **Description**: "The universe's geometry, revealed in a flash. The math of nature, made manifest."
@@ -37,7 +38,7 @@ Impact: Low cost, temporary UI/UX modifications. These are subtle shifts in real
 - **Card**: Weeping Glass
   - **Cost**: 50 Ξ
   - **Description**: "For a short time, the hard edges of your OS soften and flow. A reminder that even structure is fluid."
-  - **System Effect**: For 15 minutes, UI elements on the Canvas develop a slow, "dripping" animation, as if made of liquid glass. Purely cosmetic, utterly beautiful.
+  - **System Effect**: For 15 minutes, a `theme-weeping-glass` class is applied, causing UI elements on the Canvas to develop a slow, "dripping" animation, as if made of liquid glass. Purely cosmetic, utterly beautiful.
 
 ### 3.2. Class II: Agentic Whims (Whispers of Myth)
 Impact: Medium cost, directly influence agent behavior. For the user who enjoys a conversation with the machine, especially when the machine gets ideas of its own. These are functional but flavored disruptions that challenge the user to adapt.

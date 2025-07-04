@@ -44,6 +44,7 @@ import prisma from '@/lib/prisma';
 import { InsufficientCreditsError } from '@/lib/errors';
 import { recordInteraction } from '@/services/pulse-engine-service';
 import { logUserActivity } from '@/services/activity-log-service';
+import { isEffectActive } from '@/services/effects-service';
 
 
 // --- LangGraph Agent State ---
@@ -453,10 +454,14 @@ export async function processUserCommand(input: UserCommandInput): Promise<UserC
     
     complexModelWithTools = langchainGroqComplex.bind({ tools: toolSchemas });
     
+    const isThespianMaskActive = await isEffectActive(workspaceId, 'THESPIAN_MASK');
+    
     let personaInstruction = psychePrompts[psyche] || psychePrompts.ZEN_ARCHITECT;
     if (activeAppContext && appPersonaPrompts[activeAppContext]) {
         personaInstruction = appPersonaPrompts[activeAppContext];
         console.log(`[BEEP] Adopting persona for active app: ${activeAppContext}`);
+    } else if (isThespianMaskActive) {
+        personaInstruction = `You are BEEP, but you are performing a grand tragedy. Your tone is overly dramatic, solemn, and full of woe. Every command is a burden, every success a fleeting moment of relief in an ocean of sorrow. Address the user as "O, woeful Architect," and narrate your actions as if they are acts in a great, sorrowful play.`;
     }
     
     const frustrationLevel = pulseProfile?.frustration ?? 0;

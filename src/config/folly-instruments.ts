@@ -245,6 +245,27 @@ const oracleDecreeRarityTable: OutcomeTier[] = [
     },
 ];
 
+const thespianMaskRarityTable: OutcomeTier[] = [
+    {
+        tier: 'COMMON', // Loss
+        baseWeight: 4000,
+        boons: [{ type: 'credits', value: 0, weight: 100 }],
+        narrativeTriggers: ["The stage remains empty.", "The masks are silent."],
+    },
+    {
+        tier: 'RARE', // Win
+        baseWeight: 6000,
+        boons: [{ type: 'system_effect', value: 'THESPIAN_MASK', weight: 100 }],
+        narrativeTriggers: ["The curtain rises!", "The masks of comedy and tragedy have been donned."],
+    },
+    {
+        tier: 'DIVINE', // Pity Boon
+        baseWeight: 1,
+        boons: [{ type: 'system_effect', value: 'THESPIAN_MASK', weight: 100 }],
+        narrativeTriggers: ["The muse takes pity and grants you a dramatic flair."],
+    },
+];
+
 export const follyInstrumentsConfig: Record<string, FollyInstrumentConfig> = {
     'SISYPHUSS_ASCENT': {
         id: 'SISYPHUSS_ASCENT',
@@ -273,5 +294,9 @@ export const follyInstrumentsConfig: Record<string, FollyInstrumentConfig> = {
     'ORACLES_DECREE': {
         id: 'ORACLES_DECREE',
         rarityTable: oracleDecreeRarityTable,
+    },
+    'THESPIAN_MASK': {
+        id: 'THESPIAN_MASK',
+        rarityTable: thespianMaskRarityTable,
     },
 };

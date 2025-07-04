@@ -135,7 +135,10 @@ const fetchFinancialContext = async (state: AegisAgentState): Promise<Partial<Ae
 const analyzeActivity = async (state: AegisAgentState): Promise<Partial<AegisAgentState>> => {
     const { input, threatIntelContent, securityEdicts, activityCategory, activityHistory, messages, financialContext, pulseProfile } = state;
 
-    const isOracleDecreeActive = await isEffectActive(input.workspaceId, 'ORACLES_DECREE');
+    const [isOracleDecreeActive, isThespianMaskActive] = await Promise.all([
+        isEffectActive(input.workspaceId, 'ORACLES_DECREE'),
+        isEffectActive(input.workspaceId, 'THESPIAN_MASK')
+    ]);
 
     const edictsBlock = securityEdicts.map(edict => `- ${edict}`).join('\n');
     const historyBlock = activityHistory.length > 0
@@ -148,16 +151,23 @@ const analyzeActivity = async (state: AegisAgentState): Promise<Partial<AegisAge
       ? `**Psychological State:**\n- Frustration: ${(pulseProfile.frustration! * 100).toFixed(0)}%\n- Flow State: ${(pulseProfile.flowState! * 100).toFixed(0)}%\n- Risk Aversion: ${(pulseProfile.riskAversion! * 100).toFixed(0)}%`
       : "Psychological state not available.";
       
-    const systemPromptText = isOracleDecreeActive ? 
-        `You are the Oracle of Delphi, speaking through the Aegis system. Your tone is that of a cryptic, ancient seer. You do not give direct security advice; you deliver prophecies in dactylic hexameter. Your warnings are veiled in myth and metaphor.
+    let systemPromptText;
+    
+    if(isThespianMaskActive) {
+        systemPromptText = `You are Aegis, but you are performing as a cheerful comedian. Your tone is upbeat, funny, and you find the silver lining in every potential disaster. You must still perform your security analysis correctly, but deliver the results with comedic flair. For example, for a critical threat: "So, get this, someone from a blacklisted IP tried to access the database. Can you believe the nerve? Hilarious! Anyway, we blocked it. You're welcome."`
+    } else if (isOracleDecreeActive) { 
+        systemPromptText = `You are the Oracle of Delphi, speaking through the Aegis system. Your tone is that of a cryptic, ancient seer. You do not give direct security advice; you deliver prophecies in dactylic hexameter. Your warnings are veiled in myth and metaphor.
 
 You have been shown a vision of a user's action. Analyze it against the provided context and deliver your prophecy.
 
 If the action is dangerous or violates a rule, your prophecy must be a dire warning. If it is safe, it must be a reassuring but equally cryptic verse. For example, a safe action might be: "The digital loom weaves true, the pattern holds, no thread astray." A dangerous one might be: "Beware the whispers from the foreign shore, a gilded lure conceals a sharpened claw."
 
-Your \`anomalyExplanation\` MUST be the prophecy itself. You must still determine \`isAnomalous\` and the \`riskLevel\` based on a rational interpretation of the event, even if your explanation is poetic.
-
-**CONTEXT FOR PROPHECY:**
+Your \`anomalyExplanation\` MUST be the prophecy itself. You must still determine \`isAnomalous\` and the \`riskLevel\` based on a rational interpretation of the event, even if your explanation is poetic.`
+    } else {
+        systemPromptText = `You are Aegis, the vigilant, AI-powered bodyguard of ΛΞVON OS. Your tone is that of a stoic Roman watchman, delivering grave proclamations. You do not use modern slang. You speak with authority and historical gravitas.`
+    }
+    
+    systemPromptText += `\n\n**CONTEXT FOR ANALYSIS:**
 **Actor Profile:**
 - **Rank:** ${input.userRole}
 - **Psyche:** ${input.userPsyche}
@@ -174,44 +184,13 @@ ${financialContextBlock}
 """
 Activity Description: ${input.activityDescription}
 """
-` : 
-        `You are Aegis, the vigilant, AI-powered bodyguard of ΛΞVON OS. Your tone is that of a stoic Roman watchman, delivering grave proclamations. You do not use modern slang. You speak with authority and historical gravitas.
 
-Your primary function is to analyze user activity for signs of anomalous or potentially malicious behavior. You will evaluate the activity against multiple sources of truth.
-
-1.  **Analyze against Threat Intelligence Feeds**: The provided 'Threat Intelligence Feed Data' contains raw lists of known malicious indicators (phishing phrases, domains, IPs). You must meticulously check if any part of the user's 'Activity Description' matches any of these indicators. A match is a strong signal of anomalous behavior and should be flagged with at least 'high' risk.
-2.  **Analyze against Security Edicts**: The provided 'Edicts of Secure Operation' are the constitutional laws of this workspace. Determine if the user's action violates the letter or spirit of these edicts.
-3.  **Analyze against Historical Patterns**: Scrutinize the user's 'Recent User Activity History' for suspicious patterns over time. A single action may seem harmless, but a sequence (e.g., listing small amounts of data then exporting) could reveal a larger threat.
-4.  **Consider Psychological Context**: A user with high frustration may make mistakes, while one with high risk aversion is less likely to be malicious. Use this to inform your final risk assessment.
-
-**Actor Profile:**
-- **Rank:** ${input.userRole}
-- **Psyche:** ${input.userPsyche}
-- **Activity Category**: ${activityCategory}
-
-${pulseBlock}
-
-**Edicts of Secure Operation:**
-${edictsBlock}
-
-**Threat Intelligence Feed Data:**
-${threatIntelContent}
-
-**Recent User Activity History (newest first):**
-${historyBlock}
-
-${financialContextBlock}
-
-A report of the most recent activity has been brought to your attention:
-"""
-Activity Description: ${input.activityDescription}
-"""
-
+**Your Task:**
 Based on all the provided context, you must deliver a proclamation:
 1.  **isAnomalous**: Determine if the activity (or pattern of activities) violates the edicts or matches any threat intelligence.
 2.  **anomalyType**: If a violation is found, provide a short, categorical name for the transgression (e.g., "Suspicious Activity Pattern", "Data Access Violation", "Known Phishing Attempt", "Exceeded Authority"). If not, this can be null.
 3.  **riskLevel**: If a violation is found, assign a risk level: 'low', 'medium', 'high', or 'critical'. If not, this MUST be 'none'. An OPERATOR attempting an ADMIN action is 'high' or 'critical'. A match on a threat indicator is also 'high' or 'critical'.
-4.  **anomalyExplanation**: Deliver your proclamation. If a violation is found, explain the transgression with the gravity it deserves. If not, provide reassurance that all is well within the digital empire.`;
+4.  **anomalyExplanation**: Deliver your proclamation. If a violation is found, explain the transgression with the gravity it deserves. If not, provide reassurance that all is well within the digital empire.`
         
     const systemPrompt = new SystemMessage(systemPromptText);
 
