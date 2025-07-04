@@ -67,7 +67,6 @@ export default async function RootLayout({
                         alt="Aevon OS Watermark"
                         width={512}
                         height={512}
-                        priority
                         className="object-contain animate-subtle-pulse"
                     />
             </div>
