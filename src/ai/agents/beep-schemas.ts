@@ -7,37 +7,40 @@ import { AegisAnomalyScanOutputSchema } from './aegis-schemas';
 import { ContactSchema, DeleteContactOutputSchema } from '@/ai/tools/crm-schemas';
 import { BillingUsageSchema, RequestCreditTopUpOutputSchema } from '@/ai/tools/billing-schemas';
 import { DatingProfileSchema } from '@/ai/tools/dating-schemas';
-import { VinDieselOutputSchema } from './vin-diesel-schemas';
-import { VandelayAlibiOutputSchema } from './vandelay-schemas';
-import { WinstonWolfeOutputSchema } from './winston-wolfe-schemas';
-import { KifKrokerAnalysisOutputSchema } from './kif-kroker-schemas';
-import { RolodexAnalysisOutputSchema } from './rolodex-schemas';
-import { JrocOutputSchema } from './jroc-schemas';
-import { LaheyAnalysisOutputSchema } from './lahey-schemas';
-import { ForemanatorLogOutputSchema } from './foremanator-schemas';
-import { SterileishAnalysisOutputSchema } from './sterileish-schemas';
-import { PaperTrailScanOutputSchema } from './paper-trail-schemas';
-import { BarbaraOutputSchema } from './barbara-schemas';
-import { AuditorOutputSchema } from './auditor-generalissimo-schemas';
-import { WingmanOutputSchema } from './wingman-schemas';
+import { VinDieselInputSchema, VinDieselOutputSchema } from './vin-diesel-schemas';
+import { VandelayAlibiOutputSchema, VandelayAlibiInputSchema } from './vandelay-schemas';
+import { WinstonWolfeOutputSchema, WinstonWolfeInputSchema } from './winston-wolfe-schemas';
+import { KifKrokerAnalysisOutputSchema, KifKrokerAnalysisInputSchema } from './kif-kroker-schemas';
+import { RolodexAnalysisOutputSchema, RolodexAnalysisInputSchema } from './rolodex-schemas';
+import { JrocOutputSchema, JrocInputSchema } from './jroc-schemas';
+import { LaheyAnalysisOutputSchema, LaheyAnalysisInputSchema } from './lahey-schemas';
+import { ForemanatorLogOutputSchema, ForemanatorLogInputSchema } from './foremanator-schemas';
+import { SterileishAnalysisOutputSchema, SterileishAnalysisInputSchema } from './sterileish-schemas';
+import { PaperTrailScanOutputSchema, PaperTrailScanInputSchema } from './paper-trail-schemas';
+import { BarbaraOutputSchema, BarbaraInputSchema } from './barbara-schemas';
+import { AuditorOutputSchema, AuditorInputSchema } from './auditor-generalissimo-schemas';
+import { WingmanOutputSchema, WingmanInputSchema } from './wingman-schemas';
 import { OsintOutputSchema } from './osint-schemas';
 import { InfidelityAnalysisOutputSchema } from './infidelity-analysis-schemas';
 import { DecoyOutputSchema } from './decoy-schemas';
 import { DossierOutputSchema } from './dossier-schemas';
-import { KendraOutputSchema } from './kendra-schemas';
-import { OrpheanOracleOutputSchema } from './orphean-oracle-schemas';
-import { LumberghAnalysisOutputSchema } from './lumbergh-schemas';
-import { LucilleBluthOutputSchema } from './lucille-bluth-schemas';
-import { PamAudioOutputSchema } from './pam-poovey-schemas';
+import { KendraOutputSchema, KendraInputSchema } from './kendra-schemas';
+import { OrpheanOracleOutputSchema, OrpheanOracleInputSchema } from './orphean-oracle-schemas';
+import { LumberghAnalysisOutputSchema, LumberghAnalysisInputSchema } from './lumbergh-schemas';
+import { LucilleBluthOutputSchema, LucilleBluthInputSchema } from './lucille-bluth-schemas';
+import { PamAudioOutputSchema, PamScriptInputSchema } from './pam-poovey-schemas';
 import { TransactionSchema } from '@/ai/tools/ledger-schemas';
 import { StonksBotOutputSchema } from './stonks-bot-schemas';
-import { RenoModeAnalysisOutputSchema } from './reno-mode-schemas';
-import { PatricktAgentOutputSchema } from './patrickt-agent-schemas';
+import { RenoModeAnalysisOutputSchema, RenoModeAnalysisInputSchema } from './reno-mode-schemas';
+import { PatricktAgentOutputSchema, PatricktAgentInputSchema } from './patrickt-agent-schemas';
 import { InventoryDaemonOutputSchema } from './inventory-daemon-schemas';
 import { SystemStatusSchema, FindUsersByVowOutputSchema, ManageSyndicateOutputSchema } from '@/ai/tools/demiurge-schemas';
-import { RitualQuestOutputSchema } from './ritual-quests-schemas';
+import { RitualQuestOutputSchema, RitualQuestInputSchema } from './ritual-quests-schemas';
 import { TransmuteCreditsOutputSchema } from '@/ai/tools/proxy-schemas';
 import { VaultAnalysisOutputSchema } from './vault-daemon-schemas';
+import { CrmActionSchema } from './crm-agent-schemas';
+import { DrSyntaxInputSchema } from './dr-syntax-schemas';
+import { StonksBotInputSchema } from './stonks-bot-schemas';
 
 
 // Schemas from the original BEEP agent, preserved for the public contract.
@@ -337,6 +340,112 @@ export const AgentReportSchema = z.discriminatedUnion('agent', [
   })
 ]);
 
+export const RouterSchema = z.discriminatedUnion("route", [
+    z.object({ route: z.literal("dispatcher") }),
+    z.object({ route: z.literal("reasoner") }),
+    z.object({ route: z.literal("inventory_daemon"), params: z.object({ query: z.string() }) }),
+    z.object({ route: z.literal("burn_bridge_protocol") }),
+    z.object({ route: z.literal("vault_daemon") }),
+    z.object({ 
+      route: z.literal("crm_agent"), 
+      params: CrmActionSchema.describe("The specific CRM action and parameters extracted from the user's command.") 
+    }),
+    z.object({ 
+      route: z.literal("dr_syntax"), 
+      params: DrSyntaxInputSchema.pick({ content: true, contentType: true }).describe("The content and its type to be critiqued.")
+    }),
+    z.object({ 
+      route: z.literal("stonks_bot"), 
+      params: StonksBotInputSchema.pick({ ticker: true, mode: true }).describe("The stock ticker and personality mode for the bot.")
+    }),
+    z.object({
+        route: z.literal('winston_wolfe'),
+        params: WinstonWolfeInputSchema.pick({ reviewText: true }),
+    }),
+    z.object({
+        route: z.literal('kif_kroker'),
+        params: KifKrokerAnalysisInputSchema.pick({ channelId: true }),
+    }),
+    z.object({
+        route: z.literal('vandelay'),
+        params: VandelayAlibiInputSchema.pick({ topicHint: true, addAttendees: true }).partial(),
+    }),
+    z.object({
+        route: z.literal('rolodex'),
+        params: RolodexAnalysisInputSchema.pick({ candidateName: true, candidateSummary: true, jobDescription: true }),
+    }),
+    z.object({
+        route: z.literal('jroc'),
+        params: JrocInputSchema.pick({ businessType: true, logoStyle: true }),
+    }),
+    z.object({
+        route: z.literal('lahey_surveillance'),
+        params: LaheyAnalysisInputSchema.pick({ logEntry: true }),
+    }),
+    z.object({
+        route: z.literal('foremanator'),
+        params: ForemanatorLogInputSchema.pick({ logText: true }),
+    }),
+    z.object({
+        route: z.literal('sterileish'),
+        params: SterileishAnalysisInputSchema.pick({ logText: true, entryType: true }),
+    }),
+    z.object({
+        route: z.literal('paper_trail'),
+        params: PaperTrailScanInputSchema.pick({ receiptPhotoUri: true, caseFile: true }),
+    }),
+    z.object({
+        route: z.literal('barbara'),
+        params: BarbaraInputSchema.pick({ documentText: true, task: true }),
+    }),
+    z.object({
+        route: z.literal('auditor'),
+        params: AuditorInputSchema.pick({ transactions: true }),
+    }),
+    z.object({
+        route: z.literal('wingman'),
+        params: WingmanInputSchema.pick({ situationContext: true, messageMode: true }),
+    }),
+    z.object({
+        route: z.literal('kendra'),
+        params: KendraInputSchema.pick({ productIdea: true }),
+    }),
+    z.object({
+        route: z.literal('orphean_oracle'),
+        params: OrpheanOracleInputSchema.pick({ userQuery: true }),
+    }),
+    z.object({
+        route: z.literal('lumbergh'),
+        params: LumberghAnalysisInputSchema.pick({ inviteText: true }),
+    }),
+    z.object({
+        route: z.literal('lucille_bluth'),
+        params: LucilleBluthInputSchema.pick({ expenseDescription: true, expenseAmount: true, category: true }),
+    }),
+    z.object({
+        route: z.literal('pam_poovey'),
+        params: PamScriptInputSchema.pick({ topic: true }),
+    }),
+    z.object({
+        route: z.literal('reno_mode'),
+        params: RenoModeAnalysisInputSchema.pick({ photoDataUri: true }),
+    }),
+    z.object({
+        route: z.literal('patrickt_app'),
+        params: PatricktAgentInputSchema.pick({ action: true, eventDescription: true, eventCategory: true, chatInput: true }),
+    }),
+    z.object({
+        route: z.literal('vin_diesel'),
+        params: VinDieselInputSchema.pick({ vin: true }),
+    }),
+    z.object({
+        route: z.literal('ritual_quests'),
+        params: RitualQuestInputSchema.pick({}).partial(),
+    }),
+]).describe("The routing decision. You must choose a route and, for specialist agents like crm_agent, extract all necessary parameters.");
+export type RouterResult = z.infer<typeof RouterSchema>;
+
+
 export const UserCommandInputSchema = z.object({
   userCommand: z.string().describe('A natural language command from the user about what they want to do or launch.'),
   userId: z.string(),
@@ -358,3 +467,4 @@ export type UserCommandOutput = z.infer<typeof UserCommandOutputSchema>;
     
 
     
+

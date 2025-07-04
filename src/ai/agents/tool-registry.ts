@@ -4,43 +4,14 @@
  * It uses a factory pattern to create context-aware tool instances.
  */
 
-import { Tool, DynamicTool } from '@langchain/core/tools';
+import { Tool } from '@langchain/core/tools';
 import { z } from 'zod';
 import { UserPsyche, UserRole } from '@prisma/client';
 import prisma from '@/lib/prisma';
 
 import {
-    AgentReportSchema,
     UserCommandOutputSchema,
 } from '../agents/beep-schemas';
-
-// Agent Imports
-import { validateVin } from '@/ai/agents/vin-diesel';
-import { generateSolution } from '@/ai/agents/winston-wolfe';
-import { analyzeComms } from '@/ai/agents/kif-kroker';
-import { createVandelayAlibi } from '@/ai/agents/vandelay';
-import { analyzeCandidate } from '@/ai/agents/rolodex';
-import { generateBusinessKit } from '@/ai/agents/jroc';
-import { analyzeLaheyLog } from '@/ai/agents/lahey';
-import { processDailyLog } from '@/ai/agents/foremanator';
-import { analyzeCompliance } from '@/ai/agents/sterileish';
-import { scanEvidence as scanEvidenceFlow } from '@/ai/agents/paper-trail';
-import { processDocument } from '@/ai/agents/barbara';
-import { auditFinances } from '@/ai/agents/auditor-generalissimo';
-import { generateWingmanMessage } from '@/ai/agents/wingman';
-import { performOsintScan } from '@/ai/agents/osint';
-import { performInfidelityAnalysis } from '@/ai/agents/infidelity-analysis';
-import { deployDecoy } from '@/ai/agents/decoy';
-import { generateDossier } from '@/ai/agents/dossier-agent';
-import { getKendraTake } from '@/ai/agents/kendra';
-import { invokeOracle } from '@/ai/agents/orphean-oracle-flow';
-import { analyzeInvite } from '@/ai/agents/lumbergh';
-import { analyzeExpense } from '@/ai/agents/lucille-bluth';
-import { generatePamRant } from '../agents/pam-poovey';
-import { analyzeCarShame } from '@/ai/agents/reno-mode';
-import { processPatricktAction } from '../agents/patrickt-agent';
-import { generateRitualQuests } from '../agents/ritual-quests-agent';
-
 
 // Tool Imports
 import { getUsageDetailsForAgent, requestCreditTopUpInDb } from '@/services/billing-service';
@@ -55,33 +26,8 @@ import { transmuteCredits } from '@/ai/tools/proxy-tools';
 import { RequestCreditTopUpInputSchema } from '@/ai/tools/billing-schemas';
 import { DatingProfileInputSchema } from '@/ai/tools/dating-schemas';
 import { CreateSecurityAlertInputSchema } from '@/ai/tools/security-schemas';
-import { VinDieselInputSchema } from '../agents/vin-diesel-schemas';
-import { WinstonWolfeInputSchema } from '../agents/winston-wolfe-schemas';
-import { KifKrokerAnalysisInputSchema } from '../agents/kif-kroker-schemas';
-import { VandelayAlibiInputSchema } from '../agents/vandelay-schemas';
-import { RolodexAnalysisInputSchema } from '../agents/rolodex-schemas';
-import { JrocInputSchema } from '../agents/jroc-schemas';
-import { LaheyAnalysisInputSchema } from '../agents/lahey-schemas';
-import { ForemanatorLogInputSchema } from '../agents/foremanator-schemas';
-import { SterileishAnalysisInputSchema } from '../agents/sterileish-schemas';
-import { PaperTrailScanInputSchema } from '../agents/paper-trail-schemas';
-import { BarbaraInputSchema } from '../agents/barbara-schemas';
-import { AuditorInputSchema } from '../agents/auditor-generalissimo-schemas';
-import { WingmanInputSchema } from '../agents/wingman-schemas';
-import { OsintInputSchema } from '../agents/osint-schemas';
-import { InfidelityAnalysisInputSchema } from '../agents/infidelity-analysis-schemas';
-import { DecoyInputSchema } from '../agents/decoy-schemas';
-import { DossierInputSchema } from '../agents/dossier-schemas';
-import { KendraInputSchema } from '../agents/kendra-schemas';
-import { OrpheanOracleInputSchema } from '../agents/orphean-oracle-schemas';
-import { LumberghAnalysisInputSchema } from '../agents/lumbergh-schemas';
-import { LucilleBluthInputSchema } from '../agents/lucille-bluth-schemas';
-import { PamScriptInputSchema } from '../agents/pam-poovey-schemas';
 import { CreateManualTransactionInputSchema } from '@/ai/tools/ledger-schemas';
-import { RenoModeAnalysisInputSchema } from '../agents/reno-mode-schemas';
-import { PatricktAgentInputSchema } from '../agents/patrickt-agent-schemas';
 import { FindUsersByVowInputSchema, ManageSyndicateInputSchema } from '@/ai/tools/demiurge-tools';
-import { RitualQuestInputSchema } from '../agents/ritual-quests-schemas';
 import { TransmuteCreditsInputSchema } from '../tools/proxy-schemas';
 
 
@@ -115,254 +61,42 @@ class FinalAnswerTool extends Tool {
 export async function getTools(context: AgentContext): Promise<Tool[]> {
     const { userId, workspaceId, psyche, role } = context;
 
-    const createAgentTool = ({
-        name,
-        description,
-        schema,
-        agentName,
-        agentFunc,
-        reportAction,
-    }: {
-        name: string;
-        description: string;
-        schema: z.ZodSchema<any>;
-        agentName: z.infer<typeof AgentReportSchema>['agent'];
-        agentFunc: (toolInput: any) => Promise<any>;
-        reportAction?: string;
-    }) => {
-        return new DynamicTool({
-            name,
-            description,
-            schema,
-            func: async (toolInput) => {
-                const result = await agentFunc(toolInput);
-                let reportData: any = result;
-                if (reportAction) {
-                    reportData = { action: reportAction, report: result };
-                }
-                const report: z.infer<typeof AgentReportSchema> = { agent: agentName, report: reportData };
-                return JSON.stringify(report);
-            },
-        });
-    };
-    
     const allTools: Tool[] = [
         new FinalAnswerTool(),
 
-        createAgentTool({
-            name: 'getRitualQuests',
-            description: "Fetches the user's current Ritual Quests based on their Covenant. Use when the user asks for their quests or what they should do next.",
-            schema: RitualQuestInputSchema.omit({ psyche: true, workspaceId: true }),
-            agentName: 'ritual-quests',
-            agentFunc: (toolInput) => generateRitualQuests({ ...toolInput, psyche, workspaceId }),
-        }),
-        
-        createAgentTool({
+        new Tool({
             name: 'getUsageDetails',
             description: 'Gets the current billing and agent action usage details. Use this when the user asks about their usage, limits, plan, or billing.',
             schema: z.object({}),
-            agentName: 'billing',
-            reportAction: 'get_usage',
-            agentFunc: () => getUsageDetailsForAgent(workspaceId, userId),
+            func: () => getUsageDetailsForAgent(workspaceId, userId),
         }),
         
-        createAgentTool({
+        new Tool({
             name: 'requestCreditTopUp',
             description: 'Logs a user\'s request to top up their credit balance via an out-of-band payment method like an e-Transfer. Use this when the user says "add credits", "buy credits", "top up my account", etc. Extract the amount from their command.',
             schema: RequestCreditTopUpInputSchema,
-            agentName: 'billing',
-            reportAction: 'request_top_up',
-            agentFunc: (toolInput) => requestCreditTopUpInDb(toolInput, userId, workspaceId),
+            func: (toolInput) => requestCreditTopUpInDb(toolInput, userId, workspaceId),
         }),
         
-        createAgentTool({
+        new Tool({
             name: 'createManualTransaction',
             description: 'Creates a manual credit or debit transaction on the user\'s workspace account. Use this for explicit user requests like "charge me 10 credits for this" or "process a refund of 5 credits".',
             schema: CreateManualTransactionInputSchema,
-            agentName: 'ledger',
-            reportAction: 'create_manual_transaction',
-            agentFunc: (toolInput) => createManualTransaction(toolInput, workspaceId, userId),
+            func: (toolInput) => createManualTransaction(toolInput, workspaceId, userId),
         }),
         
-        createAgentTool({
+        new Tool({
             name: 'getDatingProfile',
             description: 'Fetches a dating app profile by its ID. Use this when the user wants to get information about a specific person on a dating app before crafting a message. For example, "get profile 123 from Hinge."',
             schema: DatingProfileInputSchema,
-            agentName: 'dating',
-            reportAction: 'get_profile',
-            agentFunc: (toolInput) => getDatingProfile(toolInput, workspaceId, userId),
+            func: (toolInput) => getDatingProfile(toolInput, workspaceId, userId),
         }),
 
-        createAgentTool({
+        new Tool({
             name: 'createSecurityAlert',
             description: 'Creates a security alert in the Aegis system. Use this when the Aegis anomaly scan returns a positive result for a threat. You must provide the type, explanation, and risk level of the alert based on the Aegis report.',
             schema: CreateSecurityAlertInputSchema,
-            agentName: 'security',
-            reportAction: 'create_alert',
-            agentFunc: (toolInput) => createSecurityAlertInDb(toolInput, workspaceId, userId),
-        }),
-        
-        createAgentTool({
-            name: 'validateVin',
-            description: 'Validates a Vehicle Identification Number (VIN) for compliance and decoding. Use this when the user asks to "validate a VIN", "check a VIN", or similar.',
-            schema: VinDieselInputSchema.omit({ workspaceId: true }),
-            agentName: 'vin-diesel',
-            agentFunc: (toolInput) => validateVin({ ...toolInput, workspaceId }),
-        }),
-        
-        createAgentTool({
-            name: 'solveReputationProblem',
-            description: 'Analyzes a negative online review and generates a professional, disarming response. Use this when a user wants to "fix a bad review", "handle a complaint", etc.',
-            schema: WinstonWolfeInputSchema.omit({ workspaceId: true }),
-            agentName: 'winston-wolfe',
-            agentFunc: (toolInput) => generateSolution({ ...toolInput, workspaceId }),
-        }),
-        
-        createAgentTool({
-            name: 'analyzeTeamComms',
-            description: 'Analyzes a Slack channel for morale, passive-aggression, and burnout probability using the channel ID. Use this for "checking team morale", "analyzing a conversation", etc.',
-            schema: z.object({ channelId: z.string().describe("The ID of the public Slack channel to analyze.") }),
-            agentName: 'kif-kroker',
-            agentFunc: (toolInput) => analyzeComms({ ...toolInput, workspaceId }),
-        }),
-        
-        createAgentTool({
-            name: 'createAlibi',
-            description: 'Generates a fake, jargon-filled calendar invite to block off time. Use this for commands like "block my calendar", "create a fake meeting", "I need an hour".',
-            schema: VandelayAlibiInputSchema.omit({ workspaceId: true }),
-            agentName: 'vandelay',
-            agentFunc: (toolInput) => createVandelayAlibi({ ...toolInput, workspaceId }),
-        }),
-        
-        createAgentTool({
-            name: 'analyzeCandidate',
-            description: 'Analyzes a candidate summary against a job description. Use this to "check candidate fit", "analyze a resume", etc. You need to provide the candidate name, summary, and the job description.',
-            schema: RolodexAnalysisInputSchema.omit({ workspaceId: true }),
-            agentName: 'rolodex',
-            agentFunc: (toolInput) => analyzeCandidate({ ...toolInput, workspaceId }),
-        }),
-
-        createAgentTool({
-            name: 'generateBusinessKit',
-            description: 'Generates a business name, tagline, and logo concept. Use this when the user asks to "start a business", "get legit", "make a company", etc. They need to provide the type of business and a logo style.',
-            schema: JrocInputSchema.omit({ workspaceId: true }),
-            agentName: 'jroc',
-            agentFunc: (toolInput) => generateBusinessKit({ ...toolInput, workspaceId }),
-        }),
-
-        createAgentTool({
-            name: 'investigateLog',
-            description: 'Analyzes a log entry for suspicious activity with the cynical eye of an alcoholic ex-cop. Use this to investigate employee actions or any other log data.',
-            schema: LaheyAnalysisInputSchema.omit({ workspaceId: true }),
-            agentName: 'lahey-surveillance',
-            agentFunc: (toolInput) => analyzeLaheyLog({ ...toolInput, workspaceId }),
-        }),
-
-        createAgentTool({
-            name: 'logDailyReport',
-            description: 'Logs a daily report for a construction site. Takes raw text and structures it. Use for commands like "log daily report for construction."',
-            schema: ForemanatorLogInputSchema.omit({ workspaceId: true }),
-            agentName: 'foremanator',
-            agentFunc: (toolInput) => processDailyLog({ ...toolInput, workspaceId }),
-        }),
-
-        createAgentTool({
-            name: 'analyzeComplianceLog',
-            description: 'Analyzes a cleanroom or medical device manufacturing log for compliance issues with a sarcastic tone. Use for commands like "analyze this cleanroom log" or "is this calibration record compliant?".',
-            schema: SterileishAnalysisInputSchema.omit({ workspaceId: true }),
-            agentName: 'sterileish',
-            agentFunc: (toolInput) => analyzeCompliance({ ...toolInput, workspaceId }),
-        }),
-
-        new DynamicTool({
-            name: 'scanReceipt',
-            description: 'Scans a receipt image and extracts transaction details. The user must provide a photo of the receipt as a data URI.',
-            schema: PaperTrailScanInputSchema.omit({ workspaceId: true }),
-            func: async (toolInput) => {
-                const result = await scanEvidenceFlow({ ...toolInput, workspaceId });
-                const report: z.infer<typeof AgentReportSchema> = { agent: 'paper-trail', report: result };
-                return JSON.stringify(report);
-            },
-        }),
-
-        createAgentTool({
-            name: 'processDocumentForBarbara',
-            description: 'Delegates a document processing or compliance task to Agent Barbara. Use this for tasks like validating VINs, drafting professional emails, or checking compliance. Specify the task and provide the document text.',
-            schema: BarbaraInputSchema.omit({ workspaceId: true }),
-            agentName: 'barbara',
-            agentFunc: (toolInput) => processDocument({ ...toolInput, workspaceId }),
-        }),
-
-        createAgentTool({
-            name: 'auditFinances',
-            description: 'Audits a list of financial transactions with extreme prejudice. Use this for commands like \'audit my expenses\', \'review these transactions\', etc.',
-            schema: AuditorInputSchema.omit({ workspaceId: true }),
-            agentName: 'auditor',
-            agentFunc: (toolInput) => auditFinances({ ...toolInput, workspaceId }),
-        }),
-        
-        createAgentTool({
-            name: 'generateWingmanMessage',
-            description: 'Crafts the perfect message for a tricky social situation. The user must provide the situation context and a desired message mode (e.g., \'Charming AF\', \'Help Me Say No\').',
-            schema: WingmanInputSchema.omit({ workspaceId: true }),
-            agentName: 'wingman',
-            agentFunc: (toolInput) => generateWingmanMessage({ ...toolInput, workspaceId }),
-        }),
-        
-        createAgentTool({
-            name: 'getKendraTake',
-            description: 'Gets an unhinged, but brilliant, marketing campaign strategy for a product idea from KENDRA.exe. Use this when a user has a product idea and wants marketing help.',
-            schema: KendraInputSchema.omit({ workspaceId: true }),
-            agentName: 'kendra',
-            agentFunc: (toolInput) => getKendraTake({ ...toolInput, workspaceId }),
-        }),
-
-        createAgentTool({
-            name: 'invokeOrpheanOracle',
-            description: 'Consults the Orphean Oracle to translate raw business data into a profound, metaphorical, visual narrative. Use this when the user asks for a "story" about their data, or wants to "see" their business performance in a new way.',
-            schema: OrpheanOracleInputSchema.omit({ workspaceId: true }),
-            agentName: 'orphean-oracle',
-            agentFunc: (toolInput) => invokeOracle({ ...toolInput, workspaceId }),
-        }),
-        
-        createAgentTool({
-            name: 'analyzeMeetingInvite',
-            description: 'Analyzes a meeting invite for pointlessness and generates passive-aggressive decline memos. Use this when a user asks to "check a meeting invite" or "get me out of this meeting".',
-            schema: LumberghAnalysisInputSchema.omit({ workspaceId: true }),
-            agentName: 'lumbergh',
-            agentFunc: (toolInput) => analyzeInvite({ ...toolInput, workspaceId }),
-        }),
-        
-        createAgentTool({
-            name: 'getLucilleBluthTake',
-            description: 'Sends an expense to Lucille Bluth for a witty, judgmental, and condescending remark. Use this when a user wants to "log an expense", "categorize a purchase", etc. Extract the item description and cost from the user command.',
-            schema: LucilleBluthInputSchema.omit({ workspaceId: true }),
-            agentName: 'lucille-bluth',
-            agentFunc: (toolInput) => analyzeExpense({ ...toolInput, workspaceId }),
-        }),
-
-        createAgentTool({
-            name: 'getPamsTake',
-            description: 'Delegates a task to Pam Poovey, the HR director. Use this for requests like \'get Pam to talk about onboarding\' or \'ask Pam about the attendance policy\'. Specify the HR topic.',
-            schema: PamScriptInputSchema.omit({ workspaceId: true }),
-            agentName: 'pam-poovey',
-            agentFunc: (toolInput) => generatePamRant({ ...toolInput, workspaceId }),
-        }),
-
-        createAgentTool({
-            name: 'analyzeCarShame',
-            description: "Analyzes a photo of a user's messy car to provide a shame rating, a roast, and a detailing recommendation.",
-            schema: RenoModeAnalysisInputSchema.omit({ workspaceId: true }),
-            agentName: 'reno-mode',
-            agentFunc: (toolInput) => analyzeCarShame({ ...toolInput, workspaceId }),
-        }),
-
-        createAgentTool({
-            name: 'managePatricktSaga',
-            description: 'Logs events, gets roasts, or analyzes drama related to the "Patrickt" saga. Action can be LOG_EVENT, ANALYZE_DRAMA, or GENERATE_ROAST.',
-            schema: PatricktAgentInputSchema.omit({ workspaceId: true, userId: true }),
-            agentName: 'patrickt-app',
-            agentFunc: (toolInput) => processPatricktAction({ ...toolInput, workspaceId, userId }),
+            func: (toolInput) => createSecurityAlertInDb(toolInput, workspaceId, userId),
         }),
     ];
 
@@ -374,37 +108,29 @@ export async function getTools(context: AgentContext): Promise<Tool[]> {
 
     if (isOwner) {
         allTools.push(
-            createAgentTool({
+            new Tool({
                 name: 'getSystemStatus',
                 description: "Retrieves the current operational status of the entire ΛΞVON OS, including system load and agent performance. Only for the Architect.",
                 schema: z.object({}),
-                agentName: 'demiurge',
-                reportAction: 'get_system_status',
-                agentFunc: getSystemStatus,
+                func: getSystemStatus,
             }),
-            createAgentTool({
+            new Tool({
                 name: 'findUsersByVow',
                 description: "Finds users based on a keyword from their 'founding vow' or 'sacrifice' made during the Rite of Invocation. Only for the Architect.",
                 schema: FindUsersByVowInputSchema,
-                agentName: 'demiurge',
-                reportAction: 'find_users_by_vow',
-                agentFunc: findUsersByVow,
+                func: findUsersByVow,
             }),
-             createAgentTool({
+             new Tool({
                 name: 'manageSyndicateAccess',
                 description: "Performs high-level administrative actions on a group of users (a 'Syndicate' or 'Covenant'). Only for the Architect.",
                 schema: ManageSyndicateInputSchema,
-                agentName: 'demiurge',
-                reportAction: 'manage_syndicate_access',
-                agentFunc: manageSyndicateAccess,
+                func: manageSyndicateAccess,
             }),
-            createAgentTool({
+            new Tool({
                 name: 'transmuteCredits',
                 description: 'Transmutes ΞCredits to settle a real-world tribute (payment). The user must confirm the details. For Sovereigns only.',
                 schema: TransmuteCreditsInputSchema,
-                agentName: 'proxy',
-                reportAction: 'transmute',
-                agentFunc: (toolInput) => transmuteCredits(toolInput, workspaceId, userId),
+                func: (toolInput) => transmuteCredits(toolInput, workspaceId, userId),
             })
         );
     }

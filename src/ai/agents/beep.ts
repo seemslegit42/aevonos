@@ -44,6 +44,8 @@ import {
     UserCommandOutputSchema,
     type UserCommandOutput,
     AgentReportSchema,
+    RouterResult,
+    RouterSchema,
 } from './beep-schemas';
 import {
     getConversationHistory,
@@ -53,30 +55,30 @@ import prisma from '@/lib/prisma';
 import { InsufficientCreditsError } from '@/lib/errors';
 import { recordInteraction } from '@/services/pulse-engine-service';
 import { logUserActivity } from '@/services/activity-log-service';
+import { validateVin } from './vin-diesel';
+import { generateSolution } from './winston-wolfe';
+import { analyzeComms } from './kif-kroker';
+import { createVandelayAlibi } from './vandelay';
+import { analyzeCandidate } from './rolodex';
+import { generateBusinessKit } from './jroc';
+import { analyzeLaheyLog } from './lahey';
+import { processDailyLog } from './foremanator';
+import { analyzeCompliance } from './sterileish';
+import { scanEvidence } from './paper-trail';
+import { processDocument } from './barbara';
+import { auditFinances } from './auditor-generalissimo';
+import { generateWingmanMessage } from './wingman';
+import { getKendraTake } from './kendra';
+import { invokeOracle } from './orphean-oracle-flow';
+import { analyzeInvite } from './lumbergh';
+import { analyzeExpense } from './lucille-bluth';
+import { generatePamRant } from './pam-poovey';
+import { analyzeCarShame } from './reno-mode';
+import { processPatricktAction } from './patrickt-agent';
+import { generateRitualQuests } from './ritual-quests-agent';
+
 
 // --- Router and State Schemas ---
-const RouterSchema = z.discriminatedUnion("route", [
-    z.object({ route: z.literal("dispatcher") }),
-    z.object({ route: z.literal("reasoner") }),
-    z.object({ route: z.literal("inventory_daemon"), params: z.object({ query: z.string() }) }),
-    z.object({ route: z.literal("burn_bridge_protocol") }),
-    z.object({ route: z.literal("vault_daemon") }),
-    z.object({ 
-      route: z.literal("crm_agent"), 
-      params: CrmActionSchema.describe("The specific CRM action and parameters extracted from the user's command.") 
-    }),
-    z.object({ 
-      route: z.literal("dr_syntax"), 
-      params: DrSyntaxInputSchema.pick({ content: true, contentType: true }).describe("The content and its type to be critiqued.")
-    }),
-    z.object({ 
-      route: z.literal("stonks_bot"), 
-      params: StonksBotInputSchema.pick({ ticker: true, mode: true }).describe("The stock ticker and personality mode for the bot.")
-    }),
-]).describe("The routing decision. You must choose a route and, for specialist agents like crm_agent, extract all necessary parameters.");
-
-type RouterResult = z.infer<typeof RouterSchema>;
-
 // LangGraph State
 interface AgentState {
   messages: BaseMessage[];
@@ -200,12 +202,33 @@ const router = async (state: AgentState): Promise<Partial<AgentState>> => {
     Routes:
     - 'dispatcher': For simple app launches, greetings, or direct commands that don't need complex reasoning.
     - 'reasoner': For complex requests involving analysis, planning, or multi-step tool use.
-    - 'inventory_daemon': For any request about stock levels, product inventory, or purchase orders.
-    - 'burn_bridge_protocol': For explicit requests to "burn the bridge" or conduct a full-spectrum investigation on a person.
-    - 'vault_daemon': For any request about finances, revenue, profit, spending, or where money is being wasted.
-    - 'crm_agent': For any request about contacts (creating, listing, updating, deleting). You MUST extract the crm_action and all its parameters.
-    - 'dr_syntax': For any request involving critique, review, or feedback on text, code, or prompts. You MUST extract the content and contentType.
-    - 'stonks_bot': For any request about stock prices or financial "advice". You MUST extract the ticker and mode.
+    - 'inventory_daemon': For requests about stock, inventory, or purchase orders.
+    - 'burn_bridge_protocol': For full-spectrum investigation on a person.
+    - 'vault_daemon': For requests about finance, revenue, profit, or spending.
+    - 'crm_agent': For requests about contacts (create, list, update, delete).
+    - 'dr_syntax': For requests involving critique or review of text, code, or prompts.
+    - 'stonks_bot': For requests about stock prices or financial "advice".
+    - 'winston_wolfe': For handling negative reviews or reputation management problems.
+    - 'kif_kroker': To analyze team communications in a Slack channel.
+    - 'vandelay': To create a fake calendar invite or alibi.
+    - 'rolodex': To analyze a job candidate's profile against a job description.
+    - 'jroc': To generate a business name, tagline, and logo concept.
+    - 'lahey_surveillance': To investigate a suspicious log entry.
+    - 'foremanator': To process a construction daily log.
+    - 'sterileish': To analyze a cleanroom or compliance log.
+    - 'paper_trail': To scan a receipt image.
+    - 'barbara': For administrative and compliance document processing tasks.
+    - 'auditor': To perform a detailed audit on a list of financial transactions.
+    - 'wingman': To get help crafting a message for a tricky social situation.
+    - 'kendra': To get a marketing campaign for a product idea.
+    - 'orphean_oracle': To get a narrative, visual story about business data.
+    - 'lumbergh': To analyze a meeting invite for pointlessness.
+    - 'lucille_bluth': To get a sarcastic take on an expense.
+    - 'pam_poovey': For HR-related rants or scripts in a specific persona.
+    - 'reno_mode': To analyze a photo of a messy car.
+    - 'patrickt_app': To log events, get roasts, or analyze drama in the "Patrickt" saga.
+    - 'vin_diesel': To validate a Vehicle Identification Number (VIN).
+    - 'ritual_quests': For user requests about their quests or goals.
 
     Conversation History:
     ${messages.map(m => `${m._getType()}: ${m.content}`).join('\n')}
@@ -220,6 +243,47 @@ const router = async (state: AgentState): Promise<Partial<AgentState>> => {
         return { routerResult: { route: 'reasoner' } };
     }
 };
+
+// Generic node for calling a specialist agent and returning its response
+const callSpecialistAgent = async (
+    state: AgentState,
+    agentName: z.infer<typeof AgentReportSchema>['agent'],
+    agentFunction: (input: any) => Promise<any>,
+    responseTemplate: (report: any) => { responseText: string, appsToLaunch: z.infer<typeof UserCommandOutputSchema>['appsToLaunch'], suggestedCommands: string[] }
+): Promise<Partial<AgentState>> => {
+    console.log(`[BEEP] Delegating to ${agentName} daemon.`);
+    const { workspaceId, userId, psyche, role, routerResult } = state;
+    if (routerResult?.route !== agentName.replace(/-/g, '_')) throw new Error(`Invalid route for ${agentName}`);
+    
+    const agentInput = {
+        ...((routerResult as any).params || {}),
+        workspaceId,
+        userId,
+        psyche,
+        role,
+    };
+
+    const report = await agentFunction(agentInput);
+    const daemonResponse = { agent: agentName, report };
+
+    const responseDetails = responseTemplate(report);
+
+    const finalAnswerToolCall = {
+        name: 'final_answer',
+        args: {
+            ...responseDetails,
+            agentReports: [daemonResponse],
+        },
+        id: `tool_call_${agentName}_final`
+    };
+    
+    const response = new AIMessage({
+        content: `${agentName} has responded.`,
+        tool_calls: [finalAnswerToolCall],
+    });
+
+    return { messages: [response] };
+}
 
 const callDispatcherModel = async (state: AgentState) => {
     console.log('[BEEP] Invoking Dispatcher (fast model).');
@@ -567,6 +631,111 @@ workflow.addNode('vault_daemon_node', callVaultDaemon);
 workflow.addNode('crm_agent_node', callCrmAgent);
 workflow.addNode('dr_syntax_node', callDrSyntax);
 workflow.addNode('stonks_bot_node', callStonksBot);
+workflow.addNode('winston_wolfe_node', (state) => callSpecialistAgent(state, 'winston-wolfe', generateSolution, (report) => ({
+    responseText: `The Fixer has a solution.`,
+    appsToLaunch: [{ type: 'winston-wolfe', contentProps: report }],
+    suggestedCommands: ["Copy response to clipboard"],
+})));
+workflow.addNode('kif_kroker_node', (state) => callSpecialistAgent(state, 'kif-kroker', analyzeComms, (report) => ({
+    responseText: `Kif has completed his atmospheric scan.`,
+    appsToLaunch: [{ type: 'kif-kroker', contentProps: report }],
+    suggestedCommands: ["Check another channel"],
+})));
+workflow.addNode('vandelay_node', (state) => callSpecialistAgent(state, 'vandelay', createVandelayAlibi, (report) => ({
+    responseText: `Your alibi has been architected.`,
+    appsToLaunch: [{ type: 'vandelay', contentProps: { alibi: report } }],
+    suggestedCommands: ["Copy title to clipboard"],
+})));
+workflow.addNode('rolodex_node', (state) => callSpecialistAgent(state, 'rolodex', analyzeCandidate, (report) => ({
+    responseText: `Candidate analysis complete.`,
+    appsToLaunch: [{ type: 'rolodex', contentProps: report }],
+    suggestedCommands: ["Analyze another candidate"],
+})));
+workflow.addNode('jroc_node', (state) => callSpecialistAgent(state, 'jroc', generateBusinessKit, (report) => ({
+    responseText: `J-ROC's got your back, mafk. Business kit is ready.`,
+    appsToLaunch: [{ type: 'jroc-business-kit', contentProps: report }],
+    suggestedCommands: ["Generate another business"],
+})));
+workflow.addNode('lahey_surveillance_node', (state) => callSpecialistAgent(state, 'lahey-surveillance', analyzeLaheyLog, (report) => ({
+    responseText: `The liquor has spoken.`,
+    appsToLaunch: [{ type: 'lahey-surveillance' }], // App manages its own state
+    suggestedCommands: ["Investigate another incident"],
+})));
+workflow.addNode('foremanator_node', (state) => callSpecialistAgent(state, 'foremanator', processDailyLog, (report) => ({
+    responseText: `The Foremanator has processed the log.`,
+    appsToLaunch: [{ type: 'foremanator', contentProps: report }],
+    suggestedCommands: ["Log another report"],
+})));
+workflow.addNode('sterileish_node', (state) => callSpecialistAgent(state, 'sterileish', analyzeCompliance, (report) => ({
+    responseText: `Compliance log analyzed. It's... probably fine.`,
+    appsToLaunch: [{ type: 'sterileish', contentProps: report }],
+    suggestedCommands: ["Analyze another log"],
+})));
+workflow.addNode('paper_trail_node', (state) => callSpecialistAgent(state, 'paper-trail', scanEvidence, (report) => ({
+    responseText: `The informant has filed their report.`,
+    appsToLaunch: [{ type: 'paper-trail', contentProps: { evidenceLog: [report] } }],
+    suggestedCommands: ["File more evidence"],
+})));
+workflow.addNode('barbara_node', (state) => callSpecialistAgent(state, 'barbara', processDocument, (report) => ({
+    responseText: `Agent Barbara has completed her review. I'd check the results if I were you.`,
+    appsToLaunch: [{ type: 'barbara', contentProps: report }],
+    suggestedCommands: ["Submit another document"],
+})));
+workflow.addNode('auditor_node', (state) => callSpecialistAgent(state, 'auditor', auditFinances, (report) => ({
+    responseText: `The Auditor Generalissimo has delivered his verdict. Prepare yourself, comrade.`,
+    appsToLaunch: [{ type: 'auditor-generalissimo', contentProps: report }],
+    suggestedCommands: ["Export audit report"],
+})));
+workflow.addNode('wingman_node', (state) => callSpecialistAgent(state, 'wingman', generateWingmanMessage, (report) => ({
+    responseText: `Wingman has your six. Message crafted.`,
+    appsToLaunch: [{ type: 'beep-wingman', contentProps: report }],
+    suggestedCommands: ["Copy message"],
+})));
+workflow.addNode('kendra_node', (state) => callSpecialistAgent(state, 'kendra', getKendraTake, (report) => ({
+    responseText: `KENDRA.exe has spoken. Don't waste it.`,
+    appsToLaunch: [{ type: 'kendra', contentProps: report }],
+    suggestedCommands: ["Get a take on another idea"],
+})));
+workflow.addNode('orphean_oracle_node', (state) => callSpecialistAgent(state, 'orphean-oracle', invokeOracle, (report) => ({
+    responseText: `The Orphean Oracle has returned from the data underworld with a story.`,
+    appsToLaunch: [{ type: 'orphean-oracle', contentProps: report }],
+    suggestedCommands: ["Ask another question"],
+})));
+workflow.addNode('lumbergh_node', (state) => callSpecialistAgent(state, 'lumbergh', analyzeInvite, (report) => ({
+    responseText: `Yeah, so, Lumbergh looked at that meeting invite for you. Mmmkay.`,
+    appsToLaunch: [{ type: 'project-lumbergh', contentProps: report }],
+    suggestedCommands: ["Copy decline memo"],
+})));
+workflow.addNode('lucille_bluth_node', (state) => callSpecialistAgent(state, 'lucille-bluth', analyzeExpense, (report) => ({
+    responseText: `Lucille has passed judgment on your spending.`,
+    appsToLaunch: [{ type: 'lucille-bluth', contentProps: report }],
+    suggestedCommands: ["Log another expense"],
+})));
+workflow.addNode('pam_poovey_node', (state) => callSpecialistAgent(state, 'pam-poovey', generatePamRant, (report) => ({
+    responseText: `You got Pam's take. Good luck.`,
+    appsToLaunch: [{ type: 'pam-poovey-onboarding', contentProps: report }],
+    suggestedCommands: ["Get another take from Pam"],
+})));
+workflow.addNode('reno_mode_node', (state) => callSpecialistAgent(state, 'reno-mode', analyzeCarShame, (report) => ({
+    responseText: `Reno has delivered his verdict on your filth.`,
+    appsToLaunch: [{ type: 'reno-mode', contentProps: report }],
+    suggestedCommands: ["Analyze another car"],
+})));
+workflow.addNode('patrickt_app_node', (state) => callSpecialistAgent(state, 'patrickt-app', processPatricktAction, (report) => ({
+    responseText: `The Patrickt saga continues.`,
+    appsToLaunch: [{ type: 'patrickt-app' }], // App has its own state
+    suggestedCommands: ["Log another event"],
+})));
+workflow.addNode('vin_diesel_node', (state) => callSpecialistAgent(state, 'vin-diesel', validateVin, (report) => ({
+    responseText: `VIN Diesel's report is in.`,
+    appsToLaunch: [{ type: 'vin-diesel', contentProps: report }],
+    suggestedCommands: ["Validate another VIN"],
+})));
+workflow.addNode('ritual_quests_node', (state) => callSpecialistAgent(state, 'ritual-quests', generateRitualQuests, (report) => ({
+    responseText: `The Chronicler has inscribed your Ritual Quests.`,
+    appsToLaunch: [{ type: 'ritual-quests', contentProps: report }],
+    suggestedCommands: ["Show me my quests again"],
+})));
 workflow.addNode('handle_threat', handleThreat);
 workflow.addNode('warn_and_continue', warnAndContinue);
 workflow.addNode('tools', executeTools); 
@@ -583,7 +752,7 @@ workflow.addConditionalEdges('aegis', routeAfterAegis, {
 workflow.addEdge('handle_threat', 'tools');
 workflow.addEdge('warn_and_continue', 'router');
 
-workflow.addConditionalEdges('router', (state: AgentState) => state.routerResult?.route || 'reasoner', {
+workflow.addConditionalEdges('router', (state: AgentState) => state.routerResult?.route.replace(/-/g, '_') || 'reasoner', {
     dispatcher: 'agent_dispatcher',
     reasoner: 'agent_reasoner',
     inventory_daemon: 'inventory_daemon_node',
@@ -592,39 +761,42 @@ workflow.addConditionalEdges('router', (state: AgentState) => state.routerResult
     crm_agent: 'crm_agent_node',
     dr_syntax: 'dr_syntax_node',
     stonks_bot: 'stonks_bot_node',
+    winston_wolfe: 'winston_wolfe_node',
+    kif_kroker: 'kif_kroker_node',
+    vandelay: 'vandelay_node',
+    rolodex: 'rolodex_node',
+    jroc: 'jroc_node',
+    lahey_surveillance: 'lahey_surveillance_node',
+    foremanator: 'foremanator_node',
+    sterileish: 'sterileish_node',
+    paper_trail: 'paper_trail_node',
+    barbara: 'barbara_node',
+    auditor: 'auditor_node',
+    wingman: 'wingman_node',
+    kendra: 'kendra_node',
+    orphean_oracle: 'orphean_oracle_node',
+    lumbergh: 'lumbergh_node',
+    lucille_bluth: 'lucille_bluth_node',
+    pam_poovey: 'pam_poovey_node',
+    reno_mode: 'reno_mode_node',
+    patrickt_app: 'patrickt_app_node',
+    vin_diesel: 'vin_diesel_node',
+    ritual_quests: 'ritual_quests_node',
 });
 
-workflow.addConditionalEdges('agent_dispatcher', shouldContinue, {
-  tools: 'tools',
-  end: END,
-});
-workflow.addConditionalEdges('agent_reasoner', shouldContinue, {
-  tools: 'tools',
-  end: END,
-});
-workflow.addConditionalEdges('inventory_daemon_node', shouldContinue, {
-  tools: 'tools',
-  end: END,
-});
-workflow.addConditionalEdges('burn_bridge_protocol_node', shouldContinue, {
-  tools: 'tools',
-  end: END,
-});
-workflow.addConditionalEdges('vault_daemon_node', shouldContinue, {
-  tools: 'tools',
-  end: END,
-});
-workflow.addConditionalEdges('crm_agent_node', shouldContinue, {
-  tools: 'tools',
-  end: END,
-});
-workflow.addConditionalEdges('dr_syntax_node', shouldContinue, {
-  tools: 'tools',
-  end: END,
-});
-workflow.addConditionalEdges('stonks_bot_node', shouldContinue, {
-  tools: 'tools',
-  end: END,
+const nodesWithEdges = [
+    'agent_dispatcher', 'agent_reasoner', 'inventory_daemon_node', 'burn_bridge_protocol_node',
+    'vault_daemon_node', 'crm_agent_node', 'dr_syntax_node', 'stonks_bot_node', 'winston_wolfe_node',
+    'kif_kroker_node', 'vandelay_node', 'rolodex_node', 'jroc_node', 'lahey_surveillance_node', 'foremanator_node',
+    'sterileish_node', 'paper_trail_node', 'barbara_node', 'auditor_node', 'wingman_node', 'kendra_node',
+    'orphean_oracle_node', 'lumbergh_node', 'lucille_bluth_node', 'pam_poovey_node', 'reno_mode_node',
+    'patrickt_app_node', 'vin_diesel_node', 'ritual_quests_node'
+];
+nodesWithEdges.forEach(nodeName => {
+    workflow.addConditionalEdges(nodeName, shouldContinue, {
+        tools: 'tools',
+        end: END,
+    });
 });
 
 
