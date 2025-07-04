@@ -96,13 +96,22 @@ export async function getWorkspaceUsers(workspaceId: string) {
   return users;
 }
 
+const WORKSPACE_VOWS_CACHE_KEY = (workspaceId: string) => `admin:vows:${workspaceId}`;
+const WORKSPACE_VOWS_CACHE_TTL = 60 * 15; // 15 minutes
+
 /**
  * Retrieves the founding vows and goals for all users in a workspace.
  * @param workspaceId The ID of the workspace.
  * @returns A promise that resolves to an array of objects containing user and vow data.
  */
 export async function getWorkspaceVows(workspaceId: string) {
-  return prisma.user.findMany({
+  const cacheKey = WORKSPACE_VOWS_CACHE_KEY(workspaceId);
+  const cachedVows = await cache.get(cacheKey);
+  if (cachedVows) {
+      return cachedVows;
+  }
+  
+  const vows = await prisma.user.findMany({
     where: {
       workspaces: {
         some: { id: workspaceId },
@@ -121,4 +130,7 @@ export async function getWorkspaceVows(workspaceId: string) {
       createdAt: 'asc',
     },
   });
+
+  await cache.set(cacheKey, vows, 'EX', WORKSPACE_VOWS_CACHE_TTL);
+  return vows;
 }
