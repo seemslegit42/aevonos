@@ -610,7 +610,8 @@ export const artifactManifests: ArtifactManifest[] = [
     rarity: 'COMMON',
     systemEffect: 'For 60 seconds, UI animations and refresh rates slow dramatically.',
     imageUrl: 'https://placehold.co/400x560.png',
-    imageHint: 'slow motion',
+    imageHint: 'slow motion clock',
+    durationMinutes: 1,
   },
   {
     id: 'ACROPOLIS_MARBLE',
@@ -665,6 +666,7 @@ export const artifactManifests: ArtifactManifest[] = [
     systemEffect: 'For 15 minutes, a `theme-weeping-glass` class is applied, causing UI elements on the Canvas to develop a slow, "dripping" animation.',
     imageUrl: 'https://placehold.co/400x560.png',
     imageHint: 'liquid glass',
+    durationMinutes: 15,
   },
   {
     id: 'ORACLES_DECREE',
@@ -717,6 +719,7 @@ export const artifactManifests: ArtifactManifest[] = [
     systemEffect: 'For 10 minutes, BEEP adopts a tragic persona, while Aegis communicates with comedic optimism.',
     imageUrl: 'https://placehold.co/400x560.png',
     imageHint: 'theater masks',
+    durationMinutes: 10,
   },
   {
     id: 'BEEPS_CYNICISM',

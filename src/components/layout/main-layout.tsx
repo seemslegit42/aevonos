@@ -29,6 +29,7 @@ const effectToTheme: Record<string, string> = {
     'ACROPOLIS_MARBLE': 'theme-acropolis-marble',
     'NOCTUAS_GAZE': 'theme-noctuas-gaze',
     'WEEPING_GLASS': 'theme-weeping-glass',
+    'GEOLOGIC_TIME': 'theme-geologic-time',
 };
 
 

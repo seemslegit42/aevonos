@@ -224,6 +224,27 @@ const weepingGlassRarityTable: OutcomeTier[] = [
     },
 ];
 
+const geologicTimeRarityTable: OutcomeTier[] = [
+    {
+        tier: 'COMMON', // Loss
+        baseWeight: 2000, // 20% chance of failure
+        boons: [{ type: 'credits', value: 0, weight: 100 }],
+        narrativeTriggers: ["Time remains constant.", "The eons do not stir for your tribute."],
+    },
+    {
+        tier: 'RARE', // Win
+        baseWeight: 8000, // 80% chance of success
+        boons: [{ type: 'system_effect', value: 'GEOLOGIC_TIME', weight: 100 }],
+        narrativeTriggers: ["The weight of ages settles upon your canvas.", "Time itself bends to your will."],
+    },
+    {
+        tier: 'DIVINE', // Pity Boon
+        baseWeight: 1,
+        boons: [{ type: 'system_effect', value: 'GEOLOGIC_TIME', weight: 100 }],
+        narrativeTriggers: ["The artifact takes pity on your persistence."],
+    },
+];
+
 const oracleDecreeRarityTable: OutcomeTier[] = [
     {
         tier: 'COMMON', // Loss
@@ -298,5 +319,9 @@ export const follyInstrumentsConfig: Record<string, FollyInstrumentConfig> = {
     'THESPIAN_MASK': {
         id: 'THESPIAN_MASK',
         rarityTable: thespianMaskRarityTable,
+    },
+    'GEOLOGIC_TIME': {
+        id: 'GEOLOGIC_TIME',
+        rarityTable: geologicTimeRarityTable,
     },
 };

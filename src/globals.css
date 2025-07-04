@@ -95,6 +95,26 @@
     --ring: 45 100% 60%;
   }
 
+  .dark.theme-noctuas-gaze {
+    --background: 0 0% 0%;
+    --foreground: 240 5% 90%;
+    --card: 240 5% 4%;
+    --card-foreground: 240 5% 90%;
+    --popover: 0 0% 0%;
+    --popover-foreground: 240 5% 90%;
+    --primary: 240 5% 80%;
+    --primary-foreground: 0 0% 0%;
+    --secondary: 240 5% 15%;
+    --secondary-foreground: 240 5% 90%;
+    --muted: 240 5% 10%;
+    --muted-foreground: 240 5% 50%;
+    --accent: 240 5% 70%;
+    --accent-foreground: 0 0% 0%;
+    --border: 240 5% 15%;
+    --input: 240 5% 15%;
+    --ring: 240 5% 80%;
+  }
+
   .dark.theme-covenant-motion {
     --background: 220 40% 10%;
     --foreground: 180 100% 95%;
@@ -161,6 +181,19 @@
   .animate-screen-shake {
     animation: screen-shake 0.5s;
   }
+
+  .dark.theme-weeping-glass .react-resizable {
+    animation: weeping-glass 8s ease-in-out infinite;
+  }
+
+  .dark.theme-geologic-time .react-resizable {
+    transition-duration: 4s !important;
+    animation: slow-drift 20s ease-in-out infinite;
+  }
+
+  .dark.theme-geologic-time * {
+      transition-duration: 2s !important;
+  }
 }
 
 @keyframes crystal-pulse {
@@ -195,4 +228,27 @@
     80% { transform: translate(-1px, -1px) rotate(0.5deg); }
     90% { transform: translate(1px, 2px) rotate(0deg); }
     100% { transform: translate(1px, -2px) rotate(-0.5deg); }
+}
+
+@keyframes weeping-glass {
+    0%, 100% {
+        border-radius: var(--radius);
+        transform: translateY(0) scale(1);
+    }
+    50% {
+        border-radius: 40% 60% 70% 30% / 30% 50% 50% 70%;
+        transform: translateY(2px) scale(0.98);
+    }
+}
+
+@keyframes slow-drift {
+    0%, 100% {
+        transform: translate(0, 0);
+    }
+    25% {
+        transform: translate(1px, 2px);
+    }
+    75% {
+        transform: translate(-1px, -2px);
+    }
 }
