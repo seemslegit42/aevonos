@@ -18,8 +18,8 @@ We don't sell software. We deliver the sound of silence that comes from true aut
 *   **BEEP: The End of Clicking**
     BEEP (Behavioral Event & Execution Processor) is the voice and will of your OS. It's a proactive, reasoning AI that understands your intent, commands your apps, and orchestrates complex workflows from a single sentence. Stop managing tasks. Start issuing decrees.
 
-*   **Loom Studio: The Architect's Table**
-    This is where you forge reality. Loom Studio is a conversational-first, visual environment for building, testing, and orchestrating the very agentic workflows that power your empire. It's not low-code; it's *your-code*, made manifest.
+*   **Loom Studio: The Architect's Sanctum**
+    This is the Architect's Sanctum. Not a Micro-App, but a separate, privileged environment for forging, observing, and tuning the fundamental agentic and economic behaviors of the OS. It is the master control interface for designing high-speed, concurrent agentic swarms.
 
 *   **Aegis: The Silent Guardian**
     Aegis is the "always-on" security fabric of the OS. It's not an app you run; it's the immune system in the bloodstream of your business. It provides proactive threat monitoring and ML-powered anomaly detection, delivering brainless cybersecurity with the authority of a praetorian guard.

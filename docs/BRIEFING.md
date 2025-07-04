@@ -63,7 +63,7 @@ This document provides a concise, high-level overview of the ΛΞVON OS codebase
 *   **Micro-App Canvas**: A dynamic, draggable, and resizable interface where modular applications are launched and managed.
 *   **ΞPITOME Economy**: A dual-layer economy. A predictable platform fee is paired with a closed-loop internal currency (`ΞCredits`) spent in The Armory and on gamified "Folly Instruments".
 *   **Klepsydra Engine**: A gamified "luck" system (`pulse-engine-service` and `folly-instruments.ts`) that modulates the outcomes of chance-based Micro-Apps.
-*   **Loom Studio**: A visual workflow editor for creating and managing agentic automations.
+*   **Loom Studio**: The Architect's Sanctum. A privileged environment for forging, observing, and tuning the agentic and economic behaviors of the OS.
 
 ---
 
@@ -80,7 +80,7 @@ This document provides a concise, high-level overview of the ΛΞVON OS codebase
 
 *   **Primary Input**: Natural language text commands from the user.
 *   **Other Inputs**: File uploads (for `PaperTrail`), external API data (mocked).
-*   **Primary Output**: Changes to the UI state (launching Micro-Apps), generated text and audio from agents.
+*   **Primary Output**: Changes to the UI state (launching new Micro-Apps), generated text and audio from agents.
 *   **External Services Used**: Firebase (Auth), Neon (Database), Vercel (Hosting), Groq (LLM Inference), Google AI (Genkit platform).
 
 ---

@@ -1,36 +1,48 @@
+# Loom Studio Protocol Specification
+Document Version: 1.1 (Groq & Swarm Revision)
+Status: Canonized
+Author: ARCHIVEX
 
-# ΛΞVON OS: Core Subsystems - Loom Studio
-1. Introduction: The Architect's Table of Automation
-Loom Studio is a native, privileged orchestration layer inside ΛΞVON OS. It is not a Micro-App [cite: previous user input]. It serves as the central creative, debugging, and agent orchestration workspace. Loom Studio is where the automation blueprints are assembled, tuned, and connected, providing the default interface for inspecting and manipulating agentic logic. It lives in the persistent Canvas layer, dictating how agents behave, not just how they look.
-1.1. Core Identity & Vision
-Loom Studio addresses critical challenges in the development, debugging, and deployment of artificial intelligence (AI) workflows, particularly those involving GPT agents. It distinguishes itself from traditional code editors or playgrounds through its architecture characterized by stateful, reactive, and introspective capabilities, presenting a unique "jade/glass artifact" user experience. Loom Studio serves as the integrated development environment (IDE) for agents, applications, and workflows within the broader ΛΞVON OS ecosystem.
-2. Visual Workspace: The Agent Orchestration Canvas
-Loom Studio provides a spatial, draggable canvas where users and agents can visually construct, layer, and interconnect prompt blocks, scripts, and workflows. This is the primary interface for designing the "blueprints" of automation.
-Drag-and-Drop Editor: Users can intuitively design and orchestrate complex agent behaviors through a drag-and-drop interface, greatly simplifying the design and management of complex chains for AI agents. Nodes representing different actions, conditions, or agent invocations can be placed and connected visually.
-Modular Panels: The interface features multiple modular, floating panels (e.g., Palette of commands, Inspector for property editing, Timeline for prompt sequencing) that can be moved, resized, stacked, and pinned, offering flexible workspace customization.
-Workflow Saving & Versioning: Users can save workflow structures and track changes, allowing review and restoration of previous versions. This ensures traceability and allows for iterative refinement of automation blueprints.
-3. Orchestrating Intelligence: LangGraph & Agent Behavior
-Loom Studio is the visual command center for orchestrating agents, workflows, and Micro-App behavior. Its core functionality is built around LangGraph as the underlying framework for defining agentic logic and workflow execution.
-Agent Orchestration: Enables the spawning, editing, and supervising of AI agents that participate in workflow execution inside ΛΞVON OS. This includes managing their lifecycle from creation to deployment and monitoring. Its agent orchestration leverages Groq's speed and Swarm AI principles for real-time, high-speed execution and synthesis of agent inputs.
-Agent Behavior Composition: Allows developers to precisely define how agents will act, react, and interact within a workflow. This includes defining an agent's "Profile" (identity, personality, context) and its "Action" capabilities (executing decisions, using tools).
-Workflow Execution: Loom Studio provides runtime debugging, observability, and configuration for LangGraph graphs. When users design a workflow, Loom Studio translates this visual design into a LangGraph representation (JSONB in database) for execution by BEEP and the underlying Groq Swarm.
-4. Advanced Debugging & Observability: Making the Black Box Visible
-Loom Studio introduces a specialized, holistic debugging suite tailored to the unique complexities of AI agents, representing an "AI-native" approach to understanding agent behavior, reasoning, and system-level interactions. This directly addresses debugging hell and the non-deterministic nature of LLM agents.
-Event Debugging and Replay: Offers a granular, step-by-step examination of an AI agent's execution flow. Developers can "time-travel" through agent interactions, observing internal states and decisions at each juncture. This is crucial for understanding non-deterministic LLM behavior.
-Behavioral Snapshots: Captures and stores the complete state of an agent at critical points in its execution for post-mortem analysis, addressing reliability pain points.
-Real-time Prompt Diffing: Provides immediate visual feedback on how modifications to prompts or changes in contextual inputs impact the agent's subsequent behavior and generated outputs, enabling precise prompt engineering and optimization.
-Live Observability: Offers continuous, real-time monitoring of agent health, performance, and behavior, tracking critical metrics such as request counts, durations, error rates, and token costs. This supports proactive control and compliance.
-Agent DNA Viewer: Provides a deep, introspective view into the fundamental architecture and operational mechanics of an AI agent, including its memory, planning, and tool utilization, directly confronting the "black box" problem prevalent in LLM systems.
-Prompt Injection Sandbox: An isolated environment to test prompt logic in real-time with live feedback on output tokens, agent state, and API calls, ensuring secure and predictable prompt behavior.
-5. Integration and Context
-Loom Studio lives in the persistent Canvas layer, providing a privileged system UI that commands, while Micro-Apps serve.
-Micro-App Interaction: Loom Studio can spawn or modify agent flows within Micro-Apps. It is crucial for combining Micro-Apps into complex agentic workflows, using them as callable nodes or tools within a LangGraph.
-BEEP Integration: As an agentic interface, Loom Studio integrates into BEEP's orchestration chains, allowing BEEP to scaffold initial workflow drafts based on natural language requests. BEEP can also provide contextual guidance within Loom Studio.
-Aegis Integration: Loom Studio facilitates integration with Aegis via subscriptions to security-driven flow conditions. It allows for the design and visualization of SOAR (Security Orchestration, Automation, and Response) playbooks, where security incidents can trigger automated workflows.
-KLEPSYDRA Engine Integration (The Fate Loom): Loom Studio provides a visualization of the system-wide economic pulse. For internal ops and elite devs, the "Fate Loom" dashboard within Loom Studio shows an animated sinewave of economic pulse, Φ accumulation heatmaps by cohort, and real-time alerts for economic anomalies or churn risk. It also exposes "Profit Dials" for tuning the economic engine.
-Contextual Understanding: Loom Studio maintains an understanding of the global workspace context (user, active data, other open Micro-Apps) to facilitate informed workflow design and debugging.
-6. Role in the ΛΞVON OS Ecosystem
-Loom Studio is not just a code editor or prompt builder; it's a dynamic, AI-native creative hub that blends workspace flexibility, security-first controls, and full agent integration. It empowers users to build AI workflows with the same fluidity and power as a developer building software—but with visual tools and agent collaboration.
-Accelerating Development: Simplifies the "orchestration part" of agent development, leading to faster iteration cycles and improved collaboration among diverse team members.
-Democratizing AI: Lowers the barrier to entry for complex agent design, allowing for rapid prototyping and experimentation for non-technical users.
-Driving Value: Focuses on specific, complex use cases like multi-agent onboarding, building AI form fillers, and deploying conditional logic for anomaly detection, addressing high-value, enterprise-grade automation challenges.
+## 1. Doctrinal Statement
+Loom Studio is the Architect's Sanctum. It is not a Micro-App; it is a separate, privileged environment that exists outside the user's Canvas. Its purpose is to provide the master control interface for the system's architect to forge, observe, and tune the fundamental agentic and economic behaviors of ΛΞVON OS.
+
+The integration of the Groq LPU and Swarm AI principles elevates Loom Studio from a simple workflow builder into a command center for designing high-speed, concurrent agentic systems. Every workflow woven here is not a linear script, but a blueprint for a lightning-fast, multi-agent swarm.
+
+## 2. Core Components
+Loom Studio is composed of three primary functional areas:
+
+### 2.1 The Architect's Table (Workflow Design)
+Function: A visual, node-based interface for building, modifying, and testing complex agentic workflows using LangGraph.
+
+Swarm Integration: The interface provides specific nodes for Swarm Orchestration, allowing the Architect to define parallel execution paths, delegate tasks to multiple agents concurrently, and synthesize their results.
+
+Groq-Awareness: Each node that represents a call to an AI for reasoning is explicitly marked as a "Groq-inference step," allowing for precise performance analysis.
+
+### 2.2 The Observatory (Deep Observability & Debugging)
+Function: Provides unprecedented transparency into agent behavior and workflow execution in real-time.
+
+Capabilities:
+
+Live Observability: Visually trace a live workflow as it executes, seeing which agent is active and what data is being passed.
+
+Real-time Prompt Diffing: Inspect the exact prompts being sent to the Groq LPU and the raw inference received in milliseconds.
+
+Behavioral Snapshots & Replay: Capture the full state of a failed or anomalous workflow and replay it step-by-step to diagnose faults.
+
+Performance Profiling: A dedicated dashboard that displays the P95 latency for each node in a workflow, with a specific focus on the sub-millisecond response times from the Groq LPU.
+
+### 2.3 The Loom of Fates (Economic & System Control)
+Function: The centralized control panel for tuning the global economic and operational parameters of the entire OS.
+
+The "Profit Dials": Provides direct access to the levers that control the KLEPSYDRA engine, including:
+
+Base RTR (Retained Tribute Ratio)
+
+Pity Boon Threshold
+
+Transmutation Tithe
+
+Aegis Integration: This is also where SOAR (Security Orchestration, Automation, and Response) playbooks are designed and linked to specific Aegis threat alerts.
+
+## 3. Access Protocol
+Access to Loom Studio is a privilege, not a right. It is restricted to users with the "Architect" role and is accessed via the Sacred Gateway, not through any standard navigation. It is, by design, separate from the standard Initiate and Sovereign experience.
