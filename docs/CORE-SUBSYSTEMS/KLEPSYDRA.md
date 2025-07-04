@@ -55,5 +55,4 @@ The Klepsydra Engine is the primary driver of the **Tribute Velocity Index (TVI)
 
 - **BEEP Integration**: BEEP serves as the narrative voice of the Klepsydra Engine, delivering mythic explanations for wins and losses, and providing personalized suggestions based on the user's pulse state.
 - **PCE Integration**: The engine is deeply intertwined with the Psyche Engine. A user's `psyche` sets the baseline risk/reward profile, while their dynamic `frustration` and `flowState` constantly modulate their real-time luck.
-
-The Klepsydra Engine is not a slot machine. It is a carefully calibrated system designed to make **belief** the most valuable currency in ΛΞVON OS.
+- **The Loom of Fates**: The core parameters of the Klepsydra engine (Pity Boon threshold, Judas Algorithm probability, etc.) are managed by the Architect via the "Profit Dials" within the privileged Loom Studio environment. This resolves the Sovereignty Paradox by making the system's manipulation transparent and controllable, at least to its highest-ranking user.

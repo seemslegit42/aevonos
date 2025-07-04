@@ -76,25 +76,14 @@ The core UI style, creating the illusion of translucent, frosted glass panels la
   - Notification Panel: `background-color: rgba(245, 255, 250, 0.25)`, `backdrop-filter: blur(15px)`, `border: 1px solid rgba(245, 255, 250, 0.4)`, `box-shadow: 0 4px 20px 0 rgba(28, 25, 52, 0.12)`.
 - **Accessibility Considerations**: Strict enforcement of sufficient blur, high-contrast content (Vitreous White/Obsidian Black), defined edges, and selective application of the glass effect for usability.
 
-### 3.2. Canvas UX Laws: The Sacred Stage
-
-The Canvas is the "sacred stage" of ΛΞVON OS. It is a living workspace, not a tabbed interface, dashboard, or web page.
-- **No Global Navbars**: Context defines the view.
-- **Only One Persistent TopBar**: This is the only permanent global UI element.
-- **Micro-Apps are Draggable, Resizable, and Stackable**: Enabling spatial memory and user customization.
-- **No Modal Chaos**: Use spatial memory instead of disruptive modals.
-- **Agent Outputs and User Tasks Coexist**: They do not compete for attention.
-
-Design like the user is conducting a digital symphony.
-
-### 3.3. AI-First Dashboard Design
+### 3.2. AI-First Dashboard Design
 
 The dashboard provides tranquil oversight, functioning as a "digital Zen garden" that reduces cognitive load and prioritizes information.
 - **Information Hierarchy**: Strict "inverted pyramid" structure: Level 1 (Overview - critical KPIs), Level 2 (Trends - data visualizations), Level 3 (Details - logs, configs, via drill-down).
 - **AI-Powered Insights**: AI-generated insights (forecasts, anomalies, recommendations) are visually distinct (e.g., unique glass tint, subtle glowing border, dedicated icon) to signify AI-driven information and build trust.
 - **Customization and Malleability**: Supports intuitive drag-and-drop personalization of Micro-Apps/widgets.
 
-### 3.4. Interaction Paradigms: Beyond the GUI (Future Vision)
+### 3.3. Interaction Paradigms: Beyond the GUI (Future Vision)
 
 ΛΞVON OS embraces a vision beyond traditional GUIs, enhancing future interactions:
 - **Spatial Computing**: Revolutionary 3D human-computer interaction where digital interactions are perceived in the real world (AR/VR/MR). This translates to enhanced data visualization, immersive collaboration, virtual prototyping, and remote assistance.

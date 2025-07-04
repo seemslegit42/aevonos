@@ -45,11 +45,9 @@ A small, curated set of starter Micro-Apps, relevant to their Vow, are pre-arran
 
 Step 5: The First Command
 Location: The user's new Canvas.
-System Response: The TopBar is active. After a five-second pause to allow the user to absorb the scene, BEEP's voice (via TTS) and text manifest for the first time, its persona determined by the Vow.
-Architect Vow: BEEP (as the Architect's Apprentice): "The foundation is laid. What is our first directive?"
-Sovereign Vow: BEEP (as the Steward): "Your domain awaits. What is your first decree?"
-Oracle Vow: BEEP (as the Oracle): "The currents are still. What truth shall we seek first?"
-The Rite is complete. The user is now an Initiate.
+System Response: The TopBar is active. After a five-second pause to allow the user to absorb the scene, BEEP's voice (via TTS) and text manifest for the first time, its persona determined by the Vow. BEEP then presents the user with their first "Ritual Quest" to guide their initial interaction.
+Example (for an Architect): "The foundation is laid. Your first Ritual Quest is to summon the Terminal and chart the system's processes. Shall we begin?"
+The Rite is complete. The user is now an Initiate, not a user.
 
 3. Architectural & Technical Implementation
 This ritual is orchestrated by a precise interplay between the frontend and the auth-service.
