@@ -29,7 +29,7 @@ export default function PricingPage() {
                         <Link href="/login">
                             <Button variant="ghost">Sign In</Button>
                         </Link>
-                         <Link href="/register">
+                         <Link href="/login">
                             <Button>Request a Build</Button>
                         </Link>
                     </nav>
