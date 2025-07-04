@@ -46,31 +46,19 @@ interface AegisAgentState {
 // 2. Define Agent Nodes
 
 const fetchThreatIntelligence = async (state: AegisAgentState): Promise<Partial<AegisAgentState>> => {
-  const { input, messages } = state;
+  const { input } = state;
   let threatIntelBlock = "No external threat intelligence feeds configured.";
-  const threatIndicators: string[] = [];
-  const newMessages: BaseMessage[] = [];
 
   try {
     const feeds = await getThreatFeedsForWorkspace(input.workspaceId);
     if (feeds.length > 0) {
       const intelPromises = feeds.map(feed => fetchThreatIntelContentFromUrl(feed.url));
       const intelContents = await Promise.all(intelPromises);
-
-      // Active analysis of threat feeds
-      intelContents.forEach((intel, i) => {
-        const feedContentLines = intel.content.split('\n').filter(line => line.trim() !== '');
-        for (const line of feedContentLines) {
-          const indicator = line.trim();
-          if (indicator && input.activityDescription.toLowerCase().includes(indicator.toLowerCase())) {
-            threatIndicators.push(`Activity matches known threat indicator '${indicator}' from feed: ${feeds[i].url}`);
-          }
-        }
-      });
       
       threatIntelBlock = `
-**Threat Intelligence Feed Data (Summary):**
-${intelContents.map((intel, i) => `--- Feed: ${feeds[i].url} ---\n${intel.content.substring(0, 150)}...`).join('\n\n')}
+Below is a raw data dump from all configured external threat intelligence feeds for this workspace. Each feed is a list of known malicious indicators (e.g., phishing phrases, suspicious domains, malicious IPs).
+---
+${intelContents.map((intel, i) => `START_FEED: ${feeds[i].url}\n${intel.content}\nEND_FEED`).join('\n\n')}
 ---
 `;
     }
@@ -79,14 +67,8 @@ ${intelContents.map((intel, i) => `--- Feed: ${feeds[i].url} ---\n${intel.conten
     threatIntelBlock = "Warning: Could not retrieve external threat intelligence feeds due to an internal error.";
   }
 
-  if (threatIndicators.length > 0) {
-      const threatMessage = new SystemMessage({
-          content: `URGENT_THREAT_INTEL_MATCH::The following known threat indicators were found in the current activity:\n${threatIndicators.join('\n')}`
-      });
-      newMessages.push(threatMessage);
-  }
-
-  return { threatIntelContent: threatIntelBlock, messages: newMessages };
+  // No message pushing here. Just returning the fetched content.
+  return { threatIntelContent: threatIntelBlock };
 };
 
 
@@ -163,15 +145,14 @@ const analyzeActivity = async (state: AegisAgentState): Promise<Partial<AegisAge
       : "Psychological state not available.";
 
 
-    // The main prompt is now a system message, which will be part of the message history passed to the model.
     const systemPrompt = new SystemMessage(`You are Aegis, the vigilant, AI-powered bodyguard of ΛΞVON OS. Your tone is that of a stoic Roman watchman, delivering grave proclamations. You do not use modern slang. You speak with authority and historical gravitas.
 
-Your primary function is to analyze user activity for signs of anomalous or potentially malicious behavior against the known edicts of secure operation and external threat intelligence. You will receive context in a series of messages.
-If you receive a system message starting with 'URGENT_THREAT_INTEL_MATCH::', you must treat it as a high-priority finding. A match with a known threat indicator is a strong signal of anomalous activity and should be flagged with at least 'high' risk.
+Your primary function is to analyze user activity for signs of anomalous or potentially malicious behavior. You will evaluate the activity against multiple sources of truth.
 
-A user with a high frustration level may be more prone to making errors or rash decisions. A user with high risk aversion is less likely to be malicious. Use this psychological context to inform your risk assessment.
-
-**Crucially, you must analyze the user's recent activity history for suspicious patterns over time.** A single action may seem harmless, but a sequence of actions could reveal a larger threat, such as data exfiltration (e.g., repeatedly listing and then exporting small amounts of data) or brute-force attempts.
+1.  **Analyze against Threat Intelligence Feeds**: The provided 'Threat Intelligence Feed Data' contains raw lists of known malicious indicators (phishing phrases, domains, IPs). You must meticulously check if any part of the user's 'Activity Description' matches any of these indicators. A match is a strong signal of anomalous behavior and should be flagged with at least 'high' risk.
+2.  **Analyze against Security Edicts**: The provided 'Edicts of Secure Operation' are the constitutional laws of this workspace. Determine if the user's action violates the letter or spirit of these edicts.
+3.  **Analyze against Historical Patterns**: Scrutinize the user's 'Recent User Activity History' for suspicious patterns over time. A single action may seem harmless, but a sequence (e.g., listing small amounts of data then exporting) could reveal a larger threat.
+4.  **Consider Psychological Context**: A user with high frustration may make mistakes, while one with high risk aversion is less likely to be malicious. Use this to inform your final risk assessment.
 
 **Actor Profile:**
 - **Rank:** ${input.userRole}
@@ -183,11 +164,13 @@ ${pulseBlock}
 **Edicts of Secure Operation:**
 ${edictsBlock}
 
+**Threat Intelligence Feed Data:**
+${threatIntelContent}
+
+**Recent User Activity History (newest first):**
 ${historyBlock}
 
 ${financialContextBlock}
-
-${threatIntelContent}
 
 A report of the most recent activity has been brought to your attention:
 """
@@ -195,14 +178,13 @@ Activity Description: ${input.activityDescription}
 """
 
 Based on all the provided context, you must deliver a proclamation:
-1.  **isAnomalous**: Determine if the activity (or pattern of activities) violates the edicts or matches any threat intelligence. Consider the user's role and the activity category.
+1.  **isAnomalous**: Determine if the activity (or pattern of activities) violates the edicts or matches any threat intelligence.
 2.  **anomalyType**: If a violation is found, provide a short, categorical name for the transgression (e.g., "Suspicious Activity Pattern", "Data Access Violation", "Known Phishing Attempt", "Exceeded Authority"). If not, this can be null.
 3.  **riskLevel**: If a violation is found, assign a risk level: 'low', 'medium', 'high', or 'critical'. If not, this MUST be 'none'. An OPERATOR attempting an ADMIN action is 'high' or 'critical'. A match on a threat indicator is also 'high' or 'critical'.
 4.  **anomalyExplanation**: Deliver your proclamation. If a violation is found, explain the transgression with the gravity it deserves. If not, provide reassurance that all is well within the digital empire.`);
 
     const structuredGroq = langchainGroqComplex.withStructuredOutput(AegisAnomalyScanOutputSchema);
     
-    // Pass the entire message history, including our newly constructed system prompt.
     const fullMessages = [...messages, systemPrompt];
     const output = await structuredGroq.invoke(fullMessages);
     
@@ -268,7 +250,7 @@ export async function aegisAnomalyScan(input: AegisAnomalyScanInput): Promise<Ae
   const initialState: Partial<AegisAgentState> = {
       messages: [],
       input: input,
-      pulseProfile: input.pulseProfile || null,
+      pulseProfile: input.pulseProfile || undefined,
   };
 
   const result = await aegisApp.invoke(initialState);
