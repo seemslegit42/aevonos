@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React from 'react';
@@ -11,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { cn } from '@/lib/utils';
+import { useToast } from '@/hooks/use-toast';
 
 const iconMap: Record<TransactionType, React.ElementType> = {
     [TransactionType.CREDIT]: ArrowUpRight,
@@ -34,7 +36,7 @@ interface RecentActivityFeedProps {
 export default function RecentActivityFeed({ transactions, isLoading, error, onRefresh }: RecentActivityFeedProps) {
 
     const renderContent = () => {
-        if (isLoading) {
+        if (isLoading && transactions.length === 0) {
              return (
                 <div className="space-y-3">
                     <Skeleton className="h-10 w-full" />

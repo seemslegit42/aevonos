@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useMemo } from 'react';
@@ -75,7 +76,7 @@ export default function DashboardWidgets({
             <div className="lg:col-span-2 h-full">
                 <RecentActivityFeed 
                     transactions={transactions} 
-                    isLoading={isLoading && transactions.length === 0} 
+                    isLoading={isLoading} 
                     error={error}
                     onRefresh={onRefresh}
                 />

@@ -56,6 +56,7 @@ export async function PUT(request: NextRequest) {
 
     const { edicts } = validation.data;
     
+    // Atomically delete old edicts and create new ones
     await prisma.$transaction([
       prisma.securityEdict.deleteMany({
         where: { workspaceId: workspace.id },
