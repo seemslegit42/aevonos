@@ -282,6 +282,7 @@ export async function getNudges() {
 
   return nudges;
 }
+
 export async function clearFirstWhisper() {
   const { user } = await getAuthenticatedUser();
   if (!user) return;
