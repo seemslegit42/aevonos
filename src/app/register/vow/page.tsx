@@ -14,10 +14,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Loader2, Sparkles } from 'lucide-react';
+import { Loader2, Sparkles, MailCheck } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { UserPsyche } from '@prisma/client';
-import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '@/lib/firebase/client';
 
 const formSchema = z.object({
@@ -27,7 +26,6 @@ const formSchema = z.object({
   agentAlias: z.string().min(2, { message: "Your voice must have a name." }),
   psyche: z.nativeEnum(UserPsyche, { errorMap: () => ({ message: "You must choose a path." }) }),
   email: z.string().email({ message: "A valid email is required." }),
-  password: z.string().min(8, { message: "Your password must be at least 8 characters." }),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -37,7 +35,6 @@ const steps = [
   { id: 'vow', fields: ['goal'], title: 'The Vow', description: "Tell me what you will build." },
   { id: 'naming', fields: ['workspaceName', 'agentAlias'], title: 'The Naming', description: "The system must be named to be commanded." },
   { id: 'covenant', fields: ['psyche'], title: 'The Covenant', description: "Choose your path. This choice is final." },
-  { id: 'key', fields: ['email', 'password'], title: 'The Key', description: "Forge the key to your new OS." },
 ];
 
 const psycheOptions = [
@@ -52,6 +49,7 @@ export default function VowPage() {
     const { toast } = useToast();
     const [currentStep, setCurrentStep] = useState(0);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isSubmitted, setIsSubmitted] = useState(false);
 
     const emailFromQuery = searchParams.get('email') || '';
 
@@ -64,15 +62,17 @@ export default function VowPage() {
             agentAlias: 'BEEP',
             psyche: undefined,
             email: emailFromQuery,
-            password: '',
         },
     });
 
     useEffect(() => {
         if (emailFromQuery) {
             form.setValue('email', emailFromQuery);
+        } else {
+            // If there's no email, they shouldn't be here.
+            router.push('/register');
         }
-    }, [emailFromQuery, form]);
+    }, [emailFromQuery, form, router]);
 
     const handleNext = async () => {
         const fieldsToValidate = steps[currentStep].fields as (keyof FormData)[];
@@ -100,26 +100,17 @@ export default function VowPage() {
                 throw new Error(errorData.error || 'Failed to complete the Rite of Invocation.');
             }
             
-            const result = await response.json();
+            // Set email in local storage for the magic link flow
+            window.localStorage.setItem('emailForSignIn', data.email);
+            setIsSubmitted(true);
             
-            if (!auth) throw new Error("Firebase Auth is not configured.");
-            await signInWithEmailAndPassword(auth, data.email, data.password);
-
-            toast({
-                title: "The Pact is Forged.",
-                description: result.benediction || "Welcome, Sovereign.",
-                duration: 10000,
-            });
-
-            router.push('/');
-            router.refresh();
-
         } catch (error) {
             toast({
                 variant: 'destructive',
                 title: "The Rite Failed",
                 description: error instanceof Error ? error.message : "An unknown error occurred.",
             });
+        } finally {
             setIsSubmitting(false);
         }
     };
@@ -132,76 +123,85 @@ export default function VowPage() {
                 </CardHeader>
                 <CardContent>
                     <AnimatePresence mode="wait">
-                        <motion.div
-                            key={currentStep}
-                            initial={{ x: 300, opacity: 0 }}
-                            animate={{ x: 0, opacity: 1 }}
-                            exit={{ x: -300, opacity: 0 }}
-                            transition={{ duration: 0.3, ease: 'easeInOut' }}
-                        >
-                            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                                <div className="text-center mb-6">
-                                    <h3 className="font-semibold">{steps[currentStep].title}</h3>
-                                    <p className="text-sm text-muted-foreground">{steps[currentStep].description}</p>
-                                </div>
-                                
-                                {currentStep === 0 && (
-                                     <Textarea {...form.register('whatMustEnd')} placeholder="e.g., The tyranny of dashboards and endless SaaS tabs." rows={4} className="bg-background/50"/>
-                                )}
-                                {currentStep === 1 && (
-                                     <Textarea {...form.register('goal')} placeholder="e.g., An agentic operating system that anticipates, acts, and disappears." rows={4} className="bg-background/50"/>
-                                )}
-                                {currentStep === 2 && (
-                                    <div className="space-y-4">
-                                        <Input {...form.register('workspaceName')} placeholder="Your Canvas Name" className="bg-background/50"/>
-                                        <Input {...form.register('agentAlias')} placeholder="Your Agent's Name" className="bg-background/50"/>
+                        {isSubmitted ? (
+                             <motion.div
+                                key="success"
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -20 }}
+                                className="text-center space-y-4 p-4"
+                            >
+                                <MailCheck className="w-16 h-16 mx-auto text-accent" />
+                                <h2 className="text-2xl font-bold font-headline">The Pact is Forged</h2>
+                                <p className="text-muted-foreground">The ether has acknowledged your vow. Follow the echo sent to your designation to enter the Canvas.</p>
+                                <Button onClick={() => router.push('/login')}>Return to Chamber</Button>
+                            </motion.div>
+                        ) : (
+                            <motion.div
+                                key={currentStep}
+                                initial={{ x: 300, opacity: 0 }}
+                                animate={{ x: 0, opacity: 1 }}
+                                exit={{ x: -300, opacity: 0 }}
+                                transition={{ duration: 0.3, ease: 'easeInOut' }}
+                            >
+                                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                                    <div className="text-center mb-6">
+                                        <h3 className="font-semibold">{steps[currentStep].title}</h3>
+                                        <p className="text-sm text-muted-foreground">{steps[currentStep].description}</p>
                                     </div>
-                                )}
-                                {currentStep === 3 && (
-                                    <RadioGroup
-                                        onValueChange={(value) => form.setValue('psyche', value as UserPsyche)}
-                                        defaultValue={form.getValues('psyche')}
-                                        className="gap-4"
-                                    >
-                                        {psycheOptions.map(option => (
-                                            <Label key={option.value} className="flex items-center space-x-3 rounded-md border p-4 cursor-pointer hover:bg-accent/10 bg-background/50">
-                                                <RadioGroupItem value={option.value} />
-                                                <div>
-                                                    <p className="font-semibold">{option.label}</p>
-                                                    <p className="text-xs text-muted-foreground">{option.description}</p>
-                                                </div>
-                                            </Label>
-                                        ))}
-                                    </RadioGroup>
-                                )}
-                                 {currentStep === 4 && (
-                                    <div className="space-y-4">
-                                        <Input {...form.register('email')} type="email" placeholder="Your Email" className="bg-background/50"/>
-                                        <Input {...form.register('password')} type="password" placeholder="Your Password" className="bg-background/50"/>
-                                    </div>
-                                )}
-                                <AnimatePresence>
-                                {Object.values(form.formState.errors).length > 0 && (
-                                    <motion.div initial={{opacity: 0}} animate={{opacity: 1}} exit={{opacity: 0}}>
-                                        <p className="text-sm font-medium text-destructive text-center">
-                                            {Object.values(form.formState.errors)[0].message}
-                                        </p>
-                                    </motion.div>
-                                )}
-                                </AnimatePresence>
-                                <div className="flex justify-between items-center pt-4">
-                                    <Button type="button" variant="ghost" onClick={handlePrev} disabled={currentStep === 0}>Back</Button>
                                     
-                                    {currentStep < steps.length - 1 ? (
-                                        <Button type="button" onClick={handleNext}>Next</Button>
-                                    ) : (
-                                        <Button type="submit" disabled={isSubmitting} variant="summon">
-                                            {isSubmitting ? <Loader2 className="animate-spin" /> : <><Sparkles className="mr-2 h-4 w-4" />Forge the Pact</>}
-                                        </Button>
+                                    {currentStep === 0 && (
+                                        <Textarea {...form.register('whatMustEnd')} placeholder="e.g., The tyranny of dashboards and endless SaaS tabs." rows={4} className="bg-background/50"/>
                                     )}
-                                </div>
-                            </form>
-                        </motion.div>
+                                    {currentStep === 1 && (
+                                        <Textarea {...form.register('goal')} placeholder="e.g., An agentic operating system that anticipates, acts, and disappears." rows={4} className="bg-background/50"/>
+                                    )}
+                                    {currentStep === 2 && (
+                                        <div className="space-y-4">
+                                            <Input {...form.register('workspaceName')} placeholder="Your Canvas Name" className="bg-background/50"/>
+                                            <Input {...form.register('agentAlias')} placeholder="Your Agent's Name" className="bg-background/50"/>
+                                        </div>
+                                    )}
+                                    {currentStep === 3 && (
+                                        <RadioGroup
+                                            onValueChange={(value) => form.setValue('psyche', value as UserPsyche)}
+                                            defaultValue={form.getValues('psyche')}
+                                            className="gap-4"
+                                        >
+                                            {psycheOptions.map(option => (
+                                                <Label key={option.value} className="flex items-center space-x-3 rounded-md border p-4 cursor-pointer hover:bg-accent/10 bg-background/50">
+                                                    <RadioGroupItem value={option.value} />
+                                                    <div>
+                                                        <p className="font-semibold">{option.label}</p>
+                                                        <p className="text-xs text-muted-foreground">{option.description}</p>
+                                                    </div>
+                                                </Label>
+                                            ))}
+                                        </RadioGroup>
+                                    )}
+                                    <AnimatePresence>
+                                    {Object.values(form.formState.errors).length > 0 && (
+                                        <motion.div initial={{opacity: 0}} animate={{opacity: 1}} exit={{opacity: 0}}>
+                                            <p className="text-sm font-medium text-destructive text-center">
+                                                {Object.values(form.formState.errors)[0].message}
+                                            </p>
+                                        </motion.div>
+                                    )}
+                                    </AnimatePresence>
+                                    <div className="flex justify-between items-center pt-4">
+                                        <Button type="button" variant="ghost" onClick={handlePrev} disabled={currentStep === 0}>Back</Button>
+                                        
+                                        {currentStep < steps.length - 1 ? (
+                                            <Button type="button" onClick={handleNext}>Next</Button>
+                                        ) : (
+                                            <Button type="submit" disabled={isSubmitting} variant="summon">
+                                                {isSubmitting ? <Loader2 className="animate-spin" /> : <><Sparkles className="mr-2 h-4 w-4" />Forge the Pact</>}
+                                            </Button>
+                                        )}
+                                    </div>
+                                </form>
+                            </motion.div>
+                        )}
                     </AnimatePresence>
                 </CardContent>
             </Card>

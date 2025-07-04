@@ -1,6 +1,4 @@
-
 import { PrismaClient, AgentStatus, SecurityRiskLevel, TransactionType, PlanTier, UserRole, UserPsyche, Prisma, ChaosCardClass } from '@prisma/client'
-import bcrypt from 'bcryptjs'
 import { artifactManifests } from '../src/config/artifacts';
 import prisma from '../src/lib/prisma';
 
@@ -19,14 +17,11 @@ async function main() {
   }
   
   console.log('No existing data found. Seeding from scratch...');
-
-  const hashedPassword = await bcrypt.hash('password123', 10);
   
   // Create multiple users with different roles
   const adminUser = await prisma.user.create({
     data: {
       email: 'architect@aevonos.com',
-      password: hashedPassword,
       firstName: 'The',
       lastName: 'Architect',
       agentAlias: 'BEEP',
@@ -41,7 +36,6 @@ async function main() {
   const managerUser = await prisma.user.create({
     data: {
       email: 'manager@aevonos.com',
-      password: hashedPassword,
       firstName: 'Project',
       lastName: 'Manager',
       agentAlias: 'Overseer',
@@ -56,7 +50,6 @@ async function main() {
   const operatorUser = await prisma.user.create({
     data: {
       email: 'operator@aevonos.com',
-      password: hashedPassword,
       firstName: 'Field',
       lastName: 'Operator',
       agentAlias: 'Field',
@@ -71,7 +64,6 @@ async function main() {
   const auditorUser = await prisma.user.create({
     data: {
       email: 'auditor@aevonos.com',
-      password: hashedPassword,
       firstName: 'Compliance',
       lastName: 'Auditor',
       agentAlias: 'Auditron',
