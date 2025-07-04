@@ -223,4 +223,3 @@ export default function VowPage() {
         </div>
     );
 }
-

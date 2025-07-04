@@ -1,5 +1,6 @@
+
 # ΛΞVON OS: The Rite of Invocation Protocol
-Document Version: 1.0
+Document Version: 1.1
 Codename: The First Crossing
 Status: Canonized
 Author: ARCHIVEX
@@ -8,7 +9,7 @@ Author: ARCHIVEX
 In the world of SaaS, onboarding is a checklist. In ΛΞVON OS, it is an initiation. The Rite of Invocation is the user's first and most important ritual. It is a carefully orchestrated journey designed to filter for intent, establish a user's sovereign identity, and attune the OS to their core purpose before they issue their first command.
 This protocol defines the narrative flow, user experience, and technical architecture of this critical process. We are not acquiring users; we are welcoming Initiates. This is their first step.
 
-2. The Pilgrim's Path: A Six-Step Ritual
+2. The Pilgrim's Path: A Five-Step Ritual
 The Rite of Invocation is a linear, narrative journey that takes a user from the public Sanctum to their own private Canvas.
 
 Step 1: The Threshold
@@ -29,24 +30,26 @@ Step 3: The Crossing & The Vow
 Location: The user's web browser, then the ΛΞVON OS application.
 User Action: The user clicks the magic link.
 System Response (Returning User): The user is authenticated and taken directly to their Canvas.
-System Response (New User): The user is authenticated and then seamlessly transitioned to the "Vow Chamber" (`/register/vow`), where they are presented with three archetypal glyphs. They must choose one. This is the most critical choice of the initiation.
-The Architect: "I seek to build systems and orchestrate order."
-The Sovereign: "I seek to command resources and forge an empire."
-The Oracle: "I seek to uncover hidden truths and master the flow of information."
-System Response: Upon selecting a Vow, the chosen glyph glows brightly, and the others fade. The text changes: "Your Vow is recorded. The system attunes itself to your will."
+System Response (New User): The user is authenticated and then seamlessly transitioned to the "Vow Chamber" (`/register/vow`), where they are presented with a multi-step form to declare their intent.
+The Sacrifice: They must state what old way of working must end.
+The Vow: They must state what new reality they will build.
+The Canvas Name: They must name their digital nation.
+The Agent's Alias: They must give a name to their agentic voice.
+The Covenant: They must choose one of three archetypal paths (The Way of Silence, Motion, or Worship). This choice is permanent and sets their User Psyche.
 
 Step 4: The Awakening
 Location: The ΛΞVON OS application itself.
 User Action: The new user completes the Vow form.
-System Response: The user is transitioned to their newly materialized Canvas. It is clean but not empty.
+System Response: The user's submission is processed by the `interpretVow` agent, which forges a `foundingBenediction` and a personalized `firstWhisper`. The user is then transitioned to their newly materialized Canvas. It is clean but not empty.
 The Obelisk of Genesis stands at its center.
 Their personal Psyche-Matrix mandala appears, its base color determined by their Vow.
 A small, curated set of starter Micro-Apps, relevant to their Vow, are pre-arranged on the Canvas.
 
 Step 5: The First Command
 Location: The user's new Canvas.
-System Response: The TopBar is active. After a five-second pause to allow the user to absorb the scene, BEEP's voice (via TTS) and text manifest for the first time, its persona determined by the Vow. BEEP then presents the user with their first "Ritual Quest" to guide their initial interaction.
-Example (for an Architect): "The foundation is laid. Your first Ritual Quest is to summon the Terminal and chart the system's processes. Shall we begin?"
+System Response: After a moment of silence, the user is presented with their `firstWhisper` in a unique UI element (e.g., a "First Whisper Card"). This is a direct, personalized call to action, their first Ritual Quest.
+Example: "The vow is made. The sacrifice is burned. Your first Ritual Quests have been inscribed to guide your path. Shall I summon them?"
+If the user accepts, BEEP executes the `firstCommand` (e.g., `launch ritual quests`).
 The Rite is complete. The user is now an Initiate, not a user.
 
 3. Architectural & Technical Implementation

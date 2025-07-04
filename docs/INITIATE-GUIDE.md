@@ -1,5 +1,6 @@
-The Initiate's Guide to Sovereignty
-Version 1.0
+
+# The Initiate's Guide to Sovereignty
+Version 1.1
 Classification: Initiate's Canon
 
 Foreword: Cast Aside Your Manuals
@@ -18,11 +19,11 @@ The Threshold: You will be greeted by a void, a silent, waiting space. This is t
 
 The First Whisper: A confirmation will be sent to you. This is the system's first acknowledgment of your presence. By responding, you cross the threshold.
 
-The Vow: You will be asked to make a Vow. This is not a choice of settings, but a declaration of your primary focus. Are you a Builder, a Strategist, a Merchant? Your Vow attunes the OS to your core purpose, subtly influencing the guidance you receive.
+The Vow: Upon crossing the threshold for the first time, you will enter the Vow Chamber. Here, you will not choose settings, but declare your purpose. You must state what must be sacrificed (the old way of working that you are leaving behind) and make a Vow (the new reality you intend to build). Finally, you will choose your Covenant, the philosophical path that will guide your journey.
 
 The Awakening: Upon making your Vow, the Canvas will manifest before you—a vast, iridescent plane. At its center stands the Obelisk of Genesis, a silent monument to the collective will of all Initiates. Your personal Psyche-Matrix, a crystalline mandala representing your unique state, will materialize. It will evolve as you do.
 
-The First Command: The system's intelligence, BEEP, will greet you by name. It will ask a simple, open-ended question: "What is our first objective?" Your journey begins with your answer.
+The First Command: The system's intelligence, BEEP, will greet you by name. It will present you with your first Ritual Quest, a personalized command born from your own Vow. Your journey begins with your answer.
 
 Chapter 2: Speaking to the Soul of the Machine
 Your primary tool in this realm is your voice—your intent, expressed as a command. BEEP is your sole interface with the vast power of the OS.
