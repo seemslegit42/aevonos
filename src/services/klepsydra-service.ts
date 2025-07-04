@@ -344,7 +344,7 @@ export async function processFollyTribute(
         
         if (systemEffect) {
             const cardManifest = artifactManifests.find(c => c.id === systemEffect);
-            const durationMs = (cardManifest?.durationMinutes || 5) * 60 * 1000;
+            const durationMs = (cardManifest?.durationMinutes || 60) * 60 * 1000;
             await tx.activeSystemEffect.create({
               data: {
                 workspaceId: workspaceId,

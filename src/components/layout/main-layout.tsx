@@ -27,7 +27,7 @@ const psycheToTheme: Record<UserPsyche, string> = {
 
 const effectToTheme: Record<string, string> = {
     'ACROPOLIS_MARBLE': 'theme-acropolis-marble',
-    // Future themes can be added here
+    'NOCTUAS_GAZE': 'theme-noctuas-gaze', // Example for future expansion
 };
 
 
