@@ -100,3 +100,6 @@ import '@/ai/agents/orphean-oracle-flow.ts';
 import '@/ai/agents/lumbergh-agent.ts';
 import '@/ai/agents/lucille-bluth-agent.ts';
 import '@/ai/agents/pam-poovey-agent.ts';
+import '@/ai/agents/vin-diesel-agent.ts';
+import '@/ai/agents/reno-mode-agent.ts';
+import '@/ai/agents/patrickt.ts';

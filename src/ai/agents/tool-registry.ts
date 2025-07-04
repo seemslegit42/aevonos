@@ -39,9 +39,9 @@ import { consultOrpheanOracle, OrpheanOracleAgentInputSchema } from './orphean-o
 import { consultLumbergh, LumberghAgentInputSchema } from './lumbergh-agent';
 import { consultLucille, LucilleBluthAgentInputSchema } from './lucille-bluth-agent';
 import { consultPam, PamPooveyAgentInputSchema } from './pam-poovey-agent';
-import { analyzeCarShame, RenoModeAnalysisInputSchema } from './reno-mode';
-import { processPatricktAction, PatricktAgentInputSchema } from './patrickt-agent';
-import { validateVin, VinDieselInputSchema } from './vin-diesel';
+import { consultRenoMode, RenoModeAgentInputSchema } from './reno-mode-agent';
+import { consultPatrickt, PatricktAgentInputSchema } from './patrickt-agent';
+import { consultVinDiesel, VinDieselAgentInputSchema } from './vin-diesel-agent';
 import { consultInventoryDaemon } from './inventory-daemon';
 import { generateRitualQuests, RitualQuestInputSchema } from './ritual-quests-agent';
 import { executeBurnBridgeProtocol, BurnBridgeInputSchema } from './burn-bridge-agent';
@@ -118,9 +118,9 @@ export function getSpecialistAgentDefinitions(): SpecialistAgentDefinition[] {
         { name: 'lumbergh', description: 'Analyzes a meeting invite for pointlessness.', schema: LumberghAgentInputSchema.pick({ inviteText: true }) },
         { name: 'lucille_bluth', description: 'Gets a sarcastic take on an expense.', schema: LucilleBluthAgentInputSchema.pick({ expenseDescription: true, expenseAmount: true, category: true }) },
         { name: 'pam_poovey', description: 'Generates HR-related rants or scripts in a specific persona.', schema: PamPooveyAgentInputSchema.pick({ topic: true }) },
-        { name: 'reno_mode', description: 'Analyzes a photo of a messy car.', schema: RenoModeAnalysisInputSchema.pick({ photoDataUri: true }) },
+        { name: 'reno_mode', description: 'Analyzes a photo of a messy car.', schema: RenoModeAgentInputSchema.pick({ photoDataUri: true }) },
         { name: 'patrickt_app', description: 'Logs events, gets roasts, or analyzes drama in the "Patrickt" saga.', schema: PatricktAgentInputSchema.pick({ action: true, eventDescription: true, eventCategory: true, chatInput: true }).partial() },
-        { name: 'vin_diesel', description: 'Validates a Vehicle Identification Number (VIN).', schema: VinDieselInputSchema.pick({ vin: true }) },
+        { name: 'vin_diesel', description: 'Validates a Vehicle Identification Number (VIN).', schema: VinDieselAgentInputSchema.pick({ vin: true }) },
         { name: 'inventory_daemon', description: 'Handles requests about stock, inventory, or purchase orders.', schema: z.object({ query: z.string() }) },
         { name: 'ritual_quests', description: 'Gets the user their current ritual quests to guide their journey.', schema: RitualQuestInputSchema.omit({ workspaceId: true }) },
         { name: 'burn_bridge_protocol', description: 'Performs a full-spectrum investigation (OSINT, analysis, decoy) on a person.', schema: BurnBridgeInputSchema.omit({ workspaceId: true, userId: true }) },
@@ -154,9 +154,9 @@ export const specialistAgentMap: Record<string, (input: any, context: AgentConte
     lumbergh: (input: any, context: AgentContext) => consultLumbergh({ ...input, ...context }),
     lucille_bluth: (input: any, context: AgentContext) => consultLucille({ ...input, ...context }),
     pam_poovey: (input: any, context: AgentContext) => consultPam({ ...input, ...context }),
-    reno_mode: (input: any, context: AgentContext) => analyzeCarShame({ ...input, ...context }),
-    patrickt_app: (input: any, context: AgentContext) => processPatricktAction({ ...input, ...context }),
-    vin_diesel: (input: any, context: AgentContext) => validateVin({ ...input, ...context }),
+    reno_mode: (input: any, context: AgentContext) => consultRenoMode({ ...input, ...context }),
+    patrickt_app: (input: any, context: AgentContext) => consultPatrickt({ ...input, ...context }),
+    vin_diesel: (input: any, context: AgentContext) => consultVinDiesel({ ...input, ...context }),
     inventory_daemon: (input: any, context: AgentContext) => consultInventoryDaemon({ ...input }),
     ritual_quests: (input: any, context: AgentContext) => generateRitualQuests({ ...input, ...context }),
     burn_bridge_protocol: (input: any, context: AgentContext) => executeBurnBridgeProtocol({ ...input, ...context }),
