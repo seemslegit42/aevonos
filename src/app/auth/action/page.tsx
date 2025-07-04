@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { isSignInWithEmailLink, signInWithEmailLink } from 'firebase/auth';
 import { auth } from '@/lib/firebase/client';
 import { motion } from 'framer-motion';
@@ -10,7 +10,6 @@ import { BeepIcon } from '@/components/icons/BeepIcon';
 
 export default function AuthActionPage() {
     const router = useRouter();
-    const searchParams = useSearchParams();
     const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
     const [error, setError] = useState('');
 
@@ -87,7 +86,16 @@ export default function AuthActionPage() {
     }
 
     return (
-        <div className="flex h-screen w-screen items-center justify-center p-4">
+        <div className="flex h-screen w-screen items-center justify-center p-4 relative overflow-hidden">
+             <div className="absolute top-0 z-[-2] h-full w-full bg-background">
+                <div 
+                    className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-transparent"
+                />
+                <div 
+                    className="absolute inset-0 animate-aurora bg-[linear-gradient(135deg,hsl(var(--iridescent-one)/0.2),hsl(var(--iridescent-two)/0.2)_50%,hsl(var(--iridescent-three)/0.2)_100%)] bg-[length:600%_600%]"
+                />
+                <div className="absolute inset-0 grain-overlay" />
+            </div>
             <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
