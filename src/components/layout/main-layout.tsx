@@ -38,7 +38,8 @@ export function MainLayout({ children, user: dbUser, workspace, initialVas }: Ma
   const [activeEffects, setActiveEffects] = useState<ActiveSystemEffect[]>([]);
   
   const isPublicPage = ['/login', '/register', '/pricing'].some(p => pathname.startsWith(p));
-  const needsOnboarding = firebaseUser && !dbUser && !authLoading && pathname !== '/register/vow';
+  const isAuthActionPage = pathname === '/auth/action';
+  const needsOnboarding = firebaseUser && !dbUser && !authLoading && !isPublicPage;
 
   useEffect(() => {
     // If the user is authenticated with Firebase but has no DB record, they need to complete the Rite.
@@ -46,10 +47,10 @@ export function MainLayout({ children, user: dbUser, workspace, initialVas }: Ma
       router.push('/register/vow');
     }
     // If the user isn't authenticated and is not on a public page, they need to sign in.
-    else if (!authLoading && !firebaseUser && !isPublicPage) {
+    else if (!authLoading && !firebaseUser && !isPublicPage && !isAuthActionPage) {
       router.push('/login');
     }
-  }, [authLoading, firebaseUser, isPublicPage, needsOnboarding, pathname, router]);
+  }, [authLoading, firebaseUser, isPublicPage, isAuthActionPage, needsOnboarding, pathname, router]);
 
 
   // Effect for fetching active system effects
@@ -90,7 +91,7 @@ export function MainLayout({ children, user: dbUser, workspace, initialVas }: Ma
 
 
   // While checking auth state, show a skeleton.
-  if (authLoading && !isPublicPage) {
+  if (authLoading && !isPublicPage && !isAuthActionPage) {
       return (
           <div className="flex flex-col h-screen overflow-hidden">
             <div className="flex-shrink-0 p-2 sm:p-4">
@@ -102,7 +103,7 @@ export function MainLayout({ children, user: dbUser, workspace, initialVas }: Ma
   }
   
   // If user is on a public page, or needs to onboard, or isn't signed in, render only the children (e.g., the login page)
-  if (isPublicPage || needsOnboarding || (!firebaseUser && !authLoading)) {
+  if (isPublicPage || isAuthActionPage || needsOnboarding || (!firebaseUser && !authLoading)) {
     return <>{children}</>;
   }
   
