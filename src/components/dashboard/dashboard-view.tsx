@@ -6,8 +6,14 @@ import { type Agent as AgentData, type User, type Workspace, Transaction } from 
 import { MicroAppGrid } from '../micro-app-grid';
 import { useAppStore } from '@/store/app-store';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
-import SystemWeave from './system-weave';
 import PulseNarrativeDisplay from './pulse-narrative-display';
+import dynamic from 'next/dynamic';
+
+const SystemWeave = dynamic(() => import('./system-weave'), {
+  ssr: false,
+  loading: () => <div className="absolute inset-0 -z-10" />,
+});
+
 
 interface DashboardViewProps {
   initialAgents: AgentData[];

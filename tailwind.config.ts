@@ -16,9 +16,9 @@ export default {
         sm: "calc(var(--radius) - 4px)",
       },
       fontFamily: {
-        body: ['Lexend', 'sans-serif'],
-        headline: ['Comfortaa', 'sans-serif'],
-        mono: ['Inconsolata', 'monospace'],
+        body: ['var(--font-body)', 'sans-serif'],
+        headline: ['var(--font-headline)', 'sans-serif'],
+        mono: ['var(--font-mono)', 'monospace'],
       },
       colors: {
         border: "hsl(var(--border))",

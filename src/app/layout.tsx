@@ -7,12 +7,32 @@ import Image from 'next/image';
 import { AuthProvider } from '@/context/AuthContext';
 import { getAuthenticatedUser } from '@/lib/firebase/admin';
 import { getUserVas } from './user/actions';
+import { Comfortaa, Lexend, Inconsolata } from 'next/font/google';
+import { cn } from '@/lib/utils';
 
 
 export const metadata: Metadata = {
   title: 'ΛΞVON OS',
   description: 'An agentic operating system interface.',
 };
+
+const fontBody = Lexend({
+  subsets: ['latin'],
+  variable: '--font-body',
+  weight: ['300', '400', '500'],
+});
+
+const fontHeadline = Comfortaa({
+  subsets: ['latin'],
+  variable: '--font-headline',
+  weight: ['400', '700'],
+});
+
+const fontMono = Inconsolata({
+    subsets: ['latin'],
+    variable: '--font-mono',
+    weight: ['400', '700'],
+});
 
 
 export default async function RootLayout({
@@ -29,12 +49,8 @@ export default async function RootLayout({
   }
 
   return (
-    <html lang="en" className="dark">
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@400;700&family=Lexend:wght@300;400;500&family=Inconsolata:wght@400;700&display=swap" rel="stylesheet" />
-      </head>
+    <html lang="en" className={cn("dark", fontBody.variable, fontHeadline.variable, fontMono.variable)}>
+      <head />
       <body className="font-body antialiased relative min-h-screen">
         <AuthProvider>
             <div className="absolute top-0 z-[-2] h-screen w-full bg-background">
