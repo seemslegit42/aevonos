@@ -4,11 +4,10 @@
 import { create } from 'zustand';
 import { enableMapSet } from 'immer';
 import { produce } from 'immer';
-import { generateSpeech } from '@/ai/flows/tts-flow';
 import { artifactManifests } from '@/config/artifacts';
 import { toast } from '@/hooks/use-toast';
 import { agentReportHandlers } from './agent-report-handler';
-import type { AgentReport, UserCommandOutput } from '@/ai/agents/beep-schemas';
+import type { UserCommandOutput } from '@/ai/agents/beep-schemas';
 
 
 enableMapSet();
@@ -288,13 +287,6 @@ export const useAppStore = create<AppStore>()((set, get) => ({
     const { handleCommand } = await import('@/app/actions');
     const result = await handleCommand(command, activeAppContext);
     
-    // Generate audio in parallel
-    let audioPromise = null;
-    if (result.responseText) {
-        const isAlert = result.agentReports?.some(r => r.agent === 'aegis' && r.report.isAnomalous);
-        audioPromise = generateSpeech({ text: result.responseText, mood: isAlert ? 'alert' : 'neutral' });
-    }
-
     // Show a toast for text-only responses
     if (result.responseText && (!result.appsToLaunch || result.appsToLaunch.length === 0)) {
         toast({
@@ -319,13 +311,7 @@ export const useAppStore = create<AppStore>()((set, get) => ({
         }
     }
 
-    if(audioPromise) {
-        const audioResult = await audioPromise;
-        set({ beepOutput: { ...result, responseAudioUri: audioResult.audioDataUri } });
-    } else {
-        set({ beepOutput: result });
-    }
-
+    set({ beepOutput: result });
     set({ isLoading: false });
   },
 

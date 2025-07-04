@@ -45,6 +45,7 @@ import { InsufficientCreditsError } from '@/lib/errors';
 import { recordInteraction } from '@/services/pulse-engine-service';
 import { logUserActivity } from '@/services/activity-log-service';
 import { isEffectActive } from '@/services/effects-service';
+import { generateSpeech } from '@/ai/flows/tts-flow';
 
 
 // --- LangGraph Agent State ---
@@ -549,6 +550,7 @@ Your purpose is to be the invisible, silent orchestrator of true automation. Now
           appsToLaunch: [],
           agentReports: result.agentReports || [],
           suggestedCommands: ["Please try again."],
+          responseAudioUri: '',
         };
     }
     
@@ -560,12 +562,21 @@ Your purpose is to be the invisible, silent orchestrator of true automation. Now
           appsToLaunch: [],
           agentReports: result.agentReports || [],
           suggestedCommands: ["Please check the agent reports for results."],
+          responseAudioUri: '',
         };
     }
 
     try {
         const finalResponse = UserCommandOutputSchema.parse(finalAnswerCall.args);
         finalResponse.agentReports = [...(finalResponse.agentReports || []), ...(result.agentReports || [])];
+        
+        // --- TTS Generation ---
+        if (finalResponse.responseText) {
+            const isAlert = result.aegisReport?.riskLevel === 'high' || result.aegisReport?.riskLevel === 'critical';
+            const audioResponse = await generateSpeech({ text: finalResponse.responseText, mood: isAlert ? 'alert' : 'neutral' });
+            finalResponse.responseAudioUri = audioResponse.audioDataUri;
+        }
+        // --- End TTS ---
         
         await recordInteraction(userId, 'success');
         return finalResponse;
@@ -577,6 +588,7 @@ Your purpose is to be the invisible, silent orchestrator of true automation. Now
             appsToLaunch: [],
             agentReports: result.agentReports || [],
             suggestedCommands: ["Try rephrasing your command."],
+            responseAudioUri: '',
         };
     }
 
