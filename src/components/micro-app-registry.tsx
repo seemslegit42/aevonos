@@ -1,5 +1,7 @@
 
+
 import React from 'react';
+import dynamic from 'next/dynamic';
 import { TerminalIcon } from '@/components/icons/TerminalIcon';
 import { CrystalIcon } from '@/components/icons/CrystalIcon';
 import { AegisIcon } from '@/components/icons/AegisIcon';
@@ -48,56 +50,59 @@ import { MerchantOfCabbageIcon } from './icons/MerchantOfCabbageIcon';
 import { CommandAndCauldronIcon } from './icons/CommandAndCauldronIcon';
 import { IntegrationNexusIcon } from './icons/IntegrationNexusIcon';
 import { ValidatorIcon } from './icons/ValidatorIcon';
-
-
-import Terminal from './micro-apps/terminal';
-import AegisReport from './micro-apps/aegis-report';
-import DrSyntax from './micro-apps/dr-syntax';
-import ContactList from './micro-apps/contact-list';
-import ContactEditor from './micro-apps/contact-editor';
-import UsageMonitor from './micro-apps/usage-monitor';
-import TopUp from './micro-apps/top-up';
-import UserProfileSettings from './micro-apps/user-profile-settings';
-import WorkspaceSettings from './micro-apps/workspace-settings';
-import Armory from './micro-apps/armory';
-import AegisThreatScope from './micro-apps/aegis-threatscope';
-import AegisCommand from './micro-apps/aegis-command';
-import ScribesArchive from './micro-apps/file-explorer';
-import LoomPage from '@/app/loom/page';
-import TheWinstonWolfe from './micro-apps/winston-wolfe';
-import TheKifKroker from './micro-apps/kif-kroker';
-import TheRolodex from './micro-apps/rolodex';
-import Vandelay from './micro-apps/vandelay';
-import JrocBusinessKit from './micro-apps/jroc-business-kit';
-import LaheyCommander from './micro-apps/lahey-commander';
-import TheForemanator from './micro-apps/the-foremanator';
-import Sterileish from './micro-apps/sterileish';
-import PaperTrail from './micro-apps/paper-trail';
-import Barbara from './micro-apps/barbara';
-import AuditorGeneralissimo from './micro-apps/auditor-generalissimo';
-import BeepWingman from './micro-apps/beep-wingman';
-import Kendra from './micro-apps/kendra';
-import OrpheanOracle from './micro-apps/orphean-oracle';
-import ProjectLumbergh from './micro-apps/project-lumbergh';
-import TheLucilleBluth from './micro-apps/lucille-bluth';
-import PamPooveyOnboarding from './micro-apps/pam-poovey-onboarding';
-import StonksBot from './micro-apps/stonks-bot';
-import RenoMode from './micro-apps/reno-mode';
-import PatricktApp from './micro-apps/patrickt';
-import VinDiesel from './micro-apps/vin-diesel';
-import ObeliskMarketplace from './micro-apps/obelisk-marketplace';
-import ProxyAgent from './micro-apps/proxy-agent';
-import AdminConsole from './micro-apps/admin-console';
-import InfidelityRadar from './micro-apps/infidelity-radar';
-import RitualQuests from './micro-apps/ritual-quests';
-import HowardsSidekick from './micro-apps/howards-sidekick';
-import SisyphusAscent from './micro-apps/sisyphus-ascent';
-import MerchantOfCabbage from './micro-apps/merchant-of-cabbage';
-import CommandAndCauldron from './micro-apps/command-and-cauldron';
-import IntegrationNexus from './micro-apps/integration-nexus';
-import Validator from './micro-apps/validator';
-
 import { type MicroAppType } from '@/store/app-store';
+import { Skeleton } from './ui/skeleton';
+
+// --- Lazy Load ALL MicroApp Content Components ---
+const LoadingSkeleton = () => <div className="p-4"><Skeleton className="h-full w-full" /></div>;
+
+const Terminal = dynamic(() => import('./micro-apps/terminal'), { loading: LoadingSkeleton });
+const AegisReport = dynamic(() => import('./micro-apps/aegis-report'), { loading: LoadingSkeleton });
+const DrSyntax = dynamic(() => import('./micro-apps/dr-syntax'), { loading: LoadingSkeleton });
+const ContactList = dynamic(() => import('./micro-apps/contact-list'), { loading: LoadingSkeleton });
+const ContactEditor = dynamic(() => import('./micro-apps/contact-editor'), { loading: LoadingSkeleton });
+const UsageMonitor = dynamic(() => import('./micro-apps/usage-monitor'), { loading: LoadingSkeleton });
+const TopUp = dynamic(() => import('./micro-apps/top-up'), { loading: LoadingSkeleton });
+const UserProfileSettings = dynamic(() => import('./micro-apps/user-profile-settings'), { loading: LoadingSkeleton });
+const WorkspaceSettings = dynamic(() => import('./micro-apps/workspace-settings'), { loading: LoadingSkeleton });
+const Armory = dynamic(() => import('./micro-apps/armory'), { loading: LoadingSkeleton });
+const AegisThreatScope = dynamic(() => import('./micro-apps/aegis-threatscope'), { loading: LoadingSkeleton });
+const AegisCommand = dynamic(() => import('./micro-apps/aegis-command'), { loading: LoadingSkeleton });
+const ScribesArchive = dynamic(() => import('./micro-apps/file-explorer'), { loading: LoadingSkeleton });
+const LoomPage = dynamic(() => import('@/app/loom/page'), { loading: LoadingSkeleton });
+const TheWinstonWolfe = dynamic(() => import('./micro-apps/winston-wolfe'), { loading: LoadingSkeleton });
+const TheKifKroker = dynamic(() => import('./micro-apps/kif-kroker'), { loading: LoadingSkeleton });
+const TheRolodex = dynamic(() => import('./micro-apps/rolodex'), { loading: LoadingSkeleton });
+const Vandelay = dynamic(() => import('./micro-apps/vandelay'), { loading: LoadingSkeleton });
+const JrocBusinessKit = dynamic(() => import('./micro-apps/jroc-business-kit'), { loading: LoadingSkeleton });
+const LaheyCommander = dynamic(() => import('./micro-apps/lahey-commander'), { loading: LoadingSkeleton });
+const TheForemanator = dynamic(() => import('./micro-apps/the-foremanator'), { loading: LoadingSkeleton });
+const Sterileish = dynamic(() => import('./micro-apps/sterileish'), { loading: LoadingSkeleton });
+const PaperTrail = dynamic(() => import('./micro-apps/paper-trail'), { loading: LoadingSkeleton });
+const Barbara = dynamic(() => import('./micro-apps/barbara'), { loading: LoadingSkeleton });
+const AuditorGeneralissimo = dynamic(() => import('./micro-apps/auditor-generalissimo'), { loading: LoadingSkeleton });
+const BeepWingman = dynamic(() => import('./micro-apps/beep-wingman'), { loading: LoadingSkeleton });
+const Kendra = dynamic(() => import('./micro-apps/kendra'), { loading: LoadingSkeleton });
+const OrpheanOracle = dynamic(() => import('./micro-apps/orphean-oracle'), { loading: LoadingSkeleton });
+const ProjectLumbergh = dynamic(() => import('./micro-apps/project-lumbergh'), { loading: LoadingSkeleton });
+const TheLucilleBluth = dynamic(() => import('./micro-apps/lucille-bluth'), { loading: LoadingSkeleton });
+const PamPooveyOnboarding = dynamic(() => import('./micro-apps/pam-poovey-onboarding'), { loading: LoadingSkeleton });
+const StonksBot = dynamic(() => import('./micro-apps/stonks-bot'), { loading: LoadingSkeleton });
+const RenoMode = dynamic(() => import('./micro-apps/reno-mode'), { loading: LoadingSkeleton });
+const PatricktApp = dynamic(() => import('./micro-apps/patrickt'), { loading: LoadingSkeleton });
+const VinDiesel = dynamic(() => import('./micro-apps/vin-diesel'), { loading: LoadingSkeleton });
+const ObeliskMarketplace = dynamic(() => import('./micro-apps/obelisk-marketplace'), { loading: LoadingSkeleton });
+const ProxyAgent = dynamic(() => import('./micro-apps/proxy-agent'), { loading: LoadingSkeleton });
+const AdminConsole = dynamic(() => import('./micro-apps/admin-console'), { loading: LoadingSkeleton });
+const InfidelityRadar = dynamic(() => import('./micro-apps/infidelity-radar'), { loading: LoadingSkeleton });
+const RitualQuests = dynamic(() => import('./micro-apps/ritual-quests'), { loading: LoadingSkeleton });
+const HowardsSidekick = dynamic(() => import('./micro-apps/howards-sidekick'), { loading: LoadingSkeleton });
+const SisyphusAscent = dynamic(() => import('./micro-apps/sisyphus-ascent'), { loading: LoadingSkeleton });
+const MerchantOfCabbage = dynamic(() => import('./micro-apps/merchant-of-cabbage'), { loading: LoadingSkeleton });
+const CommandAndCauldron = dynamic(() => import('./micro-apps/command-and-cauldron'), { loading: LoadingSkeleton });
+const IntegrationNexus = dynamic(() => import('./micro-apps/integration-nexus'), { loading: LoadingSkeleton });
+const Validator = dynamic(() => import('./micro-apps/validator'), { loading: LoadingSkeleton });
+
 
 type ComponentRegistry = {
     icon: React.ComponentType<any>;

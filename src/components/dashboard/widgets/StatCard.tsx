@@ -1,18 +1,16 @@
 
-'use client';
 
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface StatCardProps {
     icon: React.ElementType;
     title: string;
     value: React.ReactNode;
     description: string;
-    loading?: boolean;
 }
 
-export default function StatCard({ icon: Icon, title, value, description, loading }: StatCardProps) {
+export default function StatCard({ icon: Icon, title, value, description }: StatCardProps) {
     return (
         <Card className="bg-background/50">
             <CardHeader className="p-3 pb-2 flex-row items-center justify-between space-y-0">

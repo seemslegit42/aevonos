@@ -1,18 +1,18 @@
 
+
 'use client';
 
 import React, { useState, useEffect } from 'react';
 import MicroAppCard from './micro-app-card';
 import { type MicroApp, useAppStore } from '@/store/app-store';
 import FirstWhisperCard from '@/components/layout/FirstWhisperCard';
-import type { Agent, User, Workspace, Transaction } from '@prisma/client';
+import type { User } from '@prisma/client';
 import { useIsMobile } from '@/hooks/use-is-mobile';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { X } from 'lucide-react';
 import { getAppIcon, getAppContent } from './micro-app-registry';
 import { ScrollArea } from './ui/scroll-area';
-import DashboardWidgets from './dashboard/widgets/DashboardWidgets';
 import {
   Carousel,
   CarouselContent,
@@ -24,12 +24,10 @@ import {
 interface MicroAppGridProps {
   apps: MicroApp[];
   user: User | null;
-  initialAgents: Agent[];
-  workspace: (Workspace & { membersCount: number }) | null;
-  recentTransactions: (Transaction & { amount: number })[];
+  children: React.ReactNode;
 }
 
-export function MicroAppGrid({ apps, user, initialAgents, workspace, recentTransactions }: MicroAppGridProps) {
+export function MicroAppGrid({ apps, user, children }: MicroAppGridProps) {
   const [showWhisper, setShowWhisper] = useState(false);
   const isMobile = useIsMobile();
   const closeApp = useAppStore(state => state.closeApp);
@@ -50,13 +48,13 @@ export function MicroAppGrid({ apps, user, initialAgents, workspace, recentTrans
     if (apps.length > 0) {
       return (
         <Carousel className="w-full h-full">
-          <CarouselContent className="h-full">
+          <CarouselContent className="h-full -ml-2">
             {apps.map(app => {
               const Icon = getAppIcon(app.type);
               const ContentComponent = getAppContent(app.type);
               return (
-                <CarouselItem key={app.id} className="h-full p-2 md:p-4">
-                  <Card className="flex flex-col w-full h-full">
+                <CarouselItem key={app.id} className="h-full p-2 md:p-4 pl-4 basis-full">
+                  <Card className="flex flex-col w-full h-full shadow-lg">
                     <CardHeader className="flex flex-row items-center justify-between space-x-4 p-4 flex-shrink-0">
                       <div className="flex items-center gap-4">
                         <div className="w-10 h-10 flex-shrink-0 items-center justify-center">
@@ -82,8 +80,8 @@ export function MicroAppGrid({ apps, user, initialAgents, workspace, recentTrans
               );
             })}
           </CarouselContent>
-           {apps.length > 1 && <CarouselPrevious className="left-2" />}
-           {apps.length > 1 && <CarouselNext className="right-2" />}
+           {apps.length > 1 && <CarouselPrevious className="left-2 bg-background/70 hover:bg-background" />}
+           {apps.length > 1 && <CarouselNext className="right-2 bg-background/70 hover:bg-background" />}
         </Carousel>
       );
     }
@@ -92,19 +90,13 @@ export function MicroAppGrid({ apps, user, initialAgents, workspace, recentTrans
     return (
         <div className="h-full w-full">
             <ScrollArea className="h-full">
-                <div className="p-4 space-y-4">
-                    {showWhisper && user ? (
-                        <div className="flex justify-center items-center">
-                            <FirstWhisperCard user={user} onAction={onWhisperAction} />
-                        </div>
-                    ) : (
-                         <DashboardWidgets
-                            initialAgents={initialAgents}
-                            workspace={workspace}
-                            recentTransactions={recentTransactions}
-                        />
-                    )}
-                </div>
+                {showWhisper && user ? (
+                    <div className="p-4 flex justify-center items-center">
+                        <FirstWhisperCard user={user} onAction={onWhisperAction} />
+                    </div>
+                ) : (
+                    <>{children}</>
+                )}
             </ScrollArea>
         </div>
     );
@@ -120,11 +112,7 @@ export function MicroAppGrid({ apps, user, initialAgents, workspace, recentTrans
       {showWhisper && user ? (
           <FirstWhisperCard user={user} onAction={onWhisperAction} />
       ) : apps.length === 0 ? (
-          <DashboardWidgets 
-            initialAgents={initialAgents}
-            workspace={workspace}
-            recentTransactions={recentTransactions}
-          />
+          <>{children}</>
       ) : null}
     </div>
   );

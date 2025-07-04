@@ -1,8 +1,13 @@
 
+
 import DashboardView from '@/components/dashboard/dashboard-view';
 import { type Agent, type User, type Transaction, type Workspace } from '@prisma/client';
 import { getAuthenticatedUser } from '@/lib/firebase/admin';
 import prisma from '@/lib/prisma';
+import StatCard from '@/components/dashboard/widgets/StatCard';
+import AgentStatusList from '@/components/dashboard/widgets/AgentStatusList';
+import RecentActivityFeed from '@/components/dashboard/widgets/RecentActivityFeed';
+import { CreditCard, Users, Bot } from 'lucide-react';
 
 export default async function Home() {
     try {

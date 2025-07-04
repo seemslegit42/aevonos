@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React from 'react';
@@ -8,6 +9,7 @@ import { useAppStore } from '@/store/app-store';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import PulseNarrativeDisplay from './pulse-narrative-display';
 import dynamic from 'next/dynamic';
+import DashboardWidgets from './widgets/DashboardWidgets';
 
 const SystemWeave = dynamic(() => import('./system-weave'), {
   ssr: false,
@@ -33,10 +35,13 @@ export default function DashboardView({ initialAgents, user, workspace, recentTr
         <MicroAppGrid 
             apps={apps} 
             user={user} 
-            initialAgents={initialAgents} 
-            workspace={workspace} 
-            recentTransactions={recentTransactions} 
-        />
+        >
+           <DashboardWidgets 
+                initialAgents={initialAgents} 
+                workspace={workspace} 
+                recentTransactions={recentTransactions} 
+            />
+        </MicroAppGrid>
       </DndContext>
       <PulseNarrativeDisplay />
     </div>
