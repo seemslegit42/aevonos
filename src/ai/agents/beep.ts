@@ -1,5 +1,4 @@
 
-
 'use server';
 
 /**
@@ -159,26 +158,37 @@ ${messages.find(m => m instanceof HumanMessage)?.content}
 
 
 /**
- * A factory function to create specialist router nodes. Each router is an LLM
- * call that is only aware of the tools within its specific domain, making its
- * decision much faster and more accurate.
- * @param category The TriageCategory this router is responsible for.
- * @param definitions The tool definitions for this category.
- * @returns An async function that acts as a LangGraph node.
+ * A "meta-router" node that invokes multiple specialist routers in parallel based on triage results.
+ * It aggregates the tool calls from each specialist into a single execution plan.
  */
-const createSpecialistRouterNode = (category: TriageCategory, definitions: ReturnType<typeof getSpecialistAgentDefinitions>) => {
-    return async (state: AgentState): Promise<Partial<AgentState>> => {
-        const { messages, role } = state;
-        const tools = definitions.map(def => new Tool({
-            name: def.name,
-            description: def.description,
-            schema: def.schema,
-            func: async () => `This is a stub for the ${def.name} specialist agent. The tool execution node will handle the actual call.`,
-        }));
+const dispatchToSpecialists = async (state: AgentState): Promise<Partial<AgentState>> => {
+    const { messages, categories, role } = state;
 
-        const routerModel = langchainGroqFast.bind({ tools: [...tools, new FinalAnswerTool()] });
+    if (!categories || categories.length === 0) {
+        return { error: "Dispatcher called without categories." };
+    }
 
-        const prompt = new HumanMessage(`You are a specialist routing agent for the ${category} domain. Your job is to select the correct tool(s) from your limited toolset to handle the user's command. If no tool is appropriate, call \`final_answer\` to escalate to the main reasoner.
+    console.log(`[BEEP Dispatcher] Dispatching to specialists for categories: ${categories.join(', ')}`);
+    const categorizedAgentDefs = getCategorizedSpecialistAgentDefinitions();
+
+    const specialistPromises = categories
+        .filter(cat => cat !== 'GENERAL_UTILITY' && cat !== 'NOT_APPLICABLE')
+        .map(category => {
+            const definitions = categorizedAgentDefs[category];
+            if (!definitions) {
+                console.warn(`[BEEP Dispatcher] No specialist router found for category: ${category}`);
+                return Promise.resolve(null);
+            }
+            
+            const tools = definitions.map(def => new Tool({
+                name: def.name,
+                description: def.description,
+                schema: def.schema,
+                func: async () => `This is a stub.`,
+            }));
+
+            const routerModel = langchainGroqFast.bind({ tools: [...tools, new FinalAnswerTool()] });
+            const prompt = new HumanMessage(`You are a specialist routing agent for the ${category} domain. Your job is to select the correct tool(s) from your limited toolset to handle the user's command. If no tool is appropriate, call \`final_answer\` to escalate to the main reasoner.
 
 Domain: **${category}**
 Available Tools:
@@ -189,12 +199,26 @@ User Command:
 """
 ${messages.find(m => m instanceof HumanMessage)?.content}
 """`);
-        
-        console.log(`[BEEP Router] Invoking ${category} specialist router.`);
-        const response = await routerModel.invoke([prompt]);
-        console.log(`[BEEP Router] ${category} router decided to call:`, response.tool_calls?.map(tc => tc.name));
-        return { messages: [response] };
-    };
+            return routerModel.invoke([prompt]);
+        });
+    
+    const specialistResponses = await Promise.all(specialistPromises);
+    
+    const allToolCalls = specialistResponses.flatMap(response => response?.tool_calls || []);
+
+    if (allToolCalls.length === 0) {
+        console.log('[BEEP Dispatcher] No tool calls from any specialist. Escalating to reasoner.');
+        return { messages: [new AIMessage({ content: "No specialist action taken. Escalating to reasoner." })] };
+    }
+
+    console.log(`[BEEP Dispatcher] Aggregated tool calls:`, allToolCalls.map(tc => tc.name));
+    
+    const aggregatedMessage = new AIMessage({
+        content: `Aggregated plan from specialists.`,
+        tool_calls: allToolCalls,
+    });
+
+    return { messages: [aggregatedMessage] };
 };
 
 /**
@@ -249,7 +273,7 @@ ${messages.find(m => m instanceof HumanMessage)?.content}
  * A robust node for executing tool calls from any agent.
  * It catches errors and packages them into a ToolMessage.
  */
-const executeToolsNode = async (state: AgentState, config?: any): Promise<Partial<AgentState>> => {
+const toolExecutor = async (state: AgentState, config?: any): Promise<Partial<AgentState>> => {
     const { messages, ...context } = state;
     const lastMessage = messages[messages.length - 1];
 
@@ -406,8 +430,9 @@ const routeAfterAegis = (state: AgentState) => {
 
 /**
  * Routes the command after the initial triage.
- * If one specific domain is identified, it routes to that specialist.
- * If multiple or general domains are found, it escalates to the general planner.
+ * If one or more specific domains are identified, it routes to the dispatcher.
+ * If GENERAL_UTILITY is found, it routes to the general planner.
+ * Otherwise, it escalates directly to the reasoner.
  */
 const routeAfterTriage = (state: AgentState): string => {
   const { categories } = state;
@@ -415,46 +440,40 @@ const routeAfterTriage = (state: AgentState): string => {
     console.log("[BEEP Triage Route] Not applicable or empty. Routing to reasoner.");
     return 'agent_reasoner';
   }
-  if (categories.length === 1 && categories[0] !== 'GENERAL_UTILITY') {
-    const category = categories[0];
-    const route = `${category.toLowerCase()}Router`;
-    console.log(`[BEEP Triage Route] Single category found: ${category}. Routing to specialist: ${route}.`);
-    
-    // Safety check to ensure the route exists as a node.
-    const specialistRouters: TriageCategory[] = ["CRM", "FINANCE", "CONTENT_ANALYSIS", "ADMINISTRATION", "ENTERTAINMENT", "WORKSPACE_MANAGEMENT"];
-    if (specialistRouters.includes(category)) {
-      return route;
-    }
+  if (categories.includes('GENERAL_UTILITY')) {
+    console.log(`[BEEP Triage Route] General utility requested. Routing to general planner.`);
+    return 'generalPlanner';
   }
   
-  // If multiple categories or just GENERAL_UTILITY, use the general planner
-  console.log(`[BEEP Triage Route] Multiple/general categories found: ${categories.join(', ')}. Routing to general planner.`);
-  return 'generalPlanner';
+  // If we have one or more specific categories, dispatch to specialists.
+  console.log(`[BEEP Triage Route] Specific categories found: ${categories.join(', ')}. Routing to dispatcher.`);
+  return 'dispatchToSpecialists';
 };
 
-
-const routeAfterSpecialistRouter = (state: AgentState) => {
+/**
+ * Routes the graph after a planning stage (either from the dispatcher or general planner).
+ */
+const routeAfterPlanning = (state: AgentState) => {
     const lastMessage = state.messages[state.messages.length - 1];
 
     if (!(lastMessage instanceof AIMessage) || !lastMessage.tool_calls || lastMessage.tool_calls.length === 0) {
-        console.log("[BEEP Router] Specialist router did not specify a tool. Escalating to reasoner.");
-        return 'reasoner';
+        console.log("[BEEP Planner Route] Planner did not produce tool calls. Escalating to reasoner.");
+        return 'agent_reasoner';
     }
 
     if (lastMessage.tool_calls.some(tc => tc.name === 'final_answer')) {
-        console.log("[BEEP Router] Specialist router provided a final answer. Ending execution.");
+        console.log("[BEEP Planner Route] Planner provided a final answer. Ending execution.");
         return 'end'; 
     }
     
-    console.log("[BEEP Router] Specialist router dispatched to tool executor.");
-    return 'call_specialists';
+    console.log("[BEEP Planner Route] Planner dispatched to tool executor.");
+    return 'tool_executor';
 }
 
 const routeAfterTools = (state: AgentState) => {
     if (state.error) return 'handle_error';
-    const lastMessage = state.messages.findLast(m => m instanceof AIMessage);
-    if (lastMessage?.tool_calls?.some(tc => tc.name === 'final_answer')) return 'end';
-    return 'continue';
+    // After tools are executed, always go back to the reasoner to synthesize the results.
+    return 'agent_reasoner';
 };
 
 
@@ -478,26 +497,18 @@ const buildBeepGraph = () => {
       },
     });
 
-    const categorizedAgentDefs = getCategorizedSpecialistAgentDefinitions();
-
     // Add nodes
     workflow.addNode('aegis', callAegis);
     workflow.addNode('warn_and_continue', warnAndContinue);
     workflow.addNode('triage', triage);
+    workflow.addNode('dispatchToSpecialists', dispatchToSpecialists);
     workflow.addNode('generalPlanner', generalPlanner);
-    workflow.addNode('crmRouter', createSpecialistRouterNode('CRM', categorizedAgentDefs.CRM));
-    workflow.addNode('financeRouter', createSpecialistRouterNode('FINANCE', categorizedAgentDefs.FINANCE));
-    workflow.addNode('contentAnalysisRouter', createSpecialistRouterNode('CONTENT_ANALYSIS', categorizedAgentDefs.CONTENT_ANALYSIS));
-    workflow.addNode('administrationRouter', createSpecialistRouterNode('ADMINISTRATION', categorizedAgentDefs.ADMINISTRATION));
-    workflow.addNode('entertainmentRouter', createSpecialistRouterNode('ENTERTAINMENT', categorizedAgentDefs.ENTERTAINMENT));
-    workflow.addNode('workspaceManagementRouter', createSpecialistRouterNode('WORKSPACE_MANAGEMENT', categorizedAgentDefs.WORKSPACE_MANAGEMENT));
-    workflow.addNode('specialist_tool_node', (state, config) => executeToolsNode(state, config));
+    workflow.addNode('tool_executor', (state, config) => toolExecutor(state, config));
     workflow.addNode('agent_reasoner', (state, config) => callReasonerModel(state, config));
-    workflow.addNode('reasoner_tool_node', (state, config) => executeToolsNode(state, config));
     workflow.addNode('handle_threat', handleThreat);
     workflow.addNode('handle_error', handleErrorNode);
     
-    // Define entrypoint and core security flow
+    // Define edges
     workflow.setEntryPoint('aegis');
     workflow.addConditionalEdges('aegis', routeAfterAegis, {
       threat: 'handle_threat',
@@ -506,61 +517,31 @@ const buildBeepGraph = () => {
     });
     workflow.addEdge('warn_and_continue', 'triage');
 
-    // Add triage and routing to specialist routers
-    const specialistRouterMap = getCategorizedSpecialistAgentDefinitions();
-    const routerNames = Object.keys(specialistRouterMap).filter(k => k !== 'GENERAL_UTILITY' && k !== 'NOT_APPLICABLE');
-    
-    const triagePathMap = {
+    workflow.addConditionalEdges('triage', routeAfterTriage, {
+        dispatchToSpecialists: 'dispatchToSpecialists',
         generalPlanner: 'generalPlanner',
         agent_reasoner: 'agent_reasoner',
-    };
-    for (const router of routerNames) {
-        triagePathMap[`${router.toLowerCase()}Router`] = `${router.toLowerCase()}Router`;
-    }
-
-    workflow.addConditionalEdges('triage', routeAfterTriage, triagePathMap);
-
-
-    // Add edges from each specialist router
-    for (const router of routerNames) {
-        workflow.addConditionalEdges(`${router.toLowerCase()}Router`, routeAfterSpecialistRouter, {
-            call_specialists: 'specialist_tool_node',
-            reasoner: 'agent_reasoner',
-            end: END
-        });
-    }
-
-    // Add edges for the general planner (fallback)
-     workflow.addConditionalEdges('generalPlanner', routeAfterSpecialistRouter, {
-        call_specialists: 'specialist_tool_node',
-        reasoner: 'agent_reasoner',
-        end: END
     });
 
-    // Add edges for tool execution and final reasoning
-    workflow.addConditionalEdges('specialist_tool_node', routeAfterTools, {
-        continue: 'agent_reasoner',
-        handle_error: 'handle_error',
+    workflow.addConditionalEdges('dispatchToSpecialists', routeAfterPlanning, {
+        tool_executor: 'tool_executor',
+        agent_reasoner: 'agent_reasoner',
         end: END,
     });
     
-    const shouldReasonerCallTools = (state: AgentState) => {
-        const lastMessage = state.messages[state.messages.length - 1];
-        return (lastMessage instanceof AIMessage && lastMessage.tool_calls && lastMessage.tool_calls.length > 0)
-            ? 'call_reasoner_tools'
-            : 'end';
-    }
-
-    workflow.addConditionalEdges('agent_reasoner', shouldReasonerCallTools, {
-        call_reasoner_tools: 'reasoner_tool_node',
-        end: END
-    });
-    
-    workflow.addConditionalEdges('reasoner_tool_node', routeAfterTools, {
-        continue: 'agent_reasoner', // Loop back to reasoner
-        handle_error: 'handle_error',
+    workflow.addConditionalEdges('generalPlanner', routeAfterPlanning, {
+        tool_executor: 'tool_executor',
+        agent_reasoner: 'agent_reasoner',
         end: END,
     });
+    
+    workflow.addConditionalEdges('tool_executor', routeAfterTools, {
+        agent_reasoner: 'agent_reasoner',
+        handle_error: 'handle_error',
+    });
+    
+    // The reasoner's only tool is `final_answer`. So after it runs, the graph ends.
+    workflow.addEdge('agent_reasoner', END);
     
     // Add terminal nodes
     workflow.addEdge('handle_threat', END);
@@ -602,7 +583,8 @@ export async function processUserCommand(input: UserCommandInput): Promise<UserC
   try {
     const reasonerTools = await getReasonerTools({ userId, workspaceId, psyche, role });
     
-    const specialistTools = Object.entries(specialistAgentMap).map(([name, func]) => {
+    // Create a dynamic list of all specialist tools, wrapping them to include the necessary context on invocation.
+    const allSpecialistTools = Object.entries(specialistAgentMap).map(([name, func]) => {
         const agentDefinition = getSpecialistAgentDefinitions().find(def => def.name === name);
         if (!agentDefinition) {
             throw new Error(`Definition not found for specialist agent: ${name}`);
@@ -675,8 +657,7 @@ Your purpose is to be the invisible, silent orchestrator of true automation. Now
     
     const runnableConfig = { 
         configurable: { 
-            "specialist_tool_node": { tools: specialistTools },
-            "reasoner_tool_node": { tools: reasonerTools },
+            "tool_executor": { tools: allSpecialistTools },
             "agent_reasoner": { tools: reasonerTools },
         } 
     };
