@@ -1,22 +1,23 @@
-
 'use client';
 
 import React, { useState, useEffect, useMemo, Suspense } from 'react';
 import { User } from '@prisma/client';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Stars, Html } from '@react-three/drei';
-import * as THREE from 'three';
 
 import { Button } from '@/components/ui/button';
-import { UserPlus, AlertTriangle } from 'lucide-react';
+import { UserPlus, AlertTriangle, List, Star } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import UserCard from './UserCard';
 import UserStar from './UserStar';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import UserRosterTable from './UserRosterTable';
 
 type UserData = Pick<User, 'id' | 'email' | 'firstName' | 'lastName' | 'role' | 'lastLoginAt' | 'psyche' | 'agentAlias'>;
+type ViewMode = 'pantheon' | 'roster';
 
-const Scene = ({ users, onActionComplete, currentUserId }: { users: UserData[], onActionComplete: () => void, currentUserId: string }) => {
+const PantheonView = ({ users, onActionComplete, currentUserId }: { users: UserData[], onActionComplete: () => void, currentUserId: string }) => {
     const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
 
     const positions = useMemo(() => {
@@ -37,34 +38,36 @@ const Scene = ({ users, onActionComplete, currentUserId }: { users: UserData[], 
     const selectedUserIndex = useMemo(() => users.findIndex(u => u.id === selectedUserId), [users, selectedUserId]);
 
     return (
-        <Suspense fallback={null}>
-            <ambientLight intensity={0.2} />
-            <pointLight position={[0, 0, 0]} intensity={1} />
-            <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade />
+       <Canvas camera={{ position: [0, 0, 15], fov: 75 }}>
+           <Suspense fallback={null}>
+                <ambientLight intensity={0.2} />
+                <pointLight position={[0, 0, 0]} intensity={1} />
+                <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade />
 
-            {users.map((user, i) => (
-                <UserStar
-                    key={user.id}
-                    user={user}
-                    position={positions[i]}
-                    isSelected={selectedUserId === user.id}
-                    onClick={() => setSelectedUserId(user.id)}
-                />
-            ))}
-            
-            {selectedUser && selectedUserIndex !== -1 && (
-                <Html position={positions[selectedUserIndex]} center>
-                    <div className="w-80 -translate-x-1/2 translate-y-12">
-                         <UserCard user={selectedUser} currentUserId={currentUserId} onActionComplete={() => {
-                             setSelectedUserId(null); // Deselect on action
-                             onActionComplete();
-                         }} />
-                    </div>
-                </Html>
-            )}
+                {users.map((user, i) => (
+                    <UserStar
+                        key={user.id}
+                        user={user}
+                        position={positions[i]}
+                        isSelected={selectedUserId === user.id}
+                        onClick={() => setSelectedUserId(user.id)}
+                    />
+                ))}
+                
+                {selectedUser && selectedUserIndex !== -1 && (
+                    <Html position={positions[selectedUserIndex]} center>
+                        <div className="w-80 -translate-x-1/2 translate-y-12">
+                            <UserCard user={selectedUser} currentUserId={currentUserId} onActionComplete={() => {
+                                setSelectedUserId(null);
+                                onActionComplete();
+                            }} />
+                        </div>
+                    </Html>
+                )}
 
-            <OrbitControls autoRotate autoRotateSpeed={0.2} enablePan={false} enableZoom={true} />
-        </Suspense>
+                <OrbitControls autoRotate autoRotateSpeed={0.2} enablePan={false} enableZoom={true} />
+            </Suspense>
+       </Canvas>
     );
 };
 
@@ -74,6 +77,7 @@ export default function UserManagementTab() {
   const [error, setError] = useState<string | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [viewMode, setViewMode] = useState<ViewMode>('pantheon');
 
   useEffect(() => {
     async function fetchUsersAndSession() {
@@ -137,17 +141,21 @@ export default function UserManagementTab() {
         </div>;
     }
     
-    return (
-       <Canvas camera={{ position: [0, 0, 15], fov: 75 }}>
-           <Scene users={users} onActionComplete={handleActionComplete} currentUserId={currentUserId!} />
-       </Canvas>
-    );
+    if (viewMode === 'roster') {
+        return <UserRosterTable users={users} currentUserId={currentUserId!} onActionComplete={handleActionComplete} />;
+    }
+    
+    return <PantheonView users={users} onActionComplete={handleActionComplete} currentUserId={currentUserId!} />;
   }
 
   return (
     <div className="p-2 space-y-2 h-full flex flex-col">
-      <div className="flex justify-end flex-shrink-0">
-        <Button disabled><UserPlus className="mr-2" />Invite Soul</Button>
+      <div className="flex justify-between items-center flex-shrink-0">
+          <ToggleGroup type="single" value={viewMode} onValueChange={(value: ViewMode) => value && setViewMode(value)}>
+            <ToggleGroupItem value="pantheon" aria-label="Pantheon View"><Star className="h-4 w-4 mr-2"/>Pantheon</ToggleGroupItem>
+            <ToggleGroupItem value="roster" aria-label="Roster View"><List className="h-4 w-4 mr-2"/>Roster</ToggleGroupItem>
+          </ToggleGroup>
+          <Button disabled><UserPlus className="mr-2" />Invite Soul</Button>
       </div>
       <div className="flex-grow rounded-lg overflow-hidden relative border">
          {renderContent()}
