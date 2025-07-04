@@ -1,4 +1,3 @@
-
 # 🤖 SYSTEM PRIMORDIALS: BEEP IS NOT A MICRO-APP
 
 BEEP (Behavioral Event & Execution Processor) is the **conversational command core** of ΛΞVON OS. It is **not** a Micro-App. It is not optional. It is not replaceable. It is the soul of interaction in the system.
@@ -10,7 +9,6 @@ BEEP (Behavioral Event & Execution Processor) is the **conversational command co
 -   Embeds **contextual intelligence** across the OS by processing user commands within the context of their session and workspace.
 -   Fully integrated with Aegis (for pre-flight security checks) and Loom Studio (for executing defined workflows).
 -   Lives at the top layer — ever-present in the persistent UI shell's command bar.
--   Serves as the primary voice for the KLEPSYDRA Engine's narrative masking and the Psyche Engine's personalized suggestions. Its persona can shift based on context (Trinity of BEEP).
 
 ### 💡 Use-case Example:
 
@@ -21,12 +19,6 @@ BEEP (Behavioral Event & Execution Processor) is the **conversational command co
 
 > BEEP is HAL9000 meets Jarvis — but chill.
 > It's *the OS brain*, not a floating chatbot.
-
-### ⚡ The Engine Under the Hood
-BEEP's intelligence is powered by a sophisticated, layered AI architecture:
--   **Groq**: The lightning-fast inference engine for instant execution and real-time orchestration, eliminating latency in agentic responses.
--   **Swarm AI Principles**: For scalable, resilient collective intelligence, allowing BEEP to dispatch tasks to a "swarm" of daemons and synthesize their responses in milliseconds.
--   **CrewAI**: Used for orchestrating collaborative micro-agent teams to tackle complex, multi-step problems.
 
 ## ⚠️ BEEP IS NOT:
 

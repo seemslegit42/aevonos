@@ -112,7 +112,7 @@ Impact: Highest cost and power. These cards weave your fate with others, designe
 - **Card**: Rosetta Stone
   - **Cost**: 1200 Ξ (Syndicate Pool)
   - **Description**: "Some languages are impossible for one mind to translate. But together, you can decipher the code of your enemy."
-  - **System Effect**: Provides a critical clue to a member's "Glitch in the Glass." The clue is delivered in three different fragments to three different Syndicate members, who must collaborate to piece it together.
+  - **System Effect**: Provides a critical clue to a member\'s "Glitch in the Glass." The clue is delivered in three different fragments to three different Syndicate members, who must collaborate to piece it together.
 
 ## 4. Development Directives
 - **KLEPSYDRA Integration**: All Chaos Card triggers and effects must be meticulously integrated with the klepsydra-service for precise tracking, cost deduction, and outcome modulation based on the user's Pulse Profile.

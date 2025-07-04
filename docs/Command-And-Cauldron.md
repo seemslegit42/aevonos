@@ -1,4 +1,3 @@
-
 # Command & Cauldron™: The Sovereign Security Platform
 
 > "The Cauldron is not a part of the OS. It is a pact made with a higher power. It is an oath, written in credit and enforced by code."

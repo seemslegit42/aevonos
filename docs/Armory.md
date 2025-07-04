@@ -1,4 +1,3 @@
-
 # The Armory: Micro-App & Artifact Marketplace - Technical Specification
 
 > "A tool is an extension of the will. Here is your arsenal."

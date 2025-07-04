@@ -21,7 +21,7 @@ The foundation of the Covenant System is the `User.psyche` field, populated duri
 - **Risk-Averse Artisan** -> **Covenant of Worship** (Symbol: 🜃)
 - **Zen Architect** -> **Covenant of Silence** (Symbol: 🜄)
 
-These are not stored as separate models in the initial implementation. They are logical groupings derived from the `psyche` enum, allowing for rapid, low-overhead implementation. Future iterations may formalize this with a `Covenant` table in the Prisma schema to store Covenant-specific metadata (e.g., leaderboards, shared resources).
+These are logical groupings derived from the `psyche` enum, allowing for rapid, low-overhead implementation.
 
 ---
 
@@ -30,7 +30,7 @@ These are not stored as separate models in the initial implementation. They are 
 ### 3.1. UI/UX Personalization (Phase 1)
 The most immediate manifestation of the Covenant System is in the UI.
 
-- **Thematic Overrides**: The `RootLayout` will check the authenticated user's `psyche`. Based on the Covenant, a specific CSS class will be applied to the `<html>` tag (e.g., `theme-covenant-motion`). This allows for targeted styling via `globals.css`.
+- **Thematic Overrides**: The `RootLayout` checks the authenticated user's `psyche`. Based on the Covenant, a specific CSS class is applied to the `<html>` tag (e.g., `theme-covenant-motion`). This allows for targeted styling via `globals.css`.
 - **`Covenant of Silence`**: Will feature a minimalist theme with reduced motion, fewer notifications, and a focus on typography and negative space.
 - **`Covenant of Motion`**: Will feature more dynamic animations, real-time data visualizations in Micro-Apps, and a more vibrant, energetic color palette.
 - **`Covenant of Worship`**: Will feature UI elements designed for "altar displays" (e.g., showcasing acquired Chaos Cards) and a visual language that emphasizes artifact collection and achievement.
@@ -42,19 +42,19 @@ The most immediate manifestation of the Covenant System is in the UI.
   - **Silence**: BEEP is minimal, precise, and speaks only when necessary.
 - **Other Agents**: Agents like Dr. Syntax are already psyche-aware. This pattern will be extended to other agents where appropriate.
 
-### 3.3. Community Infrastructure (Phase 2 - Roadmap)
+### 3.3. Community Infrastructure (Implemented)
 - **API Endpoints**:
   - `GET /api/covenants/me`: Returns the user's Covenant info, including symbol and name.
   - `GET /api/covenants/{covenantName}/members`: (Admin-only) Returns members of a specific Covenant.
   - `GET /api/covenants/{covenantName}/leaderboard`: Returns a leaderboard based on Vow Alignment Score (VAS).
-- **Shared Channels**: Future implementations could use a real-time service (e.g., Ably, Supabase Realtime) to create Covenant-specific communication channels within a dedicated Micro-App.
-- **Ritual Quests**: BEEP will be upgraded to generate and assign cohort-specific challenges ("Ritual Quests") designed to increase the Vow Alignment Score (VAS) of Covenant members.
+- **Admin Console Integration**: The `Admin Console` Micro-App now features a "Covenants" tab that visualizes each Covenant's member roster and leaderboard, providing the Architect with a clear view of their community's structure and alignment.
+- **Ritual Quests**: BEEP generates and assigns cohort-specific challenges ("Ritual Quests") designed to increase the Vow Alignment Score (VAS) of Covenant members.
 
 ---
 
 ## 4. Measuring Success: The Vow Alignment Score (VAS)
 
-The VAS is a key component of Return on Belief (RoB). It will be calculated via an asynchronous background job that analyzes a user's recent `Transaction` and `WorkflowRun` history.
+The VAS is a key component of Return on Belief (RoB). It is calculated by the `vas-service.ts` by analyzing a user's recent `Transaction` history.
 
 - **Example Calculation**:
   - A member of the **Covenant of Motion** runs multiple workflows in parallel and uses high-velocity Micro-Apps. -> **High VAS**.

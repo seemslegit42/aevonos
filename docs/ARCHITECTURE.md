@@ -61,7 +61,7 @@ Your chosen stack is excellent for this.
 **Multi-Tenancy:**
 - **Schema-per-tenant:** Highest isolation, most complex to manage at scale.
 - **Database-per-tenant:** Even higher isolation, but more operational overhead.
-- **Shared schema with `tenant_id`:** Most common for SaaS. Each table includes a `tenantId` column. This requires careful indexing and query filtering to prevent data leaks. This is generally the recommended approach for SMB SaaS due to cost-efficiency and easier management.
+- **Shared schema with `tenant_id`:** Most common for SaaS. Each table includes a `tenantId` column. This requires careful indexing and query filtering to prevent data leaks. This is generally the recommended approach for an SMB DOP/OS due to cost-efficiency and easier management.
 
 **Prisma Benefits:** Type safety, migrations, and clean API for interacting with this complex relational data will be invaluable for 27 micro-apps.
 
