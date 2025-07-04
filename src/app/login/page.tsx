@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -9,19 +9,35 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, MailCheck } from 'lucide-react';
-import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FlowerOfLifeIcon } from '@/components/icons/FlowerOfLifeIcon';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 
 const LoginSchema = z.object({
   email: z.string().email({ message: "A valid designation is required." }),
 });
 
+const titles = [
+  "The digital world is noise.",
+  "Your focus has been shattered.",
+  "Sovereignty awaits the willing.",
+  "State your designation.",
+];
+
 export default function LoginPage() {
   const { toast } = useToast();
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [titleIndex, setTitleIndex] = useState(0);
+
+  useEffect(() => {
+    if (isSubmitted) return;
+    if (titleIndex < titles.length - 1) {
+      const timer = setTimeout(() => {
+        setTitleIndex(titleIndex + 1);
+      }, 1800);
+      return () => clearTimeout(timer);
+    }
+  }, [titleIndex, isSubmitted]);
 
   const form = useForm<z.infer<typeof LoginSchema>>({
     resolver: zodResolver(LoginSchema),
@@ -57,16 +73,16 @@ export default function LoginPage() {
       });
     }
   };
-
+  
   const formVariants = {
     hidden: { opacity: 0, y: 30, scale: 0.95 },
     visible: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.7, ease: [0.22, 1, 0.36, 1] } },
     exit: { opacity: 0, y: -30, scale: 0.95, transition: { duration: 0.5, ease: [0.6, -0.05, 0.7, 0.99] } },
-  }
+  };
 
   return (
     <div className="flex h-screen w-screen items-center justify-center p-4 relative overflow-hidden">
-        {/* Background elements from RootLayout */}
+        {/* Background elements */}
         <div className="absolute top-0 z-[-2] h-full w-full bg-background">
             <div 
                 className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-transparent"
@@ -79,9 +95,7 @@ export default function LoginPage() {
                 <FlowerOfLifeIcon className="w-full h-full max-w-3xl max-h-3xl" />
             </div>
         </div>
-      <div
-        className="w-full max-w-sm text-center"
-      >
+      <div className="w-full max-w-sm text-center">
         <AnimatePresence mode="wait">
             {isSubmitted ? (
               <motion.div
@@ -90,61 +104,69 @@ export default function LoginPage() {
                 initial="hidden"
                 animate="visible"
                 exit="exit"
+                className="flex flex-col items-center gap-4 p-8 rounded-lg bg-background/50 backdrop-blur-lg"
               >
-                <Card className="bg-background/70 backdrop-blur-xl border-accent/50 shadow-lg">
-                    <CardContent className="p-8 space-y-4">
-                        <MailCheck className="w-16 h-16 mx-auto text-accent" />
-                        <h2 className="text-2xl font-bold font-headline">An Echo Has Been Sent</h2>
-                        <p className="text-muted-foreground">Follow it from your inbox to cross the threshold.</p>
-                    </CardContent>
-                </Card>
+                  <MailCheck className="w-16 h-16 text-accent" />
+                  <h2 className="text-2xl font-bold font-headline">An Echo Has Been Sent</h2>
+                  <p className="text-muted-foreground">Follow it from your inbox to cross the threshold.</p>
               </motion.div>
             ) : (
-              <motion.div key="form" variants={formVariants} initial="hidden" animate="visible" exit="exit">
-                <Card className="bg-background/70 backdrop-blur-xl border border-border/20 shadow-lg">
-                    <CardHeader className="space-y-4">
-                        <Image 
-                            src="/logo.png"
-                            alt="Aevon OS Logo"
-                            width={80}
-                            height={80}
-                            className="mx-auto animate-subtle-pulse"
-                            priority
-                        />
-                        <div className="space-y-1">
-                            <CardTitle className="font-headline text-3xl tracking-tight">The Threshold</CardTitle>
-                            <CardDescription>State your designation to begin the Rite of Invocation.</CardDescription>
-                        </div>
-                    </CardHeader>
-                    <CardContent>
-                        <Form {...form}>
-                            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                                <FormField
-                                  control={form.control}
-                                  name="email"
-                                  render={({ field }) => (
-                                    <FormItem>
-                                      <FormControl>
-                                        <Input
-                                          id="email"
-                                          type="email"
-                                          placeholder="oracle@aevonos.com"
-                                          disabled={isSubmitting}
-                                          className="bg-background/50 h-12 text-center"
-                                          {...field}
-                                        />
-                                      </FormControl>
-                                      <FormMessage />
-                                    </FormItem>
-                                  )}
-                                />
-                                <Button type="submit" disabled={isSubmitting} className="w-full h-12 text-base" variant="summon">
-                                  {isSubmitting ? <Loader2 className="animate-spin" /> : 'Cross the Threshold'}
-                                </Button>
-                            </form>
-                        </Form>
-                    </CardContent>
-                </Card>
+              <motion.div 
+                key="form" 
+                variants={formVariants} 
+                initial="hidden" 
+                animate="visible" 
+                exit="exit"
+                className="flex flex-col items-center gap-8"
+              >
+                <div className="h-10 text-center">
+                  <AnimatePresence mode="wait">
+                      <motion.h1
+                          key={titleIndex}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -10 }}
+                          transition={{ duration: 0.5 }}
+                          className="font-headline text-2xl tracking-tight text-foreground"
+                      >
+                          {titles[titleIndex]}
+                      </motion.h1>
+                  </AnimatePresence>
+                </div>
+
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: titleIndex === titles.length - 1 ? 1 : 0 }}
+                  transition={{ duration: 1 }}
+                  className="w-full"
+                >
+                  <Form {...form}>
+                      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                          <FormField
+                            control={form.control}
+                            name="email"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormControl>
+                                  <Input
+                                    id="email"
+                                    type="email"
+                                    placeholder="oracle@aevonos.com"
+                                    disabled={isSubmitting}
+                                    className="bg-background/50 h-12 text-center text-lg"
+                                    {...field}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <Button type="submit" disabled={isSubmitting} className="w-full h-12 text-base" variant="summon">
+                            {isSubmitting ? <Loader2 className="animate-spin" /> : 'Cross the Threshold'}
+                          </Button>
+                      </form>
+                  </Form>
+                </motion.div>
               </motion.div>
             )}
           </AnimatePresence>
