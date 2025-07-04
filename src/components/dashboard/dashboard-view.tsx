@@ -8,7 +8,7 @@ import { useAppStore } from '@/store/app-store';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import PulseNarrativeDisplay from './pulse-narrative-display';
 import dynamic from 'next/dynamic';
-import DashboardWidgets from './widgets/DashboardWidgets';
+import DashboardWidgets from './DashboardWidgets';
 import { useToast } from '@/hooks/use-toast';
 import { DailyBriefingOutput } from '@/ai/agents/briefing-schemas';
 
