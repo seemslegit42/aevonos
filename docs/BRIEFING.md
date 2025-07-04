@@ -1,3 +1,4 @@
+
 # ΛΞVON OS: Technical Briefing
 
 This document provides a concise, high-level overview of the ΛΞVON OS codebase for rapid context transfer.
@@ -69,10 +70,10 @@ This document provides a concise, high-level overview of the ΛΞVON OS codebase
 
 ### 5. 🪓 Pain Points & Complexity
 
-*   **The BEEP Monolith**: The `beep.ts` agent is the single brain for the entire OS. Its LangGraph implementation is vast and complex, making it a central point of failure and a challenge to debug.
+*   **BEEP Orchestration Complexity**: The `beep.ts` agent, acting as the central swarm orchestrator, is a highly complex `LangGraph` state machine. While its routing logic is now structured, its role as the single entry point for all commands makes it a critical and intricate component to maintain and debug.
 *   **The App Store Monolith**: Similarly, `app-store.ts` handles almost all client-side logic, from submitting commands to processing agent reports. It's a complex piece of state management.
-*   **Mocked Services**: Many agent tools are currently mocked (e.g., Slack, financial data APIs). Replacing these with live implementations will require significant effort.
-*   **Implicit Dependencies**: The system relies heavily on specific string matching for BEEP to invoke the correct tools. Changes to tool names or descriptions can break functionality in non-obvious ways.
+*   **Live Service Dependencies**: Many agent tools rely on live, third-party APIs (e.g., for financial data or OSINT). Ensuring these integrations are robust, handling API changes, and managing rate limits requires ongoing maintenance.
+*   **Tool Schema Dependencies**: The BEEP router now uses a structured schema to select and invoke specialist agents. While this is more robust than simple string matching, it creates a tight coupling between the router's expectations and the Zod schemas defined for each agent tool. Changes to tool schemas must be carefully managed to avoid breaking the orchestration logic.
 
 ---
 
