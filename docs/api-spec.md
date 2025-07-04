@@ -1,5 +1,5 @@
 # ΛΞVON OS - API Specification
-Document Version: 1.0
+Document Version: 1.1
 Status: Canonized
 Author: ARCHIVEX
 
@@ -15,7 +15,7 @@ Example: `Authorization: Bearer <your_jwt_here>`
 
 The JWT is managed on the client-side as a secure, `HttpOnly` cookie named `session`. API routes are authenticated server-side by validating this cookie.
 
-## 3. Endpoints
+## 3. Core Endpoints
 
 ### 3.1. Agentic Core
 
@@ -50,7 +50,7 @@ The primary entry point for all agentic actions. This endpoint processes a natur
 
 ---
 
-### 3.2. User Management
+### 3.2. User & Workspace
 
 #### **`GET /api/users/me`**
 Retrieves the profile of the currently authenticated user.
@@ -91,7 +91,7 @@ Returns the updated user profile object.
 These endpoints are restricted to users with the `ADMIN` role who are also the owner of the workspace.
 
 #### **`GET /api/admin/overview`**
-Retrieves high-level statistics for the workspace dashboard.
+Retrieves high-level statistics for the workspace dashboard. This endpoint is cached for performance.
 
 **Response (200 OK):**
 ```json
@@ -105,10 +105,59 @@ Retrieves high-level statistics for the workspace dashboard.
 ```
 
 #### **`GET /api/admin/users`**
-Retrieves a list of all users within the current workspace.
+Retrieves a list of all users within the current workspace. This endpoint is cached for performance.
 
 **Response (200 OK):**
 An array of user profile objects as defined in `GET /api/users/me`.
+
+#### **`GET /api/admin/vows`**
+Retrieves the founding vows and goals for all users in the workspace, providing insight into the collective purpose of the team.
+
+**Response (200 OK):**
+```json
+[
+    {
+        "id": "string (cuid)",
+        "email": "string",
+        "firstName": "string | null",
+        "lastName": "string | null",
+        "psyche": "ZEN_ARCHITECT | SYNDICATE_ENFORCER | RISK_AVERSE_ARTISAN",
+        "foundingVow": "string | null",
+        "foundingGoal": "string | null"
+    }
+]
+```
+
+#### **`GET /api/admin/covenants/{covenantName}/members`**
+Retrieves the member roster for a specific Covenant (`motion`, `worship`, or `silence`).
+
+**Response (200 OK):**
+```json
+[
+    {
+        "id": "string (cuid)",
+        "email": "string",
+        "firstName": "string | null",
+        "lastName": "string | null"
+    }
+]
+```
+
+#### **`GET /api/admin/covenants/{covenantName}/leaderboard`**
+Retrieves the Vow Alignment Score (VAS) leaderboard for a specific Covenant.
+
+**Response (200 OK):**
+```json
+[
+    {
+        "id": "string (cuid)",
+        "email": "string",
+        "firstName": "string | null",
+        "lastName": "string | null",
+        "vas": "number"
+    }
+]
+```
 
 ---
 

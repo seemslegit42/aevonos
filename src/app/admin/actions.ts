@@ -47,8 +47,10 @@ export async function updateUserRole(formData: FormData) {
       data: { role },
     });
     
-    // Invalidate user cache
+    // Invalidate caches
     await cache.del(`user:${userId}`);
+    await cache.del(`admin:users:${workspace.id}`); // Invalidate the list of users
+    await cache.del(`admin:overview:${workspace.id}`); // User role change doesn't affect overview, but it's good practice
     
     revalidatePath('/'); // Revalidate to update the admin console
     return { success: true, message: 'User role updated.' };
@@ -98,8 +100,10 @@ export async function removeUserFromWorkspace(formData: FormData) {
             },
         });
         
-        // Invalidate both user and workspace cache for the removed user
+        // Invalidate caches
         await cache.del(`user:${userId}`, `workspace:user:${userId}`);
+        await cache.del(`admin:users:${workspace.id}`); // Invalidate the list of users
+        await cache.del(`admin:overview:${workspace.id}`); // Invalidate overview as user count changed
 
         revalidatePath('/');
         return { success: true, message: 'User removed from workspace.' };
