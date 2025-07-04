@@ -30,9 +30,9 @@ import { consultJroc, JrocAgentInputSchema } from './jroc-agent';
 import { consultLahey, LaheyAgentInputSchema } from './lahey-agent';
 import { consultForemanator, ForemanatorAgentInputSchema } from './foremanator-agent';
 import { consultSterileish, SterileishAgentInputSchema } from './sterileish-agent';
-import { scanEvidence, PaperTrailScanInputSchema } from './paper-trail';
-import { processDocument, BarbaraInputSchema } from './barbara';
-import { auditFinances, AuditorInputSchema } from './auditor-generalissimo';
+import { consultPaperTrail, PaperTrailAgentInputSchema } from './paper-trail-agent';
+import { consultBarbara, BarbaraAgentInputSchema } from './barbara-agent';
+import { consultAuditor, AuditorAgentInputSchema } from './auditor-agent';
 import { generateWingmanMessage, WingmanInputSchema } from './wingman';
 import { getKendraTake, KendraInputSchema } from './kendra';
 import { invokeOracle, OrpheanOracleInputSchema } from './orphean-oracle-flow';
@@ -109,9 +109,9 @@ export function getSpecialistAgentDefinitions(): SpecialistAgentDefinition[] {
         { name: 'lahey_surveillance', description: 'Investigates a suspicious employee log entry.', schema: LaheyAgentInputSchema.pick({ logEntry: true }) },
         { name: 'foremanator', description: 'Processes a construction daily log.', schema: ForemanatorAgentInputSchema.pick({ logText: true }) },
         { name: 'sterileish', description: 'Analyzes a cleanroom or compliance log.', schema: SterileishAgentInputSchema.pick({ logText: true, entryType: true }) },
-        { name: 'paper_trail', description: 'Scans a receipt image for expense details.', schema: PaperTrailScanInputSchema.pick({ receiptPhotoUri: true, caseFile: true }).partial() },
-        { name: 'barbara', description: 'Processes administrative and compliance documents.', schema: BarbaraInputSchema.pick({ documentText: true, task: true }) },
-        { name: 'auditor', description: 'Performs a detailed audit on a list of financial transactions.', schema: AuditorInputSchema.pick({ transactions: true }) },
+        { name: 'paper_trail', description: 'Scans a receipt image for expense details.', schema: PaperTrailAgentInputSchema.pick({ receiptPhotoUri: true, caseFile: true }).partial() },
+        { name: 'barbara', description: 'Processes administrative and compliance documents.', schema: BarbaraAgentInputSchema.pick({ documentText: true, task: true }) },
+        { name: 'auditor', description: 'Performs a detailed audit on a list of financial transactions.', schema: AuditorAgentInputSchema.pick({ transactions: true }) },
         { name: 'wingman', description: 'Helps craft a message for a tricky social situation.', schema: WingmanInputSchema.pick({ situationContext: true, messageMode: true }) },
         { name: 'kendra', description: 'Generates a marketing campaign for a product idea.', schema: KendraInputSchema.pick({ productIdea: true }) },
         { name: 'orphean_oracle', description: 'Generates a narrative, visual story about business data.', schema: OrpheanOracleInputSchema.pick({ userQuery: true }) },
@@ -145,9 +145,9 @@ export const specialistAgentMap: Record<string, (input: any, context: AgentConte
     lahey_surveillance: (input: any, context: AgentContext) => consultLahey({ ...input, ...context }),
     foremanator: (input: any, context: AgentContext) => consultForemanator({ ...input, ...context }),
     sterileish: (input: any, context: AgentContext) => consultSterileish({ ...input, ...context }),
-    paper_trail: (input: any, context: AgentContext) => scanEvidence({ ...input, ...context }),
-    barbara: (input: any, context: AgentContext) => processDocument({ ...input, ...context }),
-    auditor: (input: any, context: AgentContext) => auditFinances({ ...input, ...context }),
+    paper_trail: (input: any, context: AgentContext) => consultPaperTrail({ ...input, ...context }),
+    barbara: (input: any, context: AgentContext) => consultBarbara({ ...input, ...context }),
+    auditor: (input: any, context: AgentContext) => consultAuditor({ ...input, ...context }),
     wingman: (input: any, context: AgentContext) => generateWingmanMessage({ ...input, ...context }),
     kendra: (input: any, context: AgentContext) => getKendraTake({ ...input, ...context }),
     orphean_oracle: (input: any, context: AgentContext) => invokeOracle({ ...input, ...context }),
