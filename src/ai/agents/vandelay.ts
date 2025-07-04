@@ -22,8 +22,8 @@ const generateAlibiFlow = ai.defineFlow(
   },
   async ({ topicHint, addAttendees, workspaceId }) => {
     // --- CACHING LOGIC ---
-    const cacheKey = `${topicHint?.toLowerCase().trim() || 'generic'}-${!!addAttendees}`;
-    const cachedAlibi = getCachedAlibi(cacheKey);
+    const cacheKey = `vandelay-alibi:${topicHint?.toLowerCase().trim() || 'generic'}-${!!addAttendees}`;
+    const cachedAlibi = await getCachedAlibi(cacheKey);
     if (cachedAlibi) {
       console.log(`[Vandelay Agent] Cache hit for key: ${cacheKey}. Returning pre-computed response.`);
       // IMPORTANT: Even with a cache hit, we must bill for the action.
@@ -66,7 +66,7 @@ const generateAlibiFlow = ai.defineFlow(
     });
     
     if (output) {
-        setCachedAlibi(cacheKey, output);
+        await setCachedAlibi(cacheKey, output);
     }
 
     return output!;

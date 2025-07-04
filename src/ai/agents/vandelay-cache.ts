@@ -1,38 +1,19 @@
 
 import type { VandelayAlibiOutput } from './vandelay-schemas';
+import cache from '@/lib/cache';
 
-const CACHE_TTL_MINUTES = 60; // Alibis can be cached for longer
+const CACHE_TTL_SECONDS = 60 * 60; // 1 hour
 
-interface CachedAlibi {
-  alibi: VandelayAlibiOutput;
-  timestamp: number;
+export async function getCachedAlibi(cacheKey: string): Promise<VandelayAlibiOutput | null> {
+    const cachedData = await cache.get(cacheKey);
+    if (cachedData) {
+        console.log(`[Vandelay Cache] Cache hit for ${cacheKey}.`);
+        return cachedData as VandelayAlibiOutput;
+    }
+    return null;
 }
 
-const alibiCache: Record<string, CachedAlibi> = {};
-
-export function getCachedAlibi(cacheKey: string): VandelayAlibiOutput | null {
-  const cached = alibiCache[cacheKey];
-  if (!cached) {
-    return null;
-  }
-
-  const now = Date.now();
-  const ageInMinutes = (now - cached.timestamp) / (1000 * 60);
-
-  if (ageInMinutes > CACHE_TTL_MINUTES) {
-    console.log(`[Vandelay Cache] Stale entry for ${cacheKey}. Ignoring.`);
-    delete alibiCache[cacheKey];
-    return null;
-  }
-
-  console.log(`[Vandelay Cache] Cache hit for ${cacheKey}.`);
-  return cached.alibi;
-}
-
-export function setCachedAlibi(cacheKey: string, alibi: VandelayAlibiOutput): void {
+export async function setCachedAlibi(cacheKey: string, alibi: VandelayAlibiOutput): Promise<void> {
   console.log(`[Vandelay Cache] Caching alibi for ${cacheKey}.`);
-  alibiCache[cacheKey] = {
-    alibi,
-    timestamp: Date.now(),
-  };
+  await cache.set(cacheKey, alibi, 'EX', CACHE_TTL_SECONDS);
 }

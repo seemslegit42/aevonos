@@ -12,7 +12,30 @@ import {
     type LucilleBluthOutput
 } from './lucille-bluth-schemas';
 import { authorizeAndDebitAgentActions } from '@/services/billing-service';
-import { lucilleBluthCache } from './lucille-bluth-cache';
+
+/**
+ * A pre-computed cache for The Lucille Bluth's judgments on common expenses.
+ * This demonstrates a simple caching strategy to reduce LLM calls for frequent, deterministic inputs.
+ */
+const lucilleBluthStaticResponses: Record<string, LucilleBluthOutput> = {
+  'coffee-7-beverages': {
+    judgmentalRemark: "It's one coffee, Michael. What could it cost, ten dollars?",
+    categorization: 'Frivolous Beverages',
+  },
+  'taco-15-takeout': {
+    judgmentalRemark: "Tacos? I don't understand the question, and I won't respond to it.",
+    categorization: 'Peasant Food',
+  },
+  'sandwich-12-lunch': {
+    judgmentalRemark: 'Oh, a sandwich. How... proletarian. You get a meal and a smile for that where I come from.',
+    categorization: 'Midday Sustenance',
+  },
+  'gas-50-transportation': {
+    judgmentalRemark: "You're putting *fifty dollars* of gasoline into a car? Are you trying to fly it to the moon?",
+    categorization: 'Internal Combustion',
+  },
+};
+
 
 const analyzeExpenseFlow = ai.defineFlow(
   {
@@ -21,15 +44,16 @@ const analyzeExpenseFlow = ai.defineFlow(
     outputSchema: LucilleBluthOutputSchema,
   },
   async ({ expenseDescription, expenseAmount, category, workspaceId }) => {
-    // --- CACHING LOGIC ---
-    const cacheKey = `${expenseDescription.toLowerCase().trim()}-${expenseAmount}-${category.toLowerCase().trim()}`;
-    if (lucilleBluthCache[cacheKey]) {
-      console.log(`[Lucille Bluth Agent] Cache hit for key: ${cacheKey}.`);
+    // Check for a static response first to avoid LLM call for common items.
+    const staticResponseKey = `${expenseDescription.toLowerCase().trim()}-${expenseAmount}-${category.toLowerCase().trim()}`;
+    if (lucilleBluthStaticResponses[staticResponseKey]) {
+      console.log(`[Lucille Bluth Agent] Static response hit for key: ${staticResponseKey}.`);
+      // We still bill for the action, as the value is in the witty response, not the computation.
       await authorizeAndDebitAgentActions({ workspaceId, actionType: 'SIMPLE_LLM' });
-      return lucilleBluthCache[cacheKey];
+      return lucilleBluthStaticResponses[staticResponseKey];
     }
-    console.log(`[Lucille Bluth Agent] Cache miss for key: ${cacheKey}.`);
-    // --- END CACHING LOGIC ---
+    
+    console.log(`[Lucille Bluth Agent] Static response miss for key: ${staticResponseKey}. Calling LLM.`);
     
     await authorizeAndDebitAgentActions({ workspaceId, actionType: 'SIMPLE_LLM' });
 

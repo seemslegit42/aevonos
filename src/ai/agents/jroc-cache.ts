@@ -1,47 +1,27 @@
 
 import type { JrocOutput, JrocInput } from './jroc-schemas';
+import cache from '@/lib/cache';
 
-const CACHE_TTL_MINUTES = 15;
+const CACHE_TTL_SECONDS = 15 * 60; // 15 minutes
 
-interface CachedBusinessKit {
-  kit: JrocOutput;
-  timestamp: number;
-}
-
-const jrocCache: Record<string, CachedBusinessKit> = {};
-
-function getCacheKey(input: Pick<JrocInput, 'businessType' | 'logoStyle'>): string {
-  // Normalize and create a stable key
+const getCacheKey = (input: Pick<JrocInput, 'businessType' | 'logoStyle'>): string => {
   const type = input.businessType.toLowerCase().trim().replace(/\s+/g, '-');
   const style = input.logoStyle;
-  return `${type}:${style}`;
+  return `jroc-kit:${type}:${style}`;
 }
 
 export async function getCachedBusinessKit(input: Pick<JrocInput, 'businessType' | 'logoStyle'>): Promise<JrocOutput | null> {
   const key = getCacheKey(input);
-  const cached = jrocCache[key];
-  if (!cached) {
-    return null;
+  const cachedData = await cache.get(key);
+  if (cachedData) {
+      console.log(`[J-ROC Cache] Cache hit for ${key}.`);
+      return cachedData as JrocOutput;
   }
-
-  const now = Date.now();
-  const ageInMinutes = (now - cached.timestamp) / (1000 * 60);
-
-  if (ageInMinutes > CACHE_TTL_MINUTES) {
-    console.log(`[J-ROC Cache] Stale entry for ${key}. Re-generating.`);
-    delete jrocCache[key];
-    return null;
-  }
-
-  console.log(`[J-ROC Cache] Cache hit for ${key}.`);
-  return cached.kit;
+  return null;
 }
 
 export async function setCachedBusinessKit(input: Pick<JrocInput, 'businessType' | 'logoStyle'>, kit: JrocOutput): Promise<void> {
   const key = getCacheKey(input);
   console.log(`[J-ROC Cache] Caching kit for ${key}.`);
-  jrocCache[key] = {
-    kit,
-    timestamp: Date.now(),
-  };
+  await cache.set(key, kit, 'EX', CACHE_TTL_SECONDS);
 }

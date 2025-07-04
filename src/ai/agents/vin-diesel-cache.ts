@@ -1,40 +1,21 @@
 
 import type { VinDieselOutput } from './vin-diesel-schemas';
+import cache from '@/lib/cache';
 
-const CACHE_TTL_MINUTES = 10;
+const CACHE_TTL_SECONDS = 10 * 60; // 10 minutes
 
-interface CachedVinValidation {
-  result: VinDieselOutput;
-  timestamp: number;
+export async function getCachedValidation(vin: string): Promise<VinDieselOutput | null> {
+  const key = `vin-validation:${vin.toUpperCase()}`;
+  const cachedData = await cache.get(key);
+  if (cachedData) {
+    console.log(`[VIN Diesel Cache] Cache hit for ${key}.`);
+    return cachedData as VinDieselOutput;
+  }
+  return null;
 }
 
-const vinCache: Record<string, CachedVinValidation> = {};
-
-export function getCachedValidation(vin: string): VinDieselOutput | null {
-  const key = vin.toUpperCase();
-  const cached = vinCache[key];
-  if (!cached) {
-    return null;
-  }
-
-  const now = Date.now();
-  const ageInMinutes = (now - cached.timestamp) / (1000 * 60);
-
-  if (ageInMinutes > CACHE_TTL_MINUTES) {
-    console.log(`[VIN Diesel Cache] Stale entry for ${key}. Ignoring.`);
-    delete vinCache[key];
-    return null;
-  }
-
-  console.log(`[VIN Diesel Cache] Cache hit for ${key}.`);
-  return cached.result;
-}
-
-export function setCachedValidation(vin: string, result: VinDieselOutput): void {
-  const key = vin.toUpperCase();
+export async function setCachedValidation(vin: string, result: VinDieselOutput): Promise<void> {
+  const key = `vin-validation:${vin.toUpperCase()}`;
   console.log(`[VIN Diesel Cache] Caching result for ${key}.`);
-  vinCache[key] = {
-    result,
-    timestamp: Date.now(),
-  };
+  await cache.set(key, result, 'EX', CACHE_TTL_SECONDS);
 }

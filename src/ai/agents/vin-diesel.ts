@@ -24,7 +24,7 @@ const vinDieselValidationFlow = ai.defineFlow(
   },
   async ({ vin, workspaceId }) => {
     // --- CACHING LOGIC ---
-    const cachedResult = getCachedValidation(vin);
+    const cachedResult = await getCachedValidation(vin);
     if (cachedResult) {
         // Even with a cache hit, we bill for the action. The value is in the result.
         await authorizeAndDebitAgentActions({ workspaceId, actionType: 'TOOL_USE' }); // Simplified billing
@@ -62,7 +62,7 @@ const vinDieselValidationFlow = ai.defineFlow(
             decodedInfo: {},
             complianceReport: { registration: 'Unknown', customs: 'Unknown', inspection: 'Unknown' }
         };
-        setCachedValidation(vin, errorResult); // Cache failures too to prevent repeated failed requests
+        await setCachedValidation(vin, errorResult); // Cache failures too to prevent repeated failed requests
         return errorResult;
     }
 
@@ -81,7 +81,7 @@ const vinDieselValidationFlow = ai.defineFlow(
             decodedInfo: {},
             complianceReport: { registration: 'Flagged', customs: 'Flagged', inspection: 'Failed - Incomplete Data' }
         };
-        setCachedValidation(vin, invalidDataResult);
+        await setCachedValidation(vin, invalidDataResult);
         return invalidDataResult;
     }
 
@@ -128,7 +128,7 @@ const vinDieselValidationFlow = ai.defineFlow(
       ...output
     };
     
-    setCachedValidation(vin, finalResult);
+    await setCachedValidation(vin, finalResult);
     return finalResult;
   }
 );

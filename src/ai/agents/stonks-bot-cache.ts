@@ -1,44 +1,25 @@
 
 import type { StonksBotOutput, StonksBotMode } from './stonks-bot-schemas';
+import cache from '@/lib/cache';
 
-const CACHE_TTL_MINUTES = 5;
+const CACHE_TTL_SECONDS = 5 * 60; // 5 minutes for financial data
 
-interface CachedStonksAdvice {
-  advice: StonksBotOutput;
-  timestamp: number;
-}
-
-const stonksCache: Record<string, CachedStonksAdvice> = {};
-
-function getCacheKey(ticker: string, mode: StonksBotMode): string {
-  return `${ticker.toUpperCase()}:${mode}`;
+const getCacheKey = (ticker: string, mode: StonksBotMode): string => {
+  return `stonks-advice:${ticker.toUpperCase()}:${mode}`;
 }
 
 export async function getCachedAdvice(ticker: string, mode: StonksBotMode): Promise<StonksBotOutput | null> {
   const key = getCacheKey(ticker, mode);
-  const cached = stonksCache[key];
-  if (!cached) {
-    return null;
+  const cachedData = await cache.get(key);
+  if (cachedData) {
+      console.log(`[Stonks Cache] Cache hit for ${key}.`);
+      return cachedData as StonksBotOutput;
   }
-
-  const now = Date.now();
-  const ageInMinutes = (now - cached.timestamp) / (1000 * 60);
-
-  if (ageInMinutes > CACHE_TTL_MINUTES) {
-    console.log(`[Stonks Cache] Stale entry for ${key}. Ignoring.`);
-    delete stonksCache[key];
-    return null;
-  }
-
-  console.log(`[Stonks Cache] Cache hit for ${key}.`);
-  return cached.advice;
+  return null;
 }
 
 export async function setCachedAdvice(ticker: string, mode: StonksBotMode, advice: StonksBotOutput): Promise<void> {
   const key = getCacheKey(ticker, mode);
   console.log(`[Stonks Cache] Caching advice for ${key}.`);
-  stonksCache[key] = {
-    advice,
-    timestamp: Date.now(),
-  };
+  await cache.set(key, advice, 'EX', CACHE_TTL_SECONDS);
 }
