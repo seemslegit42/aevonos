@@ -10,14 +10,12 @@ import { CSS } from '@dnd-kit/utilities';
 import { getAppIcon, getAppContent } from './micro-app-registry';
 import { cn } from '@/lib/utils';
 import { ResizableBox } from 'react-resizable';
-import { useIsMobile } from '@/hooks/use-is-mobile';
 
 interface MicroAppCardProps {
   app: MicroApp;
 }
 
 export default function MicroAppCard({ app }: MicroAppCardProps) {
-  const isMobile = useIsMobile();
   const triggerAppAction = useAppStore((state) => state.triggerAppAction);
   const bringToFront = useAppStore((state) => state.bringToFront);
   const handleResize = useAppStore((state) => state.handleResize);
@@ -98,27 +96,21 @@ export default function MicroAppCard({ app }: MicroAppCardProps) {
 
   return (
     <div ref={setNodeRef} style={style} className="group" onPointerDown={handlePointerDown} data-app-type={app.type}>
-        {isMobile ? (
-             <div className="relative shadow-lg rounded-lg w-full h-full">
-                {cardElement}
-             </div>
-        ) : (
-            <ResizableBox
-                width={app.size.width}
-                height={app.size.height}
-                onResizeStop={(e, data) => {
-                    e.stopPropagation();
-                    handleResize(app.id, data.size);
-                }}
-                draggableOpts={{ disabled: true }}
-                minConstraints={[320, 240]}
-                maxConstraints={[1000, 800]}
-                className="relative shadow-lg rounded-lg"
-                handle={<span className="absolute bottom-2 right-2 box-border w-5 h-5 cursor-se-resize border-2 border-solid border-muted-foreground/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-20" />}
-            >
-                {cardElement}
-            </ResizableBox>
-        )}
+        <ResizableBox
+            width={app.size.width}
+            height={app.size.height}
+            onResizeStop={(e, data) => {
+                e.stopPropagation();
+                handleResize(app.id, data.size);
+            }}
+            draggableOpts={{ disabled: true }}
+            minConstraints={[320, 240]}
+            maxConstraints={[1000, 800]}
+            className="relative shadow-lg rounded-lg"
+            handle={<span className="absolute bottom-2 right-2 box-border w-5 h-5 cursor-se-resize border-2 border-solid border-muted-foreground/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-20" />}
+        >
+            {cardElement}
+        </ResizableBox>
     </div>
   );
 }

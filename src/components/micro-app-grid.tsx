@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -13,13 +12,7 @@ import { Button } from '@/components/ui/button';
 import { X } from 'lucide-react';
 import { getAppIcon, getAppContent } from './micro-app-registry';
 import { ScrollArea } from './ui/scroll-area';
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from "@/components/ui/carousel"
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface MicroAppGridProps {
   apps: MicroApp[];
@@ -30,7 +23,11 @@ interface MicroAppGridProps {
 export function MicroAppGrid({ apps, user, children }: MicroAppGridProps) {
   const [showWhisper, setShowWhisper] = useState(false);
   const isMobile = useIsMobile();
-  const closeApp = useAppStore(state => state.closeApp);
+  const { closeApp, bringToFront, activeAppId } = useAppStore((state) => ({
+    closeApp: state.closeApp,
+    bringToFront: state.bringToFront,
+    activeAppId: state.activeAppId,
+  }));
 
   useEffect(() => {
     if (apps.length === 0 && user?.firstWhisper) {
@@ -46,15 +43,35 @@ export function MicroAppGrid({ apps, user, children }: MicroAppGridProps) {
 
   if (isMobile) {
     if (apps.length > 0) {
+      const sortedApps = [...apps].sort((a, b) => a.zIndex - b.zIndex);
+      
       return (
-        <Carousel className="w-full h-full">
-          <CarouselContent className="h-full -ml-2">
-            {apps.map(app => {
+        <div className="relative h-full w-full p-4 pt-0">
+          <AnimatePresence>
+            {sortedApps.map((app, index) => {
+              const isActive = app.id === activeAppId;
+              const depth = sortedApps.length - 1 - index;
+
               const Icon = getAppIcon(app.type);
               const ContentComponent = getAppContent(app.type);
+
               return (
-                <CarouselItem key={app.id} className="h-full p-2 md:p-4 pl-4 basis-full">
-                  <Card className="flex flex-col w-full h-full shadow-lg">
+                <motion.div
+                  key={app.id}
+                  layoutId={app.id}
+                  initial={{ opacity: 0, y: 300 }}
+                  animate={{
+                    y: isActive ? 0 : -depth * 20,
+                    scale: isActive ? 1 : Math.max(0, 1 - depth * 0.05),
+                    opacity: isActive ? 1 : 1 - depth * 0.2,
+                    zIndex: app.zIndex,
+                  }}
+                  exit={{ opacity: 0, scale: 0.8, transition: { duration: 0.2 } }}
+                  transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                  className="absolute inset-x-2 top-2 bottom-2 cursor-pointer"
+                  onClick={() => !isActive && bringToFront(app.id)}
+                >
+                  <Card className="flex flex-col w-full h-full shadow-lg border-primary/20 pointer-events-auto">
                     <CardHeader className="flex flex-row items-center justify-between space-x-4 p-4 flex-shrink-0">
                       <div className="flex items-center gap-4">
                         <div className="w-10 h-10 flex-shrink-0 items-center justify-center">
@@ -64,7 +81,7 @@ export function MicroAppGrid({ apps, user, children }: MicroAppGridProps) {
                           <CardTitle className="font-headline text-lg text-foreground truncate">{app.title}</CardTitle>
                         </div>
                       </div>
-                      <Button variant="ghost" size="icon" onClick={() => closeApp(app.id)}>
+                      <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); closeApp(app.id); }}>
                         <X className="w-4 h-4" />
                       </Button>
                     </CardHeader>
@@ -76,16 +93,14 @@ export function MicroAppGrid({ apps, user, children }: MicroAppGridProps) {
                       </CardContent>
                     )}
                   </Card>
-                </CarouselItem>
+                </motion.div>
               );
             })}
-          </CarouselContent>
-           {apps.length > 1 && <CarouselPrevious className="left-2 bg-background/70 hover:bg-background" />}
-           {apps.length > 1 && <CarouselNext className="right-2 bg-background/70 hover:bg-background" />}
-        </Carousel>
+          </AnimatePresence>
+        </div>
       );
     }
-
+    
     // Show dashboard or whisper if no apps are open on mobile
     return (
         <div className="h-full w-full">
