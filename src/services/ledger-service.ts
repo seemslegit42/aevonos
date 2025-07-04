@@ -204,7 +204,7 @@ export async function processMicroAppPurchase(
 }
 
 /**
- * Atomically processes a Chaos Card activation, debiting credits and logging the event.
+ * Atomically processes a Chaos Card activation, debiting credits and applying the effect.
  * @returns A promise that resolves upon successful completion.
  */
 export async function processEffectActivation(
@@ -260,11 +260,48 @@ export async function processEffectActivation(
         aegisSignature: signature,
       },
     });
+
+    // 4. Apply the effect (either a timed effect or a user buff)
+    const cardManifest = artifactManifests.find(a => a.id === cardId);
+    if (cardManifest?.systemEffect) {
+        const durationMs = (cardManifest.durationMinutes || 60) * 60 * 1000;
+        await tx.activeSystemEffect.create({
+            data: {
+                workspaceId: workspaceId,
+                cardKey: cardManifest.systemEffect,
+                expiresAt: new Date(Date.now() + durationMs),
+            },
+        });
+    } else {
+        // Handle Mercenary cards that apply buffs to PulseProfile
+        switch(cardId) {
+            case 'LOADED_DIE':
+                await tx.pulseProfile.update({ where: { userId }, data: { loadedDieBuffCount: { increment: 3 } } });
+                break;
+            case 'SISYPHUS_REPRIEVE':
+                await tx.pulseProfile.update({ where: { userId }, data: { nextTributeGuaranteedWin: true } });
+                break;
+            case 'HADES_BARGAIN':
+                await tx.pulseProfile.update({ where: { userId }, data: { hadesBargainActive: true } });
+                break;
+        }
+    }
+    
+    // 5. Add card to user's collection if it's not a temporary effect
+    if (cardId !== 'ORACLES_INSIGHT') { // Example of a card you don't "keep"
+        await tx.user.update({
+            where: { id: userId },
+            data: { unlockedChaosCardKeys: { push: cardId } }
+        });
+    }
+
   });
 
   // Invalidate cache after the transaction
   await cache.del(`workspace:user:${userId}`);
+  await cache.del(`user:${userId}`); // To update unlockedChaosCardKeys
 }
+
 
 /**
  * Retrieves the most recent transactions for a given workspace.

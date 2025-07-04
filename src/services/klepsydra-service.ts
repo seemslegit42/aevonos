@@ -27,16 +27,6 @@ const PSYCHE_MODIFIERS: Record<UserPsyche, { oddsFactor: number; boonFactor: num
     [UserPsyche.RISK_AVERSE_ARTISAN]: { oddsFactor: 1.15, boonFactor: 0.8 }, // Lower risk, lower reward
 };
 
-// Create a list of all card keys that are purely for aesthetic system effects.
-const aestheticEffectCardKeys = artifactManifests
-    .filter(artifact => artifact.type === 'CHAOS_CARD' && artifact.cardClass === 'AESTHETIC' && artifact.systemEffect)
-    .map(artifact => artifact.id);
-
-// List of instruments that are pure gambles and should not be "owned".
-// These don't award a Chaos Card on win.
-const PURE_FOLLY_INSTRUMENTS = ['ORACLE_OF_DELPHI_VALLEY', 'SISYPHUSS_ASCENT', 'MERCHANT_OF_CABBAGE'];
-const MERCENARY_CARDS = ['LOADED_DIE', 'SISYPHUS_REPRIEVE', 'HADES_BARGAIN', 'ORACLES_INSIGHT'];
-
 type PrismaTransactionClient = Omit<Prisma.PrismaClient, "$connect" | "$disconnect" | "$on" | "$transaction" | "$use" | "$extends">;
 
 
@@ -83,59 +73,6 @@ export async function processFollyTribute(
         throw new Error(`Instrument '${instrumentId}' not found in manifest or folly config.`);
     }
 
-    // --- HANDLE MERCENARY CARD PURCHASE ---
-    if (MERCENARY_CARDS.includes(instrumentId)) {
-        return prisma.$transaction(async (tx) => {
-            const cost = instrumentManifest!.creditCost;
-            const workspace = await tx.workspace.findUniqueOrThrow({ where: { id: workspaceId }, select: { credits: true } });
-
-            if ((Number(workspace.credits)) < cost) {
-                throw new InsufficientCreditsError('Insufficient credits to acquire this boon.');
-            }
-
-            await tx.workspace.update({ where: { id: workspaceId }, data: { credits: { decrement: cost } } });
-            
-            // Apply the buff to the user's profile
-            switch (instrumentId) {
-                case 'LOADED_DIE':
-                    await tx.pulseProfile.update({ where: { userId }, data: { loadedDieBuffCount: { increment: 3 } } });
-                    break;
-                case 'SISYPHUS_REPRIEVE':
-                    await tx.pulseProfile.update({ where: { userId }, data: { nextTributeGuaranteedWin: true } });
-                    break;
-                case 'HADES_BARGAIN':
-                    await tx.pulseProfile.update({ where: { userId }, data: { hadesBargainActive: true } });
-                    break;
-                case 'ORACLES_INSIGHT':
-                    // This is a timed, workspace-wide effect for simplicity, though ideally user-specific.
-                    await tx.activeSystemEffect.create({ data: { workspaceId, cardKey: 'ORACLES_INSIGHT', expiresAt: new Date(Date.now() + 5 * 60 * 1000) } });
-                    break;
-            }
-
-            // Log the purchase
-            await tx.transaction.create({
-                data: {
-                    workspaceId, userId, instrumentId,
-                    type: TransactionType.DEBIT,
-                    amount: new Prisma.Decimal(cost),
-                    description: `Ritual Boon Acquired: ${instrumentManifest!.name}`,
-                    status: 'COMPLETED',
-                    aegisSignature: 'mock_signature_for_boon_purchase', // Placeholder
-                }
-            });
-            
-            // Add the card to the user's inventory
-            await tx.user.update({
-                where: { id: userId },
-                data: { unlockedChaosCardKeys: { push: instrumentId } }
-            });
-
-            // Mark as a "win" for UI purposes; the boon is the applied effect.
-            return { outcome: 'win', boonAmount: 0, aethericEcho: 0 };
-        });
-    }
-
-    // --- REGULAR FOLLY INSTRUMENT LOGIC ---
     const instrumentConfig = follyInstrumentsConfig[instrumentId];
     if (!instrumentConfig) {
         throw new Error(`Instrument '${instrumentId}' not found in Folly configuration.`);
@@ -307,27 +244,6 @@ export async function processFollyTribute(
                 aegisSignature: signature,
             }
         });
-        
-        if (awardedCardKey && !PURE_FOLLY_INSTRUMENTS.includes(awardedCardKey) && !aestheticEffectCardKeys.includes(awardedCardKey)) {
-            if (!user.unlockedChaosCardKeys.includes(awardedCardKey)) {
-                 await tx.user.update({
-                    where: { id: userId },
-                    data: { unlockedChaosCardKeys: { push: awardedCardKey } },
-                });
-            }
-        }
-        
-        if (systemEffect) {
-            const cardManifest = artifactManifests.find(c => c.id === systemEffect);
-            const durationMs = (cardManifest?.durationMinutes || 60) * 60 * 1000;
-            await tx.activeSystemEffect.create({
-              data: {
-                workspaceId: workspaceId,
-                cardKey: systemEffect,
-                expiresAt: new Date(Date.now() + durationMs),
-              },
-            });
-        }
         
         const discovery = await tx.instrumentDiscovery.findFirst({
             where: { userId, instrumentId: instrumentId, converted: false }

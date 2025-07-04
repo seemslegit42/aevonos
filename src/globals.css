@@ -186,11 +186,6 @@
     animation: weeping-glass 8s ease-in-out infinite;
   }
 
-  /*
-   * For the Geologic Time Chaos Card effect.
-   * This slows down all transitions and animations on elements that have them.
-   * It also adds a slow, subtle drift animation to resizable app windows.
-   */
   .dark.theme-geologic-time * {
       transition-duration: 4s !important;
       animation-duration: 20s !important;
@@ -229,7 +224,7 @@
     50% { transform: translate(-1px, 2px) rotate(-0.5deg); }
     60% { transform: translate(-3px, 1px) rotate(0deg); }
     70% { transform: translate(3px, 1px) rotate(-0.5deg); }
-    80% { transform: translate(-1px, -1px) rotate(-0.5deg); }
+    80% { transform: translate(-1px, -1px) rotate(0.5deg); }
     90% { transform: translate(1px, 2px) rotate(0deg); }
     100% { transform: translate(1px, -2px) rotate(-0.5deg); }
 }

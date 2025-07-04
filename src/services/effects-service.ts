@@ -10,39 +10,21 @@ import { processEffectActivation } from './ledger-service';
 
 /**
  * Activates a Chaos Card effect for a user.
- * This involves debiting their credits and creating an ActiveSystemEffect record.
+ * This is now a simple controller that delegates the transactional logic
+ * of debiting credits and applying the effect to the ledger service.
  * @param userId The ID of the user activating the card.
  * @param workspaceId The ID of the user's workspace.
  * @param cardId The ID of the Chaos Card to activate.
- * @returns A promise that resolves to the created ActiveSystemEffect record.
  */
-export async function activateCardEffect(userId: string, workspaceId: string, cardId: string): Promise<ActiveSystemEffect> {
+export async function activateCardEffect(userId: string, workspaceId: string, cardId: string): Promise<void> {
   const cardManifest = artifactManifests.find(a => a.id === cardId && a.type === 'CHAOS_CARD');
 
   if (!cardManifest) {
     throw new Error(`Chaos Card with ID '${cardId}' not found.`);
   }
-  if (!cardManifest.systemEffect) {
-    throw new Error(`Chaos Card '${cardId}' has no defined system effect to activate.`);
-  }
 
-  const { creditCost, systemEffect, durationMinutes = 60 } = cardManifest;
-
-  // Process the financial transaction first. This will throw on insufficient funds.
-  await processEffectActivation(userId, workspaceId, cardId, cardManifest.name, creditCost);
-
-  // If payment was successful, create the effect.
-  const expiresAt = new Date(Date.now() + durationMinutes * 60 * 1000);
-
-  const newEffect = await prisma.activeSystemEffect.create({
-    data: {
-      workspaceId,
-      cardKey: systemEffect,
-      expiresAt,
-    },
-  });
-
-  return newEffect;
+  // Delegate the entire transactional process to the ledger service.
+  await processEffectActivation(userId, workspaceId, cardId, cardManifest.name, cardManifest.creditCost);
 }
 
 
