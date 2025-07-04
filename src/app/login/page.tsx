@@ -2,7 +2,6 @@
 'use client';
 
 import React, { useState } from 'react';
-import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -23,7 +22,7 @@ export default function LoginPage() {
     setIsSubmitting(true);
     
     try {
-      const response = await fetch('/api/auth/login', {
+      const response = await fetch('/api/auth/initiate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email }),
@@ -41,7 +40,7 @@ export default function LoginPage() {
     } catch (error) {
       toast({
         variant: 'destructive',
-        title: 'Login Failed',
+        title: 'Authentication Failed',
         description: (error as Error).message,
       });
     } finally {
@@ -70,7 +69,7 @@ export default function LoginPage() {
               <CardHeader className="text-center">
                 <BeepIcon className="w-16 h-16 mx-auto text-primary" />
                 <CardTitle className="font-headline text-2xl text-primary pt-4">Enter the Chamber</CardTitle>
-                <CardDescription>A key has been forged for your return.</CardDescription>
+                <CardDescription>State your designation to proceed.</CardDescription>
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleSubmit} className="space-y-4">
@@ -85,15 +84,9 @@ export default function LoginPage() {
                     disabled={isSubmitting}
                   />
                   <Button type="submit" disabled={isSubmitting} className="w-full">
-                    {isSubmitting ? <Loader2 className="animate-spin" /> : 'Request Entry'}
+                    {isSubmitting ? <Loader2 className="animate-spin" /> : 'Continue'}
                   </Button>
                 </form>
-                <div className="mt-4 text-center text-sm">
-                  New Initiate?{" "}
-                  <Link href="/register" className="underline text-primary">
-                    Begin the Rite of Invocation.
-                  </Link>
-                </div>
               </CardContent>
             </motion.div>
           )}
