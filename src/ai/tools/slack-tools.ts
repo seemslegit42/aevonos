@@ -1,33 +1,52 @@
 
 'use server';
 import { ai } from '@/ai/genkit';
-import { z } from 'zod';
 import { GetSlackChannelMessagesInputSchema, GetSlackChannelMessagesOutputSchema } from './slack-schemas';
+import { WebClient } from '@slack/web-api';
+import { getIntegrationCredentials } from '@/services/integration-service';
 
-// This is a MOCK implementation. A real one would use the Slack API.
+
 export const getSlackChannelMessages = ai.defineTool(
   {
     name: 'getSlackChannelMessages',
-    description: 'Fetches recent messages from a Slack channel.',
+    description: 'Fetches recent messages from a Slack channel using the configured integration.',
     inputSchema: GetSlackChannelMessagesInputSchema,
     outputSchema: GetSlackChannelMessagesOutputSchema,
   },
-  async ({ channelId }) => {
-    console.log(`[Mock Slack Tool] Fetching messages for channel: ${channelId}`);
-    // In a real app, you would look up the workspace's Slack auth token
-    // and make an API call to Slack's conversations.history endpoint.
-    if (channelId.toLowerCase().includes('general')) {
-         return [
-            { user: 'U01', text: "Morning team!", ts: "1722513600.000100" },
-            { user: 'U02', text: "Just a heads-up, the TPS report deadline is today. Yeeeeah.", ts: "1722513660.000200" },
-            { user: 'U03', text: "Okay, but my numbers are looking a little weird. Can someone take a look?", ts: "1722513720.000300" },
-            { user: 'U02', text: "We'll circle back on that after the standup. We need to maintain our velocity.", ts: "1722513780.000400" },
-            { user: 'U03', text: "Fine. Whatever.", ts: "1722513840.000500" },
-        ];
+  async ({ channelId, workspaceId }) => {
+    const credentials = await getIntegrationCredentials(workspaceId, 'Slack');
+    
+    if (!credentials?.apiKey) {
+      throw new Error('Slack integration has not been configured for this workspace. Please add your Slack API token in the Integration Nexus.');
     }
-     return [
-        { user: 'U01', text: "Anyone see my red stapler?", ts: "1722513600.000100" },
-        { user: 'U02', text: "I'm going to need you to come in on Saturday.", ts: "1722513660.000200" },
-    ];
+    
+    const slackClient = new WebClient(credentials.apiKey);
+
+    try {
+      const result = await slackClient.conversations.history({
+        channel: channelId,
+        limit: 20, // Fetch the last 20 messages for analysis
+      });
+
+      if (!result.ok || !result.messages) {
+        throw new Error(`Slack API error: ${result.error || 'Failed to fetch messages.'}`);
+      }
+
+      // Filter out non-user messages and map to our schema
+      const userMessages = result.messages
+        .filter(msg => msg.type === 'message' && msg.user)
+        .map(msg => ({
+            user: msg.user!,
+            text: msg.text || '',
+            ts: msg.ts!,
+        }));
+
+      return userMessages;
+
+    } catch (error) {
+      console.error(`[Slack Tool Error] Failed to fetch messages for channel ${channelId}:`, error);
+      // Re-throw the error so the agent knows the tool call failed.
+      throw new Error(error instanceof Error ? `Slack API Error: ${error.message}` : 'An unknown error occurred while fetching Slack messages.');
+    }
   }
 );

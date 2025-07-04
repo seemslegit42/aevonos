@@ -25,7 +25,7 @@ const analyzeCommsFlow = ai.defineFlow(
     await authorizeAndDebitAgentActions({ workspaceId, actionType: 'EXTERNAL_API' });
     await authorizeAndDebitAgentActions({ workspaceId, actionType: 'SIMPLE_LLM' });
     
-    const messages = await getSlackChannelMessages({ channelId });
+    const messages = await getSlackChannelMessages({ channelId, workspaceId });
     
     // This is a simplified representation. A real implementation might want to preserve user identities
     // but for Kif's analysis, a simple text block is sufficient.
