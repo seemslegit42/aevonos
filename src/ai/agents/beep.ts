@@ -51,6 +51,7 @@ import { logUserActivity } from '@/services/activity-log-service';
 import { isEffectActive } from '@/services/effects-service';
 import { generateSpeech } from '@/ai/flows/tts-flow';
 import { Tool } from '@langchain/core/tools';
+import { createSecurityAlertInDb } from '../tools/security-tools';
 
 
 // --- LangGraph Agent State ---
@@ -312,28 +313,39 @@ const callReasonerModel = async (state: AgentState, config?: any) => {
  * A terminal node that handles high-risk security threats detected by Aegis.
  */
 const handleThreat = async (state: AgentState) => {
-    const { aegisReport } = state;
-    if (!aegisReport) {
-        throw new Error("handleThreat called without an Aegis report.");
-    }
-    
-    const finalAnswerToolCall = {
-        name: 'final_answer',
-        args: {
-            responseText: `Aegis Alert: ${aegisReport.anomalyExplanation} Command execution has been halted. A security alert has been logged.`,
-            appsToLaunch: [{type: 'aegis-threatscope', title: 'Aegis ThreatScope'}],
-            suggestedCommands: ['Lock down my account', 'View security alerts'],
-        },
-        id: 'tool_call_final_answer_threat'
-    };
+  const { aegisReport, userId, workspaceId } = state;
+  if (!aegisReport) {
+    throw new Error('handleThreat called without an Aegis report.');
+  }
 
-    const response = new AIMessage({
-        content: "High-risk threat detected. Calling final_answer and terminating.",
-        tool_calls: [finalAnswerToolCall],
-    });
+  // Create the security alert in the database
+  await createSecurityAlertInDb(
+    {
+      type: aegisReport.anomalyType || 'High-Risk Anomaly',
+      explanation: aegisReport.anomalyExplanation,
+      riskLevel: aegisReport.riskLevel!,
+    },
+    workspaceId,
+    userId
+  );
 
-    return { messages: [response] };
-}
+  const finalAnswerToolCall = {
+    name: 'final_answer',
+    args: {
+      responseText: `Aegis Alert: ${aegisReport.anomalyExplanation} Command execution has been halted. A security alert has been logged.`,
+      appsToLaunch: [{ type: 'aegis-threatscope', title: 'Aegis ThreatScope' }],
+      suggestedCommands: ['Lock down my account', 'View security alerts'],
+    },
+    id: 'tool_call_final_answer_threat',
+  };
+
+  const response = new AIMessage({
+    content: 'High-risk threat detected. Calling final_answer and terminating.',
+    tool_calls: [finalAnswerToolCall],
+  });
+
+  return { messages: [response] };
+};
 
 /**
  * A node that adds a warning message to the state if Aegis detects a medium-risk activity.

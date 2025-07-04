@@ -19,8 +19,8 @@ const EDICT_CACHE_KEY = (workspaceId: string) => `edicts:${workspaceId}`;
 const EDICT_CACHE_TTL_SECONDS = 60 * 10; // 10 minutes
 
 export async function createSecurityAlertInDb(input: CreateSecurityAlertInput, workspaceId: string, userId: string): Promise<SecurityAlert> {
-    // Creating a security alert is a significant action.
-    await authorizeAndDebitAgentActions({ workspaceId, userId, actionType: 'TOOL_USE' });
+    // This is an internal system action, not directly triggered by a user command,
+    // so we don't bill for it here. Billing is handled by the initiating agent (e.g., BEEP).
     try {
       const { ...alertData } = input;
       const alert = await prisma.securityAlert.create({

@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { create } from 'zustand';
@@ -164,9 +165,15 @@ export const useAppStore = create<AppStore>()((set, get) => ({
 
         if (existingAppIndex > -1) {
           // If app exists, update it and bring to front
+          const existingApp = state.apps[existingAppIndex];
           state.apps[existingAppIndex] = {
-            ...state.apps[existingAppIndex],
+            ...existingApp,
             ...partialApp,
+            // Merge contentProps instead of overwriting
+            contentProps: {
+                ...existingApp.contentProps,
+                ...partialApp.contentProps,
+            },
             zIndex,
           };
         } else {
