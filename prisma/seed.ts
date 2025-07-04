@@ -100,6 +100,14 @@ async function main() {
   })
   console.log(`Created workspace with id: ${newWorkspace.id}`)
 
+  // Create default pulse engine config for the workspace
+  await prisma.pulseEngineConfig.create({
+    data: {
+      workspaceId: newWorkspace.id,
+    }
+  });
+  console.log(`Created default Pulse Engine config for workspace ${newWorkspace.id}`);
+
   // Seed the genesis transaction for the initial credits, which were granted at workspace creation.
   await prisma.transaction.create({
     data: {

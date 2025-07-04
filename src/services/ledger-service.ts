@@ -1,4 +1,3 @@
-
 'use server';
 /**
  * @fileOverview Service for the Obelisk Pay Credit Ledger.
@@ -14,6 +13,7 @@ import { CreateManualTransactionInputSchema, TransmuteCreditsInputSchema } from 
 import { differenceInMinutes } from 'date-fns';
 import { artifactManifests } from '@/config/artifacts';
 import { createHmac } from 'crypto';
+import { getPulseEngineConfig } from './config-service';
 
 const CreateTransactionInputSchema = z.object({
   workspaceId: z.string(),
@@ -27,7 +27,6 @@ const CreateTransactionInputSchema = z.object({
 type CreateTransactionInput = z.infer<typeof CreateTransactionInputSchema>;
 
 const XI_TO_CAD_EXCHANGE_RATE = 0.00025; // 1 CAD = 4000 Xi, placeholder. A real system would use a dynamic rate.
-const TRANSMUTATION_TITHE_RATE = 0.18; // 18%
 
 
 /**
@@ -305,8 +304,11 @@ export async function getTransmutationQuote(
   input: Omit<z.infer<typeof TransmuteCreditsInputSchema>, 'vendor'>,
   workspaceId: string
 ) {
+    const config = await getPulseEngineConfig(workspaceId);
+    const transmutationTitheRate = Number(config.transmutationTithe);
+    
     const costInX = Math.ceil(input.amount / XI_TO_CAD_EXCHANGE_RATE);
-    const tithe = Math.ceil(costInX * TRANSMUTATION_TITHE_RATE);
+    const tithe = Math.ceil(costInX * transmutationTitheRate);
     const total = costInX + tithe;
 
     const workspace = await prisma.workspace.findUnique({

@@ -1,4 +1,3 @@
-
 'use server';
 /**
  * @fileOverview The Profit Pulse Engine (Codename: KLEPSYDRA) Configuration.
@@ -8,7 +7,7 @@
 
 import prisma from '@/lib/prisma';
 import cache from '@/lib/cache';
-import { pulseEngineConfig } from '@/config/pulse-engine-config';
+import { getPulseEngineConfig } from './config-service';
 import { PulseProfile, PulsePhase, Prisma, PulseInteractionType } from '@prisma/client';
 
 type PrismaTransactionClient = Omit<Prisma.PrismaClient, "$connect" | "$disconnect" | "$on" | "$transaction" | "$use" | "$extends">;
@@ -173,9 +172,10 @@ export async function recordLoss(userId: string, tx?: PrismaTransactionClient): 
  * @param userId The ID of the user.
  * @returns True if a Pity Boon should be triggered.
  */
-export async function shouldTriggerPityBoon(userId: string, tx?: PrismaTransactionClient): Promise<boolean> {
+export async function shouldTriggerPityBoon(userId: string, workspaceId: string, tx?: PrismaTransactionClient): Promise<boolean> {
     const profile = await getPulseProfile(userId, tx);
-    return profile.consecutiveLosses >= pulseEngineConfig.PITY_THRESHOLD;
+    const config = await getPulseEngineConfig(workspaceId);
+    return profile.consecutiveLosses >= config.pityThreshold;
 }
 
 
