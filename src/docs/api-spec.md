@@ -649,14 +649,13 @@ This document provides the formal OpenAPI 3.0 specification for the ΛΞVON OS P
         "type": "object",
         "properties": {
           "email": { "type": "string", "format": "email" },
-          "password": { "type": "string", "minLength": 8 },
           "workspaceName": { "type": "string", "description": "The name for the primary workspace or 'Canvas'." },
           "agentAlias": { "type": "string", "description": "A personalized name for the core BEEP agent.", "nullable": true },
           "psyche": { "$ref": "#/components/schemas/UserPsyche" },
           "whatMustEnd": { "type": "string", "description": "The user's declared 'sacrifice' during the Rite of Invocation.", "nullable": true },
           "goal": { "type": "string", "description": "The user's declared 'vow' or goal during the Rite of Invocation.", "nullable": true }
         },
-        "required": ["email", "password", "workspaceName", "psyche"]
+        "required": ["email", "workspaceName", "psyche"]
       },
       "User": {
         "type": "object",
