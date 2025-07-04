@@ -9,6 +9,7 @@ import { artifactManifests } from '@/config/artifacts';
 import { toast } from '@/hooks/use-toast';
 import { agentReportHandlers } from './agent-report-handler';
 import type { UserCommandOutput } from '@/ai/agents/beep-schemas';
+import { calculateNewAppPosition } from '@/lib/app-window-utils';
 
 
 enableMapSet();
@@ -141,11 +142,6 @@ export interface AppStore {
   triggerAppAction: (id: string) => void;
 }
 
-const getAppDefaultSize = (type: MicroAppType) => {
-    const manifest = artifactManifests.find(a => a.id === type);
-    return manifest?.defaultSize || { width: 400, height: 500 };
-}
-
 
 export const useAppStore = create<AppStore>()((set, get) => ({
   apps: [],
@@ -177,52 +173,19 @@ export const useAppStore = create<AppStore>()((set, get) => ({
             zIndex,
           };
         } else {
-          // If app is new, create it with cascading position
-          const isClient = typeof window !== 'undefined';
-          const defaultSize = getAppDefaultSize(type);
+          // This logic can only run on the client.
+          if (typeof window === 'undefined') return;
 
-          let position = { x: 150, y: 100 };
-          let size = defaultSize;
+          // If app is new, calculate its position and size
+          const { position, size } = calculateNewAppPosition({
+              appType: type,
+              lastPosition: state.lastAppPosition,
+          });
 
-          if (isClient) {
-            const isMobile = window.innerWidth < 768;
-            if (isMobile) {
-              size = { width: window.innerWidth - 32, height: window.innerHeight * 0.7 };
-              position = { x: 16, y: 80 };
-              // On mobile, we don't cascade, so reset position tracking
-              state.lastAppPosition = null;
-            } else {
-              // Desktop cascading logic
-              const cascadeOffset = 30;
-              const topBarHeight = 80;
-              let newPosition: { x: number; y: number };
-
-              if (state.lastAppPosition) {
-                newPosition = {
-                  x: state.lastAppPosition.x + cascadeOffset,
-                  y: state.lastAppPosition.y + cascadeOffset,
-                };
-
-                // Reset cascade if it goes off-screen
-                if (
-                  newPosition.x + defaultSize.width > window.innerWidth ||
-                  newPosition.y + defaultSize.height > window.innerHeight
-                ) {
-                  newPosition = { x: 100, y: topBarHeight + 20 };
-                }
-              } else {
-                // First window placement, roughly centered
-                newPosition = {
-                  x: Math.max(50, (window.innerWidth - defaultSize.width) / 2),
-                  y: Math.max(topBarHeight, (window.innerHeight - defaultSize.height) / 2),
-                };
-              }
-
-              position = newPosition;
-              state.lastAppPosition = newPosition;
-            }
-          }
-
+          // Update last position for cascading
+          const isMobile = window.innerWidth < 768;
+          state.lastAppPosition = isMobile ? null : position;
+          
           const defaults = {
             id: `app-${Date.now()}`,
             type: type,
