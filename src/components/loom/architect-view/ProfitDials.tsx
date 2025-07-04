@@ -9,9 +9,9 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { Info, SlidersHorizontal, Activity, Loader2, Save } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import EconomicPulseChart from './EconomicPulseChart';
-import { Skeleton } from '../ui/skeleton';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
-import { Button } from '../ui/button';
+import { Button } from '@/components/ui/button';
 import { debounce } from 'lodash';
 
 type Config = {
