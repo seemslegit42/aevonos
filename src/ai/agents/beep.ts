@@ -63,7 +63,6 @@ interface AgentState {
   aegisReport: AegisAnomalyScanOutput | null;
   agentReports: z.infer<typeof AgentReportSchema>[];
   categories: TriageCategory[] | null;
-  error?: string;
 }
 
 // ===================================================================================
@@ -133,11 +132,11 @@ const triage = async (state: AgentState): Promise<Partial<AgentState>> => {
 - ADMINISTRATION: For productivity tasks, compliance checks, and internal monitoring.
 - ENTERTAINMENT: For fun, satirical, or game-like interactions.
 - WORKSPACE_MANAGEMENT: For high-level system administration, user management, and agent/workflow configuration.
-- GENERAL_UTILITY: Use this as a fallback if the command is complex, spans multiple domains, or doesn't fit a single category well.
+- GENERAL_UTILITY: Use this if the command is complex, spans multiple independent domains (e.g., "list my contacts and get the price of GME"), or doesn't fit a single category well.
 - NOT_APPLICABLE: Use this ONLY for simple greetings, chit-chat, or questions that can be answered without any specialized tools.
 
 **IMPORTANT RULES:**
-- If the command involves two distinct tasks (e.g., "check my stock portfolio and create a new contact"), include BOTH categories (e.g., \`["FINANCE", "CRM"]\`).
+- If the command involves two distinct tasks (e.g., "check my stock portfolio and create a new contact"), you MUST use \`["GENERAL_UTILITY"]\`.
 - If a command is complex and requires combining information from multiple domains (e.g., "summarize the financial performance of clients in the tech sector"), use \`["GENERAL_UTILITY"]\`.
 
 User command:
@@ -165,7 +164,7 @@ const dispatchToSpecialists = async (state: AgentState): Promise<Partial<AgentSt
     const { messages, categories, role } = state;
 
     if (!categories || categories.length === 0) {
-        return { error: "Dispatcher called without categories." };
+        return { messages: [new SystemMessage({ content: "State error: Dispatcher called without categories."})] };
     }
 
     console.log(`[BEEP Dispatcher] Dispatching to specialists for categories: ${categories.join(', ')}`);
@@ -278,7 +277,8 @@ const toolExecutor = async (state: AgentState, config?: any): Promise<Partial<Ag
     const lastMessage = messages[messages.length - 1];
 
     if (!(lastMessage instanceof AIMessage) || !lastMessage.tool_calls) {
-        return { error: "State error: last message is not an AIMessage with tool calls." };
+        // This should not happen if the graph logic is correct, but it's a safe guard.
+        return { messages: [new SystemMessage({ content: "State error: tool_executor was called without tool calls."})] };
     }
     
     const tools = config.configurable.tools as Tool[];
@@ -304,6 +304,7 @@ const toolExecutor = async (state: AgentState, config?: any): Promise<Partial<Ag
             });
         } catch (error: any) {
              console.error(`[BEEP Tool Executor] Error in agent '${toolCall.name}':`, error);
+            // Package the error into a ToolMessage so the reasoner can handle it.
             return new ToolMessage({
                 content: `Error: The agent '${toolCall.name}' failed with the following message: ${error.message}`,
                 tool_call_id: toolCall.id!,
@@ -323,12 +324,9 @@ const toolExecutor = async (state: AgentState, config?: any): Promise<Partial<Ag
         } catch (e) { /* Ignore parsing errors for non-report tool calls */ }
     }
 
-    const firstError = toolMessages.find(m => m.content.startsWith("Error:"));
-
     return { 
         messages: toolMessages, 
         agentReports: agentReports,
-        error: firstError?.content,
     };
 };
 
@@ -396,26 +394,6 @@ const warnAndContinue = (state: AgentState) => {
     return { messages: [warningMessage] };
 }
 
-/**
- * A terminal node for handling errors from tool executions.
- * It ensures a graceful failure by crafting a user-friendly error message.
- */
-const handleErrorNode = async (state: AgentState) => {
-    const response = new AIMessage({
-        content: "",
-        tool_calls: [{
-            name: 'final_answer',
-            args: {
-                responseText: `My apologies, an agent reported an error: ${state.error}`,
-                appsToLaunch: [],
-                suggestedCommands: ['Try again later', 'Contact support'],
-            },
-            id: 'tool_call_final_answer_error'
-        }]
-    });
-    return { messages: [response] };
-};
-
 
 // ===================================================================================
 // == 2. DEFINE GRAPH EDGES & ROUTING LOGIC
@@ -471,8 +449,9 @@ const routeAfterPlanning = (state: AgentState) => {
 }
 
 const routeAfterTools = (state: AgentState) => {
-    if (state.error) return 'handle_error';
     // After tools are executed, always go back to the reasoner to synthesize the results.
+    // The reasoner's prompt is equipped to handle success and error messages from tools.
+    console.log('[BEEP Tool Route] Tool execution complete. Routing to reasoner to synthesize results.');
     return 'agent_reasoner';
 };
 
@@ -493,7 +472,6 @@ const buildBeepGraph = () => {
         aegisReport: { value: (x, y) => y, default: () => null },
         agentReports: { value: (x, y) => x.concat(y), default: () => [] },
         categories: { value: (x, y) => y, default: () => null },
-        error: { value: (x, y) => y, default: () => undefined },
       },
     });
 
@@ -506,7 +484,6 @@ const buildBeepGraph = () => {
     workflow.addNode('tool_executor', (state, config) => toolExecutor(state, config));
     workflow.addNode('agent_reasoner', (state, config) => callReasonerModel(state, config));
     workflow.addNode('handle_threat', handleThreat);
-    workflow.addNode('handle_error', handleErrorNode);
     
     // Define edges
     workflow.setEntryPoint('aegis');
@@ -535,17 +512,13 @@ const buildBeepGraph = () => {
         end: END,
     });
     
-    workflow.addConditionalEdges('tool_executor', routeAfterTools, {
-        agent_reasoner: 'agent_reasoner',
-        handle_error: 'handle_error',
-    });
+    workflow.addEdge('tool_executor', 'agent_reasoner');
     
     // The reasoner's only tool is `final_answer`. So after it runs, the graph ends.
     workflow.addEdge('agent_reasoner', END);
     
     // Add terminal nodes
     workflow.addEdge('handle_threat', END);
-    workflow.addEdge('handle_error', END);
 
     return workflow.compile();
 }
@@ -762,3 +735,5 @@ Your purpose is to be the invisible, silent orchestrator of true automation. Now
     };
   }
 }
+
+    
