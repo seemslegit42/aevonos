@@ -1,3 +1,4 @@
+
 'use client';
 
 import { create } from 'zustand';
@@ -73,18 +74,70 @@ export interface MicroApp {
   contentProps?: Record<string, any>;
 }
 
+/**
+ * The central client-side state management for the application.
+ * Manages the state of all open Micro-Apps, agent interactions, and UI state.
+ */
 export interface AppStore {
+  /** An array of all currently open Micro-Apps on the canvas. */
   apps: MicroApp[];
+  /** The ID of the currently focused Micro-App. */
   activeAppId: string | null;
+  /** The next z-index value to be assigned to a new or focused app, ensuring it appears on top. */
   nextZIndex: number;
+  /** Flag indicating if BEEP is currently processing a command. */
   isLoading: boolean;
+  /** The most recent output from the BEEP agent. */
   beepOutput: UserCommandOutput | null;
+  /** The position where the last new app was opened, used for cascading new windows. */
+  lastAppPosition: { x: number; y: number } | null;
+
+  /**
+   * Creates a new Micro-App or updates an existing one. If an app with the same ID exists,
+   * it's updated with the provided properties and brought to the front. If not, a new app
+   * is created with a calculated cascading position and size.
+   * @param type The type of the Micro-App to create (e.g., 'terminal').
+   * @param partialApp An object containing properties to override the defaults, such as `id` or `contentProps`.
+   */
   upsertApp: (type: MicroAppType, partialApp: Partial<MicroApp>) => void;
+  
+  /**
+   * Closes a Micro-App, removing it from the canvas.
+   * @param id The unique ID of the Micro-App to close.
+   */
   closeApp: (id: string) => void;
+
+  /**
+   * Brings a specific Micro-App to the front of the view stack.
+   * @param id The unique ID of the Micro-App to bring to the front.
+   */
   bringToFront: (id: string) => void;
+
+  /**
+   * Updates the size of a Micro-App.
+   * @param id The unique ID of the Micro-App to resize.
+   * @param size The new width and height of the app.
+   */
   handleResize: (id: string, size: { width: number; height: number }) => void;
+
+  /**
+   * Updates the position of a Micro-App after a drag-and-drop operation.
+   * @param event The event object from the DndContext.
+   */
   handleDragEnd: (event: any) => void;
+
+  /**
+   * Submits a natural language command to the BEEP agent for processing.
+   * This is the primary method for user interaction with the OS's intelligence layer.
+   * @param command The natural language command string from the user.
+   * @param activeAppContext The optional type of the currently active app for contextual awareness.
+   */
   handleCommandSubmit: (command: string, activeAppContext?: string) => Promise<void>;
+
+  /**
+   * A placeholder for future functionality where an app can trigger an internal action.
+   * @param id The unique ID of the app triggering the action.
+   */
   triggerAppAction: (id: string) => void;
 }
 
@@ -100,6 +153,7 @@ export const useAppStore = create<AppStore>()((set, get) => ({
   nextZIndex: 10,
   isLoading: false,
   beepOutput: null,
+  lastAppPosition: null,
 
   upsertApp: (type, partialApp) => {
     set(
@@ -110,42 +164,69 @@ export const useAppStore = create<AppStore>()((set, get) => ({
         const zIndex = state.nextZIndex + 1;
 
         if (existingAppIndex > -1) {
+          // If app exists, update it and bring to front
           state.apps[existingAppIndex] = {
             ...state.apps[existingAppIndex],
             ...partialApp,
             zIndex,
           };
         } else {
-            const isClient = typeof window !== 'undefined';
-            const defaultSize = getAppDefaultSize(type);
+          // If app is new, create it with cascading position
+          const isClient = typeof window !== 'undefined';
+          const defaultSize = getAppDefaultSize(type);
 
-            let position = { x: 150, y: 100 };
-            let size = defaultSize;
+          let position = { x: 150, y: 100 };
+          let size = defaultSize;
 
-            if (isClient) {
-                const isMobile = window.innerWidth < 768;
-                if (isMobile) {
-                    size = { width: window.innerWidth - 32, height: window.innerHeight * 0.7 };
-                    position = { x: 16, y: 80 };
-                } else {
-                    const topBarHeight = 80; // Approximate height of top bar + padding
-                    position = { 
-                        x: Math.random() * (window.innerWidth - defaultSize.width - 100) + 50, 
-                        y: Math.random() * (window.innerHeight - defaultSize.height - topBarHeight - 50) + topBarHeight 
-                    };
+          if (isClient) {
+            const isMobile = window.innerWidth < 768;
+            if (isMobile) {
+              size = { width: window.innerWidth - 32, height: window.innerHeight * 0.7 };
+              position = { x: 16, y: 80 };
+              // On mobile, we don't cascade, so reset position tracking
+              state.lastAppPosition = null;
+            } else {
+              // Desktop cascading logic
+              const cascadeOffset = 30;
+              const topBarHeight = 80;
+              let newPosition: { x: number; y: number };
+
+              if (state.lastAppPosition) {
+                newPosition = {
+                  x: state.lastAppPosition.x + cascadeOffset,
+                  y: state.lastAppPosition.y + cascadeOffset,
+                };
+
+                // Reset cascade if it goes off-screen
+                if (
+                  newPosition.x + defaultSize.width > window.innerWidth ||
+                  newPosition.y + defaultSize.height > window.innerHeight
+                ) {
+                  newPosition = { x: 100, y: topBarHeight + 20 };
                 }
-            }
+              } else {
+                // First window placement, roughly centered
+                newPosition = {
+                  x: Math.max(50, (window.innerWidth - defaultSize.width) / 2),
+                  y: Math.max(topBarHeight, (window.innerHeight - defaultSize.height) / 2),
+                };
+              }
 
-            const defaults = {
-                id: `app-${Date.now()}`,
-                type: type,
-                title: artifactManifests.find(a => a.id === type)?.name || `New ${type}`,
-                description: artifactManifests.find(a => a.id === type)?.description || `A new ${type} app.`,
-                position,
-                size,
-                zIndex: zIndex,
-            };
-            state.apps.push({ ...defaults, ...partialApp });
+              position = newPosition;
+              state.lastAppPosition = newPosition;
+            }
+          }
+
+          const defaults = {
+            id: `app-${Date.now()}`,
+            type: type,
+            title: artifactManifests.find(a => a.id === type)?.name || `New ${type}`,
+            description: artifactManifests.find(a => a.id === type)?.description || `A new ${type} app.`,
+            position,
+            size,
+            zIndex: zIndex,
+          };
+          state.apps.push({ ...defaults, ...partialApp });
         }
         state.activeAppId = partialApp.id || state.apps[state.apps.length - 1].id;
         state.nextZIndex = zIndex;
@@ -157,6 +238,10 @@ export const useAppStore = create<AppStore>()((set, get) => ({
     set(
       produce((state: AppStore) => {
         state.apps = state.apps.filter((app) => app.id !== id);
+         // If the closed app was the last one, reset the cascading position
+        if (state.apps.length === 0) {
+            state.lastAppPosition = null;
+        }
       })
     );
   },
@@ -164,11 +249,11 @@ export const useAppStore = create<AppStore>()((set, get) => ({
   bringToFront: (id) => {
     set(
       produce((state: AppStore) => {
-        const zIndex = state.nextZIndex + 1;
         const appIndex = state.apps.findIndex((app) => app.id === id);
-        if (appIndex > -1) {
-          state.apps[appIndex].zIndex = zIndex;
-          state.nextZIndex = zIndex;
+        if (appIndex > -1 && state.apps[appIndex].zIndex < state.nextZIndex) {
+            const zIndex = state.nextZIndex + 1;
+            state.apps[appIndex].zIndex = zIndex;
+            state.nextZIndex = zIndex;
         }
         state.activeAppId = id;
       })
