@@ -92,5 +92,4 @@ export default function PulseNarrativeDisplay() {
         </div>
     );
 }
-
     
