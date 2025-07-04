@@ -67,7 +67,7 @@ async function createTransaction(input: CreateTransactionInput) {
                 amount: new Prisma.Decimal(amount).toFixed(8),
                 description,
                 timestamp: new Date().toISOString(),
-                userId, instrumentId
+                userId, instrumentId, agentId
             };
             const signature = createHmac('sha256', signatureSecret)
                 .update(JSON.stringify(transactionDataForSigning))

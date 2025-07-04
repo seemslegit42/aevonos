@@ -8,6 +8,7 @@ import prisma from '@/lib/prisma';
 import { Prisma, EventStatus, TransactionType } from '@prisma/client';
 import { InsufficientCreditsError } from '@/lib/errors';
 import { artifactManifests } from '@/config/artifacts';
+import { createHmac } from 'crypto';
 
 /**
  * Creates a new Black Wager event.
@@ -53,6 +54,7 @@ export async function makeBlackWagerContribution({ workspaceId, userId, amount }
     if (amount <= 0) {
         throw new Error('Contribution amount must be positive.');
     }
+    const signatureSecret = process.env.AEGIS_SIGNING_SECRET || 'default_secret_for_dev';
 
     return prisma.$transaction(async (tx) => {
         const activeEvent = await tx.globalAgenticEvent.findFirst({
@@ -101,8 +103,34 @@ export async function makeBlackWagerContribution({ workspaceId, userId, amount }
             }
         });
 
+        const isWinner = Number(updatedEvent.currentPool) >= Number(updatedEvent.poolTarget);
+        const description = isWinner 
+            ? `Winning contribution to Black Wager: ${updatedEvent.eventName}`
+            : `Contribution to Black Wager: ${updatedEvent.eventName}`;
+        
+        const transactionDataForSigning = {
+            workspaceId, userId, type: TransactionType.DEBIT,
+            amount: new Prisma.Decimal(amount).toFixed(8),
+            description, instrumentId: activeEvent.id,
+            timestamp: new Date().toISOString()
+        };
+        const signature = createHmac('sha256', signatureSecret)
+            .update(JSON.stringify(transactionDataForSigning))
+            .digest('hex');
+
+        await tx.transaction.create({
+            data: {
+                workspaceId, userId, type: TransactionType.DEBIT,
+                amount: new Prisma.Decimal(amount),
+                description,
+                instrumentId: activeEvent.id,
+                status: 'COMPLETED',
+                aegisSignature: signature,
+            }
+        });
+
         // Check if the contribution meets the target
-        if (Number(updatedEvent.currentPool) >= Number(updatedEvent.poolTarget)) {
+        if (isWinner) {
             // This workspace wins!
             await tx.globalAgenticEvent.update({
                 where: { id: updatedEvent.id },
@@ -124,32 +152,9 @@ export async function makeBlackWagerContribution({ workspaceId, userId, amount }
                     },
                 });
             }
-
-            // Log the "win" transaction for the ledger. It's still a DEBIT in terms of cost.
-            await tx.transaction.create({
-                data: {
-                    workspaceId, userId, type: TransactionType.DEBIT,
-                    amount: new Prisma.Decimal(amount),
-                    description: `Winning contribution to Black Wager: ${updatedEvent.eventName}`,
-                    instrumentId: updatedEvent.id,
-                    status: 'COMPLETED'
-                }
-            });
             
             return { success: true, eventConcluded: true, message: `Your contribution has secured the ${updatedEvent.shardReward} for your Syndicate!` };
-
         } else {
-             // Log the contribution transaction
-            await tx.transaction.create({
-                data: {
-                    workspaceId, userId, type: TransactionType.DEBIT,
-                    amount: new Prisma.Decimal(amount),
-                    description: `Contribution to Black Wager: ${updatedEvent.eventName}`,
-                    instrumentId: updatedEvent.id,
-                    status: 'COMPLETED'
-                }
-            });
-
             return { success: true, eventConcluded: false, message: 'Your tribute has been accepted.' };
         }
     });
