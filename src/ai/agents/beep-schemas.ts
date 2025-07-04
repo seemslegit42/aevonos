@@ -54,6 +54,11 @@ export const TriageCategorySchema = z.enum([
     "NOT_APPLICABLE"
 ]);
 export type TriageCategory = z.infer<typeof TriageCategorySchema>;
+
+export const TriageResultSchema = z.object({
+    categories: z.array(TriageCategorySchema).describe("An array of one or more categories that match the user's command. If multiple independent tasks are present, include all relevant categories. If unsure, or if it is a simple greeting or a request the reasoner can handle directly, use ['NOT_APPLICABLE']. If the command is complex and spans multiple domains, use ['GENERAL_UTILITY'].")
+});
+export type TriageResult = z.infer<typeof TriageResultSchema>;
 // --- END NEW ---
 
 

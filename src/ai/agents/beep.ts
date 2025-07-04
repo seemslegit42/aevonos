@@ -36,8 +36,7 @@ import {
     UserCommandOutputSchema,
     type UserCommandOutput,
     AgentReportSchema,
-    RouterSchema,
-    TriageCategorySchema,
+    TriageResultSchema,
     type TriageCategory,
 } from './beep-schemas';
 import {
@@ -64,7 +63,7 @@ interface AgentState {
   pulseProfile: PulseProfileInput | null;
   aegisReport: AegisAnomalyScanOutput | null;
   agentReports: z.infer<typeof AgentReportSchema>[];
-  category: TriageCategory | null; // NEW: To hold the triage result
+  categories: TriageCategory[] | null;
   error?: string;
 }
 
@@ -122,12 +121,12 @@ const callAegis = async (state: AgentState): Promise<Partial<AgentState>> => {
 
 
 /**
- * NEW: Uses a fast model to categorize the user's command into a specific domain.
+ * Uses a fast model to categorize the user's command into one or more domains.
  * This is the first step in the hierarchical routing process.
  */
 const triage = async (state: AgentState): Promise<Partial<AgentState>> => {
   const { messages } = state;
-  const triagePrompt = new HumanMessage(`Your task is to categorize the user's command to route it to the correct specialist department. Choose the single best category.
+  const triagePrompt = new HumanMessage(`Your task is to analyze the user's command and identify ALL relevant domains it touches upon to route it to the correct specialist department(s). Respond with an array of categories.
 
 - CRM: For managing contacts (create, list, update, delete).
 - FINANCE: For financial analysis, stock market "advice", expense tracking, and auditing.
@@ -135,28 +134,32 @@ const triage = async (state: AgentState): Promise<Partial<AgentState>> => {
 - ADMINISTRATION: For productivity tasks, compliance checks, and internal monitoring.
 - ENTERTAINMENT: For fun, satirical, or game-like interactions.
 - WORKSPACE_MANAGEMENT: For high-level system administration, user management, and agent/workflow configuration.
-- GENERAL_UTILITY: For general problem-solving, information retrieval, or complex multi-domain tasks that don't fit a single category.
-- NOT_APPLICABLE: For simple greetings, chit-chat, or commands that don't require a specialist tool.
+- GENERAL_UTILITY: Use this as a fallback if the command is complex, spans multiple domains, or doesn't fit a single category well.
+- NOT_APPLICABLE: Use this ONLY for simple greetings, chit-chat, or questions that can be answered without any specialized tools.
+
+**IMPORTANT RULES:**
+- If the command involves two distinct tasks (e.g., "check my stock portfolio and create a new contact"), include BOTH categories (e.g., \`["FINANCE", "CRM"]\`).
+- If a command is complex and requires combining information from multiple domains (e.g., "summarize the financial performance of clients in the tech sector"), use \`["GENERAL_UTILITY"]\`.
 
 User command:
 """
 ${messages.find(m => m instanceof HumanMessage)?.content}
 """`);
 
-  const triageModel = langchainGroqFast.withStructuredOutput(z.object({ category: TriageCategorySchema }));
+  const triageModel = langchainGroqFast.withStructuredOutput(TriageResultSchema);
   try {
-    const { category } = await triageModel.invoke([triagePrompt]);
-    console.log(`[BEEP Triage] Categorized command as: ${category}`);
-    return { category };
+    const { categories } = await triageModel.invoke([triagePrompt]);
+    console.log(`[BEEP Triage] Categorized command into: ${categories.join(', ')}`);
+    return { categories };
   } catch (e) {
     console.error('[BEEP Triage] Triage failed, defaulting to GENERAL_UTILITY:', e);
-    return { category: 'GENERAL_UTILITY' };
+    return { categories: ['GENERAL_UTILITY'] };
   }
 };
 
 
 /**
- * NEW: A factory function to create specialist router nodes. Each router is an LLM
+ * A factory function to create specialist router nodes. Each router is an LLM
  * call that is only aware of the tools within its specific domain, making its
  * decision much faster and more accurate.
  * @param category The TriageCategory this router is responsible for.
@@ -195,8 +198,9 @@ ${messages.find(m => m instanceof HumanMessage)?.content}
 };
 
 /**
- * The general-purpose planner node (the old 'planner'). It is now a fallback for commands
- * that don't fit into a neat category.
+ * The general-purpose planner node. It is now a fallback for commands
+ * that don't fit into a neat category or span multiple domains. It is explicitly
+ * instructed to look for parallel execution opportunities.
  */
 const generalPlanner = async (state: AgentState): Promise<Partial<AgentState>> => {
     const { messages, role } = state;
@@ -211,11 +215,18 @@ const generalPlanner = async (state: AgentState): Promise<Partial<AgentState>> =
     const plannerTools = [...specialistAgentTools, new FinalAnswerTool()];
     const routingModel = langchainGroqFast.bind({ tools: plannerTools });
     
-    const planningPrompt = new HumanMessage(`You are BEEP, the master conductor of a swarm of specialist AI agents. The command was too general for a specialist router. Your primary goal is to determine the correct action for the user's command from the full list of available agents.
+    const planningPrompt = new HumanMessage(`You are BEEP, the master conductor of a swarm of specialist AI agents. Your primary goal is to decompose the user's command into a series of discrete tasks that can be executed by your specialist agents.
 
 **Core Directive:** Analyze the user's intent. You have two options:
 1.  **Simple Response:** If the command is a simple greeting, a question you can answer directly, or does not require a specialist, you MUST call the \`final_answer\` tool with the appropriate response.
-2.  **Complex Task:** If the command requires a specific capability, you MUST call one or more of the specialist agent tools. You can call multiple tools in parallel if the tasks are independent.
+2.  **Complex Task Decomposition:** If the command requires one or more specific capabilities, you MUST identify each discrete task. For each task, select the single best specialist agent from the list below. You can and SHOULD call multiple agent tools in parallel if the user's request contains multiple, independent sub-tasks.
+
+**Example of Parallel Execution:**
+- User Command: "I need stock advice for NVDA and a good, boring alibi for my calendar tomorrow afternoon."
+- Your Plan:
+    1. Call \`stonks_bot\` tool with ticker 'NVDA'.
+    2. Call \`vandelay\` tool to create an alibi.
+    *These are independent and can be called simultaneously.*
 
 **Available Specialist Agents (Full Swarm):**
 ${getSpecialistAgentDefinitions().map(def => `- **${def.name}**: ${def.description}`).join('\n')}
@@ -394,21 +405,31 @@ const routeAfterAegis = (state: AgentState) => {
 }
 
 /**
- * NEW: Routes the command to the appropriate specialist router based on the triage category.
+ * Routes the command after the initial triage.
+ * If one specific domain is identified, it routes to that specialist.
+ * If multiple or general domains are found, it escalates to the general planner.
  */
 const routeAfterTriage = (state: AgentState): string => {
-  const { category } = state;
-  switch (category) {
-    case 'CRM': return 'crmRouter';
-    case 'FINANCE': return 'financeRouter';
-    case 'CONTENT_ANALYSIS': return 'contentAnalysisRouter';
-    case 'ADMINISTRATION': return 'administrationRouter';
-    case 'ENTERTAINMENT': return 'entertainmentRouter';
-    case 'WORKSPACE_MANAGEMENT': return 'workspaceManagementRouter';
-    case 'GENERAL_UTILITY': return 'generalPlanner';
-    case 'NOT_APPLICABLE': return 'agent_reasoner';
-    default: return 'generalPlanner';
+  const { categories } = state;
+  if (!categories || categories.length === 0 || categories.includes('NOT_APPLICABLE')) {
+    console.log("[BEEP Triage Route] Not applicable or empty. Routing to reasoner.");
+    return 'agent_reasoner';
   }
+  if (categories.length === 1 && categories[0] !== 'GENERAL_UTILITY') {
+    const category = categories[0];
+    const route = `${category.toLowerCase()}Router`;
+    console.log(`[BEEP Triage Route] Single category found: ${category}. Routing to specialist: ${route}.`);
+    
+    // Safety check to ensure the route exists as a node.
+    const specialistRouters: TriageCategory[] = ["CRM", "FINANCE", "CONTENT_ANALYSIS", "ADMINISTRATION", "ENTERTAINMENT", "WORKSPACE_MANAGEMENT"];
+    if (specialistRouters.includes(category)) {
+      return route;
+    }
+  }
+  
+  // If multiple categories or just GENERAL_UTILITY, use the general planner
+  console.log(`[BEEP Triage Route] Multiple/general categories found: ${categories.join(', ')}. Routing to general planner.`);
+  return 'generalPlanner';
 };
 
 
@@ -452,7 +473,7 @@ const buildBeepGraph = () => {
         pulseProfile: { value: (x, y) => y, default: () => null },
         aegisReport: { value: (x, y) => y, default: () => null },
         agentReports: { value: (x, y) => x.concat(y), default: () => [] },
-        category: { value: (x, y) => y, default: () => null },
+        categories: { value: (x, y) => y, default: () => null },
         error: { value: (x, y) => y, default: () => undefined },
       },
     });
@@ -486,26 +507,28 @@ const buildBeepGraph = () => {
     workflow.addEdge('warn_and_continue', 'triage');
 
     // Add triage and routing to specialist routers
-    workflow.addConditionalEdges('triage', routeAfterTriage, {
-        CRM: 'crmRouter',
-        FINANCE: 'financeRouter',
-        CONTENT_ANALYSIS: 'contentAnalysisRouter',
-        ADMINISTRATION: 'administrationRouter',
-        ENTERTAINMENT: 'entertainmentRouter',
-        WORKSPACE_MANAGEMENT: 'workspaceManagementRouter',
-        GENERAL_UTILITY: 'generalPlanner',
-        NOT_APPLICABLE: 'agent_reasoner'
-    });
+    const specialistRouterMap = getCategorizedSpecialistAgentDefinitions();
+    const routerNames = Object.keys(specialistRouterMap).filter(k => k !== 'GENERAL_UTILITY' && k !== 'NOT_APPLICABLE');
+    
+    const triagePathMap = {
+        generalPlanner: 'generalPlanner',
+        agent_reasoner: 'agent_reasoner',
+    };
+    for (const router of routerNames) {
+        triagePathMap[`${router.toLowerCase()}Router`] = `${router.toLowerCase()}Router`;
+    }
+
+    workflow.addConditionalEdges('triage', routeAfterTriage, triagePathMap);
+
 
     // Add edges from each specialist router
-    const specialistRouters: TriageCategory[] = ["CRM", "FINANCE", "CONTENT_ANALYSIS", "ADMINISTRATION", "ENTERTAINMENT", "WORKSPACE_MANAGEMENT"];
-    specialistRouters.forEach(routerName => {
-        workflow.addConditionalEdges(`${routerName.toLowerCase()}Router` as any, routeAfterSpecialistRouter, {
+    for (const router of routerNames) {
+        workflow.addConditionalEdges(`${router.toLowerCase()}Router`, routeAfterSpecialistRouter, {
             call_specialists: 'specialist_tool_node',
             reasoner: 'agent_reasoner',
             end: END
         });
-    });
+    }
 
     // Add edges for the general planner (fallback)
      workflow.addConditionalEdges('generalPlanner', routeAfterSpecialistRouter, {
@@ -665,8 +688,8 @@ Your purpose is to be the invisible, silent orchestrator of true automation. Now
       role: input.role,
       psyche: input.psyche,
       pulseProfile: pulseProfile || null,
+      categories: null,
       agentReports: [],
-      category: null,
     }, runnableConfig).catch(error => {
         if (error instanceof InsufficientCreditsError) {
             return {
