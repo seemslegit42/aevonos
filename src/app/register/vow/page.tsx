@@ -1,8 +1,8 @@
 
 'use client';
 
-import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -48,9 +48,12 @@ const psycheOptions = [
 
 export default function VowPage() {
     const router = useRouter();
+    const searchParams = useSearchParams();
     const { toast } = useToast();
     const [currentStep, setCurrentStep] = useState(0);
     const [isSubmitting, setIsSubmitting] = useState(false);
+
+    const emailFromQuery = searchParams.get('email') || '';
 
     const form = useForm<FormData>({
         resolver: zodResolver(formSchema),
@@ -60,10 +63,16 @@ export default function VowPage() {
             workspaceName: '',
             agentAlias: 'BEEP',
             psyche: undefined,
-            email: '',
+            email: emailFromQuery,
             password: '',
         },
     });
+
+    useEffect(() => {
+        if (emailFromQuery) {
+            form.setValue('email', emailFromQuery);
+        }
+    }, [emailFromQuery, form]);
 
     const handleNext = async () => {
         const fieldsToValidate = steps[currentStep].fields as (keyof FormData)[];
