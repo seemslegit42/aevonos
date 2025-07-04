@@ -3,6 +3,8 @@ import { z } from 'zod';
 
 export const InventoryDaemonInputSchema = z.object({
   query: z.string().describe("The user's inventory-related query or command."),
+  workspaceId: z.string(),
+  userId: z.string(),
 });
 export type InventoryDaemonInput = z.infer<typeof InventoryDaemonInputSchema>;
 

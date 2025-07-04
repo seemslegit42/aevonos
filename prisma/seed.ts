@@ -1,4 +1,4 @@
-import { PrismaClient, AgentStatus, SecurityRiskLevel, TransactionType, PlanTier, UserRole, UserPsyche, Prisma, ChaosCardClass } from '@prisma/client'
+import { PrismaClient, AgentStatus, SecurityRiskLevel, TransactionType, PlanTier, UserRole, UserPsyche, Prisma, ChaosCardClass, PurchaseOrderStatus } from '@prisma/client'
 import { artifactManifests } from '../src/config/artifacts';
 import prisma from '../src/lib/prisma';
 
@@ -181,6 +181,24 @@ async function main() {
       })),
   });
   console.log('Seeded Chaos Cards.');
+
+  await prisma.product.createMany({
+    data: [
+        { name: 'Obsidian Shard', description: 'Raw material for agentic cores.', stockLevel: 150, workspaceId: newWorkspace.id },
+        { name: 'Crystalline Matrix', description: 'Used in advanced UI rendering.', stockLevel: 42, workspaceId: newWorkspace.id },
+        { name: 'Aetheric Capacitor', description: 'Stores and discharges raw potential.', stockLevel: 8, workspaceId: newWorkspace.id },
+    ]
+  });
+  console.log('Seeded products.');
+  
+  await prisma.supplier.create({
+    data: {
+        name: 'The Foundry',
+        contactEmail: 'procurement@foundry.aevon',
+        workspaceId: newWorkspace.id,
+    }
+  });
+  console.log('Seeded suppliers.');
 
   console.log(`Seeding finished.`)
 }

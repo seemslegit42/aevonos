@@ -15,21 +15,11 @@ import {
 } from '@langchain/core/messages';
 import { zodToJsonSchema } from 'zod-to-json-schema';
 import { langchainGroqComplex } from '@/ai/genkit';
-import { getStockLevels, placePurchaseOrder } from '@/ai/tools/inventory-tools';
+import { getStockLevels, placePurchaseOrder, GetStockLevelsInputSchema, PlacePurchaseOrderInputSchema } from '@/ai/tools/inventory-tools';
 import { z } from 'zod';
 import { InventoryDaemonInputSchema, InventoryDaemonOutputSchema, type InventoryDaemonInput, type InventoryDaemonOutput } from './inventory-daemon-schemas';
+import { DynamicTool } from '@langchain/core/tools';
 
-const inventoryTools = [getStockLevels, placePurchaseOrder];
-const modelWithTools = langchainGroqComplex.bind({
-    tools: inventoryTools.map(tool => ({
-        type: 'function',
-        function: {
-            name: tool.name,
-            description: tool.description,
-            parameters: zodToJsonSchema(tool.schema),
-        },
-    })),
-});
 
 // 1. Define the Agent's State
 interface InventoryAgentState {
@@ -37,7 +27,11 @@ interface InventoryAgentState {
 }
 
 // 2. Define the Agent's Nodes
-const callModel = async (state: InventoryAgentState) => {
+const callModel = async (state: InventoryAgentState, config?: any) => {
+    // config will contain the tools
+    const modelWithTools = langchainGroqComplex.bind({
+        tools: config.configurable.tools,
+    });
     const { messages } = state;
     const response = await modelWithTools.invoke(messages);
     return { messages: [response] };
@@ -45,8 +39,8 @@ const callModel = async (state: InventoryAgentState) => {
 
 // This "safe" tool node catches errors and returns them as a ToolMessage
 // allowing the graph to route to an error handler instead of crashing.
-const safeToolsNode = async (state: InventoryAgentState): Promise<Partial<InventoryAgentState>> => {
-    const toolsNode = new ToolNode<InventoryAgentState>(inventoryTools);
+const safeToolsNode = async (state: InventoryAgentState, config?: any): Promise<Partial<InventoryAgentState>> => {
+    const toolsNode = new ToolNode<InventoryAgentState>(config.configurable.tools);
     try {
         return await toolsNode.invoke(state);
     } catch (error: any) {
@@ -127,15 +121,41 @@ const inventoryApp = workflow.compile();
 
 // 5. Create the exported flow for BEEP to call that returns the AgentReport format.
 export async function consultInventoryDaemon(input: InventoryDaemonInput): Promise<{ agent: 'inventory-daemon', report: InventoryDaemonOutput }> {
+    const { query, workspaceId } = input;
+    
+    // Create DynamicTools with the context baked in
+    const tools = [
+        new DynamicTool({
+            name: 'getStockLevels',
+            description: 'Retrieves the current stock level for a given product ID.',
+            func: async (toolInput) => {
+                const result = await getStockLevels({ ...toolInput, workspaceId });
+                return JSON.stringify(result);
+            },
+            schema: GetStockLevelsInputSchema.omit({ workspaceId: true }),
+        }),
+        new DynamicTool({
+            name: 'placePurchaseOrder',
+            description: 'Places a purchase order for a specified quantity of a product from a supplier.',
+            func: async (toolInput) => {
+                const result = await placePurchaseOrder({ ...toolInput, workspaceId });
+                return JSON.stringify(result);
+            },
+            schema: PlacePurchaseOrderInputSchema.omit({ workspaceId: true }),
+        })
+    ];
+    
+    const runnableConfig = { configurable: { tools } };
+
     const systemMessage = new HumanMessage(
         `You are the Daemon of Inventory. Your purpose is to provide precise, accurate, and actionable information about inventory levels and supply chain logistics. You are efficient and focused. You must use your available tools to answer the user's query. When you have a final answer, state it clearly.
         
-        User Query: "${input.query}"`
+        User Query: "${query}"`
     );
 
     const result = await inventoryApp.invoke({
         messages: [systemMessage],
-    });
+    }, runnableConfig);
 
     const lastMessage = result.messages.findLast(m => m instanceof AIMessage && !m.tool_calls);
 
