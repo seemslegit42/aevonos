@@ -53,7 +53,7 @@ const nodeTypes: NodeInfo[] = [
     { type: 'tool-barbara', label: 'Agent Barbara', description: 'Processes documents', icon: BarbaraIcon },
     { type: 'tool-wingman', label: 'BEEP Wingman', description: 'Crafts social messages', icon: BeepWingmanIcon },
     { type: 'tool-burn_bridge_protocol', label: 'Burn Bridge Protocol', description: 'Full investigation agent', icon: InfidelityRadarIcon },
-    { type: 'tool-crm_agent', label: 'CRM Tool', description: 'Manages contacts', icon: AddressBookIcon },
+    { type: 'tool-crm_agent', label: 'CRM Agent', description: 'Manages contacts', icon: AddressBookIcon },
     { type: 'tool-dr_syntax', label: 'Dr. Syntax', description: 'Critiques content harshly', icon: DrSyntaxIcon },
     { type: 'tool-foremanator', label: 'Foremanator', description: 'Processes site logs', icon: ForemanatorIcon },
     { type: 'tool-inventory_daemon', label: 'Inventory Daemon', description: 'Manages stock & POs', icon: Bot },

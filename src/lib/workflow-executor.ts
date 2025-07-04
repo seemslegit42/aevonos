@@ -1,10 +1,10 @@
 
 'use server';
 
-import type { Workflow as PrismaWorkflow } from '@prisma/client';
+import type { Workflow as PrismaWorkflow, UserPsyche } from '@prisma/client';
 import { StateGraph, END } from '@langchain/langgraph';
 import type { Workflow, Node, NodeType } from '@/components/loom/types';
-import { createContactInDb, listContactsFromDb, updateContactInDb, deleteContactInDb } from '@/ai/tools/crm-tools';
+import { consultCrmAgent } from '@/ai/agents/crm-agent';
 import { drSyntaxCritique } from '@/ai/agents/dr-syntax';
 import { generateSolution } from '@/ai/agents/winston-wolfe';
 import { analyzeComms } from '@/ai/agents/kif-kroker';
@@ -38,38 +38,42 @@ import { generateRitualQuests } from '@/ai/agents/ritual-quests-agent';
 interface ExecutionContext {
     workspaceId: string;
     userId: string;
-    psyche: PrismaWorkflow['psyche'];
+    psyche: UserPsyche;
     role: UserRole;
 }
 
 // A map of node types to their corresponding agent/tool functions.
 const nodeExecutorMap: Record<string, (input: any, context: ExecutionContext) => Promise<any>> = {
+    'tool-crm_agent': (input, context) => {
+        const { action, label, ...params } = input;
+        return consultCrmAgent({ action, params, ...context });
+    },
     'tool-winston-wolfe': (input, context) => generateSolution({ ...input, workspaceId: context.workspaceId }),
     'tool-kif-kroker': (input, context) => analyzeComms({ ...input, workspaceId: context.workspaceId }),
     'tool-vandelay': (input, context) => createVandelayAlibi({ ...input, workspaceId: context.workspaceId }),
     'tool-rolodex': (input, context) => analyzeCandidate({ ...input, workspaceId: context.workspaceId }),
     'tool-dr-syntax': (input, context) => drSyntaxCritique({ ...input, workspaceId: context.workspaceId, psyche: context.psyche }),
-    'tool-jroc-business-kit': (input, context) => generateBusinessKit({ ...input, workspaceId: context.workspaceId }),
-    'tool-lahey': (input, context) => analyzeLaheyLog({ ...input, workspaceId: context.workspaceId }),
+    'tool-jroc': (input, context) => generateBusinessKit({ ...input, workspaceId: context.workspaceId }),
+    'tool-lahey_surveillance': (input, context) => analyzeLaheyLog({ ...input, workspaceId: context.workspaceId }),
     'tool-foremanator': (input, context) => processDailyLog({ ...input, workspaceId: context.workspaceId }),
     'tool-sterileish': (input, context) => analyzeCompliance({ ...input, workspaceId: context.workspaceId }),
     'tool-barbara': (input, context) => processDocument({ ...input, workspaceId: context.workspaceId }),
-    'tool-paper-trail': (input, context) => scanEvidence({ ...input, workspaceId: context.workspaceId }),
-    'tool-auditor-generalissimo': (input, context) => auditFinances({ ...input, workspaceId: context.workspaceId }),
-    'tool-beep-wingman': (input, context) => generateWingmanMessage({ ...input, workspaceId: context.workspaceId }),
+    'tool-paper_trail': (input, context) => scanEvidence({ ...input, workspaceId: context.workspaceId }),
+    'tool-auditor': (input, context) => auditFinances({ ...input, workspaceId: context.workspaceId }),
+    'tool-wingman': (input, context) => generateWingmanMessage({ ...input, workspaceId: context.workspaceId }),
     'tool-kendra': (input, context) => getKendraTake({ ...input, workspaceId: context.workspaceId }),
-    'tool-orphean-oracle': (input, context) => invokeOracle({ ...input, workspaceId: context.workspaceId }),
-    'tool-project-lumbergh': (input, context) => analyzeInvite({ ...input, workspaceId: context.workspaceId }),
-    'tool-lucille-bluth': (input, context) => analyzeExpense({ ...input, workspaceId: context.workspaceId }),
-    'tool-pam-poovey-onboarding': (input, context) => generatePamRant({ ...input, workspaceId: context.workspaceId }),
-    'tool-stonks-bot': (input, context) => getStonksAdvice({ ...input, workspaceId: context.workspaceId, userId: context.userId }),
-    'tool-reno-mode': (input, context) => analyzeCarShame({ ...input, workspaceId: context.workspaceId }),
-    'tool-patrickt-app': (input, context) => processPatricktAction({ ...input, workspaceId: context.workspaceId, userId: context.userId }),
-    'tool-vin-diesel': (input, context) => validateVin({ ...input, workspaceId: context.workspaceId }),
-    'tool-inventory-daemon': (input, context) => consultInventoryDaemon({ ...input }),
-    'tool-vault-daemon': (input, context) => consultVaultDaemon({ ...input, workspaceId: context.workspaceId, userId: context.userId }),
-    'tool-burn-bridge-protocol': (input, context) => executeBurnBridgeProtocol({ ...input, workspaceId: context.workspaceId, userId: context.userId }),
-    'tool-ritual-quests': (input, context) => generateRitualQuests({ ...input, workspaceId: context.workspaceId, psyche: context.psyche }),
+    'tool-orphean_oracle': (input, context) => invokeOracle({ ...input, workspaceId: context.workspaceId }),
+    'tool-lumbergh': (input, context) => analyzeInvite({ ...input, workspaceId: context.workspaceId }),
+    'tool-lucille_bluth': (input, context) => analyzeExpense({ ...input, workspaceId: context.workspaceId }),
+    'tool-pam_poovey': (input, context) => generatePamRant({ ...input, workspaceId: context.workspaceId }),
+    'tool-stonks_bot': (input, context) => getStonksAdvice({ ...input, workspaceId: context.workspaceId, userId: context.userId }),
+    'tool-reno_mode': (input, context) => analyzeCarShame({ ...input, workspaceId: context.workspaceId }),
+    'tool-patrickt_app': (input, context) => processPatricktAction({ ...input, workspaceId: context.workspaceId, userId: context.userId }),
+    'tool-vin_diesel': (input, context) => validateVin({ ...input, workspaceId: context.workspaceId }),
+    'tool-inventory_daemon': (input, context) => consultInventoryDaemon({ ...input }),
+    'tool-vault_daemon': (input, context) => consultVaultDaemon({ ...input, workspaceId: context.workspaceId, userId: context.userId }),
+    'tool-burn_bridge_protocol': (input, context) => executeBurnBridgeProtocol({ ...input, workspaceId: context.workspaceId, userId: context.userId }),
+    'tool-ritual_quests': (input, context) => generateRitualQuests({ ...input, workspaceId: context.workspaceId, psyche: context.psyche }),
 };
 
 // Safely gets a nested property from an object using a dot-notation string.
@@ -109,18 +113,6 @@ async function executeNode(node: Node, payload: any, context: ExecutionContext):
                 default: console.warn(`[Executor] Unknown logic operator: ${operator}`);
             }
             return { conditionMet: result };
-        }
-        case 'tool-crm': {
-            const { action, ...crmData } = input;
-            const { workspaceId, userId } = context;
-            console.log(`[Executor] Executing CRM action: ${action} with input:`, crmData);
-            switch (action) {
-                case 'list': return { contacts: await listContactsFromDb(workspaceId, userId) }; 
-                case 'create': return { newContact: await createContactInDb(crmData, workspaceId, userId) };
-                case 'update': return { updatedContact: await updateContactInDb(crmData, workspaceId, userId) };
-                case 'delete': return { deletionResult: await deleteContactInDb(crmData, workspaceId, userId) };
-                default: throw new Error(`Unsupported CRM action in workflow: ${action}`);
-            }
         }
         default:
             console.warn(`[Executor] Node type '${type}' is not implemented. Skipping.`);
