@@ -149,6 +149,11 @@ export async function updateAgentStatus(formData: FormData) {
       where: { id: agentId },
       data: { status },
     });
+    
+    // Invalidate the cache for the agent list and overview
+    await cache.del(`agents:${workspace.id}`);
+    await cache.del(`admin:overview:${workspace.id}`);
+    
     revalidatePath('/'); // Revalidate to update the admin console
     return { success: true, message: 'Agent status updated.' };
   } catch (error) {
@@ -190,6 +195,10 @@ export async function deleteAgent(formData: FormData) {
         await prisma.agent.delete({
             where: { id: agentId },
         });
+
+        // Invalidate the cache for the agent list and overview
+        await cache.del(`agents:${workspace.id}`);
+        await cache.del(`admin:overview:${workspace.id}`);
 
         revalidatePath('/');
         return { success: true, message: 'Agent decommissioned.' };

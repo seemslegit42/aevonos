@@ -1,4 +1,4 @@
-
+'use server';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import prisma from '@/lib/prisma';
@@ -20,9 +20,7 @@ export async function GET(request: NextRequest) {
      if (!workspace) {
       return NextResponse.json({ error: 'Workspace not found.' }, { status: 404 });
     }
-    // Use the new cached service function
     const agents = await getAgentsForWorkspace(workspace.id);
-
     return NextResponse.json(agents);
   } catch (error) {
     if (error instanceof Error && (error.message.includes('Unauthorized') || error.message.includes('No session cookie'))) {
@@ -60,11 +58,8 @@ export async function POST(request: NextRequest) {
         }
     });
     
-    // Invalidate the cache after creating a new agent
     await cache.del(`agents:${workspace.id}`);
-
     return NextResponse.json(newAgent, { status: 201 });
-
   } catch (error) {
     if (error instanceof Error && (error.message.includes('Unauthorized') || error.message.includes('No session cookie'))) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

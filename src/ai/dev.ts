@@ -109,3 +109,4 @@ import '@/app/api/export/dossier/route.ts';
 import '@/services/effects-service.ts';
 import '@/app/api/user/pulse/route.ts';
 import '@/ai/tools/security-tools.ts';
+import '@/services/agent-service.ts';

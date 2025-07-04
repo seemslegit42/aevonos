@@ -1,11 +1,10 @@
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AdminDashboardTab from './admin-console/AdminDashboardTab';
 import UserManagementTab from './admin-console/UserManagementTab';
-import SystemMonitoringTab from './admin-console/SystemMonitoringTab';
+import AgentMusterTab from './admin-console/SystemMonitoringTab';
 import { type User, type Workspace, UserRole } from '@prisma/client';
 import { Skeleton } from '../ui/skeleton';
 import { ShieldAlert } from 'lucide-react';
@@ -81,7 +80,7 @@ export default function AdminConsole() {
           <UserManagementTab />
         </TabsContent>
         <TabsContent value="muster" className="flex-grow mt-2 overflow-y-auto">
-          <SystemMonitoringTab />
+          <AgentMusterTab />
         </TabsContent>
         <TabsContent value="vows" className="flex-grow mt-2 overflow-y-auto">
           <SacredVowsTab />

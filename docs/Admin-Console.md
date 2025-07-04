@@ -30,12 +30,12 @@ The console is powered by a suite of admin-only API endpoints:
 - `GET /api/admin/vows`: Fetches the founding vows for all users.
 - `GET /api/covenants/{name}/...`: Fetches data for the Covenants tab.
 
-### 2.3. Server Actions
-All administrative *write* operations (changing a user's role, deleting an agent) are handled by secure server actions defined in `app/admin/actions.ts`, which perform strict ownership and permission checks before interacting with the database.
+### 2.3. Server Actions & API Calls
+Write operations (changing a user's role, updating agent status) are handled by a combination of secure server actions in `app/admin/actions.ts` and direct API calls to endpoints like `PUT /api/agents/{id}`. This architecture ensures all modifications perform strict ownership and permission checks before interacting with the database.
 
 ---
 
 ## 3. Integration with ΛΞVON OS
 
 - **Architect-Only Access**: The app is only launchable and visible in The Armory for the user designated as the workspace owner, enforcing the highest level of security.
-- **Architectural Role**: It is the "god-view" for the OS, providing the Architect with the necessary tools to manage their digital nation, maintain order, and understand the health of their
+- **Architectural Role**: It is the "god-view" for the OS, providing the Architect with the necessary tools to manage their digital nation, maintain order, and understand the health of their agentic swarm.

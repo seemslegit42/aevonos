@@ -1,4 +1,4 @@
-
+'use server';
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { z } from 'zod';
@@ -27,7 +27,6 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     }
     const { agentId } = params;
     
-    // Use the new service function
     const agent = await getAgentById(agentId, workspace.id);
 
     if (!agent) {
@@ -59,7 +58,6 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: 'Invalid agent data.', issues: validation.error.issues }, { status: 400 });
     }
 
-    // Verify the agent belongs to the user's workspace before updating
     const existingAgent = await getAgentById(agentId, workspace.id);
     if (!existingAgent) {
         return NextResponse.json({ error: 'Agent not found.' }, { status: 404 });
@@ -70,9 +68,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       data: validation.data,
     });
     
-    // Invalidate the cache for the agent list
     await cache.del(`agents:${workspace.id}`);
-
     return NextResponse.json(updatedAgent);
   } catch (error) {
     if (error instanceof Error && (error.message.includes('token expired') || error.message.includes('no token'))) {
@@ -95,7 +91,6 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
         
         const { agentId } = params;
 
-        // Verify the agent belongs to the user's workspace before deleting
         const existingAgent = await getAgentById(agentId, workspace.id);
         if (!existingAgent) {
             return NextResponse.json({ error: 'Agent not found.' }, { status: 404 });
@@ -105,9 +100,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
             where: { id: agentId },
         });
         
-        // Invalidate the cache for the agent list
         await cache.del(`agents:${workspace.id}`);
-
         return new NextResponse(null, { status: 204 });
     } catch (error) {
         if (error instanceof Error && (error.message.includes('token expired') || error.message.includes('no token'))) {
