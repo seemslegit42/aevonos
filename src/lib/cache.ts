@@ -1,89 +1,35 @@
-import Memcached from 'memcached';
+import Redis from 'ioredis';
 
-const globalForMemcached = globalThis as unknown as {
-  memcached: Memcached | undefined
+// This file configures the connection to our caching layer.
+// We are using DragonflyDB, which is a Redis-compatible in-memory data store.
+// The `ioredis` client is used to connect to it.
+
+// To avoid creating a new connection on every hot-reload in dev
+const globalForRedis = globalThis as unknown as {
+  redis: Redis | undefined
 }
 
-const memcachedUrl = process.env.MEMCACHED_URL || 'localhost:11211';
+const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
 
-// Prevent multiple connections in development
-const memcachedInstance =
-  globalForMemcached.memcached ??
-  new Memcached(memcachedUrl);
+const redis = globalForRedis.redis ?? new Redis(redisUrl, {
+    // Options to ensure robust connection for production environments
+    maxRetriesPerRequest: null,
+});
 
-memcachedInstance.on('failure', (details) => {
-    console.error('[Memcached] Server failure', details);
+redis.on('error', (err) => {
+    console.error('[Cache Service] Could not connect to Redis/DragonflyDB:', err);
 });
-memcachedInstance.on('reconnecting', (details) => {
-    console.log('[Memcached] Reconnecting', details);
-});
-memcachedInstance.on('issue', (details) => {
-    console.warn('[Memcached] Server issue', details);
+
+redis.on('connect', () => {
+    console.log('[Cache Service] Successfully connected to Redis/DragonflyDB.');
 });
 
 
 if (process.env.NODE_ENV !== 'production') {
-    globalForMemcached.memcached = memcachedInstance;
+    globalForRedis.redis = redis;
 }
 
-// Wrapper to provide a Promise-based API compatible with the old Redis implementation
-const cache = {
-  get: (key: string): Promise<any> => {
-    return new Promise((resolve, reject) => {
-      memcachedInstance.get(key, (err, data) => {
-        if (err) {
-          console.error(`[Memcached] GET error for key ${key}:`, err);
-          return reject(err);
-        }
-        // Memcached returns false for a cache miss.
-        if (data === false || data === undefined) {
-            return resolve(null);
-        }
-        try {
-          // Assume stored values are JSON strings
-          resolve(JSON.parse(data));
-        } catch (e) {
-          // If it's not JSON, return the raw data
-          resolve(data);
-        }
-      });
-    });
-  },
-  set: (key: string, value: any, command?: 'EX', lifetime?: number): Promise<'OK'> => {
-    return new Promise((resolve, reject) => {
-        const stringValue = JSON.stringify(value);
-        // Memcached's lifetime is the 3rd argument. The old API had 'EX' as 3rd and lifetime as 4th.
-        const effectiveLifetime = lifetime || 0; // 0 means no expiry
-        memcachedInstance.set(key, stringValue, effectiveLifetime, (err) => {
-            if (err) {
-                console.error(`[Memcached] SET error for key ${key}:`, err);
-                return reject(err);
-            }
-            resolve('OK');
-        });
-    });
-  },
-  del: (...keys: string[]): Promise<number> => {
-      if (keys.length === 0) return Promise.resolve(0);
-      
-      const deletePromises = keys.map(key => {
-          return new Promise<boolean>((resolve, reject) => {
-              memcachedInstance.del(key, (err, result) => {
-                  if (err) {
-                      console.error(`[Memcached] DEL error for key ${key}:`, err);
-                      // Don't reject the whole batch, just resolve this one as a failure
-                      return resolve(false);
-                  }
-                  resolve(result);
-              });
-          });
-      });
-
-      return Promise.all(deletePromises).then(results => {
-          // Return the count of successful deletions
-          return results.filter(Boolean).length;
-      });
-  }
-};
+// We name it 'cache' to keep the interface abstract.
+const cache = redis;
 
 export default cache;
