@@ -29,7 +29,7 @@ import { StonksIcon } from './icons/StonksIcon';
 import { RenoModeIcon } from './icons/RenoModeIcon';
 import { PatricktIcon } from './icons/PatricktIcon';
 import { VinDieselIcon } from './icons/VinDieselIcon';
-import { HardHat } from 'lucide-react';
+import { HardHat } from 'lucide-react'; // Placeholder for Inventory
 import { ObeliskMarketplaceIcon } from './icons/ObeliskMarketplaceIcon';
 import { ProxyAgentIcon } from './icons/ProxyAgentIcon';
 import { UsageMonitorIcon } from './icons/UsageMonitorIcon';
