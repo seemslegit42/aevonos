@@ -12,12 +12,12 @@ export const RenoModeAnalysisInputSchema = z.object({
 export type RenoModeAnalysisInput = z.infer<typeof RenoModeAnalysisInputSchema>;
 
 export const RenoModeAnalysisOutputSchema = z.object({
-  shameLevel: z.enum(['Pristine Goddex', 'Snackcident Victim', 'Gremlin Palace Royale', 'Needs a Priest', 'Total Biohazard'])
-    .describe("A playful, NSFW-ish 'Dirty Title' that feels like a badge of honor."),
-  rating: z.number().min(0).max(100).describe('A cleanliness score from 0 (disaster) to 100 (divine).'),
-  roast: z.string().describe('A flirty, teasing one-liner roast—equal parts sass and seduction, aimed at the car and the owner.'),
+  chaosLevel: z.enum(['Practically Pristine', 'Snackpocalypse Now', 'Gremlin Palace Royale', 'Needs an Intervention', 'Total Biohazard'])
+    .describe("A playful, NSFW-ish 'Mess Title' that feels iconic."),
+  rating: z.number().min(0).max(100).describe('Clutter score (0-100) with dramatic flair.'),
+  roast: z.string().describe('Teasing, flirty one-liner roast—just enough sass to make you grin, not cry.'),
   recommendedTier: z.enum(['The Quickie', 'Deep Clean Daddy', 'Full Interior Resurrection'])
-    .describe('The recommended detail package, framed like a guilty indulgence.'),
-  weirdestObject: z.string().describe("Reno's wild guess at the strangest visible object, adding surreal humor.")
+    .describe('A lovingly exaggerated cleanup tier suggestion, like a guilty pleasure indulgence.'),
+  weirdestObject: z.string().describe("Reno's wild guess at the oddest visible object—bonus points for absurdity.")
 });
 export type RenoModeAnalysisOutput = z.infer<typeof RenoModeAnalysisOutputSchema>;

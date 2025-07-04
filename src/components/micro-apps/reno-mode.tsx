@@ -16,11 +16,11 @@ import Image from 'next/image';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '../ui/input';
 
-const shameLevelConfig = {
-    'Pristine Goddex': { icon: Sparkles, color: 'text-accent' },
-    'Snackcident Victim': { icon: HeartHand, color: 'text-yellow-400' },
+const chaosLevelConfig = {
+    'Practically Pristine': { icon: Sparkles, color: 'text-accent' },
+    'Snackpocalypse Now': { icon: HeartHand, color: 'text-yellow-400' },
     'Gremlin Palace Royale': { icon: UserCheck, color: 'text-orange-400' },
-    'Needs a Priest': { icon: Flame, color: 'text-red-500' },
+    'Needs an Intervention': { icon: Flame, color: 'text-red-500' },
     'Total Biohazard': { icon: Flame, color: 'text-destructive' },
 };
 
@@ -31,20 +31,20 @@ const tierDetails = {
 };
 
 const mockSpecialists = [
-    { name: 'Brandy', specialty: 'The Upholstery Whisperer', playlist: '90s R&B', flags: ['Will find loose change you lost in 2011.'] },
-    { name: 'Kyle', specialty: 'Captain Vacuum', playlist: 'Power Metal', flags: ['Might challenge your car to a race.'] },
-    { name: 'Trixie', specialty: 'The Dashboard Diva', playlist: 'Hyperpop', flags: ['Will compliment your car\'s "vintage" dust.'] }
+    { name: 'Madame Mop™', specialty: 'The Interior Alchemist', playlist: 'Electro Swing', flags: ['Will organize your glovebox into a state of zen.'] },
+    { name: 'Glovebox Guru™', specialty: 'Master of the Micro-Cleanse', playlist: 'Lo-fi Hip Hop', flags: ['Might leave a motivational sticky note.'] },
+    { name: 'Sir Suds-a-lot', specialty: 'The Foam Knight', playlist: '80s Power Ballads', flags: ['Will probably sing to your car.'] }
 ];
 
 export default function RenoMode(props: RenoModeAnalysisOutput | {}) {
     const { handleCommandSubmit, isLoading } = useAppStore();
     const { toast } = useToast();
-    const [result, setResult] = useState<RenoModeAnalysisOutput | null>(props && 'shameLevel' in props ? props : null);
+    const [result, setResult] = useState<RenoModeAnalysisOutput | null>(props && 'chaosLevel' in props ? props : null);
     const [preview, setPreview] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
-        if (props && 'shameLevel' in props) {
+        if (props && 'chaosLevel' in props) {
             setResult(props);
         }
     }, [props]);
@@ -74,7 +74,7 @@ export default function RenoMode(props: RenoModeAnalysisOutput | {}) {
             <Card className="bg-background/50 border-0 shadow-none p-0 flex-shrink-0">
                 <CardHeader className="p-2">
                     <CardTitle className="text-base text-kendra-fuchsia">Reno Mode™: Redemption Arc</CardTitle>
-                    <CardDescription className="text-xs text-muted-foreground">“You dirty little minx… let’s get you glistening again.”</CardDescription>
+                    <CardDescription className="text-xs text-muted-foreground">“You glorious disaster… let’s get you back to your seductive sparkle.”</CardDescription>
                 </CardHeader>
                 <CardContent className="p-2 space-y-2">
                     <div className="relative aspect-video w-full rounded-md border-2 border-dashed border-kendra-fuchsia/30 bg-background/50 flex items-center justify-center">
@@ -97,7 +97,7 @@ export default function RenoMode(props: RenoModeAnalysisOutput | {}) {
                         <Card className="bg-background/80">
                             <CardHeader className="p-3">
                                 <div className="flex justify-between items-center mb-1">
-                                    <span className="text-xs font-medium text-kendra-fuchsia">Cleanliness Rating</span>
+                                    <span className="text-xs font-medium text-kendra-fuchsia">Clutter Rating</span>
                                     <span className="text-lg font-bold text-kendra-fuchsia">{result.rating}/100</span>
                                 </div>
                                 <Progress value={result.rating} className="h-2 [&>div]:bg-kendra-fuchsia" />
@@ -105,8 +105,8 @@ export default function RenoMode(props: RenoModeAnalysisOutput | {}) {
                         </Card>
 
                         <Alert className="bg-background/80 border-y2k-blueviolet/50">
-                            {React.createElement(shameLevelConfig[result.shameLevel]?.icon || Droplets, { className: `h-4 w-4 ${shameLevelConfig[result.shameLevel]?.color}` })}
-                            <AlertTitle className={shameLevelConfig[result.shameLevel]?.color}>Dirty Title: {result.shameLevel}</AlertTitle>
+                            {React.createElement(chaosLevelConfig[result.chaosLevel]?.icon || Droplets, { className: `h-4 w-4 ${chaosLevelConfig[result.chaosLevel]?.color}` })}
+                            <AlertTitle className={chaosLevelConfig[result.chaosLevel]?.color}>Mess Title: {result.chaosLevel}</AlertTitle>
                             <AlertDescription className="italic text-foreground/90">
                                "{result.roast}"
                             </AlertDescription>
@@ -124,7 +124,7 @@ export default function RenoMode(props: RenoModeAnalysisOutput | {}) {
 
                         <Accordion type="single" collapsible className="w-full">
                             <AccordionItem value="item-1">
-                                <AccordionTrigger>Filthmatch™ Local Legends</AccordionTrigger>
+                                <AccordionTrigger>Dirtmatch™ Local Heroes</AccordionTrigger>
                                 <AccordionContent>
                                     <div className="space-y-2">
                                         {mockSpecialists.map(specialist => (
