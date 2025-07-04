@@ -27,10 +27,13 @@ import { getStonksAdvice } from '@/ai/agents/stonks-bot';
 import { analyzeCarShame } from '@/ai/agents/reno-mode';
 import { processPatricktAction } from '@/ai/agents/patrickt-agent';
 import { validateVin } from '@/ai/agents/vin-diesel';
-import { consultInventoryDaemon } from '@/ai/agents/inventory-daemon';
 import { UserRole } from '@prisma/client';
 import { aegisAnomalyScan } from '@/ai/agents/aegis';
 import { createSecurityAlertInDb } from '@/ai/tools/security-tools';
+import { consultInventoryDaemon } from '@/ai/agents/inventory-daemon';
+import { consultVaultDaemon } from '@/ai/agents/vault-daemon';
+import { executeBurnBridgeProtocol } from '@/ai/agents/burn-bridge-agent';
+import { generateRitualQuests } from '@/ai/agents/ritual-quests-agent';
 
 interface ExecutionContext {
     workspaceId: string;
@@ -46,7 +49,7 @@ const nodeExecutorMap: Record<string, (input: any, context: ExecutionContext) =>
     'tool-vandelay': (input, context) => createVandelayAlibi({ ...input, workspaceId: context.workspaceId }),
     'tool-rolodex': (input, context) => analyzeCandidate({ ...input, workspaceId: context.workspaceId }),
     'tool-dr-syntax': (input, context) => drSyntaxCritique({ ...input, workspaceId: context.workspaceId, psyche: context.psyche }),
-    'tool-jroc': (input, context) => generateBusinessKit({ ...input, workspaceId: context.workspaceId }),
+    'tool-jroc-business-kit': (input, context) => generateBusinessKit({ ...input, workspaceId: context.workspaceId }),
     'tool-lahey': (input, context) => analyzeLaheyLog({ ...input, workspaceId: context.workspaceId }),
     'tool-foremanator': (input, context) => processDailyLog({ ...input, workspaceId: context.workspaceId }),
     'tool-sterileish': (input, context) => analyzeCompliance({ ...input, workspaceId: context.workspaceId }),
@@ -56,14 +59,17 @@ const nodeExecutorMap: Record<string, (input: any, context: ExecutionContext) =>
     'tool-beep-wingman': (input, context) => generateWingmanMessage({ ...input, workspaceId: context.workspaceId }),
     'tool-kendra': (input, context) => getKendraTake({ ...input, workspaceId: context.workspaceId }),
     'tool-orphean-oracle': (input, context) => invokeOracle({ ...input, workspaceId: context.workspaceId }),
-    'tool-lumbergh': (input, context) => analyzeInvite({ ...input, workspaceId: context.workspaceId }),
+    'tool-project-lumbergh': (input, context) => analyzeInvite({ ...input, workspaceId: context.workspaceId }),
     'tool-lucille-bluth': (input, context) => analyzeExpense({ ...input, workspaceId: context.workspaceId }),
-    'tool-pam-poovey': (input, context) => generatePamRant({ ...input, workspaceId: context.workspaceId }),
+    'tool-pam-poovey-onboarding': (input, context) => generatePamRant({ ...input, workspaceId: context.workspaceId }),
     'tool-stonks-bot': (input, context) => getStonksAdvice({ ...input, workspaceId: context.workspaceId, userId: context.userId }),
     'tool-reno-mode': (input, context) => analyzeCarShame({ ...input, workspaceId: context.workspaceId }),
     'tool-patrickt-app': (input, context) => processPatricktAction({ ...input, workspaceId: context.workspaceId, userId: context.userId }),
     'tool-vin-diesel': (input, context) => validateVin({ ...input, workspaceId: context.workspaceId }),
     'tool-inventory-daemon': (input, context) => consultInventoryDaemon({ ...input }),
+    'tool-vault-daemon': (input, context) => consultVaultDaemon({ ...input, workspaceId: context.workspaceId, userId: context.userId }),
+    'tool-burn-bridge-protocol': (input, context) => executeBurnBridgeProtocol({ ...input, workspaceId: context.workspaceId, userId: context.userId }),
+    'tool-ritual-quests': (input, context) => generateRitualQuests({ ...input, workspaceId: context.workspaceId, psyche: context.psyche }),
 };
 
 // Safely gets a nested property from an object using a dot-notation string.
@@ -231,4 +237,3 @@ export async function executeWorkflow(
         throw error;
     }
 }
-    

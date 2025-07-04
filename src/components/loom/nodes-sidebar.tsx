@@ -3,8 +3,8 @@
 
 import React from 'react';
 import { useDraggable } from '@dnd-kit/core';
-import { Card } from '@/components/ui/card';
-import { Bot, PlayCircle, GitBranch, LucideProps } from 'lucide-react';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Bot, PlayCircle, GitBranch, LucideProps, HardHat, Gem } from 'lucide-react';
 import { WinstonWolfeIcon } from '../icons/WinstonWolfeIcon';
 import { KifKrokerIcon } from '../icons/KifKrokerIcon';
 import { VandelayIcon } from '../icons/VandelayIcon';
@@ -28,7 +28,9 @@ import { StonksIcon } from '../icons/StonksIcon';
 import { RenoModeIcon } from '../icons/RenoModeIcon';
 import { PatricktIcon } from '../icons/PatricktIcon';
 import { VinDieselIcon } from '../icons/VinDieselIcon';
-import { HardHat } from 'lucide-react'; // Placeholder for Inventory
+import { OrpheanOracleIcon } from '../icons/OrpheanOracleIcon';
+import { RitualQuestsIcon } from '../icons/RitualQuestsIcon';
+import { InfidelityRadarIcon } from '../icons/InfidelityRadarIcon';
 import type { NodeType } from './types';
 import { ScrollArea } from '../ui/scroll-area';
 
@@ -54,13 +56,13 @@ const nodeTypes: NodeInfo[] = [
     { type: 'tool-dr-syntax', label: 'Dr. Syntax', description: 'Critiques content harshly', icon: DrSyntaxIcon },
     { type: 'tool-foremanator', label: 'Foremanator', description: 'Processes site logs', icon: ForemanatorIcon },
     { type: 'tool-inventory-daemon', label: 'Inventory Daemon', description: 'Manages stock & POs', icon: HardHat },
-    { type: 'tool-jroc', label: 'J-ROC', description: 'Generates business kits', icon: JrocIcon },
+    { type: 'tool-jroc-business-kit', label: 'J-ROC', description: 'Generates business kits', icon: JrocIcon },
     { type: 'tool-kendra', label: 'KENDRA.exe', description: 'Generates marketing campaigns', icon: KendraIcon },
     { type: 'tool-kif-kroker', label: 'Kif Kroker', description: 'Analyzes team comms', icon: KifKrokerIcon },
     { type: 'tool-lahey', label: 'Lahey', description: 'Investigates logs', icon: LaheyIcon },
-    { type: 'tool-lumbergh', label: 'Lumbergh', description: 'Analyzes meeting invites', icon: LumberghIcon },
+    { type: 'tool-project-lumbergh', label: 'Lumbergh', description: 'Analyzes meeting invites', icon: LumberghIcon },
     { type: 'tool-lucille-bluth', label: 'Lucille Bluth', description: 'Judges expenses', icon: LucilleBluthIcon },
-    { type: 'tool-pam-poovey', label: 'Pam Poovey', description: 'Generates HR rants', icon: PamPooveyIcon },
+    { type: 'tool-pam-poovey-onboarding', label: 'Pam Poovey', description: 'Generates HR rants', icon: PamPooveyIcon },
     { type: 'tool-paper-trail', label: 'Paper Trail', description: 'Scans evidence', icon: PaperTrailIcon },
     { type: 'tool-patrickt-app', label: 'Patrickt App', description: 'Manages personal chaos', icon: PatricktIcon },
     { type: 'tool-reno-mode', label: 'Reno Mode', description: 'Analyzes car shame', icon: RenoModeIcon },
@@ -70,6 +72,10 @@ const nodeTypes: NodeInfo[] = [
     { type: 'tool-vandelay', label: 'Vandelay', description: 'Generates alibis', icon: VandelayIcon },
     { type: 'tool-vin-diesel', label: 'VIN Diesel', description: 'Validates VINs', icon: VinDieselIcon },
     { type: 'tool-winston-wolfe', label: 'Winston Wolfe', description: 'Solves reputation problems', icon: WinstonWolfeIcon },
+    { type: 'tool-vault-daemon', label: 'Vault Daemon', description: 'Answers financial questions', icon: Gem },
+    { type: 'tool-orphean-oracle', label: 'Orphean Oracle', description: 'Generates data narratives', icon: OrpheanOracleIcon },
+    { type: 'tool-ritual-quests', label: 'Ritual Quests', description: 'Generates user quests', icon: RitualQuestsIcon },
+    { type: 'tool-burn-bridge-protocol', label: 'Burn Bridge Protocol', description: 'Full investigation agent', icon: InfidelityRadarIcon },
 ];
 
 
@@ -81,14 +87,14 @@ function DraggableNode({ info }: { info: NodeInfo }) {
 
     return (
         <div ref={setNodeRef} {...listeners} {...attributes}>
-            <Card className="bg-background/50 hover:bg-accent hover:text-accent-foreground cursor-grab transition-colors p-3">
-                <div className="flex items-center gap-3">
+            <Card className="bg-background/50 hover:bg-accent hover:text-accent-foreground cursor-grab transition-colors">
+                <CardHeader className="p-2 flex-row items-center gap-3 space-y-0">
                     <info.icon className="h-6 w-6 text-primary flex-shrink-0" />
-                    <div>
-                        <p className="font-bold">{info.label}</p>
-                        <p className="text-xs text-muted-foreground">{info.description}</p>
-                    </div>
-                </div>
+                    <CardTitle className="text-sm font-bold">{info.label}</CardTitle>
+                </CardHeader>
+                <CardContent className="p-2 pt-0">
+                    <p className="text-xs text-muted-foreground">{info.description}</p>
+                </CardContent>
             </Card>
         </div>
     );

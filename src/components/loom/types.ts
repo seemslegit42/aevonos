@@ -20,12 +20,16 @@ export type NodeType =
     | 'tool-kendra'
     | 'tool-lumbergh'
     | 'tool-lucille-bluth'
-    | 'tool-pam-poovey'
+    | 'tool-pam-poovey-onboarding'
     | 'tool-stonks-bot'
     | 'tool-reno-mode'
     | 'tool-patrickt-app'
     | 'tool-vin-diesel'
     | 'tool-inventory-daemon'
+    | 'tool-orphean-oracle'
+    | 'tool-ritual-quests'
+    | 'tool-burn-bridge-protocol'
+    | 'tool-vault-daemon'
     | 'tool-final-answer';
 
 
