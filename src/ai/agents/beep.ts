@@ -137,42 +137,61 @@ const planner = async (state: AgentState): Promise<Partial<AgentState>> => {
 
 const specialistToolNode = async (state: AgentState): Promise<Partial<AgentState>> => {
     const { messages, ...context } = state;
-    const specialistTools = await getSpecialistTools(context);
-    const toolExecutor = new ToolNode(specialistTools);
-    
     const lastMessage = messages[messages.length - 1];
-    if (!lastMessage || !lastMessage.tool_calls) {
+
+    if (!(lastMessage instanceof AIMessage) || !lastMessage.tool_calls) {
         return {};
     }
 
-    try {
-        const toolMessagesResult = await toolExecutor.invoke(state);
-        const toolMessages = toolMessagesResult.messages as ToolMessage[];
-        
-        const agentReports: z.infer<typeof AgentReportSchema>[] = [];
-        for (const toolMessage of toolMessages) {
-            try {
-                const parsedContent = JSON.parse(toolMessage.content as string);
-                const report = AgentReportSchema.parse(parsedContent);
-                agentReports.push(report);
-            } catch (e) {
-                // Not all tool outputs will be AgentReports, and that's okay.
-                // Errors from the tools will also fail parsing, which is handled next.
-            }
+    console.log(`[BEEP Specialist Executor] Executing specialist tools:`, lastMessage.tool_calls.map(tc => tc.name));
+    
+    const specialistTools = await getSpecialistTools(context);
+    const toolMap = new Map(specialistTools.map(tool => [tool.name, tool]));
+    
+    const toolPromises = lastMessage.tool_calls.map(async (toolCall) => {
+        const toolToCall = toolMap.get(toolCall.name);
+        if (!toolToCall) {
+            return new ToolMessage({
+                content: `Error: Specialist agent '${toolCall.name}' is not a valid or available tool.`,
+                tool_call_id: toolCall.id,
+                name: toolCall.name,
+            });
         }
-        
-        return { messages: toolMessages, agentReports: agentReports };
+        try {
+            const observation = await toolToCall.invoke(toolCall.args);
+            return new ToolMessage({
+                content: observation,
+                tool_call_id: toolCall.id,
+                name: toolCall.name,
+            });
+        } catch (error: any) {
+             console.error(`[BEEP Specialist Executor] Error in specialist agent '${toolCall.name}':`, error);
+            return new ToolMessage({
+                content: `Error: The specialist agent '${toolCall.name}' failed with the following message: ${error.message}`,
+                tool_call_id: toolCall.id,
+                name: toolCall.name,
+            });
+        }
+    });
 
-    } catch(error: any) {
-        console.error(`[BEEP Specialist Executor] Unhandled error in ToolNode:`, error);
-        const tool_call_id = lastMessage.tool_calls?.[0]?.id ?? "error_tool_call";
-        const errorMessage = new ToolMessage({
-            content: `A critical error occurred while executing specialist agents: ${error.message}. You must inform the user.`,
-            tool_call_id,
-        });
-        return { messages: [errorMessage] };
+    const toolMessages = await Promise.all(toolPromises);
+
+    const agentReports: z.infer<typeof AgentReportSchema>[] = [];
+    for (const toolMessage of toolMessages) {
+        if (typeof toolMessage.content !== 'string' || toolMessage.content.startsWith("Error:")) {
+            continue; // Skip errors or non-string content
+        }
+        try {
+            const parsedContent = JSON.parse(toolMessage.content);
+            const report = AgentReportSchema.parse(parsedContent);
+            agentReports.push(report);
+        } catch (e) {
+            // Not all successful tool outputs are AgentReports, and that's okay.
+        }
     }
-}
+
+    return { messages: toolMessages, agentReports: agentReports };
+};
 
 
 let complexModelWithTools: any;
