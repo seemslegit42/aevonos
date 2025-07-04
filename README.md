@@ -14,9 +14,9 @@ This document provides a concise, high-level overview of the ΛΞVON OS codebase
     *   **Language**: TypeScript
     *   **UI**: React, ShadCN UI, Tailwind CSS
     *   **AI/Agents**: Genkit, LangGraph, Groq (for LLM inference)
-    *   **Database**: PostgreSQL (via Neon) with Prisma ORM
+    *   **Database**: PostgreSQL with Prisma ORM
     *   **Authentication**: Firebase
-    *   **State Management**: Zustand (client-side), Redis (server-side caching)
+    *   **State Management**: Zustand (client-side), DragonflyDB (in-memory caching)
 *   **Deployment**: Production environment is Vercel. Firebase App Hosting is also configured.
 
 ---
@@ -46,11 +46,11 @@ This document provides a concise, high-level overview of the ΛΞVON OS codebase
     *   User types a command into the `TopBar`'s input field.
     *   The `app-store`'s `handleCommandSubmit` function is called.
     *   This function invokes a Server Action (`/src/app/actions.ts`), which calls the central `BEEP` agent (`/src/ai/agents/beep.ts`).
-4.  **Agent Orchestration**:
-    *   The `BEEP` agent, a `LangGraph` state machine, parses the command.
-    *   It determines which tool(s) to use from the `tool-registry.ts`.
-    *   Tools can be simple functions or calls to other specialized agents.
-    *   The results from the tools are passed back to `BEEP`, which synthesizes a final response.
+4.  **Groq Swarm Orchestration**:
+    *   The `BEEP` agent, a `LangGraph` state machine powered by the Groq LPU, parses the command's intent with near-zero latency.
+    *   It acts as a high-speed router, delegating tasks to a swarm of specialized agents defined in `tool-registry.ts`.
+    *   These specialist agents execute in parallel, performing tasks like data analysis, API calls, or content generation.
+    *   BEEP synthesizes the results from the agent swarm into a single, coherent response for the user.
 5.  **State Update & UI Render**:
     *   The response from `BEEP` is passed back to the `app-store`.
     *   The store updates its state, which can include launching new Micro-Apps, updating existing ones, or displaying notifications.
@@ -60,11 +60,11 @@ This document provides a concise, high-level overview of the ΛΞVON OS codebase
 
 ### 4. ⚙️ Key Features & Functionality
 
-*   **BEEP Agent**: The central conversational orchestrator that understands natural language and delegates tasks to a swarm of specialized agents.
+*   **Groq Swarm & BEEP Agent**: The heart of the OS. BEEP acts as a high-speed conversational router, leveraging the Groq LPU to orchestrate a swarm of specialized agents in parallel for instantaneous task execution.
 *   **Micro-App Canvas**: A dynamic, draggable, and resizable interface where modular applications are launched and managed.
 *   **ΞPITOME Economy**: A dual-layer economy. A predictable platform fee is paired with a closed-loop internal currency (`ΞCredits`) spent in The Armory and on gamified "Folly Instruments".
 *   **Klepsydra Engine**: A gamified "luck" system (`pulse-engine-service` and `folly-instruments.ts`) that modulates the outcomes of chance-based Micro-Apps.
-*   **Loom Studio**: A visual workflow editor for creating and managing agentic automations.
+*   **Loom Studio**: The Architect's Sanctum. A privileged environment for forging, observing, and tuning the agentic and economic behaviors of the OS.
 
 ---
 
@@ -82,7 +82,7 @@ This document provides a concise, high-level overview of the ΛΞVON OS codebase
 *   **Primary Input**: Natural language text commands from the user.
 *   **Other Inputs**: File uploads (for `PaperTrail`), external API data (mocked).
 *   **Primary Output**: Changes to the UI state (launching new Micro-Apps), generated text and audio from agents.
-*   **External Services Used**: Firebase (Auth), Neon (Database), Vercel (Hosting), Groq (LLM Inference), Google AI (Genkit platform).
+*   **External Services Used**: Firebase (Auth), Vercel (Hosting), Groq (LLM Inference), Google AI (Genkit platform), PostgreSQL (Database Provider).
 
 ---
 
