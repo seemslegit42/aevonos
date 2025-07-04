@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useEffect, useState } from 'react';
@@ -6,7 +7,7 @@ import { isSignInWithEmailLink, signInWithEmailLink } from 'firebase/auth';
 import { auth } from '@/lib/firebase/client';
 import { motion } from 'framer-motion';
 import { Loader2, CheckCircle, AlertTriangle } from 'lucide-react';
-import { BeepIcon } from '@/components/icons/BeepIcon';
+import { FlowerOfLifeIcon } from '@/components/icons/FlowerOfLifeIcon';
 
 export default function AuthActionPage() {
     const router = useRouter();
@@ -23,10 +24,7 @@ export default function AuthActionPage() {
             if (isSignInWithEmailLink(auth, window.location.href)) {
                 let email = window.localStorage.getItem('emailForSignIn');
                 if (!email) {
-                    // The user opened the link on a different device. To prevent session fixation
-                    // attacks, ask the user to provide their email again.
-                    // For simplicity in this flow, we will error out. A real app might show a form.
-                    setError("Your email is required to complete sign-in. Please try the login process again on this device.");
+                    setError("The Echo has faded. The path is closed. Please return to the Threshold and state your designation again.");
                     setStatus('error');
                     return;
                 }
@@ -35,18 +33,16 @@ export default function AuthActionPage() {
                     await signInWithEmailLink(auth, email, window.location.href);
                     window.localStorage.removeItem('emailForSignIn');
                     setStatus('success');
-                    // The onAuthStateChanged listener in AuthContext will handle session creation.
-                    // Redirect after a short delay.
                     setTimeout(() => {
                         router.push('/');
                     }, 2500);
                 } catch (err) {
                     console.error("Sign in with email link error:", err);
-                    setError('The signature is invalid or has expired. Please try again.');
+                    setError('The signature is invalid or has expired. Please return to the Threshold.');
                     setStatus('error');
                 }
             } else {
-                 setError('This is not a valid sign-in link.');
+                 setError('This is not a valid echo. The path is unclear.');
                  setStatus('error');
             }
         };
@@ -69,8 +65,8 @@ export default function AuthActionPage() {
                  return (
                     <>
                         <AlertTriangle className="w-16 h-16 text-destructive" />
-                        <h2 className="text-2xl font-bold font-headline">Authentication Failed</h2>
-                        <p className="text-muted-foreground">{error}</p>
+                        <h2 className="text-2xl font-bold font-headline">The Path is Broken</h2>
+                        <p className="text-muted-foreground max-w-xs mx-auto">{error}</p>
                     </>
                 );
             case 'loading':
@@ -102,7 +98,7 @@ export default function AuthActionPage() {
                 transition={{ duration: 0.5, ease: 'easeOut' }}
                 className="w-full max-w-sm text-center space-y-4"
             >
-                <BeepIcon className="w-20 h-20 mx-auto text-primary" />
+                 <FlowerOfLifeIcon className="w-24 h-24 mx-auto text-primary" />
                 {renderStatus()}
             </motion.div>
         </div>
