@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useRef, DragEvent } from 'react';
@@ -103,7 +104,6 @@ export default function Validator() {
       const isSuccess = resultStatus === 'success';
       const Icon = isSuccess ? ShieldCheck : ShieldAlert;
       const variant = isSuccess ? 'default' : 'destructive';
-      const title = isSuccess ? "Verification Successful" : "Verification Failed";
       const className = isSuccess ? "border-accent text-accent" : "border-destructive text-destructive";
 
       return (

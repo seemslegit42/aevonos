@@ -1,3 +1,4 @@
+
 // src/config/artifacts.ts
 
 export type ArtifactType = 'MICRO_APP' | 'CHAOS_CARD';
@@ -635,7 +636,7 @@ export const artifactManifests: ArtifactManifest[] = [
     creditCost: 75,
     priceModel: 'tribute',
     rarity: 'COMMON',
-    systemEffect: "Activates a pure black 'dark mode' with silver text.",
+    systemEffect: "Activates a pure black 'dark mode' that is pure black, with text glowing in a soft, silver light. All non-essential UI elements fade unless hovered over.",
     imageUrl: 'https://placehold.co/400x560.png',
     imageHint: 'owl eyes',
     durationMinutes: 60,
