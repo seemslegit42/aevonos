@@ -81,7 +81,6 @@ const LaunchableAppTypeSchema = z.enum([
   'howards-sidekick',
   'sisyphus-ascent',
   'merchant-of-cabbage',
-  'obelisk-marketplace',
   'command-and-cauldron',
   'integration-nexus',
   'ritual-quests',
