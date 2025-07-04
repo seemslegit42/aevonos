@@ -1,3 +1,4 @@
+
 # The Lucille Bluth: The Judgmental Budgeter - Technical Specification
 
 > "It's one banana, Michael. What could it cost, ten dollars?"

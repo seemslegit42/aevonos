@@ -1,3 +1,4 @@
+
 # The Kif Kroker: The Morale Monitor - Technical Specification
 
 > "*Sigh*... The conflict metrics are escalating again. I should probably... inform someone."
