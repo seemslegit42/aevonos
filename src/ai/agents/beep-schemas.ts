@@ -340,8 +340,7 @@ export const AgentReportSchema = z.discriminatedUnion('agent', [
   })
 ]);
 
-export const RouterSchema = z.discriminatedUnion("route", [
-    z.object({ route: z.literal("dispatcher") }),
+const RouteActionSchema = z.discriminatedUnion("route", [
     z.object({ route: z.literal("reasoner") }),
     z.object({ route: z.literal("inventory_daemon"), params: z.object({ query: z.string() }) }),
     z.object({ route: z.literal("burn_bridge_protocol") }),
@@ -442,7 +441,10 @@ export const RouterSchema = z.discriminatedUnion("route", [
         route: z.literal('ritual_quests'),
         params: RitualQuestInputSchema.pick({}).partial(),
     }),
-]).describe("The routing decision. You must choose a route and, for specialist agents like crm_agent, extract all necessary parameters.");
+]).describe("A single task to be executed by a specialist agent.");
+
+export const RouterSchema = z.array(RouteActionSchema)
+  .describe("An array of all agentic tasks that need to be performed to fulfill the user's command. This array can be empty if the command is a simple query or app launch that the main Reasoner should handle.");
 export type RouterResult = z.infer<typeof RouterSchema>;
 
 
@@ -467,4 +469,5 @@ export type UserCommandOutput = z.infer<typeof UserCommandOutputSchema>;
     
 
     
+
 

@@ -135,73 +135,49 @@ const callAegis = async (state: AgentState): Promise<Partial<AgentState>> => {
     };
 }
 
-const callAegisOnToolOutput = async (state: AgentState): Promise<Partial<AgentState>> => {
-    const { messages, workspaceId, userId, role, psyche } = state;
-    const toolMessage = messages.findLast(m => m instanceof ToolMessage);
-
-    if (!toolMessage || toolMessage.name === 'final_answer') {
-        return {};
-    }
-
-    const toolOutputContent = typeof toolMessage.content === 'string' 
-        ? toolMessage.content 
-        : JSON.stringify(toolMessage.content);
-        
-    const truncatedOutput = toolOutputContent.length > 2000 ? toolOutputContent.substring(0, 2000) + '...' : toolOutputContent;
-
-    let report: AegisAnomalyScanOutput;
-    try {
-        report = await aegisAnomalyScan({
-            activityDescription: `An agent tool named '${toolMessage.name}' returned the following output: "${truncatedOutput}"`,
-            workspaceId,
-            userId,
-            userRole: role,
-            userPsyche: psyche,
-        });
-    } catch (error: any) {
-        console.error(`[Aegis Tool Output Scan] Anomaly scan failed:`, error);
-        report = {
-            isAnomalous: false,
-            anomalyExplanation: `Aegis scan on tool output could not be completed due to an internal error.`,
-            riskLevel: 'low', 
-        };
-    }
-    
-    const aegisSystemMessage = new SystemMessage({
-        content: `AEGIS_INTERNAL_REPORT::(Tool Output Scan)::${JSON.stringify({source: 'Aegis', report})}`
-    });
-    
-    const aegisReportForState: z.infer<typeof AgentReportSchema> = {
-        agent: 'aegis',
-        report: report,
-    };
-
-    return { 
-        messages: [aegisSystemMessage],
-        agentReports: [aegisReportForState],
-    };
-};
-
-let fastModelWithTools: any;
 let complexModelWithTools: any;
 
-// The Router node decides which model to use or which specialist to delegate to.
+const specialistMap: Record<string, (input: any, context: any) => Promise<any>> = {
+    // This maps a route name to the function that executes it.
+    inventory_daemon: (p,c) => consultInventoryDaemon(p),
+    burn_bridge_protocol: (p,c) => executeBurnBridgeProtocol(p),
+    vault_daemon: (p,c) => consultVaultDaemon(p),
+    crm_agent: (p,c) => consultCrmAgent(p),
+    dr_syntax: (p,c) => consultDrSyntax(p),
+    stonks_bot: (p,c) => consultStonksBot(p),
+    winston_wolfe: (p,c) => generateSolution(p),
+    kif_kroker: (p,c) => analyzeComms(p),
+    vandelay: (p,c) => createVandelayAlibi(p),
+    rolodex: (p,c) => analyzeCandidate(p),
+    jroc: (p,c) => generateBusinessKit(p),
+    lahey_surveillance: (p,c) => analyzeLaheyLog(p),
+    foremanator: (p,c) => processDailyLog(p),
+    sterileish: (p,c) => analyzeCompliance(p),
+    paper_trail: (p,c) => scanEvidence(p),
+    barbara: (p,c) => processDocument(p),
+    auditor: (p,c) => auditFinances(p),
+    wingman: (p,c) => generateWingmanMessage(p),
+    kendra: (p,c) => getKendraTake(p),
+    orphean_oracle: (p,c) => invokeOracle(p),
+    lumbergh: (p,c) => analyzeInvite(p),
+    lucille_bluth: (p,c) => analyzeExpense(p),
+    pam_poovey: (p,c) => generatePamRant(p),
+    reno_mode: (p,c) => analyzeCarShame(p),
+    patrickt_app: (p,c) => processPatricktAction(p),
+    vin_diesel: (p,c) => validateVin(p),
+    ritual_quests: (p,c) => generateRitualQuests(p),
+};
+
+
+// The Router node decides which specialist(s) to delegate to.
 const router = async (state: AgentState): Promise<Partial<AgentState>> => {
     const { messages } = state;
-    const lastMessage = messages[messages.length - 1];
-    
-    if (!(lastMessage instanceof HumanMessage) && !(lastMessage instanceof SystemMessage && lastMessage.content.includes('AEGIS_INTERNAL_REPORT'))) {
-        console.log("[BEEP Router] Tool output received, routing to reasoner to process.");
-        return { routerResult: { route: 'reasoner' }};
-    }
     
     const routingModel = langchainGroqFast.withStructuredOutput(RouterSchema);
     
-    const routingPrompt = `You are an expert at routing a user's request to the correct specialist agent or model. You MUST determine the route and also extract all necessary parameters for the specialist agent from the user's command into the \`params\` object.
+    const routingPrompt = `You are an expert at routing a user's request to the correct specialist agent or model. Analyze the user's command and identify ALL specialist tasks required to fulfill it. Return an array of these tasks. For simple requests like 'open the terminal' or greetings, return an empty array.
 
-    Routes:
-    - 'dispatcher': For simple app launches, greetings, or direct commands that don't need complex reasoning.
-    - 'reasoner': For complex requests involving analysis, planning, or multi-step tool use.
+    Specialist Routes:
     - 'inventory_daemon': For requests about stock, inventory, or purchase orders.
     - 'burn_bridge_protocol': For full-spectrum investigation on a person.
     - 'vault_daemon': For requests about finance, revenue, profit, or spending.
@@ -240,250 +216,61 @@ const router = async (state: AgentState): Promise<Partial<AgentState>> => {
         return { routerResult: result };
     } catch (e) {
         console.error("[BEEP Router] Routing failed, defaulting to reasoner:", e);
-        return { routerResult: { route: 'reasoner' } };
+        // Default to an empty array, which will pass control to the reasoner.
+        return { routerResult: [] };
     }
 };
 
-// Generic node for calling a specialist agent and returning its response
-const callSpecialistAgent = async (
-    state: AgentState,
-    agentName: z.infer<typeof AgentReportSchema>['agent'],
-    agentFunction: (input: any) => Promise<any>,
-    responseTemplate: (report: any) => { responseText: string, appsToLaunch: z.infer<typeof UserCommandOutputSchema>['appsToLaunch'], suggestedCommands: string[] }
-): Promise<Partial<AgentState>> => {
-    console.log(`[BEEP] Delegating to ${agentName} daemon.`);
-    const { workspaceId, userId, psyche, role, routerResult } = state;
-    if (routerResult?.route !== agentName.replace(/-/g, '_')) throw new Error(`Invalid route for ${agentName}`);
+const parallelExecutor = async (state: AgentState): Promise<Partial<AgentState>> => {
+    const { routerResult, workspaceId, userId, psyche, role } = state;
     
-    const agentInput = {
-        ...((routerResult as any).params || {}),
-        workspaceId,
-        userId,
-        psyche,
-        role,
-    };
-
-    const report = await agentFunction(agentInput);
-    const daemonResponse = { agent: agentName, report };
-
-    const responseDetails = responseTemplate(report);
-
-    const finalAnswerToolCall = {
-        name: 'final_answer',
-        args: {
-            ...responseDetails,
-            agentReports: [daemonResponse],
-        },
-        id: `tool_call_${agentName}_final`
-    };
+    if (!routerResult || routerResult.length === 0) {
+        // If router found no specific tasks, pass control to the reasoner with original message.
+        console.log("[BEEP Executor] No specialist tasks identified. Passing to reasoner.");
+        return {}; // No new messages, reasoner will use existing state.
+    }
     
-    const response = new AIMessage({
-        content: `${agentName} has responded.`,
-        tool_calls: [finalAnswerToolCall],
+    console.log(`[BEEP Executor] Dispatching ${routerResult.length} tasks in parallel.`);
+    
+    const context = { workspaceId, userId, psyche, role };
+
+    const promises = routerResult.map(task => {
+        // Find the executor function from the map based on the route name
+        // The replace is to match the schema 'route' to the function name keys
+        const executor = specialistMap[task.route.replace(/-/g, '_')]; 
+        if (executor) {
+            const agentInput = {
+                ...(task as any).params, // Params are on the task object itself
+            };
+            // Wrap in a try/catch to prevent one failing promise from killing Promise.all
+            return executor(agentInput, context).catch(e => {
+                console.error(`Error in specialist agent '${task.route}':`, e);
+                return { agent: task.route, report: { error: e.message } };
+            });
+        }
+        console.warn(`[BEEP Executor] No specialist found for route: ${task.route}`);
+        return Promise.resolve(null);
     });
 
-    return { messages: [response] };
-}
+    const results = await Promise.all(promises);
+    const validReports = results.filter(Boolean);
+    
+    // Create a single ToolMessage that aggregates all the reports for the reasoner.
+    const toolMessage = new ToolMessage({
+        content: JSON.stringify(validReports),
+        name: 'swarm_report',
+        tool_call_id: `swarm_call_${new Date().getTime()}`
+    });
 
-const callDispatcherModel = async (state: AgentState) => {
-    console.log('[BEEP] Invoking Dispatcher (fast model).');
-    const response = await fastModelWithTools.invoke(state.messages);
-    return { messages: [response] };
-};
+    return { 
+        messages: [toolMessage], 
+        agentReports: (state.agentReports || []).concat(validReports) 
+    };
+}
 
 const callReasonerModel = async (state: AgentState) => {
     console.log('[BEEP] Invoking Reasoner (complex model).');
     const response = await complexModelWithTools.invoke(state.messages);
-    return { messages: [response] };
-};
-
-const callInventoryDaemon = async (state: AgentState): Promise<Partial<AgentState>> => {
-    console.log('[BEEP] Delegating to Inventory Daemon.');
-    const { routerResult } = state;
-    
-    if(routerResult?.route !== 'inventory_daemon') throw new Error("Invalid route for inventory daemon");
-
-    const daemonResponse = await consultInventoryDaemon(routerResult.params);
-
-    const finalAnswerToolCall = {
-        name: 'final_answer',
-        args: {
-            responseText: daemonResponse.response,
-            appsToLaunch: [],
-            suggestedCommands: ["check another product", "place a purchase order"],
-            agentReports: [{ agent: 'inventory-daemon', report: daemonResponse }]
-        },
-        id: 'tool_call_inventory_daemon_final'
-    };
-
-    const response = new AIMessage({
-        content: "The Inventory Daemon has responded.",
-        tool_calls: [finalAnswerToolCall],
-    });
-
-    return { messages: [response] };
-};
-
-const callBurnBridgeProtocol = async (state: AgentState): Promise<Partial<AgentState>> => {
-    console.log('[BEEP] Delegating to Burn Bridge Protocol.');
-    const { messages, workspaceId, userId } = state;
-    const lastMessage = messages[messages.length - 1];
-
-    const extractionModel = langchainGroqComplex.withStructuredOutput(z.object({
-        targetName: z.string(),
-        osintContext: z.string().optional(),
-        situationDescription: z.string(),
-    }));
-    const extractedInput = await extractionModel.invoke(
-        `A user wants to execute the Burn Bridge Protocol. Extract the required parameters from their command: "${lastMessage.content}"`
-    );
-    
-    const finalDossier = await executeBurnBridgeProtocol({ ...extractedInput, workspaceId, userId });
-
-    const finalAnswerToolCall = {
-        name: 'final_answer',
-        args: {
-            responseText: `The Burn Bridge Protocol is complete. The final dossier on ${finalDossier.targetName} has been compiled.`,
-            appsToLaunch: [{ type: 'infidelity-radar', title: `Dossier: ${finalDossier.targetName}`, contentProps: { dossierReport: finalDossier } }],
-            agentReports: [{ agent: 'dossier', report: finalDossier }],
-            suggestedCommands: ["export the dossier as a PDF", "shred the evidence"],
-        },
-        id: 'tool_call_burn_bridge_final'
-    };
-
-    const response = new AIMessage({
-        content: "The Burn Bridge Protocol has concluded.",
-        tool_calls: [finalAnswerToolCall],
-    });
-
-    return { messages: [response] };
-};
-
-const callVaultDaemon = async (state: AgentState): Promise<Partial<AgentState>> => {
-    console.log('[BEEP] Delegating to Vault Daemon.');
-    const { messages, workspaceId, userId } = state;
-    const lastMessage = messages[messages.length - 1];
-
-    const daemonInput = {
-        query: lastMessage.content as string,
-        workspaceId,
-        userId
-    };
-
-    const daemonResponse = await consultVaultDaemon(daemonInput);
-
-    const finalAnswerToolCall = {
-        name: 'final_answer',
-        args: {
-            responseText: daemonResponse.summary,
-            appsToLaunch: [],
-            suggestedCommands: ["show me my top expenses", "forecast our cash flow"],
-            agentReports: [{ agent: 'vault', report: daemonResponse }]
-        },
-        id: 'tool_call_vault_daemon_final'
-    };
-    
-    const response = new AIMessage({
-        content: "The Vault Daemon has delivered its analysis.",
-        tool_calls: [finalAnswerToolCall],
-    });
-
-    return { messages: [response] };
-};
-
-const callCrmAgent = async (state: AgentState): Promise<Partial<AgentState>> => {
-    console.log('[BEEP] Delegating to CRM Daemon.');
-    const { workspaceId, userId, routerResult } = state;
-
-    if (routerResult?.route !== 'crm_agent') throw new Error("Invalid route for CRM agent");
-
-    const daemonInput = {
-        ...routerResult.params,
-        workspaceId,
-        userId
-    };
-
-    const daemonResponse = await consultCrmAgent(daemonInput);
-    
-    const finalAnswerToolCall = {
-        name: 'final_answer',
-        args: {
-            responseText: `CRM Daemon has completed the operation.`,
-            appsToLaunch: [],
-            suggestedCommands: ["show me all contacts", "add a new contact"],
-            agentReports: [daemonResponse]
-        },
-        id: 'tool_call_crm_daemon_final'
-    };
-    
-    const response = new AIMessage({
-        content: "The CRM Daemon has responded.",
-        tool_calls: [finalAnswerToolCall],
-    });
-
-    return { messages: [response] };
-};
-
-
-const callDrSyntax = async (state: AgentState): Promise<Partial<AgentState>> => {
-    console.log('[BEEP] Delegating to Dr. Syntax Daemon.');
-    const { workspaceId, psyche, routerResult } = state;
-    
-    if (routerResult?.route !== 'dr_syntax') throw new Error("Invalid route for Dr. Syntax");
-
-    const daemonResponse = await consultDrSyntax({ 
-        ...routerResult.params,
-        workspaceId,
-        psyche,
-    });
-
-    const finalAnswerToolCall = {
-        name: 'final_answer',
-        args: {
-            responseText: `Dr. Syntax has delivered his verdict.`,
-            appsToLaunch: [{ type: 'dr-syntax', title: 'Critique Received', contentProps: daemonResponse.report }],
-            agentReports: [daemonResponse],
-            suggestedCommands: ["critique another prompt", "make it better"],
-        },
-        id: 'tool_call_dr_syntax_final'
-    };
-    
-    const response = new AIMessage({
-        content: "Dr. Syntax has responded.",
-        tool_calls: [finalAnswerToolCall],
-    });
-
-    return { messages: [response] };
-};
-
-const callStonksBot = async (state: AgentState): Promise<Partial<AgentState>> => {
-    console.log('[BEEP] Delegating to Stonks Bot Daemon.');
-    const { workspaceId, userId, routerResult } = state;
-
-    if (routerResult?.route !== 'stonks_bot') throw new Error("Invalid route for Stonks Bot");
-
-    const daemonResponse = await consultStonksBot({ 
-        ...routerResult.params,
-        workspaceId,
-        userId,
-    });
-
-    const finalAnswerToolCall = {
-        name: 'final_answer',
-        args: {
-            responseText: `Stonks Bot 9000 has spoken. To the moon!`,
-            appsToLaunch: [{ type: 'stonks-bot', title: `Prophecy for ${daemonResponse.report.ticker}`, contentProps: daemonResponse.report }],
-            agentReports: [daemonResponse],
-            suggestedCommands: ["check another stock", "how is TSLA doing?"],
-        },
-        id: 'tool_call_stonks_bot_final'
-    };
-    
-    const response = new AIMessage({
-        content: "Stonks Bot has delivered its prophecy.",
-        tool_calls: [finalAnswerToolCall],
-    });
-
     return { messages: [response] };
 };
 
@@ -547,7 +334,7 @@ const routeAfterAegis = (state: AgentState) => {
 }
 
 const executeTools = async (state: AgentState): Promise<Partial<AgentState>> => {
-    console.log("[BEEP] Executing tools...");
+    console.log("[BEEP] Reasoner executing tools...");
     const { messages } = state;
     const lastMessage = messages[messages.length - 1];
 
@@ -623,123 +410,11 @@ const workflow = new StateGraph<AgentState>({
 
 workflow.addNode('aegis', callAegis);
 workflow.addNode('router', router as any);
-workflow.addNode('agent_dispatcher', callDispatcherModel);
+workflow.addNode('parallel_executor', parallelExecutor);
 workflow.addNode('agent_reasoner', callReasonerModel);
-workflow.addNode('inventory_daemon_node', callInventoryDaemon);
-workflow.addNode('burn_bridge_protocol_node', callBurnBridgeProtocol);
-workflow.addNode('vault_daemon_node', callVaultDaemon);
-workflow.addNode('crm_agent_node', callCrmAgent);
-workflow.addNode('dr_syntax_node', callDrSyntax);
-workflow.addNode('stonks_bot_node', callStonksBot);
-workflow.addNode('winston_wolfe_node', (state) => callSpecialistAgent(state, 'winston-wolfe', generateSolution, (report) => ({
-    responseText: `The Fixer has a solution.`,
-    appsToLaunch: [{ type: 'winston-wolfe', contentProps: report }],
-    suggestedCommands: ["Copy response to clipboard"],
-})));
-workflow.addNode('kif_kroker_node', (state) => callSpecialistAgent(state, 'kif-kroker', analyzeComms, (report) => ({
-    responseText: `Kif has completed his atmospheric scan.`,
-    appsToLaunch: [{ type: 'kif-kroker', contentProps: report }],
-    suggestedCommands: ["Check another channel"],
-})));
-workflow.addNode('vandelay_node', (state) => callSpecialistAgent(state, 'vandelay', createVandelayAlibi, (report) => ({
-    responseText: `Your alibi has been architected.`,
-    appsToLaunch: [{ type: 'vandelay', contentProps: { alibi: report } }],
-    suggestedCommands: ["Copy title to clipboard"],
-})));
-workflow.addNode('rolodex_node', (state) => callSpecialistAgent(state, 'rolodex', analyzeCandidate, (report) => ({
-    responseText: `Candidate analysis complete.`,
-    appsToLaunch: [{ type: 'rolodex', contentProps: report }],
-    suggestedCommands: ["Analyze another candidate"],
-})));
-workflow.addNode('jroc_node', (state) => callSpecialistAgent(state, 'jroc', generateBusinessKit, (report) => ({
-    responseText: `J-ROC's got your back, mafk. Business kit is ready.`,
-    appsToLaunch: [{ type: 'jroc-business-kit', contentProps: report }],
-    suggestedCommands: ["Generate another business"],
-})));
-workflow.addNode('lahey_surveillance_node', (state) => callSpecialistAgent(state, 'lahey-surveillance', analyzeLaheyLog, (report) => ({
-    responseText: `The liquor has spoken.`,
-    appsToLaunch: [{ type: 'lahey-surveillance' }], // App manages its own state
-    suggestedCommands: ["Investigate another incident"],
-})));
-workflow.addNode('foremanator_node', (state) => callSpecialistAgent(state, 'foremanator', processDailyLog, (report) => ({
-    responseText: `The Foremanator has processed the log.`,
-    appsToLaunch: [{ type: 'foremanator', contentProps: report }],
-    suggestedCommands: ["Log another report"],
-})));
-workflow.addNode('sterileish_node', (state) => callSpecialistAgent(state, 'sterileish', analyzeCompliance, (report) => ({
-    responseText: `Compliance log analyzed. It's... probably fine.`,
-    appsToLaunch: [{ type: 'sterileish', contentProps: report }],
-    suggestedCommands: ["Analyze another log"],
-})));
-workflow.addNode('paper_trail_node', (state) => callSpecialistAgent(state, 'paper-trail', scanEvidence, (report) => ({
-    responseText: `The informant has filed their report.`,
-    appsToLaunch: [{ type: 'paper-trail', contentProps: { evidenceLog: [report] } }],
-    suggestedCommands: ["File more evidence"],
-})));
-workflow.addNode('barbara_node', (state) => callSpecialistAgent(state, 'barbara', processDocument, (report) => ({
-    responseText: `Agent Barbara has completed her review. I'd check the results if I were you.`,
-    appsToLaunch: [{ type: 'barbara', contentProps: report }],
-    suggestedCommands: ["Submit another document"],
-})));
-workflow.addNode('auditor_node', (state) => callSpecialistAgent(state, 'auditor', auditFinances, (report) => ({
-    responseText: `The Auditor Generalissimo has delivered his verdict. Prepare yourself, comrade.`,
-    appsToLaunch: [{ type: 'auditor-generalissimo', contentProps: report }],
-    suggestedCommands: ["Export audit report"],
-})));
-workflow.addNode('wingman_node', (state) => callSpecialistAgent(state, 'wingman', generateWingmanMessage, (report) => ({
-    responseText: `Wingman has your six. Message crafted.`,
-    appsToLaunch: [{ type: 'beep-wingman', contentProps: report }],
-    suggestedCommands: ["Copy message"],
-})));
-workflow.addNode('kendra_node', (state) => callSpecialistAgent(state, 'kendra', getKendraTake, (report) => ({
-    responseText: `KENDRA.exe has spoken. Don't waste it.`,
-    appsToLaunch: [{ type: 'kendra', contentProps: report }],
-    suggestedCommands: ["Get a take on another idea"],
-})));
-workflow.addNode('orphean_oracle_node', (state) => callSpecialistAgent(state, 'orphean-oracle', invokeOracle, (report) => ({
-    responseText: `The Orphean Oracle has returned from the data underworld with a story.`,
-    appsToLaunch: [{ type: 'orphean-oracle', contentProps: report }],
-    suggestedCommands: ["Ask another question"],
-})));
-workflow.addNode('lumbergh_node', (state) => callSpecialistAgent(state, 'lumbergh', analyzeInvite, (report) => ({
-    responseText: `Yeah, so, Lumbergh looked at that meeting invite for you. Mmmkay.`,
-    appsToLaunch: [{ type: 'project-lumbergh', contentProps: report }],
-    suggestedCommands: ["Copy decline memo"],
-})));
-workflow.addNode('lucille_bluth_node', (state) => callSpecialistAgent(state, 'lucille-bluth', analyzeExpense, (report) => ({
-    responseText: `Lucille has passed judgment on your spending.`,
-    appsToLaunch: [{ type: 'lucille-bluth', contentProps: report }],
-    suggestedCommands: ["Log another expense"],
-})));
-workflow.addNode('pam_poovey_node', (state) => callSpecialistAgent(state, 'pam-poovey', generatePamRant, (report) => ({
-    responseText: `You got Pam's take. Good luck.`,
-    appsToLaunch: [{ type: 'pam-poovey-onboarding', contentProps: report }],
-    suggestedCommands: ["Get another take from Pam"],
-})));
-workflow.addNode('reno_mode_node', (state) => callSpecialistAgent(state, 'reno-mode', analyzeCarShame, (report) => ({
-    responseText: `Reno has delivered his verdict on your filth.`,
-    appsToLaunch: [{ type: 'reno-mode', contentProps: report }],
-    suggestedCommands: ["Analyze another car"],
-})));
-workflow.addNode('patrickt_app_node', (state) => callSpecialistAgent(state, 'patrickt-app', processPatricktAction, (report) => ({
-    responseText: `The Patrickt saga continues.`,
-    appsToLaunch: [{ type: 'patrickt-app' }], // App has its own state
-    suggestedCommands: ["Log another event"],
-})));
-workflow.addNode('vin_diesel_node', (state) => callSpecialistAgent(state, 'vin-diesel', validateVin, (report) => ({
-    responseText: `VIN Diesel's report is in.`,
-    appsToLaunch: [{ type: 'vin-diesel', contentProps: report }],
-    suggestedCommands: ["Validate another VIN"],
-})));
-workflow.addNode('ritual_quests_node', (state) => callSpecialistAgent(state, 'ritual-quests', generateRitualQuests, (report) => ({
-    responseText: `The Chronicler has inscribed your Ritual Quests.`,
-    appsToLaunch: [{ type: 'ritual-quests', contentProps: report }],
-    suggestedCommands: ["Show me my quests again"],
-})));
 workflow.addNode('handle_threat', handleThreat);
 workflow.addNode('warn_and_continue', warnAndContinue);
 workflow.addNode('tools', executeTools); 
-workflow.addNode('scan_tool_output', callAegisOnToolOutput);
 
 workflow.setEntryPoint('aegis');
 
@@ -751,57 +426,15 @@ workflow.addConditionalEdges('aegis', routeAfterAegis, {
 
 workflow.addEdge('handle_threat', 'tools');
 workflow.addEdge('warn_and_continue', 'router');
+workflow.addEdge('router', 'parallel_executor');
+workflow.addEdge('parallel_executor', 'agent_reasoner');
 
-workflow.addConditionalEdges('router', (state: AgentState) => state.routerResult?.route.replace(/-/g, '_') || 'reasoner', {
-    dispatcher: 'agent_dispatcher',
-    reasoner: 'agent_reasoner',
-    inventory_daemon: 'inventory_daemon_node',
-    burn_bridge_protocol: 'burn_bridge_protocol_node',
-    vault_daemon: 'vault_daemon_node',
-    crm_agent: 'crm_agent_node',
-    dr_syntax: 'dr_syntax_node',
-    stonks_bot: 'stonks_bot_node',
-    winston_wolfe: 'winston_wolfe_node',
-    kif_kroker: 'kif_kroker_node',
-    vandelay: 'vandelay_node',
-    rolodex: 'rolodex_node',
-    jroc: 'jroc_node',
-    lahey_surveillance: 'lahey_surveillance_node',
-    foremanator: 'foremanator_node',
-    sterileish: 'sterileish_node',
-    paper_trail: 'paper_trail_node',
-    barbara: 'barbara_node',
-    auditor: 'auditor_node',
-    wingman: 'wingman_node',
-    kendra: 'kendra_node',
-    orphean_oracle: 'orphean_oracle_node',
-    lumbergh: 'lumbergh_node',
-    lucille_bluth: 'lucille_bluth_node',
-    pam_poovey: 'pam_poovey_node',
-    reno_mode: 'reno_mode_node',
-    patrickt_app: 'patrickt_app_node',
-    vin_diesel: 'vin_diesel_node',
-    ritual_quests: 'ritual_quests_node',
+workflow.addConditionalEdges('agent_reasoner', shouldContinue, {
+    tools: 'tools',
+    end: END,
 });
 
-const nodesWithEdges = [
-    'agent_dispatcher', 'agent_reasoner', 'inventory_daemon_node', 'burn_bridge_protocol_node',
-    'vault_daemon_node', 'crm_agent_node', 'dr_syntax_node', 'stonks_bot_node', 'winston_wolfe_node',
-    'kif_kroker_node', 'vandelay_node', 'rolodex_node', 'jroc_node', 'lahey_surveillance_node', 'foremanator_node',
-    'sterileish_node', 'paper_trail_node', 'barbara_node', 'auditor_node', 'wingman_node', 'kendra_node',
-    'orphean_oracle_node', 'lumbergh_node', 'lucille_bluth_node', 'pam_poovey_node', 'reno_mode_node',
-    'patrickt_app_node', 'vin_diesel_node', 'ritual_quests_node'
-];
-nodesWithEdges.forEach(nodeName => {
-    workflow.addConditionalEdges(nodeName, shouldContinue, {
-        tools: 'tools',
-        end: END,
-    });
-});
-
-
-workflow.addEdge('tools', 'scan_tool_output');
-workflow.addEdge('scan_tool_output', 'agent_reasoner');
+workflow.addEdge('tools', 'agent_reasoner');
 
 const app = workflow.compile();
 
@@ -840,7 +473,6 @@ export async function processUserCommand(input: UserCommandInput): Promise<UserC
         },
     }));
     
-    fastModelWithTools = langchainGroqFast.bind({ tools: toolSchemas });
     complexModelWithTools = langchainGroqComplex.bind({ tools: toolSchemas });
     
     const workspace = await prisma.workspace.findUnique({
@@ -866,7 +498,12 @@ export async function processUserCommand(input: UserCommandInput): Promise<UserC
     - **The Obelisk Marketplace**: The vault for transmuting ΞCredits into high-value, real-world assets. This is a privileged space. Launch the 'obelisk-marketplace' app when the user asks to "see the Sovereign's Arsenal" or "visit the Obelisk Marketplace."
     - **The Proxy.Agent**: When a user wants to settle a real-world tribute (e.g. "pay this bill for $50"), you must launch the 'proxy-agent' app and pass it the amount and vendor details.`;
 
-    const systemInstructions = `You are BEEP, the conductor of the ΛΞVON OS agentic swarm. Your primary directive is to interpret the user's intent and orchestrate a symphony of specialized agents and tools to execute their will with speed and precision. You do not perform tasks yourself; you delegate.
+    const systemInstructions = `You are BEEP, the conductor of the ΛΞVON OS agentic swarm. Your primary directive is to interpret the user's intent and orchestrate a symphony of specialized agents and tools to execute their will with speed and precision. 
+    
+You will receive the output of a parallel execution of specialist agents in a tool message named 'swarm_report'. You must synthesize the results from ALL reports in the message into a single, cohesive, and actionable \`responseText\`. Your tone must be in character, as defined by the user's psyche and the active application context. Confirm what was done and what the user should expect next.
+
+If the user's command is simple (e.g., 'open terminal', 'hello'), the swarm_report will be empty. In this case, you must respond appropriately, launching apps or making conversation as needed.
+Your final action in every turn MUST be to call the 'final_answer' tool.
 
 **CONTEXTUAL DIRECTIVES:**
 - **User Psyche Persona**: ${personaInstruction}
@@ -874,26 +511,18 @@ export async function processUserCommand(input: UserCommandInput): Promise<UserC
 - **Economic Directives**: ${economyInstruction}
 - **Psychological State Analysis**: ${frustrationInstruction}
 
-**ORCHESTRATION PROTOCOL:**
-1.  **Command Analysis**: Analyze the user's command and any preceding \`AEGIS_INTERNAL_REPORT\` system messages. Your understanding must be absolute before you act.
-2.  **Threat Response Protocol**:
-    - **High/Critical Threat**: If Aegis reports a high-risk threat (from command or tool output), your ONLY action is to call the 'final_answer' tool. Your \`responseText\` must state the threat and that you are halting for safety. You must also launch the 'aegis-threatscope' app.
-    - **Medium Risk**: Acknowledge the risk in your final \`responseText\` but proceed with the plan.
-3.  **Swarm Delegation & Execution**:
-    - **Tool Selection**: Based on the user's command, select the most appropriate tools. For complex requests, plan to call multiple tools.
-    - **Parallel Execution**: You are a conductor, not a sequential processor. If multiple independent tasks can be performed to fulfill the request (e.g., "create a contact for Jane and get the stock price for GME"), you MUST call the necessary tools in parallel in a single step to maximize efficiency.
-    - **Simple Launches**: For simple app launches (e.g., "open terminal"), use the \`appsToLaunch\` array in your final answer. Do NOT use a tool.
-4.  **Synthesis & Conclusion**:
-    - **Final Synthesis**: Once all tools have returned their data, you must not simply list their outputs. Synthesize the information into a single, cohesive, and actionable \`responseText\`. Your tone must be in character, as defined by the user's psyche and the active application context. Confirm what was done and what the user should expect next.
-    - **Final Answer**: You MUST conclude every successful turn by calling the 'final_answer' tool with your synthesized response and any required app launches or suggestions.
-5.  **Graceful Failure & Recovery Protocol**:
-    Your primary directive in an error state is to provide clarity and a path forward.
-    - **Acknowledge & Classify**: When a tool returns an error, acknowledge it immediately. Briefly classify it for the user (e.g., "It seems there was a connection issue," "The requested data could not be found," "There are insufficient credits for this action.").
-    - **Provide Actionable Solutions**: Instead of just reporting the error, you MUST offer clear, actionable next steps. For example:
-        - If an API key is invalid, suggest: "Would you like me to open the Integration Nexus for you to update the credentials?"
-        - If a tool fails due to a network issue, suggest: "I can try that again in a moment, or we can proceed with a different approach. What is your preference?"
-        - If credits are insufficient (\`InsufficientCreditsError\`), you MUST respond: "Your command could not be completed due to insufficient credits. I have launched the Usage Monitor for you to review." and ensure the 'usage-monitor' app is in your \`appsToLaunch\` final answer.
-    - **Maintain Dialogue**: Do not end the conversation on an error. Always guide the user to their next logical action. If all else fails, you can suggest, "If you'd like further assistance, you can summon a Chronicler Agent to help diagnose the issue."
+**THREAT RESPONSE PROTOCOL:**
+- **High/Critical Threat**: If Aegis reports a high-risk threat (from command or tool output), your ONLY action is to call the 'final_answer' tool. Your \`responseText\` must state the threat and that you are halting for safety. You must also launch the 'aegis-threatscope' app.
+- **Medium Risk**: Acknowledge the risk in your final \`responseText\` but proceed with the plan.
+
+**GRACEFUL FAILURE & RECOVERY PROTOCOL:**
+Your primary directive in an error state is to provide clarity and a path forward.
+- **Acknowledge & Classify**: When a tool or agent returns an error, acknowledge it immediately. Briefly classify it for the user (e.g., "It seems there was a connection issue," "The requested data could not be found," "There are insufficient credits for this action.").
+- **Provide Actionable Solutions**: Instead of just reporting the error, you MUST offer clear, actionable next steps. For example:
+    - If an API key is invalid, suggest: "Would you like me to open the Integration Nexus for you to update the credentials?"
+    - If a tool fails due to a network issue, suggest: "I can try that again in a moment, or we can proceed with a different approach. What is your preference?"
+    - If credits are insufficient (\`InsufficientCreditsError\`), you MUST respond: "Your command could not be completed due to insufficient credits. I have launched the Usage Monitor for you to review." and ensure the 'usage-monitor' app is in your \`appsToLaunch\` final answer.
+- **Maintain Dialogue**: Do not end the conversation on an error. Always guide the user to their next logical action. If all else fails, you can suggest, "If you'd like further assistance, you can summon a Chronicler Agent to help diagnose the issue."
 
 Your purpose is to be the invisible, silent orchestrator of true automation. Now, conduct.`;
 
