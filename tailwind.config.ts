@@ -74,22 +74,6 @@ export default {
         'roman-aqua': 'hsl(var(--roman-aqua))',
       },
       keyframes: {
-        'accordion-down': {
-          from: {
-            height: '0',
-          },
-          to: {
-            height: 'var(--radix-accordion-content-height)',
-          },
-        },
-        'accordion-up': {
-          from: {
-            height: 'var(--radix-accordion-content-height)',
-          },
-          to: {
-            height: '0',
-          },
-        },
         aurora: {
           from: {
             backgroundPosition: '0% 50%',
@@ -100,8 +84,6 @@ export default {
         },
       },
       animation: {
-        'accordion-down': 'accordion-down 0.2s ease-out',
-        'accordion-up': 'accordion-up 0.2s ease-out',
         aurora: 'aurora 15s ease infinite',
       },
     },
