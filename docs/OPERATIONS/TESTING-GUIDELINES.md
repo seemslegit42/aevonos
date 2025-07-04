@@ -1,8 +1,8 @@
 # ΛΞVON OS: Test Plan & Quality Assurance Strategy
-Document Version: 1.0
+Document Version: 1.1 (Groq & Swarm Revision)
 Status: Canonized
 Author: ARCHIVEX
-Traceability: This document provides the quality assurance framework for all components defined in SRS-ΛΞVON-OS-v1.0.
+Traceability: This document provides the quality assurance framework for all components defined in SRS-ΛΞVON-OS-v1.1.
 1. Philosophy & Objective
 1.1 Objective
 The primary objective of this strategy is to ensure that ΛΞVON OS V1.0 is not only free of critical defects but is also stable, secure, performant, and in absolute alignment with its core doctrine. We are testing for correctness, resilience, and the integrity of the user experience.
@@ -77,12 +77,12 @@ Any deviation from the expected outcome is flagged as a P1 regression and must b
 Primary Environment: The Staging environment is the sole environment for all E2E, economic, and psychological testing. It is a 1:1 mirror of the Production infrastructure.
 Data: The Staging database is seeded with a large volume of synthetically generated data that mimics production usage patterns. Under no circumstances will production data be used for testing.
 5. Release Gating & Exit Criteria
-A build can only be promoted from Staging to Production if it meets all of the following criteria:
-Code Quality: > 95% unit test coverage.
-Functional Correctness: 100% pass rate for all L3 E2E critical path tests.
-Bug Threshold: Zero (0) outstanding P0 or P1 bugs.
-Economic Stability: Successful completion of the Monte Carlo Protocol with results within a 2% tolerance of the economic model.
-Psychological Safety: Successful validation of the Judas Crucible and the Aegis kill switch.
-Performance: All API endpoints must meet the P99 latency targets defined in the SRS.
-Security: No new critical or high vulnerabilities identified by automated scans.
+A build can only be promoted from `Staging` to `Production` if it meets all of the following criteria:
+* **[NEW] Agentic Performance:** The P95 end-to-end latency for the "Golden Command Set" must be **< 1000ms**. This is a non-negotiable gate.
+* **Code Quality:** > 95% unit test coverage.
+* **Functional Correctness:** 100% pass rate for all L3 E2E critical path tests.
+* **Bug Threshold:** Zero (0) outstanding P0 or P1 bugs.
+* **Economic Stability:** Successful completion of the Monte Carlo Protocol with results within a 2% tolerance of the economic model.
+* **Psychological Safety:** Successful validation of the Judas Crucible and the Aegis kill switch.
+* **Security:** No new critical or high vulnerabilities identified by automated scans.
 This Test Plan ensures that we do not merely ship features. We ship a balanced, resilient, and trustworthy world. Quality is not a phase; it is a state of being for ΛΞVON OS.
