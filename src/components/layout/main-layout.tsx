@@ -39,7 +39,7 @@ export function MainLayout({ children, user: dbUser, workspace, initialVas }: Ma
   
   const isPublicPage = ['/login', '/register', '/pricing'].some(p => pathname.startsWith(p));
   const isAuthActionPage = pathname === '/auth/action';
-  const needsOnboarding = firebaseUser && !dbUser && !authLoading && !isPublicPage;
+  const needsOnboarding = firebaseUser && !dbUser && !authLoading && !isPublicPage && pathname !== '/register/vow';
 
   useEffect(() => {
     // If the user is authenticated with Firebase but has no DB record, they need to complete the Rite.
@@ -102,7 +102,7 @@ export function MainLayout({ children, user: dbUser, workspace, initialVas }: Ma
       )
   }
   
-  // If user is on a public page, or needs to onboard, or isn't signed in, render only the children (e.g., the login page)
+  // If user is on a public page, or needs to onboard, or isn't signed in, render only the children
   if (isPublicPage || isAuthActionPage || needsOnboarding || (!firebaseUser && !authLoading)) {
     return <>{children}</>;
   }
