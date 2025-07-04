@@ -22,6 +22,7 @@ export function NudgeHandler() {
         try {
             const nudges = await getNudges();
             if (nudges && nudges.length > 0) {
+                // Stagger the toasts so they don't all appear at once
                 nudges.forEach((nudge, index) => {
                     setTimeout(() => {
                         toast({
@@ -29,7 +30,7 @@ export function NudgeHandler() {
                             description: nudge.message,
                             duration: 8000,
                         });
-                    }, index * 2500); // Stagger the toasts
+                    }, index * 2500); 
                 });
             }
         } catch (error) {

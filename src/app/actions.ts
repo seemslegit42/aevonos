@@ -15,6 +15,7 @@ import { InsufficientCreditsError } from '@/lib/errors';
 import { acceptReclamationGift, deleteAccount } from '@/app/auth/actions';
 import { processFollyTribute } from '@/services/klepsydra-service';
 import prisma from '@/lib/prisma';
+import { differenceInMinutes } from 'date-fns';
 
 
 export async function handleCommand(command: string, activeAppContext?: string): Promise<UserCommandOutput> {
@@ -200,7 +201,7 @@ export async function transmuteCreditsViaProxy(input: z.infer<typeof TransmuteCr
     if (!user || !workspace) {
         return { success: false, error: 'Authentication failed.' };
     }
-    if (user.role !== UserRole.ADMIN || user.id !== workspace.ownerId) {
+    if (user.role !== 'ADMIN' || user.id !== workspace.ownerId) {
         return { success: false, error: 'Forbidden: Only the workspace Architect can perform transmutations.' };
     }
     
