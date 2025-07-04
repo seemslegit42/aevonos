@@ -49,8 +49,17 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex h-screen w-screen items-center justify-center p-4">
-      <Card className="w-full max-w-sm">
+    <div className="flex h-screen w-screen items-center justify-center p-4 relative">
+        <div className="absolute top-0 z-[-2] h-full w-full bg-background">
+            <div 
+                className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-transparent"
+            />
+            <div 
+                className="absolute inset-0 animate-aurora bg-[linear-gradient(135deg,hsl(var(--iridescent-one)/0.2),hsl(var(--iridescent-two)/0.2)_50%,hsl(var(--iridescent-three)/0.2)_100%)] bg-[length:600%_600%]"
+            />
+            <div className="absolute inset-0 grain-overlay" />
+        </div>
+      <Card className="w-full max-w-sm bg-background/70 backdrop-blur-xl border border-border/20 shadow-lg">
         <AnimatePresence mode="wait">
           {isSubmitted ? (
             <motion.div
