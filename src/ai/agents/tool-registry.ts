@@ -10,7 +10,10 @@ import { z } from 'zod';
 import { UserPsyche, UserRole } from '@prisma/client';
 import prisma from '@/lib/prisma';
 
-import { UserCommandOutputSchema } from '../agents/beep-schemas';
+import {
+    UserCommandOutputSchema,
+    CrmActionSchema,
+} from '../agents/beep-schemas';
 
 // Tool Service Imports
 import { getUsageDetailsForAgent, requestCreditTopUpInDb } from '@/services/billing-service';
@@ -23,7 +26,7 @@ import { transmuteCredits } from '@/ai/tools/proxy-tools';
 // Specialist Agent Imports
 import { consultDrSyntax, DrSyntaxAgentInputSchema } from './dr-syntax-agent';
 import { consultStonksBot, StonksAgentInputSchema } from './stonks-bot-agent';
-import { consultCrmAgent, CrmAgentInputSchema } from './crm-agent';
+import { consultCrmAgent } from './crm-agent';
 import { generateSolution, WinstonWolfeInputSchema } from './winston-wolfe';
 import { analyzeComms, KifKrokerAnalysisInputSchema } from './kif-kroker';
 import { createVandelayAlibi, VandelayAlibiInputSchema } from './vandelay';
@@ -82,45 +85,6 @@ class FinalAnswerTool extends Tool {
 }
 
 /**
- * Creates and returns a context-aware array of tools for the BEEP agent's PLANNER.
- * These are wrappers around the specialist agents.
- * @param context The current agent execution context.
- * @returns An array of LangChain Tool instances.
- */
-export async function getSpecialistTools(context: AgentContext): Promise<Tool[]> {
-    const specialistTools: Tool[] = [
-        new Tool({ name: 'crm_agent', description: 'Manages contacts (create, list, update, delete).', schema: CrmAgentInputSchema.omit({workspaceId: true, userId: true}), func: async (input) => JSON.stringify(await consultCrmAgent({ ...input, ...context })) }),
-        new Tool({ name: 'dr_syntax', description: 'Critiques content (prompt, code, copy).', schema: DrSyntaxAgentInputSchema.pick({ content: true, contentType: true }), func: async (input) => JSON.stringify(await consultDrSyntax({ ...input, ...context })) }),
-        new Tool({ name: 'stonks_bot', description: 'Provides unhinged financial "advice" on stocks.', schema: StonksAgentInputSchema.pick({ ticker: true, mode: true }), func: async (input) => JSON.stringify(await consultStonksBot({ ...input, ...context })) }),
-        new Tool({ name: 'winston_wolfe', description: 'Solves online reputation problems.', schema: WinstonWolfeInputSchema.pick({ reviewText: true }), func: async (input) => JSON.stringify(await generateSolution({ ...input, ...context })) }),
-        new Tool({ name: 'kif_kroker', description: 'Analyzes team comms in a Slack channel for morale issues.', schema: KifKrokerAnalysisInputSchema.pick({ channelId: true }), func: async (input) => JSON.stringify(await analyzeComms({ ...input, ...context })) }),
-        new Tool({ name: 'vandelay', description: 'Creates a fake calendar invite as an alibi.', schema: VandelayAlibiInputSchema.pick({ topicHint: true, addAttendees: true }).partial(), func: async (input) => JSON.stringify(await createVandelayAlibi({ ...input, ...context })) }),
-        new Tool({ name: 'rolodex', description: "Analyzes a job candidate's profile against a job description.", schema: RolodexAnalysisInputSchema.pick({ candidateName: true, candidateSummary: true, jobDescription: true }), func: async (input) => JSON.stringify(await analyzeCandidate({ ...input, ...context })) }),
-        new Tool({ name: 'jroc', description: 'Generates a business name, tagline, and logo concept.', schema: JrocInputSchema.pick({ businessType: true, logoStyle: true }), func: async (input) => JSON.stringify(await generateBusinessKit({ ...input, ...context })) }),
-        new Tool({ name: 'lahey_surveillance', description: 'Investigates a suspicious employee log entry.', schema: LaheyAnalysisInputSchema.pick({ logEntry: true }), func: async (input) => JSON.stringify(await analyzeLaheyLog({ ...input, ...context })) }),
-        new Tool({ name: 'foremanator', description: 'Processes a construction daily log.', schema: ForemanatorLogInputSchema.pick({ logText: true }), func: async (input) => JSON.stringify(await processDailyLog({ ...input, ...context })) }),
-        new Tool({ name: 'sterileish', description: 'Analyzes a cleanroom or compliance log.', schema: SterileishAnalysisInputSchema.pick({ logText: true, entryType: true }), func: async (input) => JSON.stringify(await analyzeCompliance({ ...input, ...context })) }),
-        new Tool({ name: 'paper_trail', description: 'Scans a receipt image for expense details.', schema: PaperTrailScanInputSchema.pick({ receiptPhotoUri: true, caseFile: true }).partial(), func: async (input) => JSON.stringify(await scanEvidence({ ...input, ...context })) }),
-        new Tool({ name: 'barbara', description: 'Processes administrative and compliance documents.', schema: BarbaraInputSchema.pick({ documentText: true, task: true }), func: async (input) => JSON.stringify(await processDocument({ ...input, ...context })) }),
-        new Tool({ name: 'auditor', description: 'Performs a detailed audit on a list of financial transactions.', schema: AuditorInputSchema.pick({ transactions: true }), func: async (input) => JSON.stringify(await auditFinances({ ...input, ...context })) }),
-        new Tool({ name: 'wingman', description: 'Helps craft a message for a tricky social situation.', schema: WingmanInputSchema.pick({ situationContext: true, messageMode: true }), func: async (input) => JSON.stringify(await generateWingmanMessage({ ...input, ...context })) }),
-        new Tool({ name: 'kendra', description: 'Generates a marketing campaign for a product idea.', schema: KendraInputSchema.pick({ productIdea: true }), func: async (input) => JSON.stringify(await getKendraTake({ ...input, ...context })) }),
-        new Tool({ name: 'orphean_oracle', description: 'Generates a narrative, visual story about business data.', schema: OrpheanOracleInputSchema.pick({ userQuery: true }), func: async (input) => JSON.stringify(await invokeOracle({ ...input, ...context })) }),
-        new Tool({ name: 'lumbergh', description: 'Analyzes a meeting invite for pointlessness.', schema: LumberghAnalysisInputSchema.pick({ inviteText: true }), func: async (input) => JSON.stringify(await analyzeInvite({ ...input, ...context })) }),
-        new Tool({ name: 'lucille_bluth', description: 'Gets a sarcastic take on an expense.', schema: LucilleBluthInputSchema.pick({ expenseDescription: true, expenseAmount: true, category: true }), func: async (input) => JSON.stringify(await analyzeExpense({ ...input, ...context })) }),
-        new Tool({ name: 'pam_poovey', description: 'Generates HR-related rants or scripts in a specific persona.', schema: PamScriptInputSchema.pick({ topic: true }), func: async (input) => JSON.stringify(await generatePamRant({ ...input, ...context })) }),
-        new Tool({ name: 'reno_mode', description: 'Analyzes a photo of a messy car.', schema: RenoModeAnalysisInputSchema.pick({ photoDataUri: true }), func: async (input) => JSON.stringify(await analyzeCarShame({ ...input, ...context })) }),
-        new Tool({ name: 'patrickt_app', description: 'Logs events, gets roasts, or analyzes drama in the "Patrickt" saga.', schema: PatricktAgentInputSchema.pick({ action: true, eventDescription: true, eventCategory: true, chatInput: true }).partial(), func: async (input) => JSON.stringify(await processPatricktAction({ ...input, ...context })) }),
-        new Tool({ name: 'vin_diesel', description: 'Validates a Vehicle Identification Number (VIN).', schema: VinDieselInputSchema.pick({ vin: true }), func: async (input) => JSON.stringify(await validateVin({ ...input, ...context })) }),
-        new Tool({ name: 'inventory_daemon', description: 'Handles requests about stock, inventory, or purchase orders.', schema: z.object({ query: z.string() }), func: async (input) => JSON.stringify(await consultInventoryDaemon({ ...input })) }),
-        new Tool({ name: 'ritual_quests', description: 'Gets the user their current ritual quests to guide their journey.', schema: RitualQuestInputSchema.omit({ workspaceId: true }), func: async (input) => JSON.stringify(await generateRitualQuests({ ...input, ...context })) }),
-        new Tool({ name: 'burn_bridge_protocol', description: 'Performs a full-spectrum investigation (OSINT, analysis, decoy) on a person.', schema: BurnBridgeInputSchema.omit({ workspaceId: true, userId: true }), func: async (input) => JSON.stringify(await executeBurnBridgeProtocol({ ...input, ...context })) }),
-        new Tool({ name: 'vault_daemon', description: 'Handles requests about finance, revenue, profit, or spending.', schema: VaultQueryInputSchema.omit({ workspaceId: true, userId: true }), func: async (input) => JSON.stringify(await consultVaultDaemon({ ...input, ...context })) }),
-    ];
-    return specialistTools;
-}
-
-/**
  * Creates and returns a context-aware array of tools for the BEEP agent's REASONER.
  * The Reasoner should only have access to essential tools, not tools that duplicate
  * the functionality of specialist agents.
@@ -132,35 +96,7 @@ export async function getReasonerTools(context: AgentContext): Promise<Tool[]> {
 
     const allTools: Tool[] = [
         new FinalAnswerTool(),
-
-        new Tool({
-            name: 'getUsageDetails',
-            description: 'Gets the current billing and agent action usage details. Use this when the user asks about their usage, limits, plan, or billing.',
-            schema: z.object({}),
-            func: () => getUsageDetailsForAgent(workspaceId, userId),
-        }),
         
-        new Tool({
-            name: 'requestCreditTopUp',
-            description: 'Logs a user\'s request to top up their credit balance via an out-of-band payment method like an e-Transfer. Use this when the user says "add credits", "buy credits", "top up my account", etc. Extract the amount from their command.',
-            schema: RequestCreditTopUpInputSchema,
-            func: (toolInput) => requestCreditTopUpInDb(toolInput, userId, workspaceId),
-        }),
-        
-        new Tool({
-            name: 'createManualTransaction',
-            description: 'Creates a manual credit or debit transaction on the user\'s workspace account. Use this for explicit user requests like "charge me 10 credits for this" or "process a refund of 5 credits".',
-            schema: CreateManualTransactionInputSchema,
-            func: (toolInput) => createManualTransaction(toolInput, workspaceId, userId),
-        }),
-        
-        new Tool({
-            name: 'getDatingProfile',
-            description: 'Fetches a dating app profile by its ID. Use this when the user wants to get information about a specific person on a dating app before crafting a message. For example, "get profile 123 from Hinge."',
-            schema: DatingProfileInputSchema,
-            func: (toolInput) => getDatingProfile(toolInput, workspaceId, userId),
-        }),
-
         new Tool({
             name: 'createSecurityAlert',
             description: 'Creates a security alert in the Aegis system. Use this when the Aegis anomaly scan returns a positive result for a threat. You must provide the type, explanation, and risk level of the alert based on the Aegis report.',
@@ -194,15 +130,77 @@ export async function getReasonerTools(context: AgentContext): Promise<Tool[]> {
                 description: "Performs high-level administrative actions on a group of users (a 'Syndicate' or 'Covenant'). Only for the Architect.",
                 schema: ManageSyndicateInputSchema,
                 func: manageSyndicateAccess,
-            }),
-            new Tool({
-                name: 'transmuteCredits',
-                description: 'Transmutes ΞCredits to settle a real-world tribute (payment). The user must confirm the details. For Sovereigns only.',
-                schema: TransmuteCreditsInputSchema,
-                func: (toolInput) => transmuteCredits(toolInput, workspaceId, userId),
             })
         );
     }
     
     return allTools;
 }
+
+export type SpecialistAgentDefinition = {
+    name: string;
+    description: string;
+    schema: z.ZodSchema<any>;
+};
+
+export function getSpecialistAgentDefinitions(): SpecialistAgentDefinition[] {
+    return [
+        { name: 'crm_agent', description: 'Manages contacts (create, list, update, delete).', schema: CrmActionSchema },
+        { name: 'dr_syntax', description: 'Critiques content (prompt, code, copy).', schema: DrSyntaxInputSchema.pick({ content: true, contentType: true }) },
+        { name: 'stonks_bot', description: 'Provides unhinged financial "advice" on stocks.', schema: StonksBotInputSchema.pick({ ticker: true, mode: true }) },
+        { name: 'winston_wolfe', description: 'Solves online reputation problems, typically by generating a response to a negative review.', schema: WinstonWolfeInputSchema.pick({ reviewText: true }) },
+        { name: 'kif_kroker', description: 'Analyzes team comms in a Slack channel for morale issues.', schema: KifKrokerAnalysisInputSchema.pick({ channelId: true }) },
+        { name: 'vandelay', description: 'Creates a fake calendar invite as an alibi.', schema: VandelayAlibiInputSchema.pick({ topicHint: true, addAttendees: true }).partial() },
+        { name: 'rolodex', description: "Analyzes a job candidate's profile against a job description.", schema: RolodexAnalysisInputSchema.pick({ candidateName: true, candidateSummary: true, jobDescription: true }) },
+        { name: 'jroc', description: 'Generates a business name, tagline, and logo concept.', schema: JrocInputSchema.pick({ businessType: true, logoStyle: true }) },
+        { name: 'lahey_surveillance', description: 'Investigates a suspicious employee log entry.', schema: LaheyAnalysisInputSchema.pick({ logEntry: true }) },
+        { name: 'foremanator', description: 'Processes a construction daily log.', schema: ForemanatorLogInputSchema.pick({ logText: true }) },
+        { name: 'sterileish', description: 'Analyzes a cleanroom or compliance log.', schema: SterileishAnalysisInputSchema.pick({ logText: true, entryType: true }) },
+        { name: 'paper_trail', description: 'Scans a receipt image for expense details.', schema: PaperTrailScanInputSchema.pick({ receiptPhotoUri: true, caseFile: true }).partial() },
+        { name: 'barbara', description: 'Processes administrative and compliance documents.', schema: BarbaraInputSchema.pick({ documentText: true, task: true }) },
+        { name: 'auditor', description: 'Performs a detailed audit on a list of financial transactions.', schema: AuditorInputSchema.pick({ transactions: true }) },
+        { name: 'wingman', description: 'Helps craft a message for a tricky social situation.', schema: WingmanInputSchema.pick({ situationContext: true, messageMode: true }) },
+        { name: 'kendra', description: 'Generates a marketing campaign for a product idea.', schema: KendraInputSchema.pick({ productIdea: true }) },
+        { name: 'orphean_oracle', description: 'Generates a narrative, visual story about business data.', schema: OrpheanOracleInputSchema.pick({ userQuery: true }) },
+        { name: 'lumbergh', description: 'Analyzes a meeting invite for pointlessness.', schema: LumberghAnalysisInputSchema.pick({ inviteText: true }) },
+        { name: 'lucille_bluth', description: 'Gets a sarcastic take on an expense.', schema: LucilleBluthInputSchema.pick({ expenseDescription: true, expenseAmount: true, category: true }) },
+        { name: 'pam_poovey', description: 'Generates HR-related rants or scripts in a specific persona.', schema: PamScriptInputSchema.pick({ topic: true }) },
+        { name: 'reno_mode', description: 'Analyzes a photo of a messy car.', schema: RenoModeAnalysisInputSchema.pick({ photoDataUri: true }) },
+        { name: 'patrickt_app', description: 'Logs events, gets roasts, or analyzes drama in the "Patrickt" saga.', schema: PatricktAgentInputSchema.pick({ action: true, eventDescription: true, eventCategory: true, chatInput: true }).partial() },
+        { name: 'vin_diesel', description: 'Validates a Vehicle Identification Number (VIN).', schema: VinDieselInputSchema.pick({ vin: true }) },
+        { name: 'inventory_daemon', description: 'Handles requests about stock, inventory, or purchase orders.', schema: z.object({ query: z.string() }) },
+        { name: 'ritual_quests', description: 'Gets the user their current ritual quests to guide their journey.', schema: RitualQuestInputSchema.omit({ workspaceId: true }) },
+        { name: 'burn_bridge_protocol', description: 'Performs a full-spectrum investigation (OSINT, analysis, decoy) on a person.', schema: BurnBridgeInputSchema.omit({ workspaceId: true, userId: true }) },
+        { name: 'vault_daemon', description: 'Handles requests about finance, revenue, profit, or spending.', schema: VaultQueryInputSchema.omit({ workspaceId: true, userId: true }) },
+    ];
+}
+
+export const specialistAgentMap: Record<string, (input: any, context: AgentContext) => Promise<any>> = {
+    crm_agent: (input: any, context: AgentContext) => consultCrmAgent({ ...input, ...context }),
+    dr_syntax: (input: any, context: AgentContext) => consultDrSyntax({ ...input, ...context }),
+    stonks_bot: (input: any, context: AgentContext) => consultStonksBot({ ...input, ...context }),
+    winston_wolfe: (input: any, context: AgentContext) => generateSolution({ ...input, ...context }),
+    kif_kroker: (input: any, context: AgentContext) => analyzeComms({ ...input, ...context }),
+    vandelay: (input: any, context: AgentContext) => createVandelayAlibi({ ...input, ...context }),
+    rolodex: (input: any, context: AgentContext) => analyzeCandidate({ ...input, ...context }),
+    jroc: (input: any, context: AgentContext) => generateBusinessKit({ ...input, ...context }),
+    lahey_surveillance: (input: any, context: AgentContext) => analyzeLaheyLog({ ...input, ...context }),
+    foremanator: (input: any, context: AgentContext) => processDailyLog({ ...input, ...context }),
+    sterileish: (input: any, context: AgentContext) => analyzeCompliance({ ...input, ...context }),
+    paper_trail: (input: any, context: AgentContext) => scanEvidence({ ...input, ...context }),
+    barbara: (input: any, context: AgentContext) => processDocument({ ...input, ...context }),
+    auditor: (input: any, context: AgentContext) => auditFinances({ ...input, ...context }),
+    wingman: (input: any, context: AgentContext) => generateWingmanMessage({ ...input, ...context }),
+    kendra: (input: any, context: AgentContext) => getKendraTake({ ...input, ...context }),
+    orphean_oracle: (input: any, context: AgentContext) => invokeOracle({ ...input, ...context }),
+    lumbergh: (input: any, context: AgentContext) => analyzeInvite({ ...input, ...context }),
+    lucille_bluth: (input: any, context: AgentContext) => analyzeExpense({ ...input, ...context }),
+    pam_poovey: (input: any, context: AgentContext) => generatePamRant({ ...input, ...context }),
+    reno_mode: (input: any, context: AgentContext) => analyzeCarShame({ ...input, ...context }),
+    patrickt_app: (input: any, context: AgentContext) => processPatricktAction({ ...input, ...context }),
+    vin_diesel: (input: any, context: AgentContext) => validateVin({ ...input, ...context }),
+    inventory_daemon: (input: any, context: AgentContext) => consultInventoryDaemon({ ...input }),
+    ritual_quests: (input: any, context: AgentContext) => generateRitualQuests({ ...input, ...context }),
+    burn_bridge_protocol: (input: any, context: AgentContext) => executeBurnBridgeProtocol({ ...input, ...context }),
+    vault_daemon: (input: any, context: AgentContext) => consultVaultDaemon({ ...input, ...context }),
+};

@@ -2,7 +2,7 @@
 
 import { z } from 'zod';
 import { SecurityRiskLevel, UserPsyche, UserRole } from '@prisma/client';
-import { DrSyntaxOutputSchema } from './dr-syntax-schemas';
+import { DrSyntaxOutputSchema, DrSyntaxInputSchema } from './dr-syntax-schemas';
 import { AegisAnomalyScanOutputSchema, PulseProfileSchema } from './aegis-schemas';
 import { ContactSchema, DeleteContactOutputSchema } from '@/ai/tools/crm-schemas';
 import { BillingUsageSchema, RequestCreditTopUpOutputSchema } from '@/ai/tools/billing-schemas';
@@ -30,7 +30,7 @@ import { LumberghAnalysisOutputSchema, LumberghAnalysisInputSchema } from './lum
 import { LucilleBluthOutputSchema, LucilleBluthInputSchema } from './lucille-bluth-schemas';
 import { PamAudioOutputSchema, PamScriptInputSchema } from './pam-poovey-schemas';
 import { TransactionSchema } from '@/ai/tools/ledger-schemas';
-import { StonksBotOutputSchema } from './stonks-bot-schemas';
+import { StonksBotOutputSchema, StonksBotInputSchema } from './stonks-bot-schemas';
 import { RenoModeAnalysisOutputSchema, RenoModeAnalysisInputSchema } from './reno-mode-schemas';
 import { PatricktAgentOutputSchema, PatricktAgentInputSchema } from './patrickt-agent-schemas';
 import { InventoryDaemonOutputSchema } from './inventory-daemon-schemas';
@@ -39,8 +39,6 @@ import { RitualQuestOutputSchema, RitualQuestInputSchema } from './ritual-quests
 import { TransmuteCreditsOutputSchema } from '@/ai/tools/proxy-schemas';
 import { VaultAnalysisOutputSchema } from './vault-daemon-schemas';
 import { CrmActionSchema } from './crm-agent-schemas';
-import { DrSyntaxInputSchema } from './dr-syntax-schemas';
-import { StonksBotInputSchema } from './stonks-bot-schemas';
 
 
 // Schemas from the original BEEP agent, preserved for the public contract.
@@ -391,7 +389,7 @@ const RouteActionSchema = z.discriminatedUnion("route", [
     }),
     z.object({
         route: z.literal('paper_trail'),
-        params: PaperTrailScanInputSchema.pick({ receiptPhotoUri: true, caseFile: true }),
+        params: PaperTrailScanInputSchema.pick({ receiptPhotoUri: true, caseFile: true }).partial(),
     }),
     z.object({
         route: z.literal('barbara'),
@@ -431,7 +429,7 @@ const RouteActionSchema = z.discriminatedUnion("route", [
     }),
     z.object({
         route: z.literal('patrickt_app'),
-        params: PatricktAgentInputSchema.pick({ action: true, eventDescription: true, eventCategory: true, chatInput: true }),
+        params: PatricktAgentInputSchema.pick({ action: true, eventDescription: true, eventCategory: true, chatInput: true }).partial(),
     }),
     z.object({
         route: z.literal('vin_diesel'),

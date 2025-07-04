@@ -7,7 +7,6 @@ import { ai } from '@/ai/genkit';
 import { z } from 'zod';
 import { DrSyntaxInputSchema, DrSyntaxOutputSchema } from './dr-syntax-schemas';
 import { drSyntaxCritique } from './dr-syntax';
-import { langchainGroqComplex } from '../genkit';
 
 // The input for this agent is the direct, structured input for the critique flow.
 export const DrSyntaxAgentInputSchema = DrSyntaxInputSchema;
