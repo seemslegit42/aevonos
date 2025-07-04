@@ -97,7 +97,7 @@ export default function MicroAppCard({ app }: MicroAppCardProps) {
   );
 
   return (
-    <div ref={setNodeRef} style={style} className="group" onPointerDown={handlePointerDown}>
+    <div ref={setNodeRef} style={style} className="group" onPointerDown={handlePointerDown} data-app-type={app.type}>
         {isMobile ? (
              <div className="relative shadow-lg rounded-lg w-full h-full">
                 {cardElement}

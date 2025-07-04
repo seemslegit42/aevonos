@@ -1,4 +1,3 @@
-
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
@@ -97,25 +96,25 @@ enum EventStatus {
 }
 
 model User {
-  id                      String                 @id @default(cuid())
-  email                   String                 @unique
-  firstName               String?
-  lastName                String?
-  role                    UserRole               @default(OPERATOR)
-  psyche                  UserPsyche             @default(ZEN_ARCHITECT)
-  agentAlias              String?                @default("BEEP")
-  unlockedChaosCardKeys   String[]
-  hasAbyssalScar          Boolean                @default(false)
-  createdAt               DateTime               @default(now())
-  updatedAt               DateTime               @updatedAt
-  lastLoginAt             DateTime?
-  foundingVow             String?
-  foundingGoal            String?
-  corePainIndex           Float?
-  foundingBenediction     String?
-  firstWhisper            String?
-  firstCommand            String?
-  reclamationGraceUntil   DateTime?
+  id                    String     @id @default(cuid())
+  email                 String     @unique
+  firstName             String?
+  lastName              String?
+  role                  UserRole   @default(OPERATOR)
+  psyche                UserPsyche @default(ZEN_ARCHITECT)
+  agentAlias            String?    @default("BEEP")
+  unlockedChaosCardKeys String[]
+  hasAbyssalScar        Boolean    @default(false)
+  createdAt             DateTime   @default(now())
+  updatedAt             DateTime   @updatedAt
+  lastLoginAt           DateTime?
+  foundingVow           String?
+  foundingGoal          String?
+  corePainIndex         Float?
+  foundingBenediction   String?
+  firstWhisper          String?
+  firstCommand          String?
+  reclamationGraceUntil DateTime?
 
   workspaces            Workspace[]           @relation("WorkspaceMembers")
   ownedWorkspaces       Workspace[]           @relation("WorkspaceOwner")
@@ -127,20 +126,20 @@ model User {
 }
 
 model Workspace {
-  id                    String                 @id @default(cuid())
-  name                  String
-  ownerId               String
-  planTier              PlanTier               @default(Apprentice)
-  credits               Decimal                @default(100.0)
-  potential             Decimal                @default(0.0)
-  agentActionsUsed      Int                    @default(0)
-  overageEnabled        Boolean                @default(false)
-  unlockedAppIds        String[]
-  createdAt             DateTime               @default(now())
-  updatedAt             DateTime               @updatedAt
+  id               String   @id @default(cuid())
+  name             String
+  ownerId          String
+  planTier         PlanTier @default(Apprentice)
+  credits          Decimal  @default(100.0)
+  potential        Decimal  @default(0.0)
+  agentActionsUsed Int      @default(0)
+  overageEnabled   Boolean  @default(false)
+  unlockedAppIds   String[]
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 
-  owner                 User                   @relation("WorkspaceOwner", fields: [ownerId], references: [id])
-  members               User[]                 @relation("WorkspaceMembers")
+  owner                 User                  @relation("WorkspaceOwner", fields: [ownerId], references: [id])
+  members               User[]                @relation("WorkspaceMembers")
   agents                Agent[]
   contacts              Contact[]
   securityAlerts        SecurityAlert[]
@@ -196,50 +195,50 @@ model WorkflowRun {
 }
 
 model Transaction {
-  id                  String             @id @default(cuid())
-  workspaceId         String
-  workspace           Workspace          @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  userId              String?
-  user                User?              @relation(fields: [userId], references: [id], onDelete: SetNull)
-  type                TransactionType
-  amount              Decimal
-  description         String
-  status              TransactionStatus  @default(PENDING)
-  instrumentId        String?
-  luckWeight          Float?
-  outcome             String?
-  tributeAmount       Decimal?
-  boonAmount          Decimal?
-  judasFactor         Decimal?
-  isTransmutation     Boolean            @default(false)
-  realWorldAmount     Decimal?
-  realWorldCurrency   String?
-  vendorName          String?
-  userPsyche          UserPsyche?
-  aegisSignature      String?
-  createdAt           DateTime           @default(now())
+  id                String            @id @default(cuid())
+  workspaceId       String
+  workspace         Workspace         @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  userId            String?
+  user              User?             @relation(fields: [userId], references: [id], onDelete: SetNull)
+  type              TransactionType
+  amount            Decimal
+  description       String
+  status            TransactionStatus @default(PENDING)
+  instrumentId      String?
+  luckWeight        Float?
+  outcome           String?
+  tributeAmount     Decimal?
+  boonAmount        Decimal?
+  judasFactor       Decimal?
+  isTransmutation   Boolean           @default(false)
+  realWorldAmount   Decimal?
+  realWorldCurrency String?
+  vendorName        String?
+  userPsyche        UserPsyche?
+  aegisSignature    String?
+  createdAt         DateTime          @default(now())
 }
 
 model PulseProfile {
-  id                         String                @id @default(cuid())
-  userId                     String                @unique
-  user                       User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
-  amplitude                  Float                 @default(0.15)
-  frequency                  Float                 @default(0.01)
-  phaseOffset                Float
-  baselineLuck               Float                 @default(0.4)
-  lastEventTimestamp         DateTime              @default(now())
-  consecutiveLosses          Int                   @default(0)
-  frustration                Float                 @default(0.0)
-  flowState                  Float                 @default(0.0)
-  riskAversion               Float                 @default(0.5)
-  nextTributeGuaranteedWin   Boolean?
-  loadedDieBuffCount         Int?
-  hadesBargainActive         Boolean?
-  lastResolvedPhase          PulsePhase?
-  lastInteractionType        PulseInteractionType?
-  createdAt                  DateTime              @default(now())
-  updatedAt                  DateTime              @updatedAt
+  id                       String                @id @default(cuid())
+  userId                   String                @unique
+  user                     User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amplitude                Float                 @default(0.15)
+  frequency                Float                 @default(0.01)
+  phaseOffset              Float
+  baselineLuck             Float                 @default(0.4)
+  lastEventTimestamp       DateTime              @default(now())
+  consecutiveLosses        Int                   @default(0)
+  frustration              Float                 @default(0.0)
+  flowState                Float                 @default(0.0)
+  riskAversion             Float                 @default(0.5)
+  nextTributeGuaranteedWin Boolean?
+  loadedDieBuffCount       Int?
+  hadesBargainActive       Boolean?
+  lastResolvedPhase        PulsePhase?
+  lastInteractionType      PulseInteractionType?
+  createdAt                DateTime              @default(now())
+  updatedAt                DateTime              @updatedAt
 }
 
 model PotentialAccrualLog {
