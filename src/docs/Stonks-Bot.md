@@ -19,7 +19,7 @@ The agent's logic is powered by the `getStonksAdvice` flow, which combines exter
 - **External Tool Use**: The flow begins by calling the `getStockPrice` tool to fetch real-time market data for the requested `ticker` from the Alpha Vantage API.
 - **Persona-Driven Prompt**: The agent uses a map of prompt instructions based on the user's selected `mode` ('Meme-Lord', 'MBAcore', 'Oracle Mode'). This allows the agent to adopt a distinct, hilarious persona for its analysis.
 - **Input**: Accepts the `ticker` symbol and the desired `mode`.
-- **Processing**: After fetching the price data, a single LLM call synthesizes the data with the selected persona to generate:
+- **Processing**: After fetching the price data, a single call to a Groq LPU synthesizes the data with the selected persona to generate:
   - Unhinged `advice`.
   - A buy/sell/hold `rating`.
   - A `confidence` statement.

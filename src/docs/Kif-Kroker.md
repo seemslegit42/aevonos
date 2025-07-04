@@ -19,7 +19,7 @@ The agent's logic is powered by the `analyzeComms` flow.
 - **External Tool Use**: Before analysis, the agent calls the `getSlackChannelMessages` tool to fetch the most recent messages from the specified channel ID.
 - **Persona-Driven Prompt**: The core prompt instructs the LLM to adopt Kif's understated and exhausted tone.
 - **Input**: Accepts a Slack `channelId`.
-- **Processing**: A single LLM call analyzes the fetched conversational snippets for sentiment, tone, and key indicators of workplace friction.
+- **Processing**: A single call to a Groq LPU analyzes the fetched conversational snippets for sentiment, tone, and key indicators of workplace friction.
 - **Output (`KifKrokerAnalysisOutputSchema`)**: Returns a structured JSON object containing:
   - `moraleLevel`: An enum from 'Nominal' to the dreaded 'Sigh'.
   - `passiveAggressionIndex`: A numerical score (0-100).

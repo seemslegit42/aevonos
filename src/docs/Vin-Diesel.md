@@ -17,7 +17,7 @@ It transforms the dry, administrative task of VIN validation into a high-octane,
 ### 2.1. The `vin-diesel-agent` (`agents/vin-diesel.ts`)
 The agent's logic is powered by the `validateVin` flow.
 - **Mocked API Logic**: For the prototype, the flow uses hardcoded logic to handle specific test VINs ('TESTVIN1234567890' for a valid case, 'BADVIN1234567890' for an invalid case) and to check for the correct 17-character length. This would be replaced by a call to an external VIN decoding API (e.g., NHTSA) in a production environment.
-- **Persona-Driven Generation**: For generic valid VINs, the agent makes an LLM call with a prompt instructing it to generate a witty, confident, in-character confirmation message.
+- **Persona-Driven Generation**: For generic valid VINs, the agent makes a call to a Groq LPU with a prompt instructing it to generate a witty, confident, in-character confirmation message.
 - **Input**: Accepts a 17-character `vin` string.
 - **Output (`VinDieselOutputSchema`)**: Returns a structured JSON object with the validation status (`isValid`), an in-character `statusMessage`, decoded vehicle information (make, model, year), and a mock `complianceReport` (registration, customs, inspection).
 

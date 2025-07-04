@@ -18,7 +18,7 @@ It is a tool of corporate apathy, designed to undermine the soul-crushing cultur
 The agent's logic is contained within the `analyzeInvite` flow.
 - **Persona-Driven Prompt**: The core prompt is rich with Lumbergh's signature phrases ("Yeeeeah," "gonna need you to," "that'd be greeeeat") and instructs the LLM to analyze meeting invites for red flags like a lack of agenda, too many attendees, or vague buzzwords.
 - **Input**: Accepts the full `inviteText` from a calendar event.
-- **Processing**: A single LLM call analyzes the invite text. If red flags are found, it sets `isFlagged` to true, generates a passive-aggressive `flagReason`, and drafts a list of 2-3 `declineMemos`. If the meeting seems fine, it returns a simple, unenthusiastic confirmation.
+- **Processing**: A single call to a Groq LPU analyzes the invite text. If red flags are found, it sets `isFlagged` to true, generates a passive-aggressive `flagReason`, and drafts a list of 2-3 `declineMemos`. If the meeting seems fine, it returns a simple, unenthusiastic confirmation.
 - **Output (`LumberghAnalysisOutputSchema`)**: Returns a structured JSON object with the analysis results.
 
 ### 2.2. The `ProjectLumbergh` Micro-App (`micro-apps/project-lumbergh.tsx`)

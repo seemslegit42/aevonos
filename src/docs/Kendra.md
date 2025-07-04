@@ -17,7 +17,7 @@ Kendra is designed to take a user's raw product idea and spit out a complete, br
 ### 2.1. The `kendra-agent` (`agents/kendra.ts`)
 Kendra's core logic is a powerful two-stage generative flow called `getKendraTake`.
 - **Input**: Accepts a `productIdea` from the user.
-- **Stage 1: Text Generation**: The first LLM call uses a detailed prompt that defines Kendra's sharp, witty, and dismissive persona. It generates a comprehensive marketing plan including:
+- **Stage 1: Text Generation**: The first call to a Groq LPU uses a detailed prompt that defines Kendra's sharp, witty, and dismissive persona. It generates a comprehensive marketing plan including:
   - A legendary `campaignTitle`.
   - A list of jarringly effective `viralHooks` for TikTok/Reels.
   - `adCopy` in three distinct, problematic-but-effective brand voices ("The Disaffected Intern," "The Unhinged Founder," "Corporate Overlord").
@@ -25,7 +25,7 @@ Kendra's core logic is a powerful two-stage generative flow called `getKendraTak
   - A list of "What Not To Do" warnings that read like roast tweets.
   - A detailed `imageDescription` for a cursed-but-perfect ad image.
   - Kendra's final, biting `kendraCommentary`.
-- **Stage 2: Image Generation**: The `imageDescription` is then passed to an image generation model to create the high-fashion, digitally chaotic ad image as a data URI.
+- **Stage 2: Image Generation**: The `imageDescription` is then passed to an image generation model (Gemini) to create the high-fashion, digitally chaotic ad image as a data URI.
 - **Output (`KendraOutputSchema`)**: Returns the full, structured campaign, including the image data URI.
 
 ### 2.2. The `Kendra` Micro-App (`micro-apps/kendra.tsx`)

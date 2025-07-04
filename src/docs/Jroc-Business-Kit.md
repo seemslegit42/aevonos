@@ -17,7 +17,7 @@ It is a tool of pure, unadulterated creative energy, designed to get a user's hu
 ### 2.1. The `jroc-agent` (`agents/jroc.ts`)
 The agent's logic is contained within the `generateBusinessKit` flow, which is a two-stage generative process.
 - **Input**: Accepts the `businessType` and a desired `logoStyle` ('bling', 'chrome', or 'dank minimal').
-- **Stage 1: Text Generation**: The first LLM call uses a prompt that fully embodies the J-ROC persona. It generates a hilarious but plausible `businessName`, a hard-as-frig `tagline`, and a vivid `logoDescription`, as if J-ROC himself were directing a music video.
+- **Stage 1: Text Generation**: The first call to a Groq LPU uses a prompt that fully embodies the J-ROC persona. It generates a hilarious but plausible `businessName`, a hard-as-frig `tagline`, and a vivid `logoDescription`, as if J-ROC himself were directing a music video.
 - **Stage 2: Image Generation**: The `logoDescription` from Stage 1 is then passed to a second, image-generation LLM call (`gemini-2.0-flash-preview-image-generation`) to create the actual logo as a data URI.
 - **Output (`JrocOutputSchema`)**: Returns a structured JSON object containing the business name, tagline, logo description, and the logo image data URI.
 

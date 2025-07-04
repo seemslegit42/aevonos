@@ -17,7 +17,7 @@ It is designed to generate concise, cynical, and vaguely unhelpful (but technica
 ### 2.1. The `pam-poovey-agent` (`agents/pam-poovey.ts`)
 The agent's logic is a two-stage generative pipeline orchestrated by the `generatePamRant` function.
 - **Input**: Accepts a `topic` enum ('onboarding', 'attendance_policy', 'firing_someone').
-- **Stage 1: Script Generation (`generatePamScriptFlow`)**: The first LLM call uses a prompt that defines Pam's persona. It generates a short, in-character script based on the selected topic.
+- **Stage 1: Script Generation (`generatePamScriptFlow`)**: The first call to a Groq LPU uses a prompt that defines Pam's persona. It generates a short, in-character script based on the selected topic.
 - **Stage 2: Audio Generation (`generatePamAudioFlow`)**: The script from Stage 1 is then passed to a second, Text-to-Speech LLM call (`gemini-2.5-flash-preview-tts`). This model generates the spoken audio of the script. The raw PCM audio data is then converted to the WAV format.
 - **Output (`PamAudioOutputSchema`)**: Returns a structured JSON object containing both the original `script` and the final `audioDataUri` for the WAV file.
 

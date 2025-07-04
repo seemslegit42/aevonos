@@ -1,3 +1,4 @@
+
 # ΛΞVON OS: Economy - Obelisk Pay (Sovereign Ledger & Transaction Engine)
 
 “A monument to sovereignty. A burial site for third-party fees.”
@@ -38,7 +39,7 @@ To adhere to these principles, the forge must construct four primary components:
 - **Security**: Access to this database will be the most restricted privilege in the entire OS, guarded by Aegis protocols and strict RBAC.
 
 ### 4.2. The Transaction Agent (The Arbiter)
-- **Description**: A privileged, core Genkit/LangGraph agent that orchestrates all financial operations. This agent is the only entity authorized to directly interact with The Vault.
+- **Description**: A privileged, core Genkit/LangGraph agent powered by Groq that orchestrates all financial operations. This agent is the only entity authorized to directly interact with The Vault.
 - **Internal API**: It exposes a simple, hardened internal API with functions like `propose_tribute()`, `grant_boon()`, and `purchase_currency()`.
 - **Atomicity Enforcement**: This agent is solely responsible for executing atomic transactions, ensuring that a user's balance is checked, debited, and the receiving account is credited as a single, unbreakable operation. Its logic is immutable and auditable.
 
@@ -63,6 +64,11 @@ To adhere to these principles, the forge must construct four primary components:
 ### 5.2. Klepsydra Engine (`klepsydra-service`)
 -   **Transactional Backbone**: Obelisk Pay is the atomic transactional backbone for the entire Klepsydra Engine.
 -   **Atomic Tribute Processing**: When a user makes a tribute to a Folly Instrument, the `klepsydra-service` calculates the outcome and boon amount. It then calls the `logTributeEvent` function in `ledger-service` to atomically record the transaction. This atomic operation guarantees that the ledger remains consistent and funds cannot be spent if they are not available.
+
+### 5.3. Proxy.Agent & The Black Card
+- **Real-World Transmutation**: For high-tier users, the `Proxy.Agent` can be summoned to transmute ΞCredits into real-world payments.
+- **Process**: The Proxy.Agent calculates the cost, adds a "Transmutation Tithe," and debits the user's account via Obelisk Pay. It then executes the real-world payment from a corporate account.
+- **The Black Card**: A physical or digital NFC card acts as a Command Card, invoking the Proxy.Agent for seamless real-world tributes.
 
 ---
 

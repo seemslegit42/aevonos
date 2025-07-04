@@ -4,7 +4,7 @@
  * @fileOverview Service for handling billing and usage tracking.
  */
 import prisma from '@/lib/prisma';
-import redis from '@/lib/redis';
+import cache from '@/lib/cache';
 import { Prisma, TransactionStatus, TransactionType, PlanTier } from '@prisma/client';
 import { aegisAnomalyScan } from '@/ai/agents/aegis';
 import { createSecurityAlertInDb } from '@/ai/tools/security-tools';
@@ -164,7 +164,7 @@ export async function authorizeAndDebitAgentActions(input: AuthorizeAndDebitInpu
 
         // Invalidate cache AFTER the transaction is successful
         if (userId) {
-            await redis.del(`workspace:user:${userId}`);
+            await cache.del(`workspace:user:${userId}`);
         }
 
         return { success: true, remainingBalance, debitAmount, message };

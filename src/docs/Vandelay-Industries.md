@@ -18,7 +18,7 @@ It is a tool that weaponizes corporate nonsense for the noble cause of personal 
 The agent's logic is powered by the `createVandelayAlibi` flow.
 - **Persona-Driven Prompt**: The core prompt instructs the LLM to act as an assistant for Vandelay Industries, using a mix of corporate buzzwords and vague concepts to generate a meeting title so dull that no one would ever question it.
 - **Input**: Accepts an optional `topicHint` (e.g., "design review") and a boolean `addAttendees` flag.
-- **Processing**: A single LLM call generates a boring, jargon-filled meeting `title`. If `addAttendees` is true, it also generates a list of 2-3 plausible but fake attendees (e.g., external stakeholders, consultants) to increase the alibi's legitimacy.
+- **Processing**: A single call to a Groq LPU generates a boring, jargon-filled meeting `title`. If `addAttendees` is true, it also generates a list of 2-3 plausible but fake attendees (e.g., external stakeholders, consultants) to increase the alibi's legitimacy.
 - **Output (`VandelayAlibiOutputSchema`)**: Returns a structured JSON object with the generated title and optional attendees.
 
 ### 2.2. The `Vandelay` Micro-App (`micro-apps/vandelay.tsx`)

@@ -6,7 +6,7 @@
  */
 
 import prisma from '@/lib/prisma';
-import redis from '@/lib/redis';
+import cache from '@/lib/cache';
 import { z } from 'zod';
 import { Prisma, Transaction, TransactionStatus, TransactionType, UserPsyche } from '@prisma/client';
 import { InsufficientCreditsError } from '@/lib/errors';
@@ -89,7 +89,7 @@ async function createTransaction(input: CreateTransactionInput) {
         });
         
         if (userId) {
-            await redis.del(`workspace:user:${userId}`);
+            await cache.del(`workspace:user:${userId}`);
         }
 
         return result;
@@ -196,7 +196,7 @@ export async function processMicroAppPurchase(
   });
 
   // Invalidate workspace cache after the transaction
-  await redis.del(`workspace:user:${userId}`);
+  await cache.del(`workspace:user:${userId}`);
 }
 
 /**
@@ -264,7 +264,7 @@ export async function confirmPendingTransaction(transactionId: string, workspace
 
     // Invalidate workspace cache on confirmation
     if (result.userId) {
-        await redis.del(`workspace:user:${result.userId}`);
+        await cache.del(`workspace:user:${result.userId}`);
     }
 
 
@@ -285,10 +285,6 @@ export async function transmuteCredits(
 ): Promise<z.infer<typeof TransmuteCreditsOutputSchema>> {
   const { amount, vendor, currency } = TransmuteCreditsInputSchema.parse(input);
   const signatureSecret = process.env.AEGIS_SIGNING_SECRET || 'default_secret_for_dev';
-
-  const baseCost = amount * EXCHANGE_RATE;
-  const tithe = baseCost * TRANSMUTATION_TITHE;
-  const totalDebit = baseCost + tithe;
 
   try {
     const result = await prisma.$transaction(async (tx) => {
@@ -335,7 +331,7 @@ export async function transmuteCredits(
       };
     });
 
-    await redis.del(`workspace:user:${userId}`);
+    await cache.del(`workspace:user:${userId}`);
     return result;
   } catch (error) {
     if (error instanceof Error) {

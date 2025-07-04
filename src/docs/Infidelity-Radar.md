@@ -1,4 +1,3 @@
-
 # Infidelity Radar: The Spectre Intelligence Suite - Technical Specification
 
 > "Because intuition deserves evidence."
@@ -19,7 +18,7 @@ The suite is composed of several independent but interoperable agents, all orche
 
 ### 2.1. `osint-agent` (`agents/osint.ts`)
 - **Purpose**: Acts as a digital bloodhound, scouring open sources for information.
-- **Architecture**: As a specialist daemon in the Groq Swarm, this agent is implemented using `LangGraph` for multi-step reasoning. It first plans which intelligence tools to use, executes them with blistering speed, and then synthesizes the results into a final report.
+- **Architecture**: As a specialist daemon in the Groq Swarm, this agent is implemented using `LangGraph` for multi-step reasoning. It first plans which intelligence tools to use, executes them with blistering speed thanks to Groq's inference engine, and then synthesizes the results into a final report.
 - **Flow**: The `performOsintScan` flow orchestrates a suite of dedicated tools (`checkEmailBreaches`, `searchIntelX`, `runFirecrawlerScan`) to gather data on a target.
 - **Synthesis**: The raw data from all tool calls is synthesized by an LLM into a coherent `OsintOutputSchema`, providing a summary, risk factors, and structured data on breaches, leaks, and social profiles.
 

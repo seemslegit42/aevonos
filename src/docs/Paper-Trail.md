@@ -18,7 +18,7 @@ It transforms the mundane task of expense tracking into an interactive, narrativ
 The agent's logic is powered by the `scanEvidence` flow, which uses a multimodal prompt.
 - **Persona-Driven Prompt**: The core prompt instructs the LLM to act as an "AI Informant" in a noir detective agency, analyzing evidence and providing leads.
 - **Input**: Accepts a `receiptPhotoUri` (a base64-encoded image of a receipt) and an optional `caseFile` name for context.
-- **Processing**: A single call to a multimodal LLM analyzes the image to extract the `vendor` name, total `amount`, and `date`. It also generates a sharp, analytical `lead` about the expense (e.g., how to categorize it, what it implies for a case).
+- **Processing**: A single call to a multimodal LLM (Gemini) analyzes the image to extract the `vendor` name, total `amount`, and `date`. It also generates a sharp, analytical `lead` about the expense (e.g., how to categorize it, what it implies for a case).
 - **Output (`PaperTrailScanOutputSchema`)**: Returns a structured JSON object with the extracted data, the generated lead, and a boolean `isEvidenceValid` flag.
 
 ### 2.2. The `PaperTrail` Micro-App (`micro-apps/paper-trail.tsx`)

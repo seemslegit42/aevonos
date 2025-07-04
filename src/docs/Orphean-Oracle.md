@@ -1,4 +1,3 @@
-
 # The Orphean Oracle: Data Narrator - Technical Specification
 
 > "I have descended into the underworld of your data. Here is the story I returned with."
@@ -19,7 +18,7 @@ It is designed to replace sterile charts and graphs with a "data constellation"â
 The agent's logic resides in the `invokeOracle` flow.
 - **Persona-Driven Prompt**: The core prompt instructs the LLM to act as the Orphean Oracle, interpreting raw JSON data not as numbers, but as a story or myth.
 - **Input**: Accepts a `userQuery` (e.g., "Tell me the story of my Q3 sales") and mock business data.
-- **Processing**: A single LLM call analyzes the user query and the mock data to generate:
+- **Processing**: A single call to a Groq LPU analyzes the user query and the mock data to generate:
   1.  A poetic, narrative `summary` of the data's meaning.
   2.  A list of clear, actionable `keyInsights`.
   3.  A `visualizationData` object containing the parameters (`nodes` and `connections`) for rendering the 3D data constellation. Node size, color, and pulse speed are determined by the LLM based on its interpretation of the data's importance and health.
