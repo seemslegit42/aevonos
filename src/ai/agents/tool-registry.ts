@@ -23,12 +23,10 @@ import { consultDrSyntax, DrSyntaxAgentInputSchema } from './dr-syntax-agent';
 import { consultStonksBot, StonksAgentInputSchema } from './stonks-bot-agent';
 import { consultCrmAgent } from './crm-agent';
 import { consultWinstonWolfe } from './winston-wolfe-agent';
-import { WinstonWolfeInputSchema } from './winston-wolfe-schemas';
 import { consultKifKroker } from './kif-kroker-agent';
-import { KifKrokerAnalysisInputSchema } from './kif-kroker-schemas';
-import { createVandelayAlibi, VandelayAlibiInputSchema } from './vandelay';
-import { analyzeCandidate, RolodexAnalysisInputSchema } from './rolodex';
-import { generateBusinessKit, JrocInputSchema } from './jroc';
+import { consultVandelay } from './vandelay-agent';
+import { consultRolodex } from './rolodex-agent';
+import { consultJroc } from './jroc-agent';
 import { analyzeLaheyLog, LaheyAnalysisInputSchema } from './lahey';
 import { processDailyLog, ForemanatorLogInputSchema } from './foremanator';
 import { analyzeCompliance, SterileishAnalysisInputSchema } from './sterileish';
@@ -53,6 +51,11 @@ import { consultDemiurge, DemiurgeActionSchema } from './demiurge-agent';
 
 // Tool Schema Imports
 import { CreateSecurityAlertInputSchema } from '@/ai/tools/security-schemas';
+import { WinstonWolfeInputSchema } from './winston-wolfe-schemas';
+import { KifKrokerAnalysisInputSchema } from './kif-kroker-schemas';
+import { VandelayAlibiInputSchema } from './vandelay-schemas';
+import { RolodexAnalysisInputSchema } from './rolodex-schemas';
+import { JrocInputSchema } from './jroc-schemas';
 
 
 // Context for multi-tenancy and personalization
@@ -141,9 +144,9 @@ export const specialistAgentMap: Record<string, (input: any, context: AgentConte
     stonks_bot: (input: any, context: AgentContext) => consultStonksBot({ ...input, ...context }),
     winston_wolfe: (input: any, context: AgentContext) => consultWinstonWolfe({ ...input, ...context }),
     kif_kroker: (input: any, context: AgentContext) => consultKifKroker({ ...input, ...context }),
-    vandelay: (input: any, context: AgentContext) => createVandelayAlibi({ ...input, ...context }),
-    rolodex: (input: any, context: AgentContext) => analyzeCandidate({ ...input, ...context }),
-    jroc: (input: any, context: AgentContext) => generateBusinessKit({ ...input, ...context }),
+    vandelay: (input: any, context: AgentContext) => consultVandelay({ ...input, ...context }),
+    rolodex: (input: any, context: AgentContext) => consultRolodex({ ...input, ...context }),
+    jroc: (input: any, context: AgentContext) => consultJroc({ ...input, ...context }),
     lahey_surveillance: (input: any, context: AgentContext) => analyzeLaheyLog({ ...input, ...context }),
     foremanator: (input: any, context: AgentContext) => processDailyLog({ ...input, ...context }),
     sterileish: (input: any, context: AgentContext) => analyzeCompliance({ ...input, ...context }),
