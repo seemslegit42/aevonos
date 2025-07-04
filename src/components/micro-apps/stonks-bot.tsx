@@ -137,4 +137,3 @@ export default function StonksBot(props: StonksBotOutput | {}) {
             )}
         </div>
     );
-}
