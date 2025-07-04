@@ -195,7 +195,7 @@ export async function transmuteCreditsViaProxy(input: z.infer<typeof TransmuteCr
     if (!user || !workspace) {
         return { success: false, error: 'Authentication failed.' };
     }
-    if (user.id !== workspace.ownerId) {
+    if (user.role !== UserRole.ADMIN || user.id !== workspace.ownerId) {
         return { success: false, error: 'Forbidden: Only the workspace Architect can perform transmutations.' };
     }
     

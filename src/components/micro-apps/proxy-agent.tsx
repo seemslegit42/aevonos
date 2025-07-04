@@ -10,8 +10,8 @@ import { Separator } from '../ui/separator';
 import { useAppStore } from '@/store/app-store';
 import { transmuteCreditsViaProxy } from '@/app/actions';
 
-const EXCHANGE_RATE = 10000;
-const TRANSMUTATION_TITHE = 0.15;
+const XI_TO_CAD_EXCHANGE_RATE = 0.00025; // 1 CAD = 4000 Xi
+const TRANSMUTATION_TITHE_RATE = 0.18;
 
 interface ProxyAgentProps {
   id: string; // app instance id
@@ -26,8 +26,8 @@ export default function ProxyAgent({ id, vendor = 'The Alchemist Bar', amount = 
   const [isProcessing, setIsProcessing] = useState(false);
   const [isAuthorized, setIsAuthorized] = useState(false);
 
-  const baseCost = amount * EXCHANGE_RATE;
-  const tithe = baseCost * TRANSMUTATION_TITHE;
+  const baseCost = amount / XI_TO_CAD_EXCHANGE_RATE;
+  const tithe = baseCost * TRANSMUTATION_TITHE_RATE;
   const totalDebit = baseCost + tithe;
 
   const handleAuthorize = async () => {
@@ -41,7 +41,7 @@ export default function ProxyAgent({ id, vendor = 'The Alchemist Bar', amount = 
             title: "Tribute Authorized",
             description: result.message,
         });
-        setTimeout(() => closeApp(id), 2000);
+        setTimeout(() => closeApp(id), 2500);
     } else {
         toast({
             variant: 'destructive',
@@ -81,11 +81,11 @@ export default function ProxyAgent({ id, vendor = 'The Alchemist Bar', amount = 
                 <Separator className="my-4" />
                  <div className="space-y-1 text-xs">
                      <div className="flex justify-between">
-                         <span>Cost:</span>
+                         <span>Cost in Xi:</span>
                          <span className="font-mono">{baseCost.toLocaleString()} Ξ</span>
                      </div>
                       <div className="flex justify-between">
-                         <span>Transmutation Tithe (15%):</span>
+                         <span>Transmutation Tithe (18%):</span>
                          <span className="font-mono">{tithe.toLocaleString()} Ξ</span>
                      </div>
                       <div className="flex justify-between font-bold text-base border-t pt-1 mt-1">

@@ -8,7 +8,7 @@
 import prisma from '@/lib/prisma';
 import cache from '@/lib/cache';
 import { z } from 'zod';
-import { Prisma, Transaction, TransactionStatus, TransactionType, UserPsyche } from '@prisma/client';
+import { Prisma, Transaction, TransactionStatus, TransactionType } from '@prisma/client';
 import { InsufficientCreditsError } from '@/lib/errors';
 import { CreateManualTransactionInputSchema, TransmuteCreditsInputSchema } from '@/ai/tools/ledger-schemas';
 import { differenceInMinutes } from 'date-fns';
@@ -26,8 +26,8 @@ const CreateTransactionInputSchema = z.object({
 });
 type CreateTransactionInput = z.infer<typeof CreateTransactionInputSchema>;
 
-const EXCHANGE_RATE = 10000; // 10,000 Ξ per $1
-const TRANSMUTATION_TITHE = 0.15; // 15%
+const XI_TO_CAD_EXCHANGE_RATE = 0.00025; // 1 CAD = 4000 Xi, placeholder. A real system would use a dynamic rate.
+const TRANSMUTATION_TITHE_RATE = 0.18; // 18%
 
 
 /**
@@ -285,6 +285,11 @@ export async function transmuteCredits(
 ): Promise<z.infer<typeof TransmuteCreditsOutputSchema>> {
   const { amount, vendor, currency } = TransmuteCreditsInputSchema.parse(input);
   const signatureSecret = process.env.AEGIS_SIGNING_SECRET || 'default_secret_for_dev';
+  
+  const baseCost = amount / XI_TO_CAD_EXCHANGE_RATE;
+  const tithe = baseCost * TRANSMUTATION_TITHE_RATE;
+  const totalDebit = baseCost + tithe;
+
 
   try {
     const result = await prisma.$transaction(async (tx) => {
@@ -321,6 +326,11 @@ export async function transmuteCredits(
           status: 'COMPLETED',
           instrumentId: 'PROXY_AGENT',
           aegisSignature: signature,
+          isTransmutation: true,
+          realWorldAmount: amount,
+          realWorldCurrency: currency,
+          vendorName: vendor,
+          transmutationTithe: new Prisma.Decimal(tithe),
         },
       });
 
