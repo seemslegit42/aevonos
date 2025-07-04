@@ -24,6 +24,7 @@ const classStyles = {
     AGENTIC: 'border-primary text-primary',
     SYSTEMIC: 'border-yellow-400 text-yellow-400',
     SYNDICATE: 'border-ring text-ring',
+    BOON: 'border-gilded-accent text-gilded-accent',
 };
 
 export function ChaosCardListingCard({ artifact, ownedCardKeys, onAcquire }: ChaosCardListingCardProps) {
@@ -119,3 +120,5 @@ export function ChaosCardListingCard({ artifact, ownedCardKeys, onAcquire }: Cha
     </Card>
   );
 }
+
+    

@@ -44,3 +44,5 @@ export const AegisAnomalyScanOutputSchema = z.object({
     .describe('A clear, concise, and human-readable explanation of why the activity is considered anomalous. Frame it from the perspective of a vigilant security agent.'),
 });
 export type AegisAnomalyScanOutput = z.infer<typeof AegisAnomalyScanOutputSchema>;
+
+    

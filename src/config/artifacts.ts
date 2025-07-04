@@ -621,7 +621,7 @@ export const artifactManifests: ArtifactManifest[] = [
     creditCost: 75,
     priceModel: 'tribute',
     rarity: 'COMMON',
-    systemEffect: 'Applies a marble and gold UI theme for one hour.',
+    systemEffect: 'Applies a `theme-acropolis-marble` class to the root element, rendering the UI in stark whites and greys with golden accents for one hour.',
     imageUrl: 'https://placehold.co/400x560.png',
     imageHint: 'marble statue',
     durationMinutes: 60,
@@ -662,7 +662,7 @@ export const artifactManifests: ArtifactManifest[] = [
     creditCost: 50,
     priceModel: 'tribute',
     rarity: 'COMMON',
-    systemEffect: 'For 15 minutes, UI elements on the Canvas develop a slow, "dripping" animation.',
+    systemEffect: 'For 15 minutes, a `theme-weeping-glass` class is applied, causing UI elements on the Canvas to develop a slow, "dripping" animation.',
     imageUrl: 'https://placehold.co/400x560.png',
     imageHint: 'liquid glass',
   },
@@ -911,3 +911,5 @@ export const artifactManifests: ArtifactManifest[] = [
     imageHint: 'skull coin',
   },
 ];
+
+    

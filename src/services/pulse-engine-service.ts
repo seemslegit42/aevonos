@@ -24,7 +24,7 @@ const PULSE_PROFILE_CACHE_TTL_SECONDS = 60 * 60; // 1 hour
  * @param tx An optional Prisma transaction client for atomicity.
  * @returns The user's PulseProfile.
  */
-async function getPulseProfile(userId: string, tx?: PrismaTransactionClient): Promise<PulseProfile> {
+export async function getPulseProfile(userId: string, tx?: PrismaTransactionClient): Promise<PulseProfile> {
   const prismaClient = tx || prisma;
   const cacheKey = PULSE_PROFILE_CACHE_KEY(userId);
 
@@ -50,6 +50,9 @@ async function getPulseProfile(userId: string, tx?: PrismaTransactionClient): Pr
         baselineLuck: 0.4,
         amplitude: 0.15,
         frequency: 0.01,
+        nextTributeGuaranteedWin: false,
+        loadedDieBuffCount: 0,
+        hadesBargainActive: false,
       },
     });
   }
@@ -241,3 +244,5 @@ export async function recordInteraction(userId: string, type: 'success' | 'failu
         await cache.set(PULSE_PROFILE_CACHE_KEY(userId), updatedProfile, 'EX', PULSE_PROFILE_CACHE_TTL_SECONDS);
     }
 }
+
+    
