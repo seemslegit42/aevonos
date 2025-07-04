@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React from 'react';
@@ -24,20 +25,31 @@ interface AgentStatusListProps {
     isLoading: boolean;
 }
 
+const AgentSkeleton = () => (
+    <div className="flex items-center gap-2">
+        <Skeleton className="h-4 w-4 rounded-full" />
+        <div className="flex-grow space-y-1">
+            <Skeleton className="h-4 w-3/4" />
+            <Skeleton className="h-3 w-1/2" />
+        </div>
+    </div>
+);
+
 export default function AgentStatusList({ agents, isLoading }: AgentStatusListProps) {
     const renderContent = () => {
+        // Show skeleton on initial load when agents array is empty
         if (isLoading && agents.length === 0) {
             return (
                 <div className="space-y-3">
-                    {[...Array(3)].map((_, i) => (
-                        <div key={i} className="flex items-center gap-2">
-                            <Skeleton className="h-4 w-4 rounded-full" />
-                            <div className="flex-grow space-y-1">
-                                <Skeleton className="h-4 w-3/4" />
-                                <Skeleton className="h-3 w-1/2" />
-                            </div>
-                        </div>
-                    ))}
+                    {[...Array(3)].map((_, i) => <AgentSkeleton key={i} />)}
+                </div>
+            )
+        }
+        // Show skeleton over existing content during refresh
+        if (isLoading) {
+            return (
+                 <div className="space-y-3">
+                    {agents.map((agent) => <AgentSkeleton key={agent.id} />)}
                 </div>
             )
         }

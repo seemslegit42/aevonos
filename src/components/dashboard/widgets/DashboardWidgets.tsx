@@ -9,7 +9,7 @@ import QuickAccess from './quick-access';
 import AgentStatusList from './agent-status-list';
 import RecentActivityFeed from './recent-activity-feed';
 import { CreditCard, Users, Bot } from 'lucide-react';
-import DailyBriefing from './DailyBriefing';
+import DailyBriefing from './daily-briefing';
 import { type DailyBriefingOutput } from '@/ai/agents/briefing-schemas';
 
 interface DashboardWidgetsProps {
@@ -37,7 +37,7 @@ export default function DashboardWidgets({
             <div className="lg:col-span-1 md:col-span-2">
                 <DailyBriefing 
                     briefing={briefing}
-                    isLoading={isLoading && !briefing}
+                    isLoading={isLoading}
                     error={error}
                 />
             </div>
@@ -47,14 +47,14 @@ export default function DashboardWidgets({
                     title="Credit Balance"
                     value={`${creditBalance} Ξ`}
                     description="Available for Agent Actions"
-                    loading={isLoading && !workspace}
+                    loading={isLoading}
                 />
                  <StatCard
                     icon={Bot}
                     title="Active Agents"
                     value={activeAgentCount}
                     description={`${totalAgentCount} agents total`}
-                    loading={isLoading && agents.length === 0}
+                    loading={isLoading}
                 />
             </div>
              <div className="space-y-4">
@@ -63,7 +63,7 @@ export default function DashboardWidgets({
                     title="Team Members"
                     value={membersCount}
                     description="In this workspace"
-                    loading={isLoading && !workspace}
+                    loading={isLoading}
                 />
                 <QuickAccess />
             </div>
@@ -71,7 +71,7 @@ export default function DashboardWidgets({
 
         <div className="flex-grow min-h-0 grid grid-cols-1 lg:grid-cols-3 gap-4">
             <div className="lg:col-span-1 h-full">
-                <AgentStatusList agents={agents} isLoading={isLoading && agents.length === 0} />
+                <AgentStatusList agents={agents} isLoading={isLoading} />
             </div>
             <div className="lg:col-span-2 h-full">
                 <RecentActivityFeed 
