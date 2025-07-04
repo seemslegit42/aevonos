@@ -224,6 +224,26 @@ const weepingGlassRarityTable: OutcomeTier[] = [
     },
 ];
 
+const oracleDecreeRarityTable: OutcomeTier[] = [
+    {
+        tier: 'COMMON', // Loss
+        baseWeight: 3000,
+        boons: [{ type: 'credits', value: 0, weight: 100 }],
+        narrativeTriggers: ["The Oracle remains silent.", "The prophecy is clouded."],
+    },
+    {
+        tier: 'RARE', // Win
+        baseWeight: 7000,
+        boons: [{ type: 'system_effect', value: 'ORACLES_DECREE', weight: 100 }],
+        narrativeTriggers: ["The Oracle's decree is issued.", "A prophecy has been inscribed for Aegis."],
+    },
+    {
+        tier: 'DIVINE', // Pity Boon
+        baseWeight: 1,
+        boons: [{ type: 'system_effect', value: 'ORACLES_DECREE', weight: 100 }],
+        narrativeTriggers: ["The Oracle takes pity and offers a cryptic warning."],
+    },
+];
 
 export const follyInstrumentsConfig: Record<string, FollyInstrumentConfig> = {
     'SISYPHUSS_ASCENT': {
@@ -249,5 +269,9 @@ export const follyInstrumentsConfig: Record<string, FollyInstrumentConfig> = {
     'WEEPING_GLASS': {
         id: 'WEEPING_GLASS',
         rarityTable: weepingGlassRarityTable,
-    }
+    },
+    'ORACLES_DECREE': {
+        id: 'ORACLES_DECREE',
+        rarityTable: oracleDecreeRarityTable,
+    },
 };
