@@ -7,8 +7,9 @@
  */
 import prisma from '@/lib/prisma';
 import cache from '@/lib/cache';
-import { AgentStatus, PlanTier } from '@prisma/client';
+import { AgentStatus, PlanTier, UserPsyche } from '@prisma/client';
 import type { User, Workspace } from '@prisma/client';
+import { calculateVasForUser } from '@/services/vas-service';
 
 const OVERVIEW_CACHE_KEY = (workspaceId: string) => `admin:overview:${workspaceId}`;
 const OVERVIEW_CACHE_TTL = 60; // 1 minute
@@ -133,4 +134,85 @@ export async function getWorkspaceVows(workspaceId: string) {
 
   await cache.set(cacheKey, vows, 'EX', WORKSPACE_VOWS_CACHE_TTL);
   return vows;
+}
+
+
+const COVENANT_MEMBERS_CACHE_KEY = (workspaceId: string, covenantName: string) => `admin:covenant-members:${workspaceId}:${covenantName}`;
+const COVENANT_LEADERBOARD_CACHE_KEY = (workspaceId: string, covenantName: string) => `admin:covenant-leaderboard:${workspaceId}:${covenantName}`;
+const COVENANT_CACHE_TTL = 60 * 5; // 5 minutes
+
+const covenantNameToPsyche = (name: string): UserPsyche | null => {
+    switch(name.toLowerCase()) {
+        case 'motion': return UserPsyche.SYNDICATE_ENFORCER;
+        case 'worship': return UserPsyche.RISK_AVERSE_ARTISAN;
+        case 'silence': return UserPsyche.ZEN_ARCHITECT;
+        default: return null;
+    }
+}
+
+/**
+ * Retrieves the member roster for a specific Covenant within a workspace.
+ * Caches the result.
+ * @param workspaceId The ID of the workspace.
+ * @param covenantName The name of the covenant ('motion', 'worship', 'silence').
+ * @returns A promise resolving to an array of user data for the covenant members.
+ */
+export async function getCovenantMembers(workspaceId: string, covenantName: string) {
+    const cacheKey = COVENANT_MEMBERS_CACHE_KEY(workspaceId, covenantName);
+    const cachedMembers = await cache.get(cacheKey);
+    if (cachedMembers && Array.isArray(cachedMembers)) {
+        return cachedMembers;
+    }
+
+    const psyche = covenantNameToPsyche(covenantName);
+    if (!psyche) {
+      throw new Error('Invalid covenant name provided.');
+    }
+
+    const members = await prisma.user.findMany({
+      where: {
+        psyche: psyche,
+        workspaces: {
+          some: { id: workspaceId }
+        }
+      },
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+      },
+    });
+
+    await cache.set(cacheKey, members, 'EX', COVENANT_CACHE_TTL);
+    return members;
+}
+
+
+/**
+ * Retrieves the Vow Alignment Score (VAS) leaderboard for a specific Covenant.
+ * Caches the result.
+ * @param workspaceId The ID of the workspace.
+ * @param covenantName The name of the covenant ('motion', 'worship', 'silence').
+ * @returns A promise resolving to a sorted array of users with their VAS.
+ */
+export async function getCovenantLeaderboard(workspaceId: string, covenantName: string) {
+    const cacheKey = COVENANT_LEADERBOARD_CACHE_KEY(workspaceId, covenantName);
+    const cachedLeaderboard = await cache.get(cacheKey);
+    if (cachedLeaderboard && Array.isArray(cachedLeaderboard)) {
+        return cachedLeaderboard;
+    }
+    
+    // We can reuse the getCovenantMembers function to avoid duplicating the initial query
+    const members = await getCovenantMembers(workspaceId, covenantName);
+
+    const leaderboardPromises = members.map(async (member: any) => {
+        const vas = await calculateVasForUser(member.id);
+        return { ...member, vas };
+    });
+
+    const leaderboard = (await Promise.all(leaderboardPromises)).sort((a, b) => b.vas - a.vas);
+
+    await cache.set(cacheKey, leaderboard, 'EX', COVENANT_CACHE_TTL);
+    return leaderboard;
 }
