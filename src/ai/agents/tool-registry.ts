@@ -16,8 +16,6 @@ import {
 } from '../agents/beep-schemas';
 
 // Agent Imports
-import { drSyntaxCritique } from '@/ai/agents/dr-syntax';
-import { aegisAnomalyScan } from '@/ai/agents/aegis';
 import { validateVin } from '@/ai/agents/vin-diesel';
 import { generateSolution } from '@/ai/agents/winston-wolfe';
 import { analyzeComms } from '@/ai/agents/kif-kroker';
@@ -40,10 +38,8 @@ import { invokeOracle } from '@/ai/agents/orphean-oracle-flow';
 import { analyzeInvite } from '@/ai/agents/lumbergh';
 import { analyzeExpense } from '@/ai/agents/lucille-bluth';
 import { generatePamRant } from '../agents/pam-poovey';
-import { getStonksAdvice } from '../agents/stonks-bot';
 import { analyzeCarShame } from '@/ai/agents/reno-mode';
 import { processPatricktAction } from '../agents/patrickt-agent';
-import { consultInventoryDaemon } from '../agents/inventory-daemon';
 import { generateRitualQuests } from '../agents/ritual-quests-agent';
 
 
@@ -57,7 +53,6 @@ import { transmuteCredits } from '@/ai/tools/proxy-tools';
 
 
 // Schema Imports
-import { DrSyntaxInputSchema } from '@/ai/agents/dr-syntax-schemas';
 import { RequestCreditTopUpInputSchema } from '@/ai/tools/billing-schemas';
 import { DatingProfileInputSchema } from '@/ai/tools/dating-schemas';
 import { CreateSecurityAlertInputSchema } from '@/ai/tools/security-schemas';
@@ -84,11 +79,9 @@ import { LumberghAnalysisInputSchema } from '../agents/lumbergh-schemas';
 import { LucilleBluthInputSchema } from '../agents/lucille-bluth-schemas';
 import { PamScriptInputSchema } from '../agents/pam-poovey-schemas';
 import { CreateManualTransactionInputSchema } from '@/ai/tools/ledger-schemas';
-import { StonksBotInputSchema } from '../agents/stonks-bot-schemas';
 import { RenoModeAnalysisInputSchema } from '../agents/reno-mode-schemas';
 import { PatricktAgentInputSchema } from '../agents/patrickt-agent-schemas';
-import { InventoryDaemonInputSchema } from '../agents/inventory-daemon-schemas';
-import { FindUsersByVowInputSchema, ManageSyndicateInputSchema } from '@/ai/tools/demiurge-schemas';
+import { FindUsersByVowInputSchema, ManageSyndicateInputSchema } from '@/ai/tools/demiurge-tools';
 import { RitualQuestInputSchema } from '../agents/ritual-quests-schemas';
 import { TransmuteCreditsInputSchema } from '../tools/proxy-schemas';
 
@@ -163,13 +156,6 @@ export async function getTools(context: AgentContext): Promise<Tool[]> {
             schema: RitualQuestInputSchema.omit({ psyche: true, workspaceId: true }),
             agentName: 'ritual-quests',
             agentFunc: (toolInput) => generateRitualQuests({ ...toolInput, psyche, workspaceId }),
-        }),
-        createAgentTool({
-            name: 'critiqueContent',
-            description: 'Sends content to Dr. Syntax for a harsh but effective critique. Use this when a user asks for a review, critique, or feedback on a piece of text, code, or a prompt. Extract the content and content type from the user command.',
-            schema: DrSyntaxInputSchema.omit({ workspaceId: true, psyche: true }),
-            agentName: 'dr-syntax',
-            agentFunc: (toolInput) => drSyntaxCritique({ ...toolInput, workspaceId, psyche }),
         }),
         
         createAgentTool({
@@ -362,14 +348,6 @@ export async function getTools(context: AgentContext): Promise<Tool[]> {
             schema: PamScriptInputSchema.omit({ workspaceId: true }),
             agentName: 'pam-poovey',
             agentFunc: (toolInput) => generatePamRant({ ...toolInput, workspaceId }),
-        }),
-
-        createAgentTool({
-            name: 'getStonksAdvice',
-            description: 'Gets unhinged, bullish, and financially irresponsible advice for a stock ticker. This is not financial advice.',
-            schema: StonksBotInputSchema.omit({ workspaceId: true, userId: true }),
-            agentName: 'stonks',
-            agentFunc: (toolInput) => getStonksAdvice({ ...toolInput, workspaceId, userId }),
         }),
 
         createAgentTool({

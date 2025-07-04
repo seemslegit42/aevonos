@@ -32,6 +32,8 @@ import { consultInventoryDaemon } from '@/ai/agents/inventory-daemon';
 import { executeBurnBridgeProtocol } from '@/ai/agents/burn-bridge-agent';
 import { consultVaultDaemon } from './vault-daemon';
 import { consultCrmAgent } from './crm-agent';
+import { consultDrSyntax } from './dr-syntax-agent';
+import { consultStonksBot } from './stonks-bot-agent';
 
 
 import {
@@ -171,13 +173,15 @@ const router = async (state: AgentState) => {
     }
     
     const routingSchema = z.object({
-        route: z.enum(["dispatcher", "reasoner", "inventory_daemon", "burn_bridge_protocol", "vault_daemon", "crm_agent"])
+        route: z.enum(["dispatcher", "reasoner", "inventory_daemon", "burn_bridge_protocol", "vault_daemon", "crm_agent", "dr_syntax", "stonks_bot"])
             .describe(`Choose 'dispatcher' for simple app launches, greetings, or direct commands.
 Choose 'reasoner' for complex requests involving analysis or multi-step tool use.
 Choose 'inventory_daemon' for any request about stock levels, product inventory, or purchase orders.
 Choose 'burn_bridge_protocol' for explicit requests to "burn the bridge" or conduct a full-spectrum investigation on a person.
 Choose 'vault_daemon' for any request about finances, revenue, profit, spending, or where money is being wasted.
-Choose 'crm_agent' for any request about contacts (creating, listing, updating, deleting).`)
+Choose 'crm_agent' for any request about contacts (creating, listing, updating, deleting).
+Choose 'dr_syntax' for any request involving critique, review, or feedback on text, code, or prompts.
+Choose 'stonks_bot' for any request about stock prices or financial "advice".`)
     });
     
     const routingModel = langchainGroqFast.withStructuredOutput(routingSchema);
@@ -337,6 +341,66 @@ const callCrmAgent = async (state: AgentState): Promise<Partial<AgentState>> => 
     return { messages: [response] };
 };
 
+
+const callDrSyntax = async (state: AgentState): Promise<Partial<AgentState>> => {
+    console.log('[BEEP] Delegating to Dr. Syntax Daemon.');
+    const { messages, workspaceId, psyche } = state;
+    const lastMessage = messages[messages.length - 1];
+
+    const daemonResponse = await consultDrSyntax({ 
+        query: lastMessage.content as string, 
+        workspaceId,
+        psyche,
+    });
+
+    const finalAnswerToolCall = {
+        name: 'final_answer',
+        args: {
+            responseText: `Dr. Syntax has delivered his verdict.`,
+            appsToLaunch: [{ type: 'dr-syntax', title: 'Critique Received', contentProps: daemonResponse.report }],
+            agentReports: [daemonResponse],
+            suggestedCommands: ["critique another prompt", "make it better"],
+        },
+        id: 'tool_call_dr_syntax_final'
+    };
+    
+    const response = new AIMessage({
+        content: "Dr. Syntax has responded.",
+        tool_calls: [finalAnswerToolCall],
+    });
+
+    return { messages: [response] };
+};
+
+const callStonksBot = async (state: AgentState): Promise<Partial<AgentState>> => {
+    console.log('[BEEP] Delegating to Stonks Bot Daemon.');
+    const { messages, workspaceId, userId } = state;
+    const lastMessage = messages[messages.length - 1];
+
+    const daemonResponse = await consultStonksBot({ 
+        query: lastMessage.content as string, 
+        workspaceId,
+        userId,
+    });
+
+    const finalAnswerToolCall = {
+        name: 'final_answer',
+        args: {
+            responseText: `Stonks Bot 9000 has spoken. To the moon!`,
+            appsToLaunch: [{ type: 'stonks-bot', title: `Prophecy for ${daemonResponse.report.ticker}`, contentProps: daemonResponse.report }],
+            agentReports: [daemonResponse],
+            suggestedCommands: ["check another stock", "how is TSLA doing?"],
+        },
+        id: 'tool_call_stonks_bot_final'
+    };
+    
+    const response = new AIMessage({
+        content: "Stonks Bot has delivered its prophecy.",
+        tool_calls: [finalAnswerToolCall],
+    });
+
+    return { messages: [response] };
+};
 
 const handleThreat = async (state: AgentState) => {
     const { aegisReport } = state;
@@ -505,6 +569,8 @@ workflow.addNode('inventory_daemon_node', callInventoryDaemon);
 workflow.addNode('burn_bridge_protocol_node', callBurnBridgeProtocol);
 workflow.addNode('vault_daemon_node', callVaultDaemon);
 workflow.addNode('crm_agent_node', callCrmAgent);
+workflow.addNode('dr_syntax_node', callDrSyntax);
+workflow.addNode('stonks_bot_node', callStonksBot);
 workflow.addNode('handle_threat', handleThreat);
 workflow.addNode('warn_and_continue', warnAndContinue);
 workflow.addNode('tools', executeTools); 
@@ -528,6 +594,8 @@ workflow.addConditionalEdges('router', (state: AgentState) => router(state), {
     burn_bridge_protocol: 'burn_bridge_protocol_node',
     vault_daemon: 'vault_daemon_node',
     crm_agent: 'crm_agent_node',
+    dr_syntax: 'dr_syntax_node',
+    stonks_bot: 'stonks_bot_node',
 });
 
 workflow.addConditionalEdges('agent_dispatcher', shouldContinue, {
@@ -551,6 +619,14 @@ workflow.addConditionalEdges('vault_daemon_node', shouldContinue, {
   end: END,
 });
 workflow.addConditionalEdges('crm_agent_node', shouldContinue, {
+  tools: 'tools',
+  end: END,
+});
+workflow.addConditionalEdges('dr_syntax_node', shouldContinue, {
+  tools: 'tools',
+  end: END,
+});
+workflow.addConditionalEdges('stonks_bot_node', shouldContinue, {
   tools: 'tools',
   end: END,
 });
