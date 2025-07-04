@@ -46,7 +46,7 @@ const processPatricktActionFlow = ai.defineFlow(
                     description: input.eventDescription || 'Another day, another drama.',
                     martyrPoints: points,
                 },
-                confirmationMessage: `Logged. You've earned ${points} Martyr Points. You deserve a medal.`
+                confirmationMessage: `Logged. You've earned ${points} Martyr Points. You're a saint.`
             };
 
         case 'ANALYZE_DRAMA':

@@ -75,11 +75,14 @@ const generatePamAudioFlow = ai.defineFlow(
       console.error('TTS media generation failed, no media returned.');
       return { audioDataUri: '' };
     }
+
     const audioBuffer = Buffer.from(
       media.url.substring(media.url.indexOf(',') + 1),
       'base64'
     );
+    
     const wavData = await toWav(audioBuffer);
+
     return {
       audioDataUri: 'data:audio/wav;base64,' + wavData,
     };
