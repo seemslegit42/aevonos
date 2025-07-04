@@ -13,7 +13,7 @@ import { InsufficientCreditsError } from '@/lib/errors';
 import { CreateManualTransactionInputSchema, TransmuteCreditsInputSchema } from '@/ai/tools/ledger-schemas';
 import { differenceInMinutes } from 'date-fns';
 import { artifactManifests } from '@/config/artifacts';
-import CryptoJS from 'crypto-js';
+import { createHmac } from 'crypto';
 
 const CreateTransactionInputSchema = z.object({
   workspaceId: z.string(),
@@ -69,7 +69,9 @@ async function createTransaction(input: CreateTransactionInput) {
                 timestamp: new Date().toISOString(),
                 userId, instrumentId
             };
-            const signature = CryptoJS.HmacSHA256(JSON.stringify(transactionDataForSigning), signatureSecret).toString();
+            const signature = createHmac('sha256', signatureSecret)
+                .update(JSON.stringify(transactionDataForSigning))
+                .digest('hex');
 
             const transaction = await tx.transaction.create({
                 data: {
@@ -165,7 +167,9 @@ export async function processMicroAppPurchase(
         description,
         timestamp: new Date().toISOString()
     };
-    const signature = CryptoJS.HmacSHA256(JSON.stringify(transactionDataForSigning), signatureSecret).toString();
+    const signature = createHmac('sha256', signatureSecret)
+        .update(JSON.stringify(transactionDataForSigning))
+        .digest('hex');
 
     // 3. Create the transaction log
     await tx.transaction.create({
@@ -358,7 +362,9 @@ export async function transmuteCredits(
             description, instrumentId: 'PROXY_AGENT',
             timestamp: new Date().toISOString()
       };
-      const signature = CryptoJS.HmacSHA256(JSON.stringify(transactionDataForSigning), signatureSecret).toString();
+      const signature = createHmac('sha256', signatureSecret)
+        .update(JSON.stringify(transactionDataForSigning))
+        .digest('hex');
       
       // In a real system, the external payment would happen here.
       // This is a critical step that requires robust error handling and potentially a transactional outbox pattern.

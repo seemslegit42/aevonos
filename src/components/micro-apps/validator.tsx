@@ -2,7 +2,6 @@
 'use client';
 
 import React, { useState, useRef, DragEvent } from 'react';
-import CryptoJS from 'crypto-js';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -12,6 +11,14 @@ import { cn } from '@/lib/utils';
 import { Tooltip, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 
 type VerificationStatus = 'idle' | 'success' | 'error';
+
+// Helper function for SHA256 hashing using Web Crypto API
+async function calculateSha256(buffer: ArrayBuffer): Promise<string> {
+    const hashBuffer = await crypto.subtle.digest('SHA-256', buffer);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    return hashHex;
+}
 
 export default function Validator() {
   const [file, setFile] = useState<File | null>(null);
@@ -64,11 +71,10 @@ export default function Validator() {
     setResultStatus('idle');
 
     const reader = new FileReader();
-    reader.onload = (e) => {
+    reader.onload = async (e) => {
       try {
         const arrayBuffer = e.target?.result as ArrayBuffer;
-        const wordArray = CryptoJS.lib.WordArray.create(arrayBuffer);
-        const calculatedHash = CryptoJS.SHA256(wordArray).toString(CryptoJS.enc.Hex);
+        const calculatedHash = await calculateSha256(arrayBuffer);
 
         if (calculatedHash === inputHash.toLowerCase().trim()) {
           setResultStatus('success');

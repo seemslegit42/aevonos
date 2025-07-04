@@ -12,7 +12,7 @@ import { PLAN_LIMITS } from '@/config/billing';
 import { InsufficientCreditsError } from '@/lib/errors';
 import type { BillingUsage, RequestCreditTopUpInput, RequestCreditTopUpOutput } from '@/ai/tools/billing-schemas';
 import { z } from 'zod';
-import CryptoJS from 'crypto-js';
+import { createHmac } from 'crypto';
 
 export const ActionTypeSchema = z.enum([
     'SIMPLE_LLM',
@@ -145,7 +145,9 @@ export async function authorizeAndDebitAgentActions(input: AuthorizeAndDebitInpu
                 description: `Agent Action: ${actionType} (x${costMultiplier || 1})`,
                 timestamp: new Date().toISOString()
             };
-            const signature = CryptoJS.HmacSHA256(JSON.stringify(transactionDataForSigning), signatureSecret).toString();
+            const signature = createHmac('sha256', signatureSecret)
+                .update(JSON.stringify(transactionDataForSigning))
+                .digest('hex');
 
             await tx.transaction.create({
                 data: {
@@ -263,7 +265,9 @@ export async function requestCreditTopUpInDb(input: RequestCreditTopUpInput, use
         description,
         timestamp: new Date().toISOString()
     };
-    const signature = CryptoJS.HmacSHA256(JSON.stringify(transactionDataForSigning), signatureSecret).toString();
+    const signature = createHmac('sha256', signatureSecret)
+        .update(JSON.stringify(transactionDataForSigning))
+        .digest('hex');
 
 
     await prisma.transaction.create({

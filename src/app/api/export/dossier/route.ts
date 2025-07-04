@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { generateDossier } from '@/ai/agents/dossier-agent';
 import { DossierInputSchema } from '@/ai/agents/dossier-schemas';
 import { pdf } from 'md-to-pdf';
-import CryptoJS from 'crypto-js';
+import { createCipheriv, scryptSync, randomBytes } from 'crypto';
 import { getAuthenticatedUser } from '@/lib/firebase/admin';
 
 const ExportRequestSchema = z.object({
@@ -13,6 +13,9 @@ const ExportRequestSchema = z.object({
   password: z.string().optional(),
   dossierInput: DossierInputSchema.omit({ workspaceId: true, userId: true }),
 });
+
+const ALGORITHM = 'aes-256-cbc';
+const SALT = 'aevon-salt-is-not-for-eating'; // Should be unique and stored securely
 
 
 export async function POST(request: NextRequest) {
@@ -32,8 +35,8 @@ export async function POST(request: NextRequest) {
         
         const { format, encrypt, password, dossierInput } = validation.data;
 
-        if (encrypt && !password) {
-            return NextResponse.json({ error: 'Password is required for encryption.' }, { status: 400 });
+        if (encrypt && (!password || password.length < 8)) {
+            return NextResponse.json({ error: 'A password of at least 8 characters is required for encryption.' }, { status: 400 });
         }
         
         const fullDossierInput = {
@@ -44,14 +47,24 @@ export async function POST(request: NextRequest) {
         
         const { markdownContent, fileName } = await generateDossier(fullDossierInput);
 
+        const encryptData = (data: string | Buffer): Buffer => {
+            const key = scryptSync(password!, SALT, 32);
+            const iv = randomBytes(16);
+            const cipher = createCipheriv(ALGORITHM, key, iv);
+            const encryptedBuffer = Buffer.concat([cipher.update(data), cipher.final()]);
+            // Prepend IV for decryption
+            return Buffer.concat([iv, encryptedBuffer]);
+        };
+
+
         if (format === 'json') {
-            let content: string | CryptoJS.lib.CipherParams = JSON.stringify({
+            const jsonData = JSON.stringify({
                 ...dossierInput,
                 markdownContent,
             }, null, 2);
-            if (encrypt) {
-                content = CryptoJS.AES.encrypt(content, password!).toString();
-            }
+            
+            const content = encrypt ? encryptData(jsonData) : Buffer.from(jsonData);
+            
             return new NextResponse(content, {
                 headers: {
                     'Content-Type': 'application/json',
@@ -75,8 +88,7 @@ export async function POST(request: NextRequest) {
         let fileBuffer = pdfFile.content;
 
         if (encrypt) {
-            const encrypted = CryptoJS.AES.encrypt(fileBuffer.toString('base64'), password!).toString();
-            fileBuffer = Buffer.from(encrypted);
+            fileBuffer = encryptData(fileBuffer);
         }
 
         return new NextResponse(fileBuffer, {
