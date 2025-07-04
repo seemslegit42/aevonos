@@ -15,7 +15,9 @@
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:report": "playwright show-report",
-    "test:unit": "jest"
+    "test:unit": "jest",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build"
   },
   "prisma": {
     "schema": "./prisma/schema.prisma",
@@ -91,6 +93,14 @@
     "@opentelemetry/exporter-jaeger": "1.25.1",
     "@opentelemetry/sdk-node": "0.52.1",
     "@playwright/test": "1.45.3",
+    "@storybook/addon-essentials": "^8.2.6",
+    "@storybook/addon-interactions": "^8.2.6",
+    "@storybook/addon-links": "^8.2.6",
+    "@storybook/addon-onboarding": "^8.2.6",
+    "@storybook/blocks": "^8.2.6",
+    "@storybook/nextjs": "^8.2.6",
+    "@storybook/react": "^8.2.6",
+    "@storybook/test": "^8.2.6",
     "@types/jest": "^29.5.12",
     "@types/jsonwebtoken": "^9.0.6",
     "@types/node": "20.12.12",
@@ -106,6 +116,7 @@
     "jest-environment-jsdom": "^29.7.0",
     "postcss": "8.4.38",
     "prisma": "^5.16.2",
+    "storybook": "^8.2.6",
     "tailwindcss": "3.4.1",
     "ts-jest": "^29.1.2",
     "typescript": "5.4.5"
