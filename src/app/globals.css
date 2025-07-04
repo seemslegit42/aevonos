@@ -181,6 +181,10 @@
   .animate-screen-shake {
     animation: screen-shake 0.5s;
   }
+
+  .dark.theme-weeping-glass .react-resizable {
+    animation: weeping-glass 8s ease-in-out infinite;
+  }
 }
 
 @keyframes crystal-pulse {
@@ -215,4 +219,15 @@
     80% { transform: translate(-1px, -1px) rotate(0.5deg); }
     90% { transform: translate(1px, 2px) rotate(0deg); }
     100% { transform: translate(1px, -2px) rotate(-0.5deg); }
+}
+
+@keyframes weeping-glass {
+    0%, 100% {
+        border-radius: var(--radius);
+        transform: translateY(0) scale(1);
+    }
+    50% {
+        border-radius: 40% 60% 70% 30% / 30% 50% 50% 70%;
+        transform: translateY(2px) scale(0.98);
+    }
 }

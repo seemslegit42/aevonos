@@ -203,6 +203,27 @@ const noctuaGazeRarityTable: OutcomeTier[] = [
     },
 ];
 
+const weepingGlassRarityTable: OutcomeTier[] = [
+    {
+        tier: 'COMMON', // Loss
+        baseWeight: 2000, // 20% chance of failure
+        boons: [{ type: 'credits', value: 0, weight: 100 }],
+        narrativeTriggers: ["The vision wavers and fades.", "The glass remains solid."],
+    },
+    {
+        tier: 'RARE', // Win
+        baseWeight: 8000, // 80% chance of success
+        boons: [{ type: 'system_effect', value: 'WEEPING_GLASS', weight: 100 }],
+        narrativeTriggers: ["The hard edges of reality soften.", "Your OS begins to flow like water."],
+    },
+    {
+        tier: 'DIVINE', // Pity Boon
+        baseWeight: 1,
+        boons: [{ type: 'system_effect', value: 'WEEPING_GLASS', weight: 100 }],
+        narrativeTriggers: ["The artifact takes pity on your persistence."],
+    },
+];
+
 
 export const follyInstrumentsConfig: Record<string, FollyInstrumentConfig> = {
     'SISYPHUSS_ASCENT': {
@@ -225,4 +246,8 @@ export const follyInstrumentsConfig: Record<string, FollyInstrumentConfig> = {
         id: 'NOCTUAS_GAZE',
         rarityTable: noctuaGazeRarityTable,
     },
+    'WEEPING_GLASS': {
+        id: 'WEEPING_GLASS',
+        rarityTable: weepingGlassRarityTable,
+    }
 };
