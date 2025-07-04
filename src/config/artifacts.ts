@@ -184,6 +184,7 @@ export const artifactManifests: ArtifactManifest[] = [
     imageHint: 'fingerprint document hash',
     defaultSize: { width: 400, height: 480 },
     permissionsRequired: [],
+    tags: ['core', 'utility', 'security'],
   },
   {
     id: 'oracle-of-delphi-valley',
