@@ -1,3 +1,4 @@
+
 import { PrismaClient, AgentStatus, SecurityRiskLevel, TransactionType, PlanTier, UserRole, UserPsyche, Prisma, ChaosCardClass, PurchaseOrderStatus } from '@prisma/client'
 import { artifactManifests } from '../src/config/artifacts';
 import prisma from '../src/lib/prisma';
@@ -133,6 +134,7 @@ async function main() {
     data: defaultEdicts.map((description) => ({
       workspaceId: newWorkspace.id,
       description: description,
+      isActive: true,
     })),
   });
   console.log('Seeded default security edicts.');
