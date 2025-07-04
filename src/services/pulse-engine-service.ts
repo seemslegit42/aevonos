@@ -244,5 +244,3 @@ export async function recordInteraction(userId: string, type: 'success' | 'failu
         await cache.set(PULSE_PROFILE_CACHE_KEY(userId), updatedProfile, 'EX', PULSE_PROFILE_CACHE_TTL_SECONDS);
     }
 }
-
-    

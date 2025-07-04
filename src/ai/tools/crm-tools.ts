@@ -72,12 +72,12 @@ export async function listContactsFromDb(workspaceId: string, userId: string): P
     await authorizeAndDebitAgentActions({ workspaceId, userId, actionType: 'TOOL_USE' });
     
     const cacheKey = CONTACTS_CACHE_KEY(workspaceId);
+    const cachedContacts = await cache.get(cacheKey);
+    if (cachedContacts && Array.isArray(cachedContacts)) {
+        return cachedContacts as Contact[];
+    }
+    
     try {
-        const cachedContacts = await cache.get(cacheKey);
-        if (cachedContacts && Array.isArray(cachedContacts)) {
-            return cachedContacts as Contact[];
-        }
-
         const contacts = await prisma.contact.findMany({
             where: {
                 workspaceId,

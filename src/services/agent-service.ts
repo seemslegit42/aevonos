@@ -14,13 +14,9 @@ const AGENTS_CACHE_TTL_SECONDS = 60 * 5; // 5 minutes
  */
 export async function getAgentsForWorkspace(workspaceId: string): Promise<Agent[]> {
     const cacheKey = AGENTS_CACHE_KEY(workspaceId);
-    try {
-        const cachedAgents = await cache.get(cacheKey);
-        if (cachedAgents && Array.isArray(cachedAgents)) {
-            return cachedAgents as Agent[];
-        }
-    } catch (e) {
-        console.error('[Agent Service] Cache GET failed:', e);
+    const cachedAgents = await cache.get(cacheKey);
+    if (cachedAgents && Array.isArray(cachedAgents)) {
+        return cachedAgents as Agent[];
     }
 
     const agents = await prisma.agent.findMany({
@@ -28,11 +24,7 @@ export async function getAgentsForWorkspace(workspaceId: string): Promise<Agent[
         orderBy: { name: 'asc' },
     });
     
-    try {
-        await cache.set(cacheKey, agents, 'EX', AGENTS_CACHE_TTL_SECONDS);
-    } catch (e) {
-        console.error('[Agent Service] Cache SET failed:', e);
-    }
+    await cache.set(cacheKey, agents, 'EX', AGENTS_CACHE_TTL_SECONDS);
 
     return agents;
 }
