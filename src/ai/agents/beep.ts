@@ -26,7 +26,7 @@ import type { RunnableConfig } from "@langchain/core/runnables";
 
 import { langchainGroqFast, langchainGroqComplex } from '@/ai/genkit';
 import { aegisAnomalyScan } from '@/ai/agents/aegis';
-import { getSpecialistTools, getReasonerTools } from '@/ai/agents/tool-registry';
+import { getTools as getReasonerTools, getSpecialistTools, getSpecialistAgentDefinitions, specialistAgentMap } from '@/ai/agents/tool-registry';
 import { AegisAnomalyScanOutputSchema, type AegisAnomalyScanOutput, type PulseProfileInput } from './aegis-schemas';
 
 import {
@@ -34,6 +34,7 @@ import {
     UserCommandOutputSchema,
     type UserCommandOutput,
     AgentReportSchema,
+    RouterSchema,
 } from './beep-schemas';
 import {
     getConversationHistory,
@@ -105,33 +106,41 @@ const callAegis = async (state: AgentState): Promise<Partial<AgentState>> => {
 
 const planner = async (state: AgentState): Promise<Partial<AgentState>> => {
     const { messages, ...context } = state;
-    const specialistTools = await getSpecialistTools(context);
-    const modelWithSpecialistTools = langchainGroqFast.bind({
-        tools: specialistTools.map(tool => ({
-            type: 'function',
-            function: {
-                name: tool.name,
-                description: tool.description,
-                parameters: zodToJsonSchema(tool.schema),
-            },
-        })),
-        tool_choice: "auto",
-    });
-    
-    const planningPrompt = `You are the BEEP router. Your job is to analyze the user's command and call the appropriate specialist agent tools to fulfill the request. You can call multiple tools in parallel. If no specialist tool is relevant (e.g., for a simple greeting or a request to launch an app like 'terminal'), do not call any tools.
+    const specialistAgentDefinitions = getSpecialistAgentDefinitions();
 
-    Conversation History:
-    ${messages.map(m => `${m._getType()}: ${m.content}`).join('\n')}
-    `;
+    const routingModel = langchainGroqFast.withStructuredOutput(RouterSchema);
     
-    const response = await modelWithSpecialistTools.invoke(planningPrompt);
+    const planningPrompt = `You are the BEEP router, a high-speed, low-latency AI task dispatcher. Your job is to analyze the user's command and determine which specialist agents, if any, are required to fulfill the request.
+
+User Command:
+"""
+${messages.find(m => m instanceof HumanMessage)?.content}
+"""
+
+Available Specialist Agents:
+${specialistAgentDefinitions.map(def => `- **${def.name}**: ${def.description}`).join('\n')}
+
+Based on the user's command, return an array of all the specialist agent tasks that must be executed. You can and should include multiple tasks if the command requires it. If no specialist is needed (e.g., for a simple greeting, a request to launch an app like 'terminal', or a command you can handle yourself), return an empty array.
+`;
     
-    if (!response.tool_calls || response.tool_calls.length === 0) {
-        console.log('[BEEP Planner] No specialist tools required. Routing to main reasoner.');
-    } else {
-        console.log(`[BEEP Planner] Planning to call tools:`, response.tool_calls.map(tc => tc.name));
+    const toolCalls = await routingModel.invoke(planningPrompt);
+
+    if (!toolCalls || toolCalls.length === 0) {
+      console.log('[BEEP Planner] No specialist tools required. Routing to main reasoner.');
+      return { messages: [new AIMessage({ content: "" })] }; // Empty AIMessage to signify no tool calls
     }
     
+    console.log(`[BEEP Planner] Planning to call tools:`, toolCalls.map(tc => tc.route));
+    
+    const response = new AIMessage({
+        content: "",
+        tool_calls: toolCalls.map((tc, i) => ({
+            name: tc.route,
+            args: tc.params || {},
+            id: `tool_call_specialist_${i}`
+        }))
+    });
+
     return { messages: [response] };
 }
 
@@ -145,11 +154,8 @@ const specialistToolNode = async (state: AgentState): Promise<Partial<AgentState
 
     console.log(`[BEEP Specialist Executor] Executing specialist tools:`, lastMessage.tool_calls.map(tc => tc.name));
     
-    const specialistTools = await getSpecialistTools(context);
-    const toolMap = new Map(specialistTools.map(tool => [tool.name, tool]));
-    
     const toolPromises = lastMessage.tool_calls.map(async (toolCall) => {
-        const toolToCall = toolMap.get(toolCall.name);
+        const toolToCall = specialistAgentMap[toolCall.name];
         if (!toolToCall) {
             return new ToolMessage({
                 content: `Error: Specialist agent '${toolCall.name}' is not a valid or available tool.`,
@@ -158,7 +164,7 @@ const specialistToolNode = async (state: AgentState): Promise<Partial<AgentState
             });
         }
         try {
-            const observation = await toolToCall.invoke(toolCall.args);
+            const observation = await toolToCall(toolCall.args, context);
             return new ToolMessage({
                 content: JSON.stringify(observation),
                 tool_call_id: toolCall.id,
@@ -182,6 +188,7 @@ const specialistToolNode = async (state: AgentState): Promise<Partial<AgentState
             continue; // Skip errors or non-string content
         }
         try {
+            // The content is already the agent output, no need to re-parse.
             const parsedContent = JSON.parse(toolMessage.content);
             const report = AgentReportSchema.parse(parsedContent);
             agentReports.push(report);
@@ -249,7 +256,6 @@ const warnAndContinue = (state: AgentState) => {
     return { messages: [warningMessage] };
 }
 
-
 const routeAfterAegis = (state: AgentState) => {
     const riskLevel = state.aegisReport?.riskLevel;
     if (riskLevel === 'high' || riskLevel === 'critical') {
@@ -270,8 +276,8 @@ const executeTools = async (state: AgentState): Promise<Partial<AgentState>> => 
         return {};
     }
 
-    const tools = await getReasonerTools(context);
-    const toolNode = new ToolNode(tools);
+    const reasonerTools = await getReasonerTools(context);
+    const toolNode = new ToolNode(reasonerTools);
     
     let toolNodeResult: Partial<AgentState>;
     try {
@@ -307,13 +313,45 @@ const executeTools = async (state: AgentState): Promise<Partial<AgentState>> => 
     };
 };
 
+const routeAfterTools = (state: AgentState): "end" | "continue" | "handle_error" => {
+    const { messages } = state;
+    const lastMessage = messages[messages.length - 1];
+    
+    if (lastMessage instanceof ToolMessage && lastMessage.content.startsWith("Error:")) {
+        return 'handle_error';
+    }
+
+    if (lastMessage instanceof AIMessage && lastMessage.tool_calls?.some(tc => tc.name === 'final_answer')) {
+        return 'end';
+    }
+    return 'continue';
+};
+
+const handleErrorNode = async (state: AgentState) => {
+    const { messages } = state;
+    const lastMessage = messages[messages.length - 1];
+    
+    const response = new AIMessage({
+        content: "",
+        tool_calls: [{
+            name: 'final_answer',
+            args: {
+                responseText: `My apologies, an agent reported an error: ${lastMessage.content}`,
+                appsToLaunch: [],
+                suggestedCommands: ['Try again later', 'Contact support'],
+            },
+            id: 'tool_call_final_answer_error'
+        }]
+    });
+
+    return { messages: [response] };
+};
+
 const shouldContinue = (state: AgentState) => {
   const { messages } = state;
   const lastMessage = messages[messages.length - 1];
   if (
-    'tool_calls' in lastMessage &&
-    lastMessage.tool_calls &&
-    lastMessage.tool_calls.length > 0
+    lastMessage instanceof AIMessage && lastMessage.tool_calls && lastMessage.tool_calls.length > 0
   ) {
     if (lastMessage.tool_calls.some(tc => tc.name === 'final_answer')) {
         return 'end';
@@ -351,7 +389,8 @@ workflow.addNode('specialist_tool_node', specialistToolNode);
 workflow.addNode('agent_reasoner', callReasonerModel);
 workflow.addNode('handle_threat', handleThreat);
 workflow.addNode('warn_and_continue', warnAndContinue);
-workflow.addNode('tools', executeTools); 
+workflow.addNode('tools', executeTools);
+workflow.addNode('handle_error', handleErrorNode);
 
 workflow.setEntryPoint('aegis');
 
@@ -375,7 +414,13 @@ workflow.addConditionalEdges('agent_reasoner', shouldContinue, {
     end: END,
 });
 
-workflow.addEdge('tools', 'agent_reasoner');
+workflow.addConditionalEdges('tools', routeAfterTools, {
+    continue: 'agent_reasoner',
+    handle_error: 'handle_error',
+    end: END,
+});
+
+workflow.addEdge('handle_error', END);
 
 const app = workflow.compile();
 
@@ -471,7 +516,7 @@ Your primary directive in an error state is to provide clarity and a path forwar
 Your purpose is to be the invisible, silent orchestrator of true automation. Now, conduct.`;
 
 
-    const history = await getConversationHistory(input.userId, input.workspaceId);
+    const history = await getConversationHistory(input.userId);
 
     const result = await app.invoke({
       messages: [new SystemMessage(systemInstructions), ...history, new HumanMessage(input.userCommand)],
@@ -507,7 +552,7 @@ Your purpose is to be the invisible, silent orchestrator of true automation. Now
     });
 
     const finalMessages = result.messages;
-    await saveConversationHistory(input.userId, input.workspaceId, finalMessages);
+    await saveConversationHistory(input.userId, finalMessages);
     
     const lastMessage = result.messages.findLast(m => m._getType() === 'ai' && m.tool_calls && m.tool_calls.some(tc => tc.name === 'final_answer')) as AIMessage | undefined;
 

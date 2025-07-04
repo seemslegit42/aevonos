@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview The Profit Pulse Engine (Codename: KLEPSYDRA) Configuration.
@@ -31,6 +32,7 @@ async function getPulseProfile(userId: string, tx?: PrismaTransactionClient): Pr
   if (!tx) {
     const cachedProfile = await cache.get(cacheKey);
     if (cachedProfile) {
+        // The PulseProfile model has no Decimal types, so it can be parsed directly.
         return cachedProfile as PulseProfile;
     }
   }

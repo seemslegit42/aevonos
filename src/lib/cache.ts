@@ -62,11 +62,12 @@ const safeSet = async (key: string, value: any, options?: any, ttl?: number) => 
 }
 
 
-// We name it 'cache' to keep the interface abstract.
+// We name it 'cache' to keep the interface abstract, but also export the raw client for advanced use.
 const cache = {
     get: safeGet,
     set: safeSet,
     del: (...args: string[]) => redis.del(...args),
+    redis, // Exporting the raw client for advanced list/set operations
 };
 
 export default cache;
