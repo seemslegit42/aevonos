@@ -2,8 +2,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { getAuthenticatedUser } from '@/lib/firebase/admin';
-import prisma from '@/lib/prisma';
 import { UserRole } from '@prisma/client';
+import { getThreatFeeds, updateThreatFeeds } from '@/services/security-service';
 
 const ThreatFeedsSchema = z.object({
   feeds: z.array(z.string().url({ message: "Each feed must be a valid URL." })),
@@ -16,15 +16,7 @@ export async function GET(request: NextRequest) {
     if (!workspace) {
         return NextResponse.json({ error: 'Workspace not found.' }, { status: 404 });
     }
-    const feeds = await prisma.threatFeed.findMany({
-      where: {
-        workspaceId: workspace.id,
-      },
-      select: {
-        id: true,
-        url: true,
-      },
-    });
+    const feeds = await getThreatFeeds(workspace.id);
     return NextResponse.json(feeds);
   } catch (error) {
     if (error instanceof Error && error.message.includes('Unauthorized')) {
@@ -53,20 +45,7 @@ export async function PUT(request: NextRequest) {
       }, { status: 400 });
     }
 
-    const { feeds } = validation.data;
-    
-    // Use a transaction to ensure atomicity: delete old feeds and create new ones.
-    await prisma.$transaction([
-      prisma.threatFeed.deleteMany({
-        where: { workspaceId: workspace.id },
-      }),
-      prisma.threatFeed.createMany({
-        data: feeds.map((url) => ({
-          url: url,
-          workspaceId: workspace.id,
-        })),
-      }),
-    ]);
+    await updateThreatFeeds(workspace.id, validation.data.feeds);
 
     return NextResponse.json({ message: 'Threat intelligence feeds updated successfully.' });
 
