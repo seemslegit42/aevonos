@@ -4,6 +4,8 @@ import { z } from 'zod';
 import prisma from '@/lib/prisma';
 import { getAuthenticatedUser } from '@/lib/firebase/admin';
 import { AgentStatus, UserRole } from '@prisma/client';
+import { getAgentsForWorkspace } from '@/services/agent-service';
+import cache from '@/lib/cache';
 
 const AgentDeploymentRequestSchema = z.object({
   name: z.string(),
@@ -18,11 +20,8 @@ export async function GET(request: NextRequest) {
      if (!workspace) {
       return NextResponse.json({ error: 'Workspace not found.' }, { status: 404 });
     }
-    const agents = await prisma.agent.findMany({
-        where: {
-            workspaceId: workspace.id,
-        }
-    });
+    // Use the new cached service function
+    const agents = await getAgentsForWorkspace(workspace.id);
 
     return NextResponse.json(agents);
   } catch (error) {
@@ -60,6 +59,9 @@ export async function POST(request: NextRequest) {
             workspaceId: workspace.id,
         }
     });
+    
+    // Invalidate the cache after creating a new agent
+    await cache.del(`agents:${workspace.id}`);
 
     return NextResponse.json(newAgent, { status: 201 });
 

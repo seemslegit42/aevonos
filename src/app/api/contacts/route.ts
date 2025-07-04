@@ -1,8 +1,8 @@
 
 import { NextRequest, NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
 import { z } from 'zod';
 import { getAuthenticatedUser } from '@/lib/firebase/admin';
+import { createContactInDb, listContactsFromDb } from '@/ai/tools/crm-tools';
 
 const ContactCreationRequestSchema = z.object({
   email: z.string().email().optional().nullable(),
@@ -13,18 +13,12 @@ const ContactCreationRequestSchema = z.object({
 
 export async function GET(request: NextRequest) {
   try {
-    const { workspace } = await getAuthenticatedUser();
-     if (!workspace) {
+    const { user, workspace } = await getAuthenticatedUser();
+     if (!user || !workspace) {
       return NextResponse.json({ error: 'Workspace not found.' }, { status: 404 });
     }
-    const contacts = await prisma.contact.findMany({
-      where: {
-        workspaceId: workspace.id,
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-    });
+    // Use the tool function, which is now cached
+    const contacts = await listContactsFromDb(workspace.id, user.id);
     return NextResponse.json(contacts);
   } catch (error) {
     if (error instanceof Error && (error.message.includes('Unauthorized') || error.message.includes('No session cookie'))) {
@@ -37,8 +31,8 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const { workspace } = await getAuthenticatedUser();
-    if (!workspace) {
+    const { user, workspace } = await getAuthenticatedUser();
+    if (!user || !workspace) {
       return NextResponse.json({ error: 'Workspace not found.' }, { status: 404 });
     }
     const body = await request.json();
@@ -47,25 +41,9 @@ export async function POST(request: NextRequest) {
     if (!validation.success) {
       return NextResponse.json({ error: 'Invalid contact data.', issues: validation.error.issues }, { status: 400 });
     }
-
-    if (validation.data.email) {
-      const existingContact = await prisma.contact.findFirst({
-        where: { 
-            email: validation.data.email,
-            workspaceId: workspace.id,
-        },
-      });
-      if (existingContact) {
-        return NextResponse.json({ error: 'Contact with this email already exists in this workspace.' }, { status: 409 });
-      }
-    }
-
-    const newContact = await prisma.contact.create({
-      data: {
-        ...validation.data,
-        workspaceId: workspace.id,
-      },
-    });
+    
+    // Use the tool function for consistency and cache invalidation
+    const newContact = await createContactInDb(validation.data, workspace.id, user.id);
 
     return NextResponse.json(newContact, { status: 201 });
   } catch (error) {

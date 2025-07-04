@@ -4,6 +4,8 @@ import prisma from '@/lib/prisma';
 import { z } from 'zod';
 import { getAuthenticatedUser } from '@/lib/firebase/admin';
 import { AgentStatus, UserRole } from '@prisma/client';
+import { getAgentById } from '@/services/agent-service';
+import cache from '@/lib/cache';
 
 const AgentUpdateSchema = z.object({
   name: z.string().optional(),
@@ -24,9 +26,9 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: 'Workspace not found.' }, { status: 404 });
     }
     const { agentId } = params;
-    const agent = await prisma.agent.findFirst({
-      where: { id: agentId, workspaceId: workspace.id },
-    });
+    
+    // Use the new service function
+    const agent = await getAgentById(agentId, workspace.id);
 
     if (!agent) {
       return NextResponse.json({ error: 'Agent not found.' }, { status: 404 });
@@ -58,9 +60,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     }
 
     // Verify the agent belongs to the user's workspace before updating
-    const existingAgent = await prisma.agent.findFirst({
-        where: { id: agentId, workspaceId: workspace.id }
-    });
+    const existingAgent = await getAgentById(agentId, workspace.id);
     if (!existingAgent) {
         return NextResponse.json({ error: 'Agent not found.' }, { status: 404 });
     }
@@ -69,6 +69,9 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       where: { id: agentId },
       data: validation.data,
     });
+    
+    // Invalidate the cache for the agent list
+    await cache.del(`agents:${workspace.id}`);
 
     return NextResponse.json(updatedAgent);
   } catch (error) {
@@ -93,9 +96,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
         const { agentId } = params;
 
         // Verify the agent belongs to the user's workspace before deleting
-        const existingAgent = await prisma.agent.findFirst({
-            where: { id: agentId, workspaceId: workspace.id }
-        });
+        const existingAgent = await getAgentById(agentId, workspace.id);
         if (!existingAgent) {
             return NextResponse.json({ error: 'Agent not found.' }, { status: 404 });
         }
@@ -103,6 +104,9 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
         await prisma.agent.delete({
             where: { id: agentId },
         });
+        
+        // Invalidate the cache for the agent list
+        await cache.del(`agents:${workspace.id}`);
 
         return new NextResponse(null, { status: 204 });
     } catch (error) {

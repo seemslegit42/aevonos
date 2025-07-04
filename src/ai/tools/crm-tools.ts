@@ -5,6 +5,7 @@
  * This is not a service. This is a collection of tools for agentic use.
  */
 import prisma from '@/lib/prisma';
+import cache from '@/lib/cache';
 import { z } from 'zod';
 import { 
     CreateContactInputSchema,
@@ -20,6 +21,9 @@ import {
 } from './crm-schemas';
 import { authorizeAndDebitAgentActions } from '@/services/billing-service';
 
+const CONTACTS_CACHE_KEY = (workspaceId: string) => `contacts:${workspaceId}`;
+const CONTACTS_CACHE_TTL_SECONDS = 60 * 5; // 5 minutes
+
 
 export async function createContactInDb(input: CreateContactInput, workspaceId: string, userId: string): Promise<Contact> {
     await authorizeAndDebitAgentActions({ workspaceId, userId, actionType: 'TOOL_USE' });
@@ -31,6 +35,8 @@ export async function createContactInDb(input: CreateContactInput, workspaceId: 
           workspaceId,
         },
       });
+      // Invalidate the cache on write operations
+      await cache.del(CONTACTS_CACHE_KEY(workspaceId));
       return contact;
     } catch (error) {
       console.error('[CRM Tool Error] Failed to create contact:', error);
@@ -54,6 +60,7 @@ export async function updateContactInDb(input: UpdateContactInput, workspaceId: 
           where: { id },
           data: dataToUpdate,
         });
+        await cache.del(CONTACTS_CACHE_KEY(workspaceId));
         return contact;
     } catch (error) {
         console.error(`[CRM Tool Error] Failed to update contact with ID ${input.id}:`, error);
@@ -62,9 +69,15 @@ export async function updateContactInDb(input: UpdateContactInput, workspaceId: 
 }
 
 export async function listContactsFromDb(workspaceId: string, userId: string): Promise<Contact[]> {
-    // A read operation also counts as an agent action.
     await authorizeAndDebitAgentActions({ workspaceId, userId, actionType: 'TOOL_USE' });
+    
+    const cacheKey = CONTACTS_CACHE_KEY(workspaceId);
     try {
+        const cachedContacts = await cache.get(cacheKey);
+        if (cachedContacts && Array.isArray(cachedContacts)) {
+            return cachedContacts as Contact[];
+        }
+
         const contacts = await prisma.contact.findMany({
             where: {
                 workspaceId,
@@ -73,6 +86,8 @@ export async function listContactsFromDb(workspaceId: string, userId: string): P
                 createdAt: 'desc',
             }
         });
+
+        await cache.set(cacheKey, contacts, 'EX', CONTACTS_CACHE_TTL_SECONDS);
         return contacts;
       } catch (error) {
         console.error('[CRM Tool Error] Failed to list contacts:', error);
@@ -96,6 +111,7 @@ export async function deleteContactInDb(input: DeleteContactInput, workspaceId: 
                 id: input.id,
             }
         });
+        await cache.del(CONTACTS_CACHE_KEY(workspaceId));
         return { id: input.id, success: true };
     } catch (error) {
         console.error(`[CRM Tool Error] Failed to delete contact with ID ${input.id}:`, error);
