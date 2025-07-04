@@ -22,8 +22,10 @@ import { createSecurityAlertInDb } from '@/ai/tools/security-tools';
 import { consultDrSyntax, DrSyntaxAgentInputSchema } from './dr-syntax-agent';
 import { consultStonksBot, StonksAgentInputSchema } from './stonks-bot-agent';
 import { consultCrmAgent } from './crm-agent';
-import { generateSolution, WinstonWolfeInputSchema } from './winston-wolfe';
-import { analyzeComms, KifKrokerAnalysisInputSchema } from './kif-kroker';
+import { consultWinstonWolfe } from './winston-wolfe-agent';
+import { WinstonWolfeInputSchema } from './winston-wolfe-schemas';
+import { consultKifKroker } from './kif-kroker-agent';
+import { KifKrokerAnalysisInputSchema } from './kif-kroker-schemas';
 import { createVandelayAlibi, VandelayAlibiInputSchema } from './vandelay';
 import { analyzeCandidate, RolodexAnalysisInputSchema } from './rolodex';
 import { generateBusinessKit, JrocInputSchema } from './jroc';
@@ -137,8 +139,8 @@ export const specialistAgentMap: Record<string, (input: any, context: AgentConte
     crm_agent: (input: any, context: AgentContext) => consultCrmAgent({ ...input, ...context }),
     dr_syntax: (input: any, context: AgentContext) => consultDrSyntax({ ...input, ...context }),
     stonks_bot: (input: any, context: AgentContext) => consultStonksBot({ ...input, ...context }),
-    winston_wolfe: (input: any, context: AgentContext) => generateSolution({ ...input, ...context }),
-    kif_kroker: (input: any, context: AgentContext) => analyzeComms({ ...input, ...context }),
+    winston_wolfe: (input: any, context: AgentContext) => consultWinstonWolfe({ ...input, ...context }),
+    kif_kroker: (input: any, context: AgentContext) => consultKifKroker({ ...input, ...context }),
     vandelay: (input: any, context: AgentContext) => createVandelayAlibi({ ...input, ...context }),
     rolodex: (input: any, context: AgentContext) => analyzeCandidate({ ...input, ...context }),
     jroc: (input: any, context: AgentContext) => generateBusinessKit({ ...input, ...context }),

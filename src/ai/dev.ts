@@ -1,4 +1,5 @@
 
+
 import { config } from 'dotenv';
 config();
 
@@ -19,7 +20,9 @@ import '@/ai/agents/lucille-bluth.ts';
 import '@/ai/agents/lucille-bluth-cache.ts';
 import '@/ai/agents/rolodex.ts';
 import '@/ai/agents/winston-wolfe.ts';
+import '@/ai/agents/winston-wolfe-agent.ts';
 import '@/ai/agents/kif-kroker.ts';
+import '@/ai/agents/kif-kroker-agent.ts';
 import '@/ai/agents/vandelay.ts';
 import '@/ai/agents/vandelay-cache.ts';
 import '@/ai/agents/paper-trail.ts';
