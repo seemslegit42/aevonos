@@ -1,3 +1,4 @@
+
 # The Scribe's Archive: The Sentient Library - Technical Specification
 
 > "Every action leaves an echo. This is where we listen."
@@ -28,4 +29,4 @@ This is not a file explorer. It is an interactive representation of the system's
 
 - **Central Data Layer**: The Archive is the visual front-end for the OS's unified data layer, making an abstract concept tangible and interactive.
 - **Agentic Interaction**: It is a prime example of a Micro-App designed for agent-first interaction. Its primary utility is unlocked through conversation with BEEP, not through direct manipulation.
-- **Architectural Role**: It reinforces the core doctrine of moving away from traditional file/folder structures towards a more intelligent, context-aware data environment. The user doesn't need to know *where* something
+- **Architectural Role**: It reinforces the core doctrine of moving away from traditional file/folder structures towards a more intelligent, context-aware data environment. The user doesn't need to know *where* something is, only *what* it is.

@@ -1,3 +1,4 @@
+
 # Spectre Intelligence Suite: The Infidelity Radar - Technical Specification
 
 > "When suspicion becomes evidence, it gets a cover page."

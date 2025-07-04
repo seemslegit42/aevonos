@@ -1,3 +1,4 @@
+
 # Oracle of Delphi (Valley): The Folly of Venture Capital - Technical Specification
 
 > "Make your tribute to the Oracle. Learn your fate in the market."
