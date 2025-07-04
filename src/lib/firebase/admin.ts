@@ -3,7 +3,7 @@ import admin from 'firebase-admin';
 import { cookies } from 'next/headers';
 import prisma from '@/lib/prisma';
 import type { User as PrismaUser, Workspace as PrismaWorkspace } from '@prisma/client';
-import cache from '@/lib/redis';
+import cache from '@/lib/cache';
 
 const serviceAccountKey = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
 

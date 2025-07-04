@@ -3,14 +3,14 @@
 /**
  * @fileOverview Service for logging and retrieving recent user activity for security analysis.
  */
-import cache from '@/lib/redis';
+import cache from '@/lib/cache';
 
 const ACTIVITY_LOG_KEY_PREFIX = 'activity-log:';
 const MAX_LOG_ENTRIES = 20; // Keep the last 20 actions
 const LOG_EXPIRATION_SECONDS = 60 * 15; // Expire log after 15 minutes of inactivity
 
 /**
- * Logs a user's activity to Redis.
+ * Logs a user's activity to the cache.
  * @param userId The ID of the user performing the action.
  * @param activityDescription A description of the action.
  */
@@ -33,7 +33,7 @@ export async function logUserActivity(userId: string, activityDescription: strin
 }
 
 /**
- * Retrieves a user's recent activity history from Redis.
+ * Retrieves a user's recent activity history from the cache.
  * @param userId The ID of the user.
  * @returns A promise that resolves to an array of activity log strings.
  */

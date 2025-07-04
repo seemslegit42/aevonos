@@ -3,7 +3,7 @@ import { NextResponse, NextRequest } from 'next/server';
 import { z } from 'zod';
 import { getAuthenticatedUser } from '@/lib/firebase/admin';
 import prisma from '@/lib/prisma';
-import redis from '@/lib/redis';
+import cache from '@/lib/cache';
 
 // Schema from api-spec.md for updating a user
 const UserUpdateRequestSchema = z.object({
@@ -53,7 +53,7 @@ export async function PUT(request: NextRequest) {
     });
     
     // Invalidate the cache for this user
-    await redis.del(`user:${sessionUser.id}`);
+    await cache.del(`user:${sessionUser.id}`);
 
     // Explicitly construct the response to match the public User schema.
     const userResponse = {

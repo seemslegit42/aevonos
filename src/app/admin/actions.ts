@@ -2,7 +2,7 @@
 'use server';
 
 import prisma from '@/lib/prisma';
-import cache from '@/lib/redis';
+import cache from '@/lib/cache';
 import { AgentStatus, UserRole } from '@prisma/client';
 import { getAuthenticatedUser } from '@/lib/firebase/admin';
 import { revalidatePath } from 'next/cache';
