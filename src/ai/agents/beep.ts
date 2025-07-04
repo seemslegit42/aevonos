@@ -503,7 +503,7 @@ Your primary directive in an error state is to provide clarity and a path forwar
 Your purpose is to be the invisible, silent orchestrator of true automation. Now, conduct.`;
 
 
-    const history = await getConversationHistory(input.userId);
+    const history = await getConversationHistory(input.userId, input.workspaceId);
 
     const result = await app.invoke({
       messages: [new SystemMessage(systemInstructions), ...history, new HumanMessage(input.userCommand)],
@@ -539,7 +539,7 @@ Your purpose is to be the invisible, silent orchestrator of true automation. Now
     });
 
     const finalMessages = result.messages;
-    await saveConversationHistory(input.userId, finalMessages);
+    await saveConversationHistory(input.userId, input.workspaceId, finalMessages);
     
     const lastMessage = result.messages.findLast(m => m._getType() === 'ai' && m.tool_calls && m.tool_calls.some(tc => tc.name === 'final_answer')) as AIMessage | undefined;
 
