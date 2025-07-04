@@ -9,7 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2, MailCheck } from 'lucide-react';
 import { BeepIcon } from '@/components/icons/BeepIcon';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FlowerOfLifeIcon } from '../icons/FlowerOfLifeIcon';
+import { FlowerOfLifeIcon } from '@/components/icons/FlowerOfLifeIcon';
 
 export default function LoginPage() {
   const { toast } = useToast();
