@@ -101,8 +101,8 @@ export default function ProxyAgent({ id, vendor = 'The Alchemist Bar', amount = 
             case 'ready':
                 return (
                     <>
-                        <h2 className="text-xl font-headline text-primary">Authorize Tribute</h2>
-                        <p className="text-sm text-muted-foreground">To: {vendor}</p>
+                        <h2 className="text-xl font-headline text-primary">Command a Material Manifestation</h2>
+                        <p className="text-sm text-muted-foreground">A tribute to facilitate a real-world transaction with {vendor}.</p>
                         <p className="text-3xl font-bold text-accent">
                             {amount.toFixed(2)} {currency}
                         </p>

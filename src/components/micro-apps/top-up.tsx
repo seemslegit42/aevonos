@@ -51,13 +51,13 @@ export default function TopUp({ workspaceId }: TopUpProps) {
     <div className="p-2 h-full flex flex-col">
         <Card className="bg-background/50 flex-grow">
             <CardHeader className="p-3">
-                <CardTitle className="text-base">Top-Up ΞCredits</CardTitle>
+                <CardTitle className="text-base">Offerings to the Obelisk</CardTitle>
                 <CardDescription className="text-xs">
-                    Send an e-Transfer to <strong className="text-primary">credits@aevonos.com</strong> with your Workspace ID in the memo: <strong className="text-primary font-mono">{workspaceId}</strong>
+                    To acquire Sovereign Command Tokens, make your tribute via e-Transfer to <strong className="text-primary">credits@aevonos.com</strong>. The Workspace ID must be included in the memo: <strong className="text-primary font-mono">{workspaceId}</strong>
                 </CardDescription>
             </CardHeader>
             <CardContent className="p-3 space-y-2">
-                 <Label>Select the credit pack you sent payment for:</Label>
+                 <Label>Select the offering you have made:</Label>
                  <div className="grid grid-cols-2 gap-3">
                     {creditPacks.map(pack => (
                         <Button 
