@@ -16,21 +16,18 @@ const nextConfig = {
             value: 'nosniff',
           },
           {
-            key: 'X-Frame-Options',
-            value: 'SAMEORIGIN',
+            key: 'Referrer-Policy',
+            value: 'strict-origin-when-cross-origin',
           },
-           {
-            key: 'X-XSS-Protection',
-            value: '1; mode=block',
+          {
+            key: 'Permissions-Policy',
+            value: "camera=(), microphone=(), geolocation=(), payment=(), usb=()",
           },
            {
              key: 'Content-Security-Policy',
-             // This policy allows:
-             // - self for all content
-             // - inline styles and scripts (needed for some libraries)
-             // - fonts from Google
-             // - images from self, data URIs, and placehold.co
-             value: "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https://placehold.co; frame-src 'self';",
+             // This policy is a bit strict. It's a good starting point.
+             // 'unsafe-inline' for styles is needed by some UI libraries for dynamic styles.
+             value: "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https://placehold.co; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'; upgrade-insecure-requests;",
            }
         ],
       },
