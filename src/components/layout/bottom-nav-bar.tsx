@@ -13,6 +13,7 @@ import { ArmoryIcon } from '@/components/icons/ArmoryIcon';
 import { AegisThreatScopeIcon } from '../icons/AegisThreatScopeIcon';
 import { BeepIcon } from '../icons/BeepIcon';
 import type { MicroAppType } from '@/store/app-store';
+import { Button } from '../ui/button';
 
 type NavItem = {
     label: string;
@@ -89,9 +90,9 @@ export default function BottomNavBar() {
                 {leftNavItems.map((item) => <NavButton key={item.label} item={item} />)}
 
                 <div className="relative -top-5">
-                     <button onClick={handleBeepFocus} className="group relative w-16 h-16 flex items-center justify-center bg-gradient-to-r from-primary to-roman-aqua rounded-full border-4 border-background shadow-lg transition-transform duration-200 hover:scale-110 active:scale-100 focus:outline-none focus:ring-4 focus:ring-primary/50" aria-label="Summon BEEP">
+                     <Button variant="summon" onClick={handleBeepFocus} className="group relative w-16 h-16 rounded-full border-4 border-background shadow-lg transition-transform duration-200 hover:scale-110 active:scale-100 focus:outline-none focus:ring-4 focus:ring-primary/50" aria-label="Summon BEEP">
                         <BeepIcon className="w-14 h-14 text-primary-foreground group-hover:animate-pulse" />
-                    </button>
+                    </Button>
                 </div>
                 
                 {rightNavItems.map((item) => <NavButton key={item.label} item={item} />)}
