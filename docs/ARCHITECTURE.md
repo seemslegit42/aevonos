@@ -1,147 +1,234 @@
-# I. Core Architectural Principles for 27 Micro-Apps
+# ΛΞVON OS - Architecture Design Document
+Document Version: 1.0
+Date: 2025-07-03
+Status: Canonized
+Author: ARCHIVEX
+Traceability: This document is the direct technical implementation of SRS-ΛΞVON-OS-v1.0.
+1. Introduction
+1.1 Purpose
+This Architecture Design Document (ADD) provides a detailed, low-level design of the ΛΞVON OS V1.0 system. It expands upon the SRS by defining the precise API contracts, database schemas, and component interaction patterns. This document is the primary technical guide for the engineering team.
+1.2 Scope
+The scope covers the detailed design of all backend microservices, the frontend application structure, the complete database schema, and the security mechanisms governing their interaction.
+2. System Architecture
+2.1 Communication Patterns
+The system employs two primary communication patterns:
+Synchronous Request/Response: For most user-initiated actions, services communicate via synchronous RESTful API calls through the central API Gateway. This ensures immediate feedback to the user.
+Asynchronous Event Streaming: For security monitoring and logging, services publish events to a message bus (e.g., Google Cloud Pub/Sub, or a managed Redis stream for V1). The aegis-service is the primary consumer of these events, allowing for decoupled, non-blocking security analysis.
+2.2 API Gateway
+The Next.js backend (acting as Backend-for-Frontend) serves as the API Gateway. It is the single entry point for all client requests. Its responsibilities are:
+Authenticating incoming requests by validating the JWT.
+Routing requests to the appropriate downstream microservice.
+Aggregating responses from multiple services if required.
+3. Detailed Service Designs
+3.1 auth-service
+Responsibilities: User authentication, session management, JWT issuance.
+API Contract (OpenAPI 3.0 Snippet):
+paths:
+  /v1/auth/initiate:
+    post:
+      summary: Initiate a passwordless login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+      responses:
+        '202':
+          description: Acknowledged. Magic link/code sent.
+  /v1/auth/complete:
+    post:
+      summary: Complete login with magic link/code
+      requestBody:
+        # ... schema for token/code
+      responses:
+        '200':
+          description: Login successful, JWT returned.
+          content:
+            application/json:
+              schema:
+                properties:
+                  jwt:
+                    type: string
+Data Ownership: User, AuthToken models.
+3.2 beep-service
+Responsibilities: NLU processing, agentic orchestration, personality matrix loading.
+API Contract (OpenAPI 3.0 Snippet):
+paths:
+  /v1/beep/command:
+    post:
+      summary: Process a natural language command
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              properties:
+                command_text:
+                  type: string
+                context: # "core_os" or "folly_instrument"
+                  type: string
+                canvas_state: # Snapshot of current Micro-App states
+                  type: object
+      responses:
+        '200':
+          description: Command executed, returns workflow result.
+Dependencies: All other services (via LangGraph tool definitions), Genkit/Groq API.
+3.3 obelisk-pay-service
+Responsibilities: Atomic ΞCredit transactions, immutable ledger, Transmutation Tithe enforcement.
+API Contract (OpenAPI 3.0 Snippet):
+paths:
+  /v1/ledger/transact:
+    post:
+      summary: Perform an internal ΞCredit transaction
+      security:
+        - serviceTokenAuth: [] # Service-to-service only
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              properties:
+                from_user_id:
+                  type: string
+                to_user_id:
+                  type: string
+                amount:
+                  type: integer
+                memo:
+                  type: string
+      responses:
+        '201':
+          description: Transaction recorded.
+Data Ownership: Transaction, UserWallet models.
+4. Database Design
+4.1 V1 Prisma Schema
+The following is the definitive V1 schema.
+// datasource db {
+//   provider     = "postgresql"
+//   url          = env("DATABASE_URL")
+//   relationMode = "prisma"
+// }
 
-This number of micro-apps demands a highly modular and scalable approach.
+// generator client {
+//   provider = "prisma-client-js"
+// }
 
-## Microservices Architecture (Backend)
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-**Absolute Must:** Each micro-app (or logical grouping of related functionality within micro-apps) should ideally be its own independent microservice. This is the only way to manage 27 distinct pieces of functionality effectively.
+  sovereigntyClass String @default("INITIATE") // INITIATE, SOVEREIGN, ARCHITECT
 
-**Benefits:**
-- **Independent Deployment:** Deploy changes to one micro-app without affecting others. Crucial for rapid iteration and stability.
-- **Independent Scaling:** Scale individual microservices based on demand. If the "invoicing" micro-app sees a spike, only it needs more resources, not the entire system.
-- **Technology Flexibility:** While you're leaning towards Node.js/TypeScript/Prisma/PostgreSQL, microservices allow for different tech stacks if a specific micro-app benefits from it (e.g., a Python service for complex AI/ML tasks).
-- **Team Autonomy:** Smaller, focused teams can own specific microservices end-to-end.
-- **Fault Isolation:** A bug or failure in one microservice won't bring down the entire DOP/OS.
+  wallet      UserWallet?
+  canvasState CanvasState?
+  psycheState PsycheState?
+  instances   MicroAppInstance[]
+}
 
-## Micro-Frontend Architecture (Frontend)
+model UserWallet {
+  id      String @id @default(cuid())
+  userId  String @unique
+  user    User   @relation(fields: [userId], references: [id])
+  balance BigInt @default(1000) // Starting balance
+}
 
-**Strongly Consider:** Similar to microservices on the backend, break your frontend into independent, self-contained "micro-frontends." Each micro-app's UI can be a separate micro-frontend.
+model CanvasState {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id])
+  layout Json // JSON representation of Micro-App positions and sizes
+}
 
-**Benefits:** Same as microservices – independent deployment, scaling, team autonomy, and even technology flexibility on the client side. This prevents your frontend from becoming a monolithic nightmare.
+model MicroApp {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String
+  developerId String
+  instances   MicroAppInstance[]
+}
 
-**Implementation:** Look into frameworks like single-spa, Module Federation (Webpack 5), or even simpler approaches like iframes for strong isolation (though with potential drawbacks).
+model MicroAppInstance {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+  microAppId String
+  microApp   MicroApp @relation(fields: [microAppId], references: [id])
+  state      Json     // Specific state for this user's instance of the app
+  createdAt  DateTime @default(now())
+}
 
-## API Gateway
+model Transaction {
+  id              String   @id @default(cuid())
+  amount          BigInt
+  memo            String
+  fromUserId      String
+  toUserId        String
+  createdAt       DateTime @default(now())
+  aegisSignature  String   // Signature from Aegis to verify integrity
+}
 
-**Central Nervous System:** You must have an API Gateway (e.g., AWS API Gateway, Azure API Management, Kong, Spring Cloud Gateway) in front of your microservices.
+model PsycheState {
+  id                String   @id @default(cuid())
+  userId            String   @unique
+  user              User     @relation(fields: [userId], references: [id])
+  sreWave           Float    // Sine-Rhythm Engine value (-1.0 to 1.0)
+  lossStreak        Int      @default(0)
+  frustrationLevel  Float    @default(0.0) // Metric monitored by Aegis
+  isThrottled       Boolean  @default(false)
+}
+5. Interaction Diagrams (Sequence)
+5.1 User Login and Canvas Hydration
+sequenceDiagram
+    participant Client
+    participant API Gateway (Next.js)
+    participant auth-service
+    participant canvas-service
+    participant UserDB
 
-**Functions:**
-- **Routing:** Direct incoming requests to the correct microservice.
-- **Authentication/Authorization:** Centralize security checks before requests hit individual services.
-- **Rate Limiting:** Protect your backend from abuse.
-- **Logging/Monitoring:** Centralized point for traffic insights.
-- **Request/Response Transformation:** Standardize data formats if microservices use different internal representations.
+    Client->>API Gateway (Next.js): POST /api/auth/complete (with code)
+    API Gateway (Next.js)->>auth-service: POST /v1/auth/complete
+    auth-service->>UserDB: Validate code, find User
+    UserDB-->>auth-service: User record
+    auth-service-->>API Gateway (Next.js): JWT
+    API Gateway (Next.js)-->>Client: Set JWT in secure cookie
 
-## Event-Driven Architecture (EDA) & Message Queues
+    Client->>API Gateway (Next.js): GET /api/canvas/state (with JWT)
+    API Gateway (Next.js)->>canvas-service: GET /v1/canvas/state
+    canvas-service->>UserDB: Fetch CanvasState and MicroAppInstances for user
+    UserDB-->>canvas-service: Layout and instances data
+    canvas-service-->>API Gateway (Next.js): Full canvas state
+    API Gateway (Next.js)-->>Client: JSON response
+    Client->>Client: Render Canvas and Micro-Apps
+5.2 BEEP Command Execution
+sequenceDiagram
+    participant Client
+    participant API Gateway (Next.js)
+    participant beep-service
+    participant LangGraph
+    participant klepsydra-service
 
-**Decoupling:** For microservices to truly be independent, they shouldn't directly call each other in many cases. Use message queues (e.g., AWS SQS/SNS, RabbitMQ, Kafka) for asynchronous communication.
-
-**Scenarios:**
-- User creates an invoice (micro-app A) -> event published -> accounting micro-app (B) consumes event to update ledger -> notification micro-app (C) consumes event to send email.
-- Long-running tasks: Offload to a queue for background processing.
-
-**Benefits:** Increased resilience, scalability, and loose coupling between services.
-
-## Agentic Architecture
-
-Since you mention "agentic," this implies AI agents performing tasks autonomously. These agents will likely interact with your microservices.
-
-- **Integration:** Agents will consume data via microservice APIs and trigger actions (e.g., `invoice_agent` sees due date, asks `email_microservice` to send a reminder).
-- **Orchestration:** Consider an "Agent OS" layer (as you've seen in search results) to manage agent lifecycles, goals, and interactions. This could be another microservice or a dedicated framework.
-- **Tooling/Function Calling:** Agents will need well-defined API endpoints (exposed via your API Gateway) that they can "call" to interact with the underlying micro-apps.
-
-# II. Data Layer Strategy (Prisma + PostgreSQL + Redis)
-
-Your chosen stack is excellent for this.
-
-## PostgreSQL (Managed Service - e.g., AWS RDS, Supabase, Neon)
-
-**Central Relational Core:** PostgreSQL will be the authoritative source for most of your structured business data (users, organizations, core settings, financial records, transactional data).
-
-**Multi-Tenancy:**
-- **Schema-per-tenant:** Highest isolation, most complex to manage at scale.
-- **Database-per-tenant:** Even higher isolation, but more operational overhead.
-- **Shared schema with `tenant_id`:** Most common for SaaS. Each table includes a `tenantId` column. This requires careful indexing and query filtering to prevent data leaks. This is generally the recommended approach for an SMB DOP/OS due to cost-efficiency and easier management.
-
-**Prisma Benefits:** Type safety, migrations, and clean API for interacting with this complex relational data will be invaluable for 27 micro-apps.
-
-**Serverless Connections:** Absolutely use a connection pooler (AWS RDS Proxy, PgBouncer, Neon's native pooling) if your microservices are deployed as serverless functions (Lambdas, Cloud Functions). This is critical.
-
-**JSONB for Flexibility:** Don't be afraid to use PostgreSQL's JSONB column for data that is semi-structured or has flexible attributes within an otherwise structured entity (e.g., custom fields for an SMB's customer profiles). Prisma supports JSONB.
-
-## Redis (Managed Service - e.g., AWS ElastiCache, Redis Cloud)
-
-**High-Speed Cache:** Crucial for improving the performance of frequently accessed data, reducing load on PostgreSQL. Cache user sessions, frequently retrieved lists (e.g., product catalogs), pre-computed dashboard metrics.
-
-**Real-time Capabilities:** Use for leaderboards, real-time notifications, messaging between micro-apps (Pub/Sub), rate limiting, and queues for very short-lived tasks.
-
-**Cache Invalidation Strategy:**
-- **TTL (Time-To-Live):** Set appropriate expiration for cached data.
-- **Event-driven Invalidation:** When a microservice writes to PostgreSQL, it should publish an event that triggers other services (or a dedicated caching service) to invalidate relevant Redis keys. This is paramount for data consistency.
-- **Read-Through/Write-Through (less common but worth exploring):** For certain datasets, consider patterns where Redis handles both reads and writes, acting as a facade to PostgreSQL.
-
-## Database per Microservice (Consider Carefully)
-
-While Microservices can have their own databases, for an SMB platform with 27 micro-apps, this adds immense operational complexity (27+ databases to manage).
-
-**Recommendation:** Start with a monorepo of microservices sharing a centralized PostgreSQL instance (with `tenant_id`) and a centralized Redis. Only break out to separate databases if a specific microservice has truly unique data consistency, scaling, or technology requirements that PostgreSQL cannot meet (e.g., a graph database for a complex recommendation engine, or a time-series DB for IoT data, which is unlikely for SMB DOP/OS core).
-
-**Data Boundaries:** Even with a shared database, each microservice should only access its own tables/data concerns. This maintains logical separation and prevents tight coupling.
-
-# III. Agentic OS Specific Considerations
-
-## Orchestration Layer
-
-How do the 27 micro-apps and the AI agents interact and coordinate?
-
-This could be a central "workflow engine" microservice (e.g., built with State Machines using AWS Step Functions, Temporal, Cadence, or a custom solution).
-
-**Goal:** Define and execute complex multi-step processes involving multiple micro-apps and agents.
-
-**Example:** Onboarding a new SMB client: Trigger a workflow that provisions their account, sets up initial settings in the "Settings" micro-app, sends welcome emails via "Notifications" micro-app, and creates initial tasks in "Task Management" micro-app. An AI agent might then analyze onboarding data and suggest next steps.
-
-## AI Agent Integration
-
-- **Language Models:** Integrate with LLMs (e.g., OpenAI, Anthropic, Google Gemini) via APIs.
-- **Prompt Engineering:** Critical for reliable agent behavior.
-- **Tool Use/Function Calling:** Design clear, versioned APIs for each micro-app that agents can "call" (e.g., `createInvoice(data)`, `getCustomerData(id)`). This is how agents interact with your system.
-- **Observability for Agents:** Monitor agent decisions, actions, and failures. Logging prompts, responses, and tool calls will be essential for debugging.
-- **Human-in-the-Loop:** For critical actions, design processes where an agent proposes an action, and a human SMB owner confirms it. This builds trust and handles edge cases.
-
-## Data for AI Agents
-
-- **RAG (Retrieval Augmented Generation):** Agents will need access to SMB-specific data from your PostgreSQL database (via microservice APIs) to perform their tasks intelligently.
-- **Vector Database (Optional but powerful):** For complex search, semantic matching, or RAG with unstructured data (e.g., company policies, customer support transcripts), consider a vector database (e.g., Supabase's pgvector, Pinecone, Chroma).
-
-# IV. Deployment & Operations (Production Focus)
-
-## Cloud Native / Serverless First
-
-- **Managed Services Everywhere:** Databases (PostgreSQL, Redis), Compute (AWS Lambda, Google Cloud Functions, Azure Functions), API Gateway, Message Queues. This reduces operational overhead dramatically.
-- **Containerization (Docker/Kubernetes):** If serverless functions become too restrictive or you need finer-grained control, containerizing your microservices with Docker and orchestrating them with Kubernetes (EKS, GKE, AKS) is the next step. This is more complex but offers immense flexibility and scalability.
-
-## CI/CD Pipeline
-
-- **Automated Everything:** Automated testing, code quality checks, building, and deployment for each microservice.
-- **Blue/Green or Canary Deployments:** For zero-downtime releases, especially crucial for a core SMB OS.
-
-## Observability (Logs, Metrics, Tracing)
-
-- **Centralized Logging:** Aggregate logs from all microservices and databases (e.g., AWS CloudWatch Logs, Datadog, Splunk, ELK stack).
-- **Distributed Tracing:** Use OpenTelemetry or similar to trace requests across multiple microservices. Essential for debugging complex interactions in a microservice architecture.
-- **Comprehensive Monitoring & Alerting:** Dashboards for key metrics (latency, error rates, resource utilization for each microservice and database) with aggressive alerting.
-
-## Security
-
-- **OAuth2/OpenID Connect:** Robust authentication for users and inter-service communication.
-- **Role-Based Access Control (RBAC):** Fine-grained permissions for SMB owners and their employees within each micro-app.
-- **API Security:** Input validation, rate limiting, secure headers, WAF (Web Application Firewall).
-- **Data Encryption:** At rest and in transit (TLS/SSL).
-- **Regular Security Audits & Penetration Testing.**
-
-## Multi-Tenancy Security
-
-This is your #1 security concern for an SMB platform.
-
-- **Strict Tenant ID Filtering:** Every database query (via Prisma) must include a `tenantId` filter to ensure users only access their own data. This needs to be enforced at the application layer, not just assumed.
-- **Middleware/Interceptors:** Implement middleware (e.g., in Express.js, NestJS) that automatically injects `tenantId` into all database queries and validates that the authenticated user belongs to that tenant.
+    Client->>API Gateway (Next.js): POST /api/beep/command (text: "Spin the wheel")
+    API Gateway (Next.js)->>beep-service: POST /v1/beep/command
+    beep-service->>LangGraph: Orchestrate workflow based on intent ("Folly Instrument Interaction")
+    LangGraph->>klepsydra-service: GET /v1/folly/execute (instrument: "SpinForge")
+    klepsydra-service->>klepsydra-service: Calculate outcome using SRE, Judas Algorithm
+    klepsydra-service-->>LangGraph: Result (e.g., "{ win: true, amount: 500 }")
+    LangGraph-->>beep-service: Final result
+    beep-service-->>API Gateway (Next.js): Formatted natural language response
+    API Gateway (Next.js)-->>Client: "The wheel lands on a gilded sigil. +500 Ξ."
+6. Security Architecture
+6.1 JWT Authentication Flow
+Issuance: The auth-service issues a short-lived (15 min) JWT upon successful login. The JWT payload contains userId, email, and sovereigntyClass.
+Client Storage: The JWT is stored in a secure, HttpOnly cookie on the client to prevent XSS attacks.
+Validation: The API Gateway validates the JWT signature and expiration on every incoming request.
+Downstream Propagation: The API Gateway forwards the validated JWT payload (as a simplified JSON header, not the full JWT) to the downstream microservices, which trust the gateway's validation. This prevents each service from needing to re-validate the signature.
+This ADD provides the final layer of technical detail required for implementation. It is the definitive source for building ΛΞVON OS V1.0. Adherence to these specifications is mandatory.
