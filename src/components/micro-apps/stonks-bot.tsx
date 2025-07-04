@@ -32,7 +32,7 @@ const ratingColors: Record<string, string> = {
     'Consider a diversified position': 'text-secondary-foreground',
     'The runes are unclear': 'text-purple-400',
     'Sell to the fools': 'text-orange-500'
-}
+};
 
 export default function StonksBot(props: StonksBotOutput | {}) {
     const { handleCommandSubmit, isLoading } = useAppStore();
@@ -60,12 +60,10 @@ export default function StonksBot(props: StonksBotOutput | {}) {
     };
 
     return (
-        <motion.div 
-            animate={isPanic ? { x: [-1, 1, -1, 1, 0] } : {}}
-            transition={isPanic ? { duration: 0.2, repeat: 5 } : {}}
+        <div 
             className={cn(
                 "p-2 space-y-3 h-full flex flex-col rounded-lg border transition-colors duration-500",
-                isPanic ? "bg-stonks-anxiety/20 border-stonks-anxiety" : "bg-stonks-green/10 border-stonks-green/50"
+                isPanic ? "bg-stonks-anxiety/20 border-stonks-anxiety animate-screen-shake" : "bg-stonks-green/10 border-stonks-green/50"
             )}
         >
             <Card className="bg-transparent border-0 shadow-none p-0">
@@ -137,6 +135,6 @@ export default function StonksBot(props: StonksBotOutput | {}) {
                     </Alert>
                 </div>
             )}
-        </motion.div>
+        </div>
     );
 }
