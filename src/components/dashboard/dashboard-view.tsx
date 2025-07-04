@@ -24,7 +24,8 @@ interface DashboardViewProps {
 }
 
 export default function DashboardView({ initialAgents, user, workspace, initialTransactions }: DashboardViewProps) {
-  const { apps, handleDragEnd } = useAppStore();
+  const apps = useAppStore((state) => state.apps);
+  const handleDragEnd = useAppStore((state) => state.handleDragEnd);
   const sensors = useSensors(useSensor(PointerSensor), useSensor(KeyboardSensor));
   const { toast } = useToast();
 

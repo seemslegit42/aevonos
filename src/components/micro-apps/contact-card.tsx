@@ -15,8 +15,10 @@ interface ContactCardProps {
   contact: Contact;
 }
 
-export default function ContactCard({ contact }: ContactCardProps) {
-  const { handleCommandSubmit, upsertApp, isLoading } = useAppStore();
+function ContactCard({ contact }: ContactCardProps) {
+  const handleCommandSubmit = useAppStore((state) => state.handleCommandSubmit);
+  const upsertApp = useAppStore((state) => state.upsertApp);
+  const isLoading = useAppStore((state) => state.isLoading);
   const [isDeleting, setIsDeleting] = useState(false);
 
   const handleDelete = () => {
@@ -98,3 +100,5 @@ export default function ContactCard({ contact }: ContactCardProps) {
     </Card>
   );
 }
+
+export default React.memo(ContactCard);

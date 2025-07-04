@@ -55,7 +55,15 @@ const CurrentTime = () => {
 export default function TopBar({ user, workspace, initialVas }: TopBarProps) {
   const formRef = useRef<HTMLFormElement>(null);
   const isMobile = useIsMobile();
-  const { handleCommandSubmit, isLoading, beepOutput, upsertApp, activeAppId, apps } = useAppStore();
+  
+  // Use granular selectors for performance
+  const handleCommandSubmit = useAppStore((state) => state.handleCommandSubmit);
+  const isLoading = useAppStore((state) => state.isLoading);
+  const beepOutput = useAppStore((state) => state.beepOutput);
+  const upsertApp = useAppStore((state) => state.upsertApp);
+  const activeAppId = useAppStore((state) => state.activeAppId);
+  const apps = useAppStore((state) => state.apps);
+
   const [inputValue, setInputValue] = useState('');
   const [vas, setVas] = useState<number | null>(initialVas);
   const [pulseProfile, setPulseProfile] = useState<PulseProfile | null>(null);

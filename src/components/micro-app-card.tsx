@@ -15,7 +15,7 @@ interface MicroAppCardProps {
   app: MicroApp;
 }
 
-export default function MicroAppCard({ app }: MicroAppCardProps) {
+function MicroAppCard({ app }: MicroAppCardProps) {
   const triggerAppAction = useAppStore((state) => state.triggerAppAction);
   const bringToFront = useAppStore((state) => state.bringToFront);
   const handleResize = useAppStore((state) => state.handleResize);
@@ -114,3 +114,5 @@ export default function MicroAppCard({ app }: MicroAppCardProps) {
     </div>
   );
 }
+
+export default React.memo(MicroAppCard);
