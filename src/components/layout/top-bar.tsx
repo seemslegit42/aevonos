@@ -6,7 +6,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Input } from '@/components/ui/input';
 import { useIsMobile } from '@/hooks/use-is-mobile';
-import { type User, type Workspace, UserPsyche } from '@prisma/client';
+import { type User, type Workspace, UserPsyche, PulseProfile } from '@prisma/client';
 import { useAppStore } from '@/store/app-store';
 import { cn } from '@/lib/utils';
 import { Button } from '../ui/button';
@@ -23,6 +23,7 @@ import {
 import { handleLogout } from '@/app/auth/actions';
 import { getUserVas } from '@/app/user/actions';
 import { Tooltip, TooltipProvider, TooltipTrigger, TooltipContent } from '../ui/tooltip';
+import PsycheMatrix from '../profile/psyche-matrix';
 
 type UserProp = Pick<User, 'id' | 'email' | 'firstName' | 'lastName' | 'role' | 'agentAlias' | 'psyche'> | null;
 
@@ -57,6 +58,24 @@ export default function TopBar({ user, workspace, initialVas }: TopBarProps) {
   const { handleCommandSubmit, isLoading, beepOutput, upsertApp, activeAppId, apps } = useAppStore();
   const [inputValue, setInputValue] = useState('');
   const [vas, setVas] = useState<number | null>(initialVas);
+  const [pulseProfile, setPulseProfile] = useState<PulseProfile | null>(null);
+
+  // Fetch Pulse Profile for PsycheMatrix
+  useEffect(() => {
+    async function fetchPulseProfile() {
+      if (!user) return;
+      try {
+        const res = await fetch('/api/user/pulse-profile');
+        if (!res.ok) return;
+        const data = await res.json();
+        setPulseProfile(data);
+      } catch (error) {
+        console.error("Error fetching pulse profile for TopBar:", error);
+      }
+    }
+    fetchPulseProfile();
+  }, [user]);
+
 
   useEffect(() => {
     async function fetchVas() {
@@ -169,6 +188,18 @@ export default function TopBar({ user, workspace, initialVas }: TopBarProps) {
           </Button>
            <div className="h-6 w-px bg-border/30" />
             <TooltipProvider>
+                 {user && pulseProfile && (
+                     <Tooltip>
+                        <TooltipTrigger asChild>
+                             <div className="w-8 h-8 cursor-pointer" onClick={handleProfileClick}>
+                                <PsycheMatrix profile={pulseProfile} psyche={user.psyche} />
+                            </div>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                           <p>Your Psyche-Matrix</p>
+                        </TooltipContent>
+                    </Tooltip>
+                 )}
                 <Tooltip>
                     <TooltipTrigger asChild>
                          <Button variant="ghost" className="p-0 h-auto hover:bg-transparent text-foreground" onClick={() => upsertApp('ritual-quests', { id: 'singleton-ritual-quests' })}>
