@@ -1,8 +1,11 @@
 
+'use server';
+
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { getAuthenticatedUser } from '@/lib/firebase/admin';
 import prisma from '@/lib/prisma';
+import cache from '@/lib/cache';
 import { UserRole } from '@prisma/client';
 
 const EdictUpdateSchema = z.object({
@@ -11,6 +14,8 @@ const EdictUpdateSchema = z.object({
       isActive: z.boolean(),
   }))
 });
+
+const EDICT_CACHE_KEY = (workspaceId: string) => `edicts:${workspaceId}`;
 
 // GET /api/security/edicts
 export async function GET(request: NextRequest) {
@@ -63,6 +68,10 @@ export async function PUT(request: NextRequest) {
       }),
     ]);
     
+    // Invalidate the cache for security edicts
+    const cacheKey = EDICT_CACHE_KEY(workspace.id);
+    await cache.del(cacheKey);
+
     return NextResponse.json({ message: 'Security edicts updated successfully.' });
 
   } catch (error) {
