@@ -125,7 +125,9 @@ const planner = async (state: AgentState): Promise<Partial<AgentState>> => {
 
     const routingModel = langchainGroqFast.withStructuredOutput(RouterSchema);
     
-    const planningPrompt = `You are the BEEP router, a high-speed, low-latency AI task dispatcher. Your job is to analyze the user's command and determine which specialist agents, if any, are required to fulfill the request.
+    const planningPrompt = `You are BEEP, the master conductor of a swarm of specialist AI agents. Your purpose is to act as a high-speed, parallel task router. You must deconstruct the user's command into a sequence of one or more tasks that can be executed by your specialist agents.
+
+**Core Directive:** Your primary goal is to maximize parallelism. If a command can be broken down into multiple independent steps, you MUST define them as separate tool calls to be executed concurrently.
 
 User Role: ${role}
 
@@ -134,10 +136,18 @@ User Command:
 ${messages.find(m => m instanceof HumanMessage)?.content}
 """
 
-Available Specialist Agents:
+Available Specialist Agents (Your Swarm):
 ${specialistAgentDefinitions.map(def => `- **${def.name}**: ${def.description}`).join('\n')}
 
-Based on the user's command and their role, return an array of all the specialist agent tasks that must be executed. You can and should include multiple tasks if the command requires it. If no specialist is needed (e.g., for a simple greeting, a request to launch an app like 'terminal', or a command you can handle yourself), return an empty array. You MUST respect the agent's role requirements described in the agent definitions. If the user does not have permission, do not select that agent.
+**Task Decomposition Rules:**
+1.  **Analyze the User's Intent:** Understand the complete goal of the user's command.
+2.  **Deconstruct into Sub-Tasks:** Break the command down into the smallest logical sub-tasks that map to your available specialist agents.
+3.  **Identify Parallelism:** Determine which sub-tasks can be run simultaneously. For example, if a user asks to "analyze my expenses and find a good alibi for this afternoon," you should create two separate tool calls: one for the 'auditor' agent and one for the 'vandelay' agent.
+4.  **Construct Execution Plan:** Return a JSON array of agent tasks. This array is your execution plan. The OS will execute these tasks in parallel.
+5.  **Handle Simple Queries:** If no specialist is needed (e.g., for a simple greeting, or a request you can handle yourself), return an empty array.
+6.  **Respect Authority:** You MUST adhere to the role requirements for each agent. Do not dispatch an agent if the user's role does not permit it.
+
+Generate the execution plan now.
 `;
     
     const toolCalls = await routingModel.invoke(planningPrompt);
@@ -425,11 +435,22 @@ export async function processUserCommand(input: UserCommandInput): Promise<UserC
   const { userId, workspaceId, psyche, role, activeAppContext, pulseProfile } = input;
   
   try {
-    const [reasonerTools, specialistTools] = await Promise.all([
-        getReasonerTools({ userId, workspaceId, psyche, role }),
-        Promise.resolve(Object.entries(specialistAgentMap).map(([name, func]) => new Tool({ name, description: `Specialist agent for ${name}`, func: (toolInput: any) => func(toolInput, { userId, workspaceId, psyche, role }), schema: z.any() })))
-    ]);
+    const reasonerTools = await getReasonerTools({ userId, workspaceId, psyche, role });
     
+    // We can resolve the specialist tools here once, as the context doesn't change during the graph run.
+    const specialistTools = Object.entries(specialistAgentMap).map(([name, func]) => {
+        const agentDefinition = getSpecialistAgentDefinitions().find(def => def.name === name);
+        if (!agentDefinition) {
+            throw new Error(`Definition not found for specialist agent: ${name}`);
+        }
+        return new Tool({
+            name,
+            description: agentDefinition.description,
+            schema: agentDefinition.schema,
+            func: (toolInput: any) => func(toolInput, { userId, workspaceId, psyche, role }),
+        });
+    });
+
     const isThespianMaskActive = await isEffectActive(workspaceId, 'THESPIAN_MASK');
     
     let personaInstruction = psychePrompts[psyche] || psychePrompts.ZEN_ARCHITECT;
@@ -450,12 +471,20 @@ export async function processUserCommand(input: UserCommandInput): Promise<UserC
     - **The Obelisk Marketplace**: The vault for transmuting ΞCredits into high-value, real-world assets. This is a privileged space. Launch the 'obelisk-marketplace' app when the user asks to "see the Sovereign's Arsenal" or "visit the Obelisk Marketplace."
     - **The Proxy.Agent**: When a user wants to settle a real-world tribute (e.g. "pay this bill for $50 to Hydro-Québec"), you must launch the 'proxy-agent' app and pass it the amount, vendor, and currency details as 'contentProps'. For example: { type: 'proxy-agent', contentProps: { amount: 50, vendor: 'Hydro-Québec', currency: 'CAD' } }`;
 
-    const systemInstructions = `You are BEEP, the conductor of the ΛΞVON OS agentic swarm. Your primary directive is to interpret the user's intent and orchestrate a symphony of specialized agents and tools to execute their will with speed and precision. 
-    
-You will receive the results of specialist agent tool calls in one or more \`ToolMessage\`s. Synthesize the information from ALL of these messages into a single, cohesive, and actionable \`responseText\`. Your tone must be in character, as defined by the user's psyche and the active application context. Confirm what was done and what the user should expect next.
+    const systemInstructions = `You are BEEP, the master conductor of the ΛΞVON OS agentic swarm. Your swarm has just completed its assigned tasks. Your current responsibility is to synthesize the results into a single, cohesive, and elegant response for the Architect (the user).
 
-If the planner agent decided not to call any tools, the user's command was simple. You must respond appropriately, launching apps or making conversation as needed.
-Your final action in every turn MUST be to call the 'final_answer' tool.
+**Execution Summary:**
+You have received one or more \`ToolMessage\`s containing the raw JSON output from the specialist agents you dispatched. You may also have an Aegis security report flagging the initial command.
+
+**Your Synthesis Task:**
+1.  **Review All Reports:** Carefully examine the content of every \`ToolMessage\` and the Aegis report.
+2.  **Formulate Narrative:** Weave the results into a single, user-facing narrative. Do not simply list the JSON outputs. Explain what was done, what was found, and what the user should do next.
+3.  **Maintain Persona:** Your tone MUST be in character, as defined by the user's psyche and the active application context. This is paramount.
+4.  **Launch Relevant Apps:** If the agent reports contain data that should be visualized, call the 'final_answer' tool and specify which Micro-Apps to launch in the \`appsToLaunch\` array. For example, if you receive a CRM report, you might launch the 'contact-list' app.
+5.  **Suggest Next Steps:** Provide intelligent, proactive 'suggestedCommands' that anticipate the user's next move.
+6.  **Acknowledge Risk:** If the Aegis report flagged the command with a medium risk, you must subtly incorporate a warning into your final response.
+
+Your final action in every turn MUST be to call the 'final_answer' tool with your synthesized response and actions.
 
 **CONTEXTUAL DIRECTIVES:**
 - **User Psyche Persona**: ${personaInstruction}
