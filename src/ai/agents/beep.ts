@@ -26,26 +26,14 @@ import type { RunnableConfig } from "@langchain/core/runnables";
 
 import { langchainGroqFast, langchainGroqComplex } from '@/ai/genkit';
 import { aegisAnomalyScan } from '@/ai/agents/aegis';
-import { getTools } from '@/ai/agents/tool-registry';
+import { getSpecialistTools, getReasonerTools } from '@/ai/agents/tool-registry';
 import { AegisAnomalyScanOutputSchema, type AegisAnomalyScanOutput, type PulseProfileInput } from './aegis-schemas';
-import { consultInventoryDaemon } from '@/ai/agents/inventory-daemon';
-import { executeBurnBridgeProtocol } from '@/ai/agents/burn-bridge-agent';
-import { consultVaultDaemon } from './vault-daemon';
-import { consultCrmAgent } from './crm-agent';
-import { consultDrSyntax } from './dr-syntax-agent';
-import { consultStonksBot } from './stonks-bot-agent';
-import { CrmActionSchema } from './crm-agent-schemas';
-import { DrSyntaxInputSchema } from './dr-syntax-schemas';
-import { StonksBotInputSchema } from './stonks-bot-schemas';
-
 
 import {
     type UserCommandInput,
     UserCommandOutputSchema,
     type UserCommandOutput,
     AgentReportSchema,
-    RouterResult,
-    RouterSchema,
 } from './beep-schemas';
 import {
     getConversationHistory,
@@ -55,31 +43,9 @@ import prisma from '@/lib/prisma';
 import { InsufficientCreditsError } from '@/lib/errors';
 import { recordInteraction } from '@/services/pulse-engine-service';
 import { logUserActivity } from '@/services/activity-log-service';
-import { validateVin } from './vin-diesel';
-import { generateSolution } from './winston-wolfe';
-import { analyzeComms } from './kif-kroker';
-import { createVandelayAlibi } from './vandelay';
-import { analyzeCandidate } from './rolodex';
-import { generateBusinessKit } from './jroc';
-import { analyzeLaheyLog } from './lahey';
-import { processDailyLog } from './foremanator';
-import { analyzeCompliance } from './sterileish';
-import { scanEvidence } from './paper-trail';
-import { processDocument } from './barbara';
-import { auditFinances } from './auditor-generalissimo';
-import { generateWingmanMessage } from './wingman';
-import { getKendraTake } from './kendra';
-import { invokeOracle } from './orphean-oracle-flow';
-import { analyzeInvite } from './lumbergh';
-import { analyzeExpense } from './lucille-bluth';
-import { generatePamRant } from './pam-poovey';
-import { analyzeCarShame } from './reno-mode';
-import { processPatricktAction } from './patrickt-agent';
-import { generateRitualQuests } from './ritual-quests-agent';
 
 
-// --- Router and State Schemas ---
-// LangGraph State
+// --- LangGraph Agent State ---
 interface AgentState {
   messages: BaseMessage[];
   workspaceId: string;
@@ -89,7 +55,6 @@ interface AgentState {
   pulseProfile: PulseProfileInput | null;
   aegisReport: AegisAnomalyScanOutput | null;
   agentReports: z.infer<typeof AgentReportSchema>[];
-  routerResult: RouterResult | null;
 }
 
 const callAegis = async (state: AgentState): Promise<Partial<AgentState>> => {
@@ -137,138 +102,80 @@ const callAegis = async (state: AgentState): Promise<Partial<AgentState>> => {
     };
 }
 
-let complexModelWithTools: any;
 
-const specialistMap: Record<string, (input: any, context: any) => Promise<any>> = {
-    // This maps a route name to the function that executes it.
-    inventory_daemon: (p,c) => consultInventoryDaemon(p),
-    burn_bridge_protocol: (p,c) => executeBurnBridgeProtocol(p),
-    vault_daemon: (p,c) => consultVaultDaemon(p),
-    crm_agent: (p,c) => consultCrmAgent(p),
-    dr_syntax: (p,c) => consultDrSyntax(p),
-    stonks_bot: (p,c) => consultStonksBot(p),
-    winston_wolfe: (p,c) => generateSolution(p),
-    kif_kroker: (p,c) => analyzeComms(p),
-    vandelay: (p,c) => createVandelayAlibi(p),
-    rolodex: (p,c) => analyzeCandidate(p),
-    jroc: (p,c) => generateBusinessKit(p),
-    lahey_surveillance: (p,c) => analyzeLaheyLog(p),
-    foremanator: (p,c) => processDailyLog(p),
-    sterileish: (p,c) => analyzeCompliance(p),
-    paper_trail: (p,c) => scanEvidence(p),
-    barbara: (p,c) => processDocument(p),
-    auditor: (p,c) => auditFinances(p),
-    wingman: (p,c) => generateWingmanMessage(p),
-    kendra: (p,c) => getKendraTake(p),
-    orphean_oracle: (p,c) => invokeOracle(p),
-    lumbergh: (p,c) => analyzeInvite(p),
-    lucille_bluth: (p,c) => analyzeExpense(p),
-    pam_poovey: (p,c) => generatePamRant(p),
-    reno_mode: (p,c) => analyzeCarShame(p),
-    patrickt_app: (p,c) => processPatricktAction(p),
-    vin_diesel: (p,c) => validateVin(p),
-    ritual_quests: (p,c) => generateRitualQuests(p),
-};
-
-
-// The Router node decides which specialist(s) to delegate to.
-const router = async (state: AgentState): Promise<Partial<AgentState>> => {
-    const { messages } = state;
+const planner = async (state: AgentState): Promise<Partial<AgentState>> => {
+    const { messages, ...context } = state;
+    const specialistTools = await getSpecialistTools(context);
+    const modelWithSpecialistTools = langchainGroqFast.bind({
+        tools: specialistTools.map(tool => ({
+            type: 'function',
+            function: {
+                name: tool.name,
+                description: tool.description,
+                parameters: zodToJsonSchema(tool.schema),
+            },
+        })),
+        tool_choice: "auto",
+    });
     
-    const routingModel = langchainGroqFast.withStructuredOutput(RouterSchema);
-    
-    const routingPrompt = `You are an expert at routing a user's request to the correct specialist agent or model. Analyze the user's command and identify ALL specialist tasks required to fulfill it. Return an array of these tasks. For simple requests like 'open the terminal' or greetings, return an empty array.
-
-    Specialist Routes:
-    - 'inventory_daemon': For requests about stock, inventory, or purchase orders.
-    - 'burn_bridge_protocol': For full-spectrum investigation on a person.
-    - 'vault_daemon': For requests about finance, revenue, profit, or spending.
-    - 'crm_agent': For requests about contacts (create, list, update, delete).
-    - 'dr_syntax': For requests involving critique or review of text, code, or prompts.
-    - 'stonks_bot': For requests about stock prices or financial "advice".
-    - 'winston_wolfe': For handling negative reviews or reputation management problems.
-    - 'kif_kroker': To analyze team communications in a Slack channel.
-    - 'vandelay': To create a fake calendar invite or alibi.
-    - 'rolodex': To analyze a job candidate's profile against a job description.
-    - 'jroc': To generate a business name, tagline, and logo concept.
-    - 'lahey_surveillance': To investigate a suspicious log entry.
-    - 'foremanator': To process a construction daily log.
-    - 'sterileish': To analyze a cleanroom or compliance log.
-    - 'paper_trail': To scan a receipt image.
-    - 'barbara': For administrative and compliance document processing tasks.
-    - 'auditor': To perform a detailed audit on a list of financial transactions.
-    - 'wingman': To get help crafting a message for a tricky social situation.
-    - 'kendra': To get a marketing campaign for a product idea.
-    - 'orphean_oracle': To get a narrative, visual story about business data.
-    - 'lumbergh': To analyze a meeting invite for pointlessness.
-    - 'lucille_bluth': To get a sarcastic take on an expense.
-    - 'pam_poovey': For HR-related rants or scripts in a specific persona.
-    - 'reno_mode': To analyze a photo of a messy car.
-    - 'patrickt_app': To log events, get roasts, or analyze drama in the "Patrickt" saga.
-    - 'vin_diesel': To validate a Vehicle Identification Number (VIN).
-    - 'ritual_quests': For user requests about their quests or goals.
+    const planningPrompt = `You are the BEEP router. Your job is to analyze the user's command and call the appropriate specialist agent tools to fulfill the request. You can call multiple tools in parallel. If no specialist tool is relevant (e.g., for a simple greeting or a request to launch an app like 'terminal'), do not call any tools.
 
     Conversation History:
     ${messages.map(m => `${m._getType()}: ${m.content}`).join('\n')}
     `;
+    
+    const response = await modelWithSpecialistTools.invoke(planningPrompt);
+    
+    if (!response.tool_calls || response.tool_calls.length === 0) {
+        console.log('[BEEP Planner] No specialist tools required. Routing to main reasoner.');
+    } else {
+        console.log(`[BEEP Planner] Planning to call tools:`, response.tool_calls.map(tc => tc.name));
+    }
+    
+    return { messages: [response] };
+}
+
+const specialistToolNode = async (state: AgentState): Promise<Partial<AgentState>> => {
+    const { messages, ...context } = state;
+    const specialistTools = await getSpecialistTools(context);
+    const toolExecutor = new ToolNode(specialistTools);
+    
+    const lastMessage = messages[messages.length - 1];
+    if (!lastMessage || !lastMessage.tool_calls) {
+        return {};
+    }
 
     try {
-        const result = await routingModel.invoke(routingPrompt);
-        console.log(`[BEEP Router] Decision:`, result);
-        return { routerResult: result };
-    } catch (e) {
-        console.error("[BEEP Router] Routing failed, defaulting to reasoner:", e);
-        // Default to an empty array, which will pass control to the reasoner.
-        return { routerResult: [] };
-    }
-};
-
-const parallelExecutor = async (state: AgentState): Promise<Partial<AgentState>> => {
-    const { routerResult, workspaceId, userId, psyche, role } = state;
-    
-    if (!routerResult || routerResult.length === 0) {
-        // If router found no specific tasks, pass control to the reasoner with original message.
-        console.log("[BEEP Executor] No specialist tasks identified. Passing to reasoner.");
-        return {}; // No new messages, reasoner will use existing state.
-    }
-    
-    console.log(`[BEEP Executor] Dispatching ${routerResult.length} tasks in parallel.`);
-    
-    const context = { workspaceId, userId, psyche, role };
-
-    const promises = routerResult.map(task => {
-        // Find the executor function from the map based on the route name
-        // The replace is to match the schema 'route' to the function name keys
-        const executor = specialistMap[task.route.replace(/-/g, '_')]; 
-        if (executor) {
-            const agentInput = {
-                ...(task as any).params, // Params are on the task object itself
-            };
-            // Wrap in a try/catch to prevent one failing promise from killing Promise.all
-            return executor(agentInput, context).catch(e => {
-                console.error(`Error in specialist agent '${task.route}':`, e);
-                return { agent: task.route, report: { error: e.message } };
-            });
+        const toolMessagesResult = await toolExecutor.invoke(state);
+        const toolMessages = toolMessagesResult.messages as ToolMessage[];
+        
+        const agentReports: z.infer<typeof AgentReportSchema>[] = [];
+        for (const toolMessage of toolMessages) {
+            try {
+                const parsedContent = JSON.parse(toolMessage.content as string);
+                const report = AgentReportSchema.parse(parsedContent);
+                agentReports.push(report);
+            } catch (e) {
+                // Not all tool outputs will be AgentReports, and that's okay.
+                // Errors from the tools will also fail parsing, which is handled next.
+            }
         }
-        console.warn(`[BEEP Executor] No specialist found for route: ${task.route}`);
-        return Promise.resolve(null);
-    });
+        
+        return { messages: toolMessages, agentReports: agentReports };
 
-    const results = await Promise.all(promises);
-    const validReports = results.filter(Boolean);
-    
-    // Create a single ToolMessage that aggregates all the reports for the reasoner.
-    const toolMessage = new ToolMessage({
-        content: JSON.stringify(validReports),
-        name: 'swarm_report',
-        tool_call_id: `swarm_call_${new Date().getTime()}`
-    });
-
-    return { 
-        messages: [toolMessage], 
-        agentReports: (state.agentReports || []).concat(validReports) 
-    };
+    } catch(error: any) {
+        console.error(`[BEEP Specialist Executor] Unhandled error in ToolNode:`, error);
+        const tool_call_id = lastMessage.tool_calls?.[0]?.id ?? "error_tool_call";
+        const errorMessage = new ToolMessage({
+            content: `A critical error occurred while executing specialist agents: ${error.message}. You must inform the user.`,
+            tool_call_id,
+        });
+        return { messages: [errorMessage] };
+    }
 }
+
+
+let complexModelWithTools: any;
 
 const callReasonerModel = async (state: AgentState) => {
     console.log('[BEEP] Invoking Reasoner (complex model).');
@@ -337,14 +244,14 @@ const routeAfterAegis = (state: AgentState) => {
 
 const executeTools = async (state: AgentState): Promise<Partial<AgentState>> => {
     console.log("[BEEP] Reasoner executing tools...");
-    const { messages } = state;
+    const { messages, ...context } = state;
     const lastMessage = messages[messages.length - 1];
 
     if (!lastMessage || !lastMessage.tool_calls) {
         return {};
     }
 
-    const tools = await getTools(state);
+    const tools = await getReasonerTools(context);
     const toolNode = new ToolNode(tools);
     
     let toolNodeResult: Partial<AgentState>;
@@ -397,6 +304,15 @@ const shouldContinue = (state: AgentState) => {
   return 'end';
 };
 
+const shouldCallSpecialists = (state: AgentState) => {
+    const { messages } = state;
+    const lastMessage = messages[messages.length - 1];
+    if (lastMessage instanceof AIMessage && lastMessage.tool_calls && lastMessage.tool_calls.length > 0) {
+        return 'call_specialists';
+    }
+    return 'reasoner';
+}
+
 const workflow = new StateGraph<AgentState>({
   channels: {
     messages: { value: (x, y) => x.concat(y), default: () => [] },
@@ -407,13 +323,12 @@ const workflow = new StateGraph<AgentState>({
     pulseProfile: { value: (x, y) => y, default: () => null },
     aegisReport: { value: (x, y) => y, default: () => null },
     agentReports: { value: (x, y) => x.concat(y), default: () => [] },
-    routerResult: { value: (x, y) => y, default: () => null },
   },
 });
 
 workflow.addNode('aegis', callAegis);
-workflow.addNode('router', router as any);
-workflow.addNode('parallel_executor', parallelExecutor);
+workflow.addNode('planner', planner);
+workflow.addNode('specialist_tool_node', specialistToolNode);
 workflow.addNode('agent_reasoner', callReasonerModel);
 workflow.addNode('handle_threat', handleThreat);
 workflow.addNode('warn_and_continue', warnAndContinue);
@@ -424,13 +339,17 @@ workflow.setEntryPoint('aegis');
 workflow.addConditionalEdges('aegis', routeAfterAegis, {
   threat: 'handle_threat',
   warn_and_continue: 'warn_and_continue',
-  continue: 'router',
+  continue: 'planner',
 });
 
+workflow.addConditionalEdges('planner', shouldCallSpecialists, {
+    call_specialists: 'specialist_tool_node',
+    reasoner: 'agent_reasoner',
+});
+
+workflow.addEdge('specialist_tool_node', 'agent_reasoner');
 workflow.addEdge('handle_threat', 'tools');
-workflow.addEdge('warn_and_continue', 'router');
-workflow.addEdge('router', 'parallel_executor');
-workflow.addEdge('parallel_executor', 'agent_reasoner');
+workflow.addEdge('warn_and_continue', 'planner');
 
 workflow.addConditionalEdges('agent_reasoner', shouldContinue, {
     tools: 'tools',
@@ -465,9 +384,9 @@ export async function processUserCommand(input: UserCommandInput): Promise<UserC
   const { userId, workspaceId, psyche, role, activeAppContext, pulseProfile } = input;
   
   try {
-    const tools = await getTools(state);
+    const reasonerTools = await getReasonerTools({ userId, workspaceId, psyche, role });
 
-    const toolSchemas = tools.map(tool => ({
+    const toolSchemas = reasonerTools.map(tool => ({
         type: 'function',
         function: {
           name: tool.name,
@@ -506,9 +425,9 @@ export async function processUserCommand(input: UserCommandInput): Promise<UserC
 
     const systemInstructions = `You are BEEP, the conductor of the ΛΞVON OS agentic swarm. Your primary directive is to interpret the user's intent and orchestrate a symphony of specialized agents and tools to execute their will with speed and precision. 
     
-You will receive the output of a parallel execution of specialist agents in a tool message named 'swarm_report'. You must synthesize the results from ALL reports in the message into a single, cohesive, and actionable \`responseText\`. Your tone must be in character, as defined by the user's psyche and the active application context. Confirm what was done and what the user should expect next.
+You will receive the results of specialist agent tool calls in one or more \`ToolMessage\`s. Synthesize the information from ALL of these messages into a single, cohesive, and actionable \`responseText\`. Your tone must be in character, as defined by the user's psyche and the active application context. Confirm what was done and what the user should expect next.
 
-If the user's command is simple (e.g., 'open terminal', 'hello'), the swarm_report will be empty. In this case, you must respond appropriately, launching apps or making conversation as needed.
+If the planner agent decided not to call any tools, the user's command was simple. You must respond appropriately, launching apps or making conversation as needed.
 Your final action in every turn MUST be to call the 'final_answer' tool.
 
 **CONTEXTUAL DIRECTIVES:**
@@ -543,7 +462,6 @@ Your purpose is to be the invisible, silent orchestrator of true automation. Now
       psyche: input.psyche,
       pulseProfile: pulseProfile || null,
       agentReports: [],
-      routerResult: null,
     }).catch(error => {
         if (error instanceof InsufficientCreditsError) {
             return {
