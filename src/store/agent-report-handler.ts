@@ -28,6 +28,10 @@ import { PatricktAgentOutput } from '@/ai/agents/patrickt-agent-schemas';
 import { VinDieselOutput } from '@/ai/agents/vin-diesel-schemas';
 import { InventoryDaemonOutput } from '@/ai/agents/inventory-daemon-schemas';
 import { RitualQuestOutput } from '@/ai/agents/ritual-quests-schemas';
+import type { OsintOutput } from '@/ai/agents/osint-schemas';
+import type { InfidelityAnalysisOutput } from '@/ai/agents/infidelity-analysis-schemas';
+import type { DecoyOutput } from '@/ai/agents/decoy-schemas';
+import type { DossierOutput } from '@/ai/agents/dossier-schemas';
 
 type AgentReportHandlers = {
   [K in AgentReport['agent']]?: (report: Extract<AgentReport, { agent: K }>['report'], store: AppStore) => void;
@@ -168,6 +172,38 @@ export const agentReportHandlers: AgentReportHandlers = {
     store.upsertApp('ritual-quests', {
       id: 'singleton-ritual-quests',
       contentProps: report,
+    });
+  },
+  'dossier': (report: DossierOutput, store) => {
+    store.upsertApp('infidelity-radar', {
+        id: `singleton-infidelity-radar`,
+        contentProps: {
+            dossierReport: report,
+        }
+    });
+  },
+  'osint': (report: OsintOutput, store) => {
+    store.upsertApp('infidelity-radar', {
+        id: `singleton-infidelity-radar`,
+        contentProps: {
+            osintReport: report,
+        }
+    });
+  },
+   'infidelity-analysis': (report: InfidelityAnalysisOutput, store) => {
+    store.upsertApp('infidelity-radar', {
+        id: `singleton-infidelity-radar`,
+        contentProps: {
+            analysisResult: report,
+        }
+    });
+  },
+   'decoy': (report: DecoyOutput, store) => {
+    store.upsertApp('infidelity-radar', {
+        id: `singleton-infidelity-radar`,
+        contentProps: {
+            decoyResult: report,
+        }
     });
   },
   'crm': (report: CrmAgentReport, store) => {

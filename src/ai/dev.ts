@@ -105,3 +105,4 @@ import '@/ai/agents/reno-mode-agent.ts';
 import '@/ai/agents/patrickt.ts';
 import '@/ai/agents/briefing-agent.ts';
 import '@/app/api/briefing/route.ts';
+import '@/app/api/export/dossier/route.ts';
