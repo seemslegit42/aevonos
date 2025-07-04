@@ -80,15 +80,15 @@ export default function LoginPage() {
                 className="text-center space-y-4 p-8"
               >
                 <MailCheck className="w-16 h-16 mx-auto text-accent" />
-                <h2 className="text-2xl font-bold font-headline">The Ether Has Heard Your Call</h2>
-                <p className="text-muted-foreground">Await the echo.</p>
+                <h2 className="text-2xl font-bold font-headline">An Echo Has Been Sent</h2>
+                <p className="text-muted-foreground">Follow it from your inbox to cross the threshold.</p>
               </motion.div>
             ) : (
               <motion.div key="form" initial={{opacity: 0}} animate={{opacity: 1}} exit={{opacity: 0}}>
                 <CardHeader className="text-center">
                   <BeepIcon className="w-16 h-16 mx-auto text-primary" />
-                  <CardTitle className="font-headline text-2xl text-primary pt-4">Enter the Chamber</CardTitle>
-                  <CardDescription>State your designation to proceed.</CardDescription>
+                  <CardTitle className="font-headline text-2xl text-primary pt-4">The Threshold</CardTitle>
+                  <CardDescription>A silent, waiting space.</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <form onSubmit={handleSubmit} className="space-y-4">
@@ -96,14 +96,14 @@ export default function LoginPage() {
                       id="email"
                       name="email"
                       type="email"
-                      placeholder="Your designation (email)..."
+                      placeholder="State your designation..."
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
                       disabled={isSubmitting}
                     />
                     <Button type="submit" disabled={isSubmitting} className="w-full">
-                      {isSubmitting ? <Loader2 className="animate-spin" /> : 'Continue'}
+                      {isSubmitting ? <Loader2 className="animate-spin" /> : 'State Designation'}
                     </Button>
                   </form>
                 </CardContent>
