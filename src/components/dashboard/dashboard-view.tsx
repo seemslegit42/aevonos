@@ -21,9 +21,16 @@ interface DashboardViewProps {
   user: User | null;
   workspace: (Workspace & { membersCount: number }) | null;
   initialTransactions: (Transaction & { amount: number })[];
+  initialEconomyStats: { totalCreditsBurned: number } | null;
 }
 
-export default function DashboardView({ initialAgents, user, workspace, initialTransactions }: DashboardViewProps) {
+export default function DashboardView({ 
+    initialAgents, 
+    user, 
+    workspace, 
+    initialTransactions,
+    initialEconomyStats
+}: DashboardViewProps) {
   const apps = useAppStore((state) => state.apps);
   const handleDragEnd = useAppStore((state) => state.handleDragEnd);
   const sensors = useSensors(useSensor(PointerSensor), useSensor(KeyboardSensor));
@@ -31,6 +38,7 @@ export default function DashboardView({ initialAgents, user, workspace, initialT
 
   const [agents, setAgents] = useState<AgentData[]>(initialAgents);
   const [transactions, setTransactions] = useState<(Transaction & { amount: number })[]>(initialTransactions);
+  const [economyStats, setEconomyStats] = useState<{ totalCreditsBurned: number } | null>(initialEconomyStats);
   const [isLoadingData, setIsLoadingData] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -38,19 +46,23 @@ export default function DashboardView({ initialAgents, user, workspace, initialT
     setIsLoadingData(true);
     setError(null);
     try {
-      const [agentsRes, txRes] = await Promise.all([
+      const [agentsRes, txRes, economyStatsRes] = await Promise.all([
         fetch('/api/agents'),
         fetch('/api/billing/transactions'),
+        fetch('/api/workspaces/me/economy-stats'),
       ]);
 
       if (!agentsRes.ok) throw new Error('Failed to fetch agent status.');
       if (!txRes.ok) throw new Error('Failed to fetch transaction history.');
+      if (!economyStatsRes.ok) throw new Error('Failed to fetch economy stats.');
       
       const agentsData = await agentsRes.json();
       const txData = await txRes.json();
+      const economyData = await economyStatsRes.json();
 
       setAgents(agentsData);
       setTransactions(txData);
+      setEconomyStats(economyData);
 
     } catch (err: any) {
         setError(err.message);
@@ -70,7 +82,10 @@ export default function DashboardView({ initialAgents, user, workspace, initialT
 
   return (
     <div className="relative h-full w-full">
-      <SystemWeave initialAgents={agents} />
+      <SystemWeave 
+        initialAgents={agents}
+        totalCreditsBurned={economyStats?.totalCreditsBurned ?? 0}
+      />
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
         <MicroAppGrid 
             apps={apps} 

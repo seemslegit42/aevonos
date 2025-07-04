@@ -209,7 +209,7 @@ export async function processMicroAppPurchase(
  * @param limit The maximum number of transactions to return.
  * @returns A list of recent transaction records.
  */
-export async function getWorkspaceTransactions(workspaceId: string, limit = 20): Promise<Transaction[]> {
+export async function getWorkspaceTransactions(workspaceId: string, limit = 20): Promise<(Transaction & { amount: number })[]> {
   if (!workspaceId) {
     throw new Error('Workspace ID is required to fetch transactions.');
   }
@@ -220,7 +220,7 @@ export async function getWorkspaceTransactions(workspaceId: string, limit = 20):
     take: limit,
   });
 
-  return txs.map(tx => ({ ...tx, amount: Number(tx.amount), tributeAmount: tx.tributeAmount ? Number(tx.tributeAmount) : null, boonAmount: tx.boonAmount ? Number(tx.boonAmount) : null }));
+  return txs.map(tx => ({ ...tx, amount: Number(tx.amount) }));
 }
 
 /**
@@ -411,4 +411,39 @@ export async function transmuteCredits(
     }
     throw new Error('An unknown error occurred during transmutation.');
   }
+}
+
+/**
+ * Gets the economy stats for a workspace.
+ * @param workspaceId The ID of the workspace.
+ * @returns The total credits burned.
+ */
+export async function getEconomyStats(workspaceId: string) {
+    const debitTransactions = await prisma.transaction.aggregate({
+        _sum: {
+            amount: true,
+        },
+        where: {
+            workspaceId,
+            type: TransactionType.DEBIT,
+            status: 'COMPLETED',
+        },
+    });
+
+    const tributeTransactions = await prisma.transaction.aggregate({
+        _sum: {
+            tributeAmount: true,
+        },
+        where: {
+            workspaceId,
+            type: TransactionType.TRIBUTE,
+            status: 'COMPLETED',
+        },
+    });
+
+    const totalDebits = debitTransactions._sum.amount?.toNumber() || 0;
+    const totalTributes = tributeTransactions._sum.tributeAmount?.toNumber() || 0;
+
+    const totalCreditsBurned = totalDebits + totalTributes;
+    return { totalCreditsBurned };
 }

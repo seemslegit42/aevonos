@@ -252,14 +252,13 @@ function Scene({ agents, beepCoreState, highlightedAgents, pulsePhase, totalCred
 }
 
 
-export default function SystemWeave({ initialAgents }: { initialAgents: AgentData[] }) {
+export default function SystemWeave({ initialAgents, totalCreditsBurned }: { initialAgents: AgentData[], totalCreditsBurned: number }) {
   const [agents, setAgents] = useState<AgentData[]>(initialAgents);
   const { isLoading, beepOutput } = useAppStore();
   const [beepCoreState, setBeepCoreState] = useState<BeepCoreState>('idle');
   const [highlightedAgents, setHighlightedAgents] = useState<Set<string>>(new Set());
   const audioRef = useRef<HTMLAudioElement>(null);
   const [pulsePhase, setPulsePhase] = useState<PulsePhase | null>(null);
-  const [economyStats, setEconomyStats] = useState<{ totalCreditsBurned: number } | null>(null);
 
   useEffect(() => {
     const fetchPulse = async () => {
@@ -273,24 +272,9 @@ export default function SystemWeave({ initialAgents }: { initialAgents: AgentDat
             console.error("Failed to fetch pulse state for SystemWeave:", error);
         }
     };
-    const fetchEconomyStats = async () => {
-        try {
-            const res = await fetch('/api/workspaces/me/economy-stats');
-            if (res.ok) {
-                const data = await res.json();
-                setEconomyStats(data);
-            }
-        } catch (error) {
-            console.error("Failed to fetch economy stats for SystemWeave:", error);
-        }
-    };
 
-    const fetchAll = () => {
-        fetchPulse();
-        fetchEconomyStats();
-    }
-    fetchAll();
-    const interval = setInterval(fetchAll, 30000); // Refresh every 30 seconds
+    fetchPulse();
+    const interval = setInterval(fetchPulse, 30000); // Refresh every 30 seconds
     return () => clearInterval(interval);
   }, []);
 
@@ -348,7 +332,7 @@ export default function SystemWeave({ initialAgents }: { initialAgents: AgentDat
   return (
       <div className="absolute inset-0 -z-10">
         <Canvas camera={{ position: [0, 8, 18], fov: 60 }}>
-            <Scene agents={agents} beepCoreState={beepCoreState} highlightedAgents={highlightedAgents} pulsePhase={pulsePhase} totalCreditsBurned={economyStats?.totalCreditsBurned ?? 0} />
+            <Scene agents={agents} beepCoreState={beepCoreState} highlightedAgents={highlightedAgents} pulsePhase={pulsePhase} totalCreditsBurned={totalCreditsBurned} />
         </Canvas>
          <audio ref={audioRef} onEnded={handleAudioEnd} className="hidden" />
       </div>

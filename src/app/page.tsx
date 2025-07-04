@@ -4,10 +4,7 @@ import DashboardView from '@/components/dashboard/dashboard-view';
 import { type Agent, type User, type Transaction, type Workspace } from '@prisma/client';
 import { getAuthenticatedUser } from '@/lib/firebase/admin';
 import prisma from '@/lib/prisma';
-import StatCard from '@/components/dashboard/widgets/StatCard';
-import AgentStatusList from '@/components/dashboard/widgets/AgentStatusList';
-import RecentActivityFeed from '@/components/dashboard/widgets/RecentActivityFeed';
-import { CreditCard, Users, Bot } from 'lucide-react';
+import { getWorkspaceTransactions, getEconomyStats } from '@/services/ledger-service';
 
 export default async function Home() {
     try {
@@ -19,22 +16,13 @@ export default async function Home() {
             return <div className="h-full w-full" />;
         }
     
-        const [agents, initialTransactions, membersCount] = await Promise.all([
+        const [agents, initialTransactions, membersCount, economyStats] = await Promise.all([
             prisma.agent.findMany({ where: { workspaceId: workspace.id }, orderBy: { name: 'asc' } }),
-            prisma.transaction.findMany({ 
-                where: { workspaceId: workspace.id },
-                orderBy: { createdAt: 'desc' },
-                take: 10,
-            }),
-            prisma.user.count({ where: { workspaces: { some: { id: workspace.id } } } })
+            getWorkspaceTransactions(workspace.id, 10),
+            prisma.user.count({ where: { workspaces: { some: { id: workspace.id } } } }),
+            getEconomyStats(workspace.id),
         ]);
         
-        // Convert Decimal to number for client-side serialization
-        const initialTransactionsWithNumbers = initialTransactions.map(tx => ({
-            ...tx,
-            amount: tx.amount.toNumber(),
-        }));
-
         const workspaceWithCount = { ...workspace, membersCount };
 
         return (
@@ -43,7 +31,8 @@ export default async function Home() {
                     initialAgents={agents} 
                     user={user} 
                     workspace={workspaceWithCount} 
-                    initialTransactions={initialTransactionsWithNumbers}
+                    initialTransactions={initialTransactions}
+                    initialEconomyStats={economyStats}
                 />
             </div>
         );
