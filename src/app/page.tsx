@@ -1,6 +1,6 @@
 
 import DashboardView from '@/components/dashboard/dashboard-view';
-import { type Agent, type User } from '@prisma/client';
+import { type Agent, type User, type Transaction, type Workspace } from '@prisma/client';
 import { getAuthenticatedUser } from '@/lib/firebase/admin';
 import prisma from '@/lib/prisma';
 
@@ -14,12 +14,32 @@ export default async function Home() {
             return <div className="h-full w-full" />;
         }
     
-        // Fetch only the agents needed for the SystemWeave background.
-        const agents = await prisma.agent.findMany({ where: { workspaceId: workspace.id } });
-    
+        const [agents, recentTransactions, membersCount] = await Promise.all([
+            prisma.agent.findMany({ where: { workspaceId: workspace.id }, orderBy: { name: 'asc' } }),
+            prisma.transaction.findMany({ 
+                where: { workspaceId: workspace.id },
+                orderBy: { createdAt: 'desc' },
+                take: 10,
+            }),
+            prisma.user.count({ where: { workspaces: { some: { id: workspace.id } } } })
+        ]);
+        
+        // Convert Decimal to number for client-side serialization
+        const transactionsWithNumbers = recentTransactions.map(tx => ({
+            ...tx,
+            amount: tx.amount.toNumber(),
+        }));
+
+        const workspaceWithCount = { ...workspace, membersCount };
+
         return (
             <div className="h-full">
-                <DashboardView initialAgents={agents} user={user} />
+                <DashboardView 
+                    initialAgents={agents} 
+                    user={user} 
+                    workspace={workspaceWithCount} 
+                    recentTransactions={transactionsWithNumbers}
+                />
             </div>
         );
 

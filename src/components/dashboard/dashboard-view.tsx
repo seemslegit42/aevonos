@@ -2,36 +2,36 @@
 'use client';
 
 import React from 'react';
-import { type Agent as AgentData, type User } from '@prisma/client';
+import { type Agent as AgentData, type User, type Workspace, Transaction } from '@prisma/client';
 import { MicroAppGrid } from '../micro-app-grid';
 import { useAppStore } from '@/store/app-store';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import SystemWeave from './system-weave';
 import PulseNarrativeDisplay from './pulse-narrative-display';
-import { useIsMobile } from '@/hooks/use-is-mobile';
 
 interface DashboardViewProps {
   initialAgents: AgentData[];
   user: User | null;
+  workspace: (Workspace & { membersCount: number }) | null;
+  recentTransactions: (Transaction & { amount: number })[];
 }
 
-export default function DashboardView({ initialAgents, user }: DashboardViewProps) {
+export default function DashboardView({ initialAgents, user, workspace, recentTransactions }: DashboardViewProps) {
   const { apps, handleDragEnd } = useAppStore();
   const sensors = useSensors(useSensor(PointerSensor), useSensor(KeyboardSensor));
-  const isMobile = useIsMobile();
-
-  const grid = <MicroAppGrid apps={apps} user={user} />;
 
   return (
     <div className="relative h-full w-full">
-      {!isMobile && <SystemWeave initialAgents={initialAgents} />}
-      {isMobile ? (
-        grid
-      ) : (
-        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-          {grid}
-        </DndContext>
-      )}
+      <SystemWeave initialAgents={initialAgents} />
+      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+        <MicroAppGrid 
+            apps={apps} 
+            user={user} 
+            initialAgents={initialAgents} 
+            workspace={workspace} 
+            recentTransactions={recentTransactions} 
+        />
+      </DndContext>
       <PulseNarrativeDisplay />
     </div>
   );

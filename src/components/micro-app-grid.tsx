@@ -4,22 +4,25 @@
 import React, { useState, useEffect } from 'react';
 import MicroAppCard from './micro-app-card';
 import { type MicroApp, useAppStore } from '@/store/app-store';
-import { FlowerOfLifeIcon } from './icons/FlowerOfLifeIcon';
 import FirstWhisperCard from '@/components/layout/FirstWhisperCard';
-import type { User } from '@prisma/client';
+import type { Agent, User, Workspace, Transaction } from '@prisma/client';
 import { useIsMobile } from '@/hooks/use-is-mobile';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { X } from 'lucide-react';
 import { getAppIcon, getAppContent } from './micro-app-registry';
 import { ScrollArea } from './ui/scroll-area';
+import DashboardWidgets from './dashboard/widgets/DashboardWidgets';
 
 interface MicroAppGridProps {
   apps: MicroApp[];
   user: User | null;
+  initialAgents: Agent[];
+  workspace: (Workspace & { membersCount: number }) | null;
+  recentTransactions: (Transaction & { amount: number })[];
 }
 
-export function MicroAppGrid({ apps, user }: MicroAppGridProps) {
+export function MicroAppGrid({ apps, user, initialAgents, workspace, recentTransactions }: MicroAppGridProps) {
   const [showWhisper, setShowWhisper] = useState(false);
   const isMobile = useIsMobile();
   const closeApp = useAppStore(state => state.closeApp);
@@ -74,20 +77,20 @@ export function MicroAppGrid({ apps, user }: MicroAppGridProps) {
                 </Card>
               );
             })}
+             {apps.length === 0 && !showWhisper && (
+                <DashboardWidgets
+                    initialAgents={initialAgents}
+                    workspace={workspace}
+                    recentTransactions={recentTransactions}
+                />
+            )}
           </div>
         </ScrollArea>
-        {apps.length === 0 && !showWhisper && (
-          <div className="text-center text-muted-foreground animate-in fade-in-50 duration-1000 flex flex-col items-center pointer-events-none absolute inset-0 justify-center">
-              <FlowerOfLifeIcon className="w-24 h-24 text-primary/30" />
-              <h2 className="text-2xl font-headline text-foreground mt-4">The Canvas Awaits Your Command.</h2>
-              <p className="mt-1 italic">"Speak, and the system will answer."</p>
-          </div>
-        )}
       </div>
     );
   }
 
-  // Desktop layout remains the same
+  // Desktop layout
   return (
     <div className="relative w-full h-full flex items-center justify-center">
       {apps.map((app) => (
@@ -97,11 +100,11 @@ export function MicroAppGrid({ apps, user }: MicroAppGridProps) {
       {showWhisper && user ? (
           <FirstWhisperCard user={user} onAction={onWhisperAction} />
       ) : apps.length === 0 ? (
-          <div className="text-center text-muted-foreground animate-in fade-in-50 duration-1000 flex flex-col items-center pointer-events-none">
-              <FlowerOfLifeIcon className="w-24 h-24 text-primary/30" />
-              <h2 className="text-2xl font-headline text-foreground mt-4">The Canvas Awaits Your Command.</h2>
-              <p className="mt-1 italic">"Speak, and the system will answer."</p>
-          </div>
+          <DashboardWidgets 
+            initialAgents={initialAgents}
+            workspace={workspace}
+            recentTransactions={recentTransactions}
+          />
       ) : null}
     </div>
   );
