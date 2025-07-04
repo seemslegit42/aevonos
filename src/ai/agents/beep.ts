@@ -332,7 +332,7 @@ const handleThreat = async (state: AgentState) => {
   const finalAnswerToolCall = {
     name: 'final_answer',
     args: {
-      responseText: `Aegis Alert: ${aegisReport.anomalyExplanation} Command execution has been halted. A security alert has been logged.`,
+      responseText: `ALERT: Aegis has flagged this command as a potential social engineering attack. The action has been blocked. Reason: ${aegisReport.anomalyExplanation}`,
       appsToLaunch: [{ type: 'aegis-threatscope', title: 'Aegis ThreatScope' }],
       suggestedCommands: ['Lock down my account', 'View security alerts'],
     },

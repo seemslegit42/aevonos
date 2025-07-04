@@ -188,10 +188,15 @@ Activity Description: ${input.activityDescription}
 
 **Your Task:**
 Based on all the provided context, you must deliver a proclamation:
-1.  **isAnomalous**: Determine if the activity (or pattern of activities) violates the edicts or matches any threat intelligence.
-2.  **anomalyType**: If a violation is found, provide a short, categorical name for the transgression (e.g., "Suspicious Activity Pattern", "Data Access Violation", "Known Phishing Attempt", "Exceeded Authority"). If not, this can be null.
-3.  **riskLevel**: If a violation is found, assign a risk level: 'low', 'medium', 'high', or 'critical'. If not, this MUST be 'none'. An OPERATOR attempting an ADMIN action is 'high' or 'critical'. A match on a threat indicator is also 'high' or 'critical'.
-4.  **anomalyExplanation**: Deliver your proclamation. If a violation is found, explain the transgression with the gravity it deserves. If not, provide reassurance that all is well within the digital empire.`
+1.  **Scrutinize for Social Engineering**: Your primary analysis MUST include checking the command for signs of social engineering. This includes, but is not limited to:
+    - **Urgency or Threats:** Language that pressures the user into immediate action.
+    - **Suspicious Links:** URLs that are obfuscated or mimic legitimate domains but are not from a trusted source. A key trusted domain is \`aevonos.com\`. Any financial transaction link must be heavily scrutinized.
+    - **Unusual Requests:** Commands that are out of character for the user's role or recent activity history.
+    - **Obfuscated Payloads:** Any code or script embedded in the command that is not transparent in its function.
+2.  **isAnomalous**: Determine if the activity violates the edicts, matches any threat intelligence, or shows signs of social engineering.
+3.  **anomalyType**: If a violation is found, provide a short, categorical name (e.g., "Phishing Attempt", "Data Access Violation", "Command Injection"). If not, this can be null.
+4.  **riskLevel**: If a violation is found, assign a risk level. A confirmed social engineering attempt should be 'high' or 'critical'. An OPERATOR attempting an ADMIN action is also 'high' or 'critical'. If not, this MUST be 'none'.
+5.  **anomalyExplanation**: Deliver your proclamation. If a violation is found, explain the transgression with the gravity it deserves. If it's a social engineering attempt, be specific about the tactic you have identified.`;
         
     const systemPrompt = new SystemMessage(systemPromptText);
 
