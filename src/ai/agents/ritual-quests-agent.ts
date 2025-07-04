@@ -55,6 +55,7 @@ const generateRitualQuestsFlow = ai.defineFlow(
   }
 );
 
-export async function generateRitualQuests(input: RitualQuestInput): Promise<RitualQuestOutput> {
-  return generateRitualQuestsFlow(input);
+export async function generateRitualQuests(input: RitualQuestInput): Promise<{ agent: 'ritual-quests', report: RitualQuestOutput }> {
+  const report = await generateRitualQuestsFlow(input);
+  return { agent: 'ritual-quests', report };
 }

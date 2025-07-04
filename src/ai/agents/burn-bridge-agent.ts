@@ -96,13 +96,14 @@ workflow.addEdge('generate_dossier', END);
 
 const burnBridgeApp = workflow.compile();
 
-// 4. Create exported flow
-export async function executeBurnBridgeProtocol(input: BurnBridgeInput): Promise<DossierOutput> {
+// 4. Create exported flow that conforms to the AgentReport schema
+export async function executeBurnBridgeProtocol(input: BurnBridgeInput): Promise<{ agent: 'dossier', report: DossierOutput }> {
     const result = await burnBridgeApp.invoke({ input });
 
     if (!result.finalDossier) {
         throw new Error('The Burn Bridge Protocol failed to generate a final dossier.');
     }
-
-    return result.finalDossier;
+    
+    // The protocol's output is a dossier report.
+    return { agent: 'dossier', report: result.finalDossier };
 }

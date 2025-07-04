@@ -66,7 +66,7 @@ workflow.addEdge('tools', 'agent');
 
 const vaultApp = workflow.compile();
 
-export async function consultVaultDaemon(input: VaultQueryInput): Promise<VaultAnalysisOutput> {
+export async function consultVaultDaemon(input: VaultQueryInput): Promise<{ agent: 'vault', report: VaultAnalysisOutput }> {
     await authorizeAndDebitAgentActions({
         workspaceId: input.workspaceId,
         userId: input.userId,
@@ -89,12 +89,13 @@ export async function consultVaultDaemon(input: VaultQueryInput): Promise<VaultA
     );
     
     const structuredModel = langchainGroqComplex.withStructuredOutput(VaultAnalysisOutputSchema);
-    const finalResult = await vaultApp.pipe(structuredModel).invoke({
+    
+    const result = await vaultApp.invoke({
         messages: [systemMessage],
         workspaceId: input.workspaceId,
     });
     
-    return finalResult;
-}
-
+    const finalResult = await structuredModel.invoke(result.messages);
     
+    return { agent: 'vault', report: finalResult };
+}

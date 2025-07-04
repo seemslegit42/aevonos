@@ -125,8 +125,8 @@ workflow.addEdge('handle_error', END);
 
 const inventoryApp = workflow.compile();
 
-// 5. Create the exported flow for BEEP to call
-export async function consultInventoryDaemon(input: InventoryDaemonInput): Promise<InventoryDaemonOutput> {
+// 5. Create the exported flow for BEEP to call that returns the AgentReport format.
+export async function consultInventoryDaemon(input: InventoryDaemonInput): Promise<{ agent: 'inventory-daemon', report: InventoryDaemonOutput }> {
     const systemMessage = new HumanMessage(
         `You are the Daemon of Inventory. Your purpose is to provide precise, accurate, and actionable information about inventory levels and supply chain logistics. You are efficient and focused. You must use your available tools to answer the user's query. When you have a final answer, state it clearly.
         
@@ -139,7 +139,10 @@ export async function consultInventoryDaemon(input: InventoryDaemonInput): Promi
 
     const lastMessage = result.messages.findLast(m => m instanceof AIMessage && !m.tool_calls);
 
+    const response = lastMessage?.content as string || "The daemon is silent. No conclusive response was formulated.";
+    
     return {
-        response: lastMessage?.content as string || "The daemon is silent. No conclusive response was formulated."
+        agent: 'inventory-daemon',
+        report: { response }
     };
 }
