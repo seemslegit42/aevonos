@@ -5,10 +5,10 @@ import React, { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ShoppingCart, Check, Loader2 } from 'lucide-react';
+import { ShoppingCart, Check, Loader2, Zap } from 'lucide-react';
 import type { ArtifactManifest } from '@/config/artifacts';
 import { useToast } from '@/hooks/use-toast';
-import { makeFollyTribute, logInstrumentDiscovery } from '@/app/actions';
+import { activateChaosCard, logInstrumentDiscovery } from '@/app/actions';
 import { Badge } from '../ui/badge';
 import { cn } from '@/lib/utils';
 
@@ -30,7 +30,6 @@ const classStyles = {
 export function ChaosCardListingCard({ artifact, ownedCardKeys, onAcquire }: ChaosCardListingCardProps) {
   const { toast } = useToast();
   const [isAcquiring, setIsAcquiring] = useState(false);
-  const isOwned = ownedCardKeys.includes(artifact.id);
   const cardRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -53,25 +52,16 @@ export function ChaosCardListingCard({ artifact, ownedCardKeys, onAcquire }: Cha
     };
   }, [artifact.id]);
 
-  const handleAcquire = async () => {
-    if (isOwned || isAcquiring) return;
+  const handleActivate = async () => {
+    if (isAcquiring) return;
     setIsAcquiring(true);
-    const result = await makeFollyTribute(artifact.id);
+    const result = await activateChaosCard(artifact.id);
     
     if (result.success) {
-      if (result.outcome === 'win' || result.outcome === 'pity_boon') {
-        toast({ title: 'Acquisition Successful', description: result.message });
-        onAcquire(); // Refresh to show ownership
-      } else {
-        toast({
-          variant: 'default',
-          title: 'Tribute Lost',
-          description: result.message,
-        });
-        onAcquire(); // Still refresh to show credit change
-      }
+        toast({ title: 'Effect Activated!', description: result.message });
+        onAcquire(); // Refresh parent component data (e.g., credit balance)
     } else {
-      toast({ variant: 'destructive', title: 'Tribute Failed', description: result.error });
+      toast({ variant: 'destructive', title: 'Activation Failed', description: result.error });
     }
     
     setIsAcquiring(false);
@@ -79,8 +69,7 @@ export function ChaosCardListingCard({ artifact, ownedCardKeys, onAcquire }: Cha
 
   const getActionContent = () => {
       if (isAcquiring) return <Loader2 className="animate-spin" />;
-      if (isOwned) return <><Check className="mr-2 h-4 w-4" /> Owned</>;
-      return <><ShoppingCart className="mr-2 h-4 w-4" /> Make Tribute</>;
+      return <><Zap className="mr-2 h-4 w-4" /> Activate</>;
   }
 
   const cardClass = artifact.cardClass ? classStyles[artifact.cardClass] || classStyles.AESTHETIC : classStyles.AESTHETIC;
@@ -113,7 +102,7 @@ export function ChaosCardListingCard({ artifact, ownedCardKeys, onAcquire }: Cha
         <p className="text-2xl font-bold text-primary font-headline">
             {`${artifact.creditCost} Ξ`}
         </p>
-        <Button variant={isOwned ? "secondary" : "default"} onClick={handleAcquire} disabled={isOwned || isAcquiring}>
+        <Button variant="default" onClick={handleActivate} disabled={isAcquiring}>
             {getActionContent()}
         </Button>
       </CardFooter>

@@ -16,6 +16,7 @@ import { acceptReclamationGift, deleteAccount } from '@/app/auth/actions';
 import { processFollyTribute } from '@/services/klepsydra-service';
 import prisma from '@/lib/prisma';
 import { differenceInMinutes } from 'date-fns';
+import { activateCardEffect } from '@/services/effects-service';
 
 
 export async function handleCommand(command: string, activeAppContext?: string): Promise<UserCommandOutput> {
@@ -194,6 +195,24 @@ export async function makeFollyTribute(instrumentId: string, tributeAmount?: num
   } catch (error) {
     console.error(`[Action: makeFollyTribute] for instrument ${instrumentId}:`, error);
     const errorMessage = error instanceof Error ? error.message : 'Failed to complete tribute.';
+    return { success: false, error: errorMessage };
+  }
+}
+
+export async function activateChaosCard(cardId: string) {
+  const { user, workspace } = await getAuthenticatedUser();
+   if (!user || !workspace) {
+        return { success: false, error: 'User or workspace not found.' };
+    }
+  
+  try {
+    await activateCardEffect(user.id, workspace.id, cardId);
+    revalidatePath('/');
+    const cardName = artifactManifests.find(c => c.id === cardId)?.name || 'The effect';
+    return { success: true, message: `${cardName} has been activated.` };
+  } catch (error) {
+    console.error(`[Action: activateChaosCard] for card ${cardId}:`, error);
+    const errorMessage = error instanceof Error ? error.message : 'Failed to activate Chaos Card.';
     return { success: false, error: errorMessage };
   }
 }

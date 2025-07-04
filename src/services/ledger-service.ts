@@ -204,6 +204,69 @@ export async function processMicroAppPurchase(
 }
 
 /**
+ * Atomically processes a Chaos Card activation, debiting credits and logging the event.
+ * @returns A promise that resolves upon successful completion.
+ */
+export async function processEffectActivation(
+  userId: string,
+  workspaceId: string,
+  cardId: string,
+  cardName: string,
+  creditCost: number
+) {
+  const signatureSecret = process.env.AEGIS_SIGNING_SECRET || 'default_secret_for_dev';
+
+  await prisma.$transaction(async (tx) => {
+    // 1. Validate credits
+    const workspace = await tx.workspace.findUniqueOrThrow({
+      where: { id: workspaceId },
+      select: { credits: true },
+    });
+
+    if (Number(workspace.credits) < creditCost) {
+      throw new InsufficientCreditsError(`Insufficient ΞCredits to activate this effect.`);
+    }
+
+    // 2. Debit credits
+    await tx.workspace.update({
+      where: { id: workspaceId },
+      data: {
+        credits: { decrement: creditCost },
+      },
+    });
+
+    const description = `Chaos Card Activated: ${cardName}`;
+    const transactionDataForSigning = {
+        workspaceId, userId, instrumentId: cardId,
+        type: TransactionType.DEBIT,
+        amount: new Prisma.Decimal(creditCost).toFixed(8),
+        description,
+        timestamp: new Date().toISOString()
+    };
+    const signature = createHmac('sha256', signatureSecret)
+        .update(JSON.stringify(transactionDataForSigning))
+        .digest('hex');
+
+    // 3. Create the transaction log
+    await tx.transaction.create({
+      data: {
+        workspaceId,
+        userId,
+        type: TransactionType.DEBIT,
+        amount: creditCost,
+        description,
+        instrumentId: cardId,
+        status: 'COMPLETED',
+        aegisSignature: signature,
+      },
+    });
+  });
+
+  // Invalidate cache after the transaction
+  await cache.del(`workspace:user:${userId}`);
+}
+
+/**
  * Retrieves the most recent transactions for a given workspace.
  * @param workspaceId The ID of the workspace.
  * @param limit The maximum number of transactions to return.
