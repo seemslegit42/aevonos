@@ -55,37 +55,35 @@ export function MicroAppGrid({ apps, user, initialAgents, workspace, recentTrans
               const Icon = getAppIcon(app.type);
               const ContentComponent = getAppContent(app.type);
               return (
-                <CarouselItem key={app.id} className="h-full">
-                  <div className="p-2 md:p-4 h-full">
-                    <Card className="flex flex-col w-full h-full">
-                      <CardHeader className="flex flex-row items-center justify-between space-x-4 p-4 flex-shrink-0">
-                        <div className="flex items-center gap-4">
-                          <div className="w-10 h-10 flex-shrink-0 items-center justify-center">
-                            <Icon className="w-full h-full text-primary" />
-                          </div>
-                          <div className="text-left overflow-hidden">
-                            <CardTitle className="font-headline text-lg text-foreground truncate">{app.title}</CardTitle>
-                          </div>
+                <CarouselItem key={app.id} className="h-full p-2 md:p-4">
+                  <Card className="flex flex-col w-full h-full">
+                    <CardHeader className="flex flex-row items-center justify-between space-x-4 p-4 flex-shrink-0">
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 flex-shrink-0 items-center justify-center">
+                          <Icon className="w-full h-full text-primary" />
                         </div>
-                        <Button variant="ghost" size="icon" onClick={() => closeApp(app.id)}>
-                          <X className="w-4 h-4" />
-                        </Button>
-                      </CardHeader>
-                      {ContentComponent && (
-                        <CardContent className="flex-grow p-0 overflow-hidden min-h-0">
-                          <div className="w-full h-full overflow-y-auto">
-                            <ContentComponent id={app.id} {...app.contentProps} />
-                          </div>
-                        </CardContent>
-                      )}
-                    </Card>
-                  </div>
+                        <div className="text-left overflow-hidden">
+                          <CardTitle className="font-headline text-lg text-foreground truncate">{app.title}</CardTitle>
+                        </div>
+                      </div>
+                      <Button variant="ghost" size="icon" onClick={() => closeApp(app.id)}>
+                        <X className="w-4 h-4" />
+                      </Button>
+                    </CardHeader>
+                    {ContentComponent && (
+                      <CardContent className="flex-grow p-0 overflow-hidden min-h-0">
+                        <div className="w-full h-full overflow-y-auto">
+                          <ContentComponent id={app.id} {...app.contentProps} />
+                        </div>
+                      </CardContent>
+                    )}
+                  </Card>
                 </CarouselItem>
               );
             })}
           </CarouselContent>
-           {apps.length > 1 && <CarouselPrevious className="left-0" />}
-           {apps.length > 1 && <CarouselNext className="right-0" />}
+           {apps.length > 1 && <CarouselPrevious className="left-2" />}
+           {apps.length > 1 && <CarouselNext className="right-2" />}
         </Carousel>
       );
     }
