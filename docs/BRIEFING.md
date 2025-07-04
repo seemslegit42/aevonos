@@ -1,4 +1,3 @@
-
 # ΛΞVON OS: Technical Briefing
 
 This document provides a concise, high-level overview of the ΛΞVON OS codebase for rapid context transfer.
