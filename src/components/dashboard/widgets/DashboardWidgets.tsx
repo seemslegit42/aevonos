@@ -12,10 +12,10 @@ import { CreditCard, Users, Bot } from 'lucide-react';
 interface DashboardWidgetsProps {
   initialAgents: Agent[];
   workspace: (Workspace & { membersCount: number }) | null;
-  recentTransactions: (Transaction & { amount: number })[];
+  initialTransactions: (Transaction & { amount: number })[];
 }
 
-export default function DashboardWidgets({ initialAgents, workspace, recentTransactions }: DashboardWidgetsProps) {
+export default function DashboardWidgets({ initialAgents, workspace, initialTransactions }: DashboardWidgetsProps) {
   return (
     <div className="p-4 w-full h-full max-w-7xl mx-auto overflow-y-auto">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
@@ -45,7 +45,7 @@ export default function DashboardWidgets({ initialAgents, workspace, recentTrans
             <AgentStatusList agents={initialAgents} />
         </div>
         <div className="lg:col-span-2 h-full">
-            <RecentActivityFeed transactions={recentTransactions} />
+            <RecentActivityFeed initialTransactions={initialTransactions} />
         </div>
       </div>
     </div>

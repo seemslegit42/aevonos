@@ -21,10 +21,10 @@ interface DashboardViewProps {
   initialAgents: AgentData[];
   user: User | null;
   workspace: (Workspace & { membersCount: number }) | null;
-  recentTransactions: (Transaction & { amount: number })[];
+  initialTransactions: (Transaction & { amount: number })[];
 }
 
-export default function DashboardView({ initialAgents, user, workspace, recentTransactions }: DashboardViewProps) {
+export default function DashboardView({ initialAgents, user, workspace, initialTransactions }: DashboardViewProps) {
   const { apps, handleDragEnd } = useAppStore();
   const sensors = useSensors(useSensor(PointerSensor), useSensor(KeyboardSensor));
 
@@ -39,7 +39,7 @@ export default function DashboardView({ initialAgents, user, workspace, recentTr
            <DashboardWidgets 
                 initialAgents={initialAgents} 
                 workspace={workspace} 
-                recentTransactions={recentTransactions} 
+                initialTransactions={initialTransactions} 
             />
         </MicroAppGrid>
       </DndContext>

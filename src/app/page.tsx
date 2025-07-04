@@ -19,7 +19,7 @@ export default async function Home() {
             return <div className="h-full w-full" />;
         }
     
-        const [agents, recentTransactions, membersCount] = await Promise.all([
+        const [agents, initialTransactions, membersCount] = await Promise.all([
             prisma.agent.findMany({ where: { workspaceId: workspace.id }, orderBy: { name: 'asc' } }),
             prisma.transaction.findMany({ 
                 where: { workspaceId: workspace.id },
@@ -30,7 +30,7 @@ export default async function Home() {
         ]);
         
         // Convert Decimal to number for client-side serialization
-        const transactionsWithNumbers = recentTransactions.map(tx => ({
+        const initialTransactionsWithNumbers = initialTransactions.map(tx => ({
             ...tx,
             amount: tx.amount.toNumber(),
         }));
@@ -43,7 +43,7 @@ export default async function Home() {
                     initialAgents={agents} 
                     user={user} 
                     workspace={workspaceWithCount} 
-                    recentTransactions={transactionsWithNumbers}
+                    initialTransactions={initialTransactionsWithNumbers}
                 />
             </div>
         );
