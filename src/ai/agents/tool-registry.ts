@@ -204,3 +204,27 @@ export const specialistAgentMap: Record<string, (input: any, context: AgentConte
     burn_bridge_protocol: (input: any, context: AgentContext) => executeBurnBridgeProtocol({ ...input, ...context }),
     vault_daemon: (input: any, context: AgentContext) => consultVaultDaemon({ ...input, ...context }),
 };
+
+
+/**
+ * Creates and returns a context-aware array of LangChain Tools for all specialist agents.
+ * This is used by the BEEP planner to route commands.
+ * @param context The current agent execution context.
+ * @returns An array of LangChain Tool instances.
+ */
+export async function getSpecialistTools(context: AgentContext): Promise<Tool[]> {
+    const definitions = getSpecialistAgentDefinitions();
+    const tools = definitions.map(def => {
+        const func = specialistAgentMap[def.name];
+        if (!func) {
+            throw new Error(`No implementation found for specialist agent: ${def.name}`);
+        }
+        return new Tool({
+            name: def.name,
+            description: def.description,
+            schema: def.schema,
+            func: (input: any) => func(input, context),
+        });
+    });
+    return tools;
+}

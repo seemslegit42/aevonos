@@ -160,7 +160,7 @@ const specialistToolNode = async (state: AgentState): Promise<Partial<AgentState
         try {
             const observation = await toolToCall.invoke(toolCall.args);
             return new ToolMessage({
-                content: observation,
+                content: JSON.stringify(observation),
                 tool_call_id: toolCall.id,
                 name: toolCall.name,
             });
