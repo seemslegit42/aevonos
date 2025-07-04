@@ -22,14 +22,14 @@ import { createSecurityAlertInDb } from '@/ai/tools/security-tools';
 import { consultDrSyntax, DrSyntaxAgentInputSchema } from './dr-syntax-agent';
 import { consultStonksBot, StonksAgentInputSchema } from './stonks-bot-agent';
 import { consultCrmAgent } from './crm-agent';
-import { consultWinstonWolfe } from './winston-wolfe-agent';
-import { consultKifKroker } from './kif-kroker-agent';
-import { consultVandelay } from './vandelay-agent';
-import { consultRolodex } from './rolodex-agent';
-import { consultJroc } from './jroc-agent';
-import { analyzeLaheyLog, LaheyAnalysisInputSchema } from './lahey';
-import { processDailyLog, ForemanatorLogInputSchema } from './foremanator';
-import { analyzeCompliance, SterileishAnalysisInputSchema } from './sterileish';
+import { consultWinstonWolfe, WinstonWolfeAgentInputSchema } from './winston-wolfe-agent';
+import { consultKifKroker, KifKrokerAgentInputSchema } from './kif-kroker-agent';
+import { consultVandelay, VandelayAgentInputSchema } from './vandelay-agent';
+import { consultRolodex, RolodexAgentInputSchema } from './rolodex-agent';
+import { consultJroc, JrocAgentInputSchema } from './jroc-agent';
+import { consultLahey, LaheyAgentInputSchema } from './lahey-agent';
+import { consultForemanator, ForemanatorAgentInputSchema } from './foremanator-agent';
+import { consultSterileish, SterileishAgentInputSchema } from './sterileish-agent';
 import { scanEvidence, PaperTrailScanInputSchema } from './paper-trail';
 import { processDocument, BarbaraInputSchema } from './barbara';
 import { auditFinances, AuditorInputSchema } from './auditor-generalissimo';
@@ -51,11 +51,6 @@ import { consultDemiurge, DemiurgeActionSchema } from './demiurge-agent';
 
 // Tool Schema Imports
 import { CreateSecurityAlertInputSchema } from '@/ai/tools/security-schemas';
-import { WinstonWolfeInputSchema } from './winston-wolfe-schemas';
-import { KifKrokerAnalysisInputSchema } from './kif-kroker-schemas';
-import { VandelayAlibiInputSchema } from './vandelay-schemas';
-import { RolodexAnalysisInputSchema } from './rolodex-schemas';
-import { JrocInputSchema } from './jroc-schemas';
 
 
 // Context for multi-tenancy and personalization
@@ -104,16 +99,16 @@ export type SpecialistAgentDefinition = {
 export function getSpecialistAgentDefinitions(): SpecialistAgentDefinition[] {
     return [
         { name: 'crm_agent', description: 'Manages contacts (create, list, update, delete).', schema: CrmActionSchema },
-        { name: 'dr_syntax', description: 'Critiques content (prompt, code, copy).', schema: DrSyntaxInputSchema.pick({ content: true, contentType: true }) },
-        { name: 'stonks_bot', description: 'Provides unhinged financial "advice" on stocks.', schema: StonksBotInputSchema.pick({ ticker: true, mode: true }) },
-        { name: 'winston_wolfe', description: 'Solves online reputation problems, typically by generating a response to a negative review.', schema: WinstonWolfeInputSchema.pick({ reviewText: true }) },
-        { name: 'kif_kroker', description: 'Analyzes team comms in a Slack channel for morale issues.', schema: KifKrokerAnalysisInputSchema.pick({ channelId: true }) },
-        { name: 'vandelay', description: 'Creates a fake calendar invite as an alibi.', schema: VandelayAlibiInputSchema.pick({ topicHint: true, addAttendees: true }).partial() },
-        { name: 'rolodex', description: "Analyzes a job candidate's profile against a job description.", schema: RolodexAnalysisInputSchema.pick({ candidateName: true, candidateSummary: true, jobDescription: true }) },
-        { name: 'jroc', description: 'Generates a business name, tagline, and logo concept.', schema: JrocInputSchema.pick({ businessType: true, logoStyle: true }) },
-        { name: 'lahey_surveillance', description: 'Investigates a suspicious employee log entry.', schema: LaheyAnalysisInputSchema.pick({ logEntry: true }) },
-        { name: 'foremanator', description: 'Processes a construction daily log.', schema: ForemanatorLogInputSchema.pick({ logText: true }) },
-        { name: 'sterileish', description: 'Analyzes a cleanroom or compliance log.', schema: SterileishAnalysisInputSchema.pick({ logText: true, entryType: true }) },
+        { name: 'dr_syntax', description: 'Critiques content (prompt, code, copy).', schema: DrSyntaxAgentInputSchema.pick({ content: true, contentType: true }) },
+        { name: 'stonks_bot', description: 'Provides unhinged financial "advice" on stocks.', schema: StonksAgentInputSchema.pick({ ticker: true, mode: true }) },
+        { name: 'winston_wolfe', description: 'Solves online reputation problems, typically by generating a response to a negative review.', schema: WinstonWolfeAgentInputSchema.pick({ reviewText: true }) },
+        { name: 'kif_kroker', description: 'Analyzes team comms in a Slack channel for morale issues.', schema: KifKrokerAgentInputSchema.pick({ channelId: true }) },
+        { name: 'vandelay', description: 'Creates a fake calendar invite as an alibi.', schema: VandelayAgentInputSchema.pick({ topicHint: true, addAttendees: true }).partial() },
+        { name: 'rolodex', description: "Analyzes a job candidate's profile against a job description.", schema: RolodexAgentInputSchema.pick({ candidateName: true, candidateSummary: true, jobDescription: true }) },
+        { name: 'jroc', description: 'Generates a business name, tagline, and logo concept.', schema: JrocAgentInputSchema.pick({ businessType: true, logoStyle: true }) },
+        { name: 'lahey_surveillance', description: 'Investigates a suspicious employee log entry.', schema: LaheyAgentInputSchema.pick({ logEntry: true }) },
+        { name: 'foremanator', description: 'Processes a construction daily log.', schema: ForemanatorAgentInputSchema.pick({ logText: true }) },
+        { name: 'sterileish', description: 'Analyzes a cleanroom or compliance log.', schema: SterileishAgentInputSchema.pick({ logText: true, entryType: true }) },
         { name: 'paper_trail', description: 'Scans a receipt image for expense details.', schema: PaperTrailScanInputSchema.pick({ receiptPhotoUri: true, caseFile: true }).partial() },
         { name: 'barbara', description: 'Processes administrative and compliance documents.', schema: BarbaraInputSchema.pick({ documentText: true, task: true }) },
         { name: 'auditor', description: 'Performs a detailed audit on a list of financial transactions.', schema: AuditorInputSchema.pick({ transactions: true }) },
@@ -147,9 +142,9 @@ export const specialistAgentMap: Record<string, (input: any, context: AgentConte
     vandelay: (input: any, context: AgentContext) => consultVandelay({ ...input, ...context }),
     rolodex: (input: any, context: AgentContext) => consultRolodex({ ...input, ...context }),
     jroc: (input: any, context: AgentContext) => consultJroc({ ...input, ...context }),
-    lahey_surveillance: (input: any, context: AgentContext) => analyzeLaheyLog({ ...input, ...context }),
-    foremanator: (input: any, context: AgentContext) => processDailyLog({ ...input, ...context }),
-    sterileish: (input: any, context: AgentContext) => analyzeCompliance({ ...input, ...context }),
+    lahey_surveillance: (input: any, context: AgentContext) => consultLahey({ ...input, ...context }),
+    foremanator: (input: any, context: AgentContext) => consultForemanator({ ...input, ...context }),
+    sterileish: (input: any, context: AgentContext) => consultSterileish({ ...input, ...context }),
     paper_trail: (input: any, context: AgentContext) => scanEvidence({ ...input, ...context }),
     barbara: (input: any, context: AgentContext) => processDocument({ ...input, ...context }),
     auditor: (input: any, context: AgentContext) => auditFinances({ ...input, ...context }),

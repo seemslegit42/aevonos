@@ -84,3 +84,6 @@ import '@/services/activity-log-service.ts';
 import '@/ai/agents/dr-syntax-agent.ts';
 import '@/ai/agents/stonks-bot-agent.ts';
 import '@/ai/tools/financial-context-tools.ts';
+import '@/ai/agents/lahey-agent.ts';
+import '@/ai/agents/foremanator-agent.ts';
+import '@/ai/agents/sterileish-agent.ts';
