@@ -1,3 +1,4 @@
+
 import { NextResponse } from 'next/server';
 import { getAuthenticatedUser } from '@/lib/firebase/admin';
 import jwt from 'jsonwebtoken';

@@ -56,4 +56,3 @@ export async function getSecurityEdicts(workspaceId: string): Promise<string[]> 
     return [];
   }
 }
-    
