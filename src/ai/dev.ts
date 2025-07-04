@@ -51,6 +51,7 @@ import '@/ai/tools/demiurge-tools.ts';
 import '@/services/pulse-engine-service.ts';
 import '@/services/klepsydra-service.ts';
 import '@/ai/agents/burn-bridge-agent.ts';
+import '@/services/integration-service.ts';
 import '@/ai/tools/slack-tools.ts';
 import '@/ai/agents/ritual-quests-agent.ts';
 import '@/services/global-event-service.ts';

@@ -17,8 +17,8 @@ export const integrationManifests: IntegrationManifest[] = [
         description: "Connect your workspace to Slack for notifications and commands.",
         iconUrl: "https://placehold.co/100x100.png",
         imageHint: 'collaboration chat logo',
-        authMethod: "oauth2",
-        setupGuideUrl: "https://slack.com/help/articles/115005265703-Connect-your-workspace-to-Slack"
+        authMethod: "api_key",
+        setupGuideUrl: "https://api.slack.com/authentication/token-types#bot"
     },
     {
         id: 'a2c4b6e8-8d0f-4f6e-9c1b-3e7d9a8c5b4d',
