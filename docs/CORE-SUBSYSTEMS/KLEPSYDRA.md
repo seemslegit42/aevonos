@@ -38,15 +38,23 @@ These are the designated points of interaction with the Klepsydra Engine. They a
 - **Future Instruments**: The architecture is designed to accommodate new Instruments of Folly, such as competitive "wagers" or high-stakes system events.
 
 ### 3.3. The Algorithm of Fate (`klepsydra-service.ts`)
-This is the server-side logic that determines the outcome of every tribute. It is a black box to the user, but its logic is transparent to the Architect:
-1.  **Invokes `processFollyTribute`**: This is the single, unified function that orchestrates the entire tribute process.
-2.  **Retrieves** the user's `PulseProfile`, including their dynamic psychological state.
-3.  **Calculates** the current `luckWeight` based on a sinusoidal pulse wave, incorporating time decay, phase offset, and psychological modifiers (`frustration`, `flowState`).
-4.  **Applies Archetype Modifiers**: The user's chosen `psyche` (Zen Architect, etc.) applies a multiplier to the base odds and potential boon amount, tuning the risk/reward profile.
-5.  **Checks for Pity Boon**: If `consecutiveLosses` exceeds the `PITY_THRESHOLD`, it overrides the odds and forces a small win to prevent user burnout.
-6.  **Triggers Judas Algorithm**: If the user is in a high `flowState`, there is a chance to trigger a "hollow win"—a slightly reduced jackpot—to engineer superstition and prevent hubris.
-7.  **Determines Outcome**: A random roll against the final, modulated odds determines a `win` or `loss`.
-8.  **Executes Atomic Transaction**: All database changes—updating the user's pulse profile, debiting the tribute, crediting any boon, and logging the immutable `TRIBUTE` transaction—are performed in a single, atomic database transaction to ensure perfect ledger consistency.
+This is a collection of sophisticated subroutines within the `klepsydra-service` designed to influence the user's emotional and economic state.
+
+- **The Sine-Rhythm Engine (SRE)**:
+  - **Function**: The core of the engine, this assigns a personal "luck-wave" to each user, modulating their outcomes in Folly Instruments.
+  - **Mechanic**: When a user's wave is at a crest (+), the SRE applies a positive multiplier to the base weights of rare and mythic rewards. When in a trough (-), it applies a negative modifier, making losses more likely but priming them for a system intervention.
+
+- **The Judas Algorithm**:
+  - **Function**: This subroutine intentionally introduces statistically insignificant but emotionally potent "miscalculations" when a user's confidence is at its peak.
+  - **Mechanic**: It can trigger "hollow wins" (e.g., a jackpot that pays out slightly less than expected) or serve unsolvable puzzles that are quickly replaced by easy ones after a clue is purchased. This fosters a mythology of "glitched odds" and "blessed runs," driving engagement through superstition.
+
+- **Aetheric Echoes**:
+  - **Function**: This visual system acts as the "currency of regret".
+  - **Mechanic**: After a choice is made (e.g., a spin in an Instrument), the PCE calculates a more "optimal" outcome and, for a fleeting moment, the UI glitches to show a phantom number of "what could have been". This non-verbal whisper is a powerful motivator to try again and correct the timeline.
+
+- **The Pity Boon Protocol**:
+  - **Function**: A failsafe designed to mitigate loss-streak abandonment.
+  - **Mechanic**: If a user exceeds the globally defined Pity Boon Threshold for consecutive losses, the KLEPSYDRA engine is forced to intervene, consuming a "Divine" tier weight from the instrument's rarity table to guarantee a minor boon on the next interaction.
 
 ---
 

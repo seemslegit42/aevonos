@@ -41,7 +41,17 @@ This is the heart of the Nudge Engine. It is a simple, powerful log that records
 
 ---
 
-## 4. Integration with the Doctrine of Sovereign Systems
+## 4. Nudge Vectors: The Application of Influence
+The Nudge Engine and Psyche-Calibration Engine apply their influence across multiple domains within the OS:
+
+- **Folly Instruments**: The primary vector. The Sine-Rhythm Engine directly modulates win/loss probabilities to create a compelling and addictive economic experience.
+- **The Obelisk Marketplace**: The PCE analyzes a user's Pulse Profile to subtly encourage specific transmutations or offer limited-time "favors" on certain assets. For example, if a user has been heavily engaged with agentic workflows, it might nudge them toward purchasing "Instruments of the Craft" by slightly reducing the ΞCredit cost for a limited time.
+- **The Armory Marketplace**: The PCE can influence the visibility or promotion of certain Micro-Apps based on user Pulse Profiles or Psyche-Matrix states. If a user's activity indicates they are struggling with a specific task, the PCE can instruct the Armory to feature a relevant third-party Instrument more prominently for them.
+- **BEEP Dialogue**: While not forcing a response, the PCE can provide hints to BEEP. If a user is in an SRE trough, BEEP's tone (via TTS) may become more encouraging. If they are on a winning streak, it may adopt the "Seducer" persona to encourage them to press their luck.
+
+---
+
+## 5. Integration with the Doctrine of Sovereign Systems
 
 The Nudge Engine is a direct implementation of the principle of **optimizing for Return on Belief**. By observing user intent (viewing an item) and gently reminding them of it later, it creates a feedback loop that feels personal and intelligent, not like a crude marketing pop-up.
 
