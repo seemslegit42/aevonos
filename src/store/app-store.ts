@@ -34,6 +34,7 @@ import { VinDieselOutput } from '@/ai/agents/vin-diesel-schemas';
 import { InventoryDaemonOutput } from '@/ai/agents/inventory-daemon-schemas';
 import { RitualQuestOutput } from '@/ai/agents/ritual-quests-schemas';
 import { artifactManifests } from '@/config/artifacts';
+import { toast } from '@/hooks/use-toast';
 
 enableMapSet();
 
@@ -400,6 +401,14 @@ export const useAppStore = create<AppStore>()((set, get) => ({
     if (result.responseText) {
         const isAlert = result.agentReports?.some(r => r.agent === 'aegis' && r.report.isAnomalous);
         audioPromise = generateSpeech({ text: result.responseText, mood: isAlert ? 'alert' : 'neutral' });
+    }
+
+    // Show a toast for text-only responses
+    if (result.responseText && (!result.appsToLaunch || result.appsToLaunch.length === 0)) {
+        toast({
+            title: "BEEP",
+            description: result.responseText,
+        });
     }
 
     // Process agent reports
