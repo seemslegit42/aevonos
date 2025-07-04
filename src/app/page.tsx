@@ -5,6 +5,9 @@ import { type Agent, type User, type Transaction, type Workspace } from '@prisma
 import { getAuthenticatedUser } from '@/lib/firebase/admin';
 import prisma from '@/lib/prisma';
 import { getWorkspaceTransactions, getEconomyStats } from '@/services/ledger-service';
+import { generateDailyBriefing } from '@/ai/agents/briefing-agent';
+import { DailyBriefingOutput } from '@/ai/agents/briefing-schemas';
+
 
 export default async function Home() {
     try {
@@ -16,11 +19,15 @@ export default async function Home() {
             return <div className="h-full w-full" />;
         }
     
-        const [agents, initialTransactions, membersCount, economyStats] = await Promise.all([
+        const [agents, initialTransactions, membersCount, economyStats, initialBriefing] = await Promise.all([
             prisma.agent.findMany({ where: { workspaceId: workspace.id }, orderBy: { name: 'asc' } }),
             getWorkspaceTransactions(workspace.id, 10),
             prisma.user.count({ where: { workspaces: { some: { id: workspace.id } } } }),
             getEconomyStats(workspace.id),
+            generateDailyBriefing({ workspaceId: workspace.id, userId: user.id, userFirstName: user.firstName || 'Architect' }).catch(err => {
+                console.error("Failed to fetch initial briefing:", err);
+                return null;
+            }) as Promise<DailyBriefingOutput | null>
         ]);
         
         const workspaceWithCount = { ...workspace, membersCount };
@@ -33,6 +40,7 @@ export default async function Home() {
                     workspace={workspaceWithCount} 
                     initialTransactions={initialTransactions}
                     initialEconomyStats={economyStats}
+                    initialBriefing={initialBriefing}
                 />
             </div>
         );

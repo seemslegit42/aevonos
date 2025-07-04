@@ -34,7 +34,7 @@ interface RecentActivityFeedProps {
 export default function RecentActivityFeed({ transactions, isLoading, error, onRefresh }: RecentActivityFeedProps) {
 
     const renderContent = () => {
-        if (isLoading && transactions.length === 0) {
+        if (isLoading) {
              return (
                 <div className="space-y-3">
                     <Skeleton className="h-10 w-full" />

@@ -1,11 +1,12 @@
+
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Coffee, AlertTriangle, ListChecks, CheckCircle } from 'lucide-react';
-import { DailyBriefingOutput } from '@/ai/agents/briefing-schemas';
+import { type DailyBriefingOutput } from '@/ai/agents/briefing-schemas';
 import { Button } from '@/components/ui/button';
 
 const LoadingSkeleton = () => (
@@ -17,42 +18,23 @@ const LoadingSkeleton = () => (
     </div>
 );
 
-export default function DailyBriefing() {
-    const [briefing, setBriefing] = useState<DailyBriefingOutput | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
+interface DailyBriefingProps {
+    briefing: DailyBriefingOutput | null;
+    isLoading: boolean;
+    error: string | null;
+}
 
-    useEffect(() => {
-        const fetchBriefing = async () => {
-            setIsLoading(true);
-            setError(null);
-            try {
-                const response = await fetch('/api/briefing');
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.error || 'Failed to fetch briefing.');
-                }
-                const data = await response.json();
-                setBriefing(data);
-            } catch (err) {
-                setError(err instanceof Error ? err.message : 'An unknown error occurred.');
-            } finally {
-                setIsLoading(false);
-            }
-        };
-        fetchBriefing();
-    }, []);
-
+export default function DailyBriefing({ briefing, isLoading, error }: DailyBriefingProps) {
     const renderContent = () => {
         if (isLoading) {
             return <LoadingSkeleton />;
         }
-        if (error) {
+        if (error && !briefing) {
             return (
                 <Alert variant="destructive">
                     <AlertTriangle className="h-4 w-4" />
                     <AlertTitle>Briefing Unavailable</AlertTitle>
-                    <AlertDescription>{error}</AlertDescription>
+                    <AlertDescription>The dashboard data could not be refreshed. Please try again later.</AlertDescription>
                 </Alert>
             );
         }
@@ -83,7 +65,13 @@ export default function DailyBriefing() {
                 </div>
             )
         }
-        return null;
+        return (
+             <Alert variant="destructive">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertTitle>Briefing Unavailable</AlertTitle>
+                <AlertDescription>The daily briefing could not be generated at this time.</AlertDescription>
+            </Alert>
+        );
     }
 
     return (
