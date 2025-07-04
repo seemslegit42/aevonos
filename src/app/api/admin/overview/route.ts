@@ -1,7 +1,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
 import { getAuthenticatedUser } from '@/lib/firebase/admin';
+import { getOverviewStats } from '@/services/admin-service';
 
 export async function GET(request: NextRequest) {
   try {
@@ -11,19 +11,7 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ error: 'Forbidden. Architect access required.' }, { status: 403 });
     }
 
-    const [userCount, agentCount, activeAgentCount] = await prisma.$transaction([
-      prisma.user.count({ where: { workspaces: { some: { id: workspace.id } } } }),
-      prisma.agent.count({ where: { workspaceId: workspace.id } }),
-      prisma.agent.count({ where: { workspaceId: workspace.id, status: 'active' } }),
-    ]);
-
-    const overview = {
-      userCount,
-      agentCount,
-      activeAgentCount,
-      creditBalance: Number(workspace.credits),
-      planTier: workspace.planTier,
-    };
+    const overview = await getOverviewStats(workspace.id);
 
     return NextResponse.json(overview);
   } catch (error) {

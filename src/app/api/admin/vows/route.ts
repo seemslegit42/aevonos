@@ -1,7 +1,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
 import { getAuthenticatedUser } from '@/lib/firebase/admin';
+import { getWorkspaceVows } from '@/services/admin-service';
 
 export async function GET(request: NextRequest) {
   try {
@@ -11,27 +11,7 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ error: 'Forbidden. Architect access required.' }, { status: 403 });
     }
 
-    const usersWithVows = await prisma.user.findMany({
-      where: {
-        workspaces: {
-          some: {
-            id: workspace.id,
-          },
-        },
-      },
-      select: {
-        id: true,
-        email: true,
-        firstName: true,
-        lastName: true,
-        psyche: true,
-        foundingVow: true,
-        foundingGoal: true,
-      },
-      orderBy: {
-        createdAt: 'asc',
-      },
-    });
+    const usersWithVows = await getWorkspaceVows(workspace.id);
 
     return NextResponse.json(usersWithVows);
   } catch (error) {
