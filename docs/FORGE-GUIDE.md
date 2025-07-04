@@ -1,6 +1,5 @@
-
 # The Forge Guide: Crafting Instruments for ΛΞVON OS
-Document Version: 1.0
+Document Version: 1.1 (Groq & Swarm Revision)
 Status: Canonized
 Audience: Third-Party Developers ("Artisans")
 1. The Call to the Forge: An Introduction
@@ -47,6 +46,9 @@ Aegis.logEvent(event: AegisEvent): Pushes a significant event from your app (e.g
 <CrystallineButton>: The standard button component.
 <OracleInput>: The standard text input component.
 And more, for every standard UI need. Direct use of primitive HTML elements like <button> or <div> for structural UI is forbidden. You must use the provided components.
+3.3 The Artisan's Pact: A Note on Performance
+Your Instrument will be part of an agentic swarm orchestrated by BEEP at near-instantaneous speeds. The core OS is powered by Groq; it does not wait.
+Your agentic functions **must** be highly performant. Any function that takes longer than 500ms to execute risks being a bottleneck in a workflow and may be deprioritized by BEEP's orchestrator. Write efficient, non-blocking code. Your Instrument's success depends not only on its function but on its ability to participate in the silence of true automation.
 4. The Micro-App Manifest (aevon.manifest.json)
 Every Instrument must contain a manifest file at its root. This file is the contract between your Instrument and the OS. It declares its identity, its needs, and its capabilities.
 {
