@@ -8,20 +8,15 @@
 import { Tool } from '@langchain/core/tools';
 import { z } from 'zod';
 import { UserPsyche, UserRole } from '@prisma/client';
-import prisma from '@/lib/prisma';
 
 import {
     UserCommandOutputSchema,
-    CrmActionSchema,
 } from '../agents/beep-schemas';
 
-// Tool Service Imports
-import { createSecurityAlertInDb } from '@/ai/tools/security-tools';
-
-// Specialist Agent Imports
+// Specialist Agent Imports and Schemas
 import { consultDrSyntax, DrSyntaxAgentInputSchema } from './dr-syntax-agent';
 import { consultStonksBot, StonksAgentInputSchema } from './stonks-bot-agent';
-import { consultCrmAgent } from './crm-agent';
+import { consultCrmAgent, CrmActionSchema } from './crm-agent';
 import { consultWinstonWolfe, WinstonWolfeAgentInputSchema } from './winston-wolfe-agent';
 import { consultKifKroker, KifKrokerAgentInputSchema } from './kif-kroker-agent';
 import { consultVandelay, VandelayAgentInputSchema } from './vandelay-agent';
@@ -49,10 +44,6 @@ import { consultVaultDaemon, VaultQueryInputSchema } from './vault-daemon';
 import { consultDemiurge, DemiurgeActionSchema } from './demiurge-agent';
 
 
-// Tool Schema Imports
-import { CreateSecurityAlertInputSchema } from '@/ai/tools/security-schemas';
-
-
 // Context for multi-tenancy and personalization
 interface AgentContext {
     userId: string;
@@ -77,12 +68,13 @@ class FinalAnswerTool extends Tool {
 
 /**
  * Creates and returns a context-aware array of tools for the BEEP agent's REASONER.
+ * The Reasoner should only have access to essential tools, not tools that duplicate
+ * the functionality of specialist agents.
  * @param context The current agent execution context.
  * @returns An array of LangChain Tool instances.
  */
 export async function getReasonerTools(context: AgentContext): Promise<Tool[]> {
     // The reasoner's only job is to synthesize the final answer.
-    // All other actions should be handled by specialist agents.
     const allTools: Tool[] = [
         new FinalAnswerTool(),
     ];
@@ -157,7 +149,7 @@ export const specialistAgentMap: Record<string, (input: any, context: AgentConte
     reno_mode: (input: any, context: AgentContext) => consultRenoMode({ ...input, ...context }),
     patrickt_app: (input: any, context: AgentContext) => consultPatrickt({ ...input, ...context }),
     vin_diesel: (input: any, context: AgentContext) => consultVinDiesel({ ...input, ...context }),
-    inventory_daemon: (input: any, context: AgentContext) => consultInventoryDaemon({ ...input }),
+    inventory_daemon: (input: any, context: AgentContext) => consultInventoryDaemon({ ...input, ...context }),
     ritual_quests: (input: any, context: AgentContext) => generateRitualQuests({ ...input, ...context }),
     burn_bridge_protocol: (input: any, context: AgentContext) => executeBurnBridgeProtocol({ ...input, ...context }),
     vault_daemon: (input: any, context: AgentContext) => consultVaultDaemon({ ...input, ...context }),

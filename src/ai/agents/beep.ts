@@ -1,4 +1,5 @@
 
+
 'use server';
 
 /**
@@ -163,7 +164,7 @@ const specialistToolNode = async (state: AgentState): Promise<Partial<AgentState
         if (!toolToCall) {
             return new ToolMessage({
                 content: `Error: Specialist agent '${toolCall.name}' is not a valid or available tool.`,
-                tool_call_id: toolCall.id,
+                tool_call_id: toolCall.id!,
                 name: toolCall.name,
             });
         }
@@ -171,14 +172,14 @@ const specialistToolNode = async (state: AgentState): Promise<Partial<AgentState
             const observation = await toolToCall(toolCall.args, context);
             return new ToolMessage({
                 content: JSON.stringify(observation),
-                tool_call_id: toolCall.id,
+                tool_call_id: toolCall.id!,
                 name: toolCall.name,
             });
         } catch (error: any) {
              console.error(`[BEEP Specialist Executor] Error in specialist agent '${toolCall.name}':`, error);
             return new ToolMessage({
                 content: `Error: The specialist agent '${toolCall.name}' failed with the following message: ${error.message}`,
-                tool_call_id: toolCall.id,
+                tool_call_id: toolCall.id!,
                 name: toolCall.name,
             });
         }
