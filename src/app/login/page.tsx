@@ -4,8 +4,9 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Loader2, Fingerprint, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
@@ -51,7 +52,6 @@ interface WorkstationCanvasProps {
 const WorkstationCanvas: React.FC<WorkstationCanvasProps> = ({ presence, setPresence }) => {
     
     useEffect(() => {
-        // Generate a new challenge when the component mounts
         if (!presence.challenge) {
             const newChallenge = `aevon-challenge-${crypto.randomUUID()}`;
             setPresence(p => ({ ...p, challenge: newChallenge }));
@@ -59,7 +59,6 @@ const WorkstationCanvas: React.FC<WorkstationCanvasProps> = ({ presence, setPres
     }, [presence.challenge, setPresence]);
 
     useEffect(() => {
-        // "Listen" for a valid signed challenge
         if (presence.signedChallenge && presence.challenge) {
             if (presence.signedChallenge === `signed(${presence.challenge})`) {
                 setTimeout(() => setPresence(p => ({ ...p, isAuthenticated: true })), 500);
@@ -76,7 +75,7 @@ const WorkstationCanvas: React.FC<WorkstationCanvasProps> = ({ presence, setPres
         )}>
             <div className={cn(
                 "absolute inset-0 z-[-1] transition-opacity duration-1000 ease-in-out",
-                isAwake ? 'opacity-25 animate-aurora' : 'opacity-05',
+                isAwake ? 'opacity-25 animate-aurora' : 'opacity-5',
                 "bg-[linear-gradient(135deg,hsl(var(--iridescent-one)/0.2),hsl(var(--iridescent-two)/0.2)_50%,hsl(var(--iridescent-three)/0.2)_100%)] bg-[length:600%_600%]"
             )}></div>
             
@@ -175,6 +174,14 @@ const MobileCompanion: React.FC<MobileCompanionProps> = ({ presence, setPresence
                     </div>
                 )}
             </CardContent>
+            <CardFooter className="p-0 pt-4 mt-auto">
+                <div className="text-center text-sm w-full">
+                    New Initiate?{" "}
+                    <Link href="/register" className="underline text-primary">
+                        Begin the Rite of Invocation.
+                    </Link>
+                </div>
+            </CardFooter>
         </Card>
     );
 };
@@ -191,7 +198,7 @@ export default function LoginPage() {
 
     useEffect(() => {
         if (presence.isAuthenticated) {
-            // In a real app, this would trigger the full session creation flow.
+            // This is a simulation. A real implementation would now call the backend to get a session JWT.
             // For now, it just redirects to the main canvas.
             setTimeout(() => router.push('/'), 2000);
         }
