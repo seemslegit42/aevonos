@@ -55,7 +55,12 @@ Cache Hit: It returns the cached data instantly.
 
 Cache Miss: It forwards the query to the PostgreSQL database using its pooled connection, receives the result, caches it for future requests, and then returns it to the service.
 
-## 4. The Mandate of Atomicity
+## 4. Architectural Mandate: Root-Level Schema
+**The Law**: The `prisma` directory, containing the `schema.prisma` file and its associated migrations, MUST reside in the project's root. It MUST NOT be placed inside the `src/` directory.
+
+**Rationale**: This is a non-negotiable architectural decision to enforce a clear, logical separation between the application's source code (`src/`) and the database's schema definitions. All build scripts (`package.json`), ORM configurations (`src/lib/prisma.ts`), and deployment processes MUST explicitly target this root-level location. Any deviation from this is a critical error.
+
+## 5. The Mandate of Atomicity
 Given that this stack handles our most critical financial and identity data, all operations that involve multiple, related database writes must be executed within a transaction to ensure atomicity.
 
 The Law: Any workflow that could be left in an inconsistent state if a step fails (e.g., debiting one user's wallet and crediting another) must be wrapped in a prisma.$transaction() block.
