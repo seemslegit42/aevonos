@@ -1,7 +1,7 @@
 
 import { NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
 import { getAuthenticatedUser } from '@/lib/firebase/admin';
+import { getActiveEffectsForWorkspace } from '@/services/effects-service';
 
 /**
  * @fileOverview API endpoint to retrieve active system effects (e.g., from Chaos Cards) for the current workspace.
@@ -17,30 +17,7 @@ export async function GET(request: Request) {
       return NextResponse.json([]);
     }
     
-    const now = new Date();
-    
-    // It's good practice to clean up expired effects periodically.
-    // Doing it on read is simple, but a cron job would be more efficient for a large-scale system.
-    await prisma.activeSystemEffect.deleteMany({
-      where: {
-        expiresAt: {
-          lt: now,
-        },
-      },
-    });
-
-    // Fetch the current, non-expired active effects for the user's workspace.
-    const activeEffects = await prisma.activeSystemEffect.findMany({
-      where: {
-        workspaceId: workspace.id,
-        expiresAt: {
-          gt: now,
-        },
-      },
-      orderBy: {
-        createdAt: 'desc', // In case of multiple, the newest one takes precedence.
-      },
-    });
+    const activeEffects = await getActiveEffectsForWorkspace(workspace.id);
     
     return NextResponse.json(activeEffects);
 

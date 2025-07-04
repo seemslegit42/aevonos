@@ -1,4 +1,3 @@
-
 # ΛΞVON OS: Economy - Chaos Card Deck Specification
 
 ## 1. Introduction: The Currency of Madness
