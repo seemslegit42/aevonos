@@ -1,11 +1,9 @@
-
 'use server';
 
 import { ai } from '@/ai/genkit';
 import { DossierInputSchema, DossierOutputSchema, type DossierInput, type DossierOutput } from './dossier-schemas';
 import { format } from 'date-fns';
 import { createHash } from 'crypto';
-import { authorizeAndDebitAgentActions } from '@/services/billing-service';
 import { langchainGroqComplex } from '@/ai/genkit';
 import { z } from 'zod';
 
@@ -16,14 +14,9 @@ const generateDossierFlow = ai.defineFlow(
     outputSchema: DossierOutputSchema,
   },
   async (input) => {
-    // A dossier is a high-value artifact.
-    await authorizeAndDebitAgentActions({
-        workspaceId: input.workspaceId,
-        userId: input.userId,
-        actionType: 'COMPLEX_LLM',
-        costMultiplier: 2.5
-    });
-
+    // NOTE: Billing logic has been moved to the calling API endpoint (/api/export/dossier)
+    // to centralize authorization and debiting at the entry point of the user-facing action.
+    
     const today = format(new Date(), 'yyyy-MM-dd');
     const caseFileName = (input.targetName || 'UNKNOWN_SUBJECT').toLowerCase().replace(/\s/g, '-');
     const fileName = `dossier-${caseFileName}${input.mode === 'legal' ? '-legal' : ''}.pdf`;

@@ -6,6 +6,8 @@ import { DossierInputSchema } from '@/ai/agents/dossier-schemas';
 import { pdf } from 'md-to-pdf';
 import { createCipheriv, scryptSync, randomBytes } from 'crypto';
 import { getAuthenticatedUser } from '@/lib/firebase/admin';
+import { authorizeAndDebitAgentActions } from '@/services/billing-service';
+import { InsufficientCreditsError } from '@/lib/errors';
 
 const ExportRequestSchema = z.object({
   format: z.enum(['pdf', 'json']),
@@ -39,6 +41,14 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'A password of at least 8 characters is required for encryption.' }, { status: 400 });
         }
         
+        // Authorize and debit before generating the expensive artifact.
+        await authorizeAndDebitAgentActions({
+            workspaceId: workspace.id,
+            userId: sessionUser.id,
+            actionType: 'COMPLEX_LLM',
+            costMultiplier: 2.5
+        });
+
         const fullDossierInput = {
             ...dossierInput,
             workspaceId: workspace.id,
@@ -99,6 +109,9 @@ export async function POST(request: NextRequest) {
         });
 
     } catch (error) {
+        if (error instanceof InsufficientCreditsError) {
+            return NextResponse.json({ error: error.message }, { status: 402 }); // Payment Required
+        }
         if (error instanceof Error && error.message.includes('Unauthorized')) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
