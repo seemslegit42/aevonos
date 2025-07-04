@@ -82,5 +82,3 @@ export async function calculateVasForUser(userId: string): Promise<number> {
     
     return Math.max(0, Math.round(vas));
 }
-
-    

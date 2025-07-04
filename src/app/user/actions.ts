@@ -10,5 +10,3 @@ export async function getUserVas(): Promise<number> {
     }
     return calculateVasForUser(user.id);
 }
-
-    
