@@ -10,6 +10,7 @@ import { Loader2, MailCheck } from 'lucide-react';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FlowerOfLifeIcon } from '@/components/icons/FlowerOfLifeIcon';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 
 export default function LoginPage() {
   const { toast } = useToast();
@@ -81,45 +82,54 @@ export default function LoginPage() {
                 initial="hidden"
                 animate="visible"
                 exit="exit"
-                className="space-y-4 p-8 bg-background/30 backdrop-blur-md rounded-xl border border-border/20"
               >
-                <MailCheck className="w-16 h-16 mx-auto text-accent" />
-                <h2 className="text-2xl font-bold font-headline">An Echo Has Been Sent</h2>
-                <p className="text-muted-foreground">Follow it from your inbox to cross the threshold.</p>
+                <Card className="border-accent/50">
+                    <CardContent className="p-8 space-y-4">
+                        <MailCheck className="w-16 h-16 mx-auto text-accent" />
+                        <h2 className="text-2xl font-bold font-headline">An Echo Has Been Sent</h2>
+                        <p className="text-muted-foreground">Follow it from your inbox to cross the threshold.</p>
+                    </CardContent>
+                </Card>
               </motion.div>
             ) : (
-              <motion.div key="form" variants={formVariants} initial="hidden" animate="visible" exit="exit" className="space-y-6">
-                <Image 
-                    src="/logo.png"
-                    alt="Aevon OS Logo"
-                    width={100}
-                    height={100}
-                    className="mx-auto animate-subtle-pulse"
-                    priority
-                />
-                <div className="space-y-2">
-                    <h1 className="font-headline text-4xl text-foreground tracking-tight">The Threshold</h1>
-                    <p className="text-muted-foreground">A silent, waiting space.</p>
-                </div>
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <div className="space-y-1 text-left">
-                    <Label htmlFor="email">State your designation</Label>
-                    <Input
-                      id="email"
-                      name="email"
-                      type="email"
-                      placeholder="oracle@aevonos.com"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required
-                      disabled={isSubmitting}
-                      className="bg-background/50 h-12 text-center"
-                    />
-                  </div>
-                    <Button type="submit" disabled={isSubmitting} className="w-full h-12 text-base" variant="summon">
-                      {isSubmitting ? <Loader2 className="animate-spin" /> : 'Cross the Threshold'}
-                    </Button>
-                </form>
+              <motion.div key="form" variants={formVariants} initial="hidden" animate="visible" exit="exit">
+                <Card className="border-border/30">
+                    <CardHeader className="space-y-6">
+                        <Image 
+                            src="/logo.png"
+                            alt="Aevon OS Logo"
+                            width={100}
+                            height={100}
+                            className="mx-auto animate-subtle-pulse"
+                            priority
+                        />
+                        <div className="space-y-2">
+                            <h1 className="font-headline text-4xl text-foreground tracking-tight">The Threshold</h1>
+                            <p className="text-muted-foreground">A silent, waiting space.</p>
+                        </div>
+                    </CardHeader>
+                    <CardContent>
+                        <form onSubmit={handleSubmit} className="space-y-4">
+                          <div className="space-y-1 text-left">
+                            <Label htmlFor="email">State your designation</Label>
+                            <Input
+                              id="email"
+                              name="email"
+                              type="email"
+                              placeholder="oracle@aevonos.com"
+                              value={email}
+                              onChange={(e) => setEmail(e.target.value)}
+                              required
+                              disabled={isSubmitting}
+                              className="bg-background/50 h-12 text-center"
+                            />
+                          </div>
+                            <Button type="submit" disabled={isSubmitting} className="w-full h-12 text-base" variant="summon">
+                              {isSubmitting ? <Loader2 className="animate-spin" /> : 'Cross the Threshold'}
+                            </Button>
+                        </form>
+                    </CardContent>
+                </Card>
               </motion.div>
             )}
           </AnimatePresence>
