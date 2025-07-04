@@ -97,3 +97,6 @@ import '@/ai/agents/barbara-agent.ts';
 import '@/ai/agents/auditor-agent.ts';
 import '@/ai/agents/orphean-oracle-agent.ts';
 import '@/ai/agents/orphean-oracle-flow.ts';
+import '@/ai/agents/lumbergh-agent.ts';
+import '@/ai/agents/lucille-bluth-agent.ts';
+import '@/ai/agents/pam-poovey-agent.ts';

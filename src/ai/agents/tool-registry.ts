@@ -36,9 +36,9 @@ import { consultAuditor, AuditorAgentInputSchema } from './auditor-agent';
 import { consultWingman, WingmanAgentInputSchema } from './wingman-agent';
 import { consultKendra, KendraAgentInputSchema } from './kendra-agent';
 import { consultOrpheanOracle, OrpheanOracleAgentInputSchema } from './orphean-oracle-agent';
-import { analyzeInvite, LumberghAnalysisInputSchema } from './lumbergh';
-import { analyzeExpense, LucilleBluthInputSchema } from './lucille-bluth';
-import { generatePamRant, PamScriptInputSchema } from './pam-poovey';
+import { consultLumbergh, LumberghAgentInputSchema } from './lumbergh-agent';
+import { consultLucille, LucilleBluthAgentInputSchema } from './lucille-bluth-agent';
+import { consultPam, PamPooveyAgentInputSchema } from './pam-poovey-agent';
 import { analyzeCarShame, RenoModeAnalysisInputSchema } from './reno-mode';
 import { processPatricktAction, PatricktAgentInputSchema } from './patrickt-agent';
 import { validateVin, VinDieselInputSchema } from './vin-diesel';
@@ -115,9 +115,9 @@ export function getSpecialistAgentDefinitions(): SpecialistAgentDefinition[] {
         { name: 'wingman', description: 'Helps craft a message for a tricky social situation.', schema: WingmanAgentInputSchema.pick({ situationContext: true, messageMode: true }) },
         { name: 'kendra', description: 'Generates a marketing campaign for a product idea.', schema: KendraAgentInputSchema.pick({ productIdea: true }) },
         { name: 'orphean_oracle', description: 'Generates a narrative, visual story about business data.', schema: OrpheanOracleAgentInputSchema.pick({ userQuery: true }) },
-        { name: 'lumbergh', description: 'Analyzes a meeting invite for pointlessness.', schema: LumberghAnalysisInputSchema.pick({ inviteText: true }) },
-        { name: 'lucille_bluth', description: 'Gets a sarcastic take on an expense.', schema: LucilleBluthInputSchema.pick({ expenseDescription: true, expenseAmount: true, category: true }) },
-        { name: 'pam_poovey', description: 'Generates HR-related rants or scripts in a specific persona.', schema: PamScriptInputSchema.pick({ topic: true }) },
+        { name: 'lumbergh', description: 'Analyzes a meeting invite for pointlessness.', schema: LumberghAgentInputSchema.pick({ inviteText: true }) },
+        { name: 'lucille_bluth', description: 'Gets a sarcastic take on an expense.', schema: LucilleBluthAgentInputSchema.pick({ expenseDescription: true, expenseAmount: true, category: true }) },
+        { name: 'pam_poovey', description: 'Generates HR-related rants or scripts in a specific persona.', schema: PamPooveyAgentInputSchema.pick({ topic: true }) },
         { name: 'reno_mode', description: 'Analyzes a photo of a messy car.', schema: RenoModeAnalysisInputSchema.pick({ photoDataUri: true }) },
         { name: 'patrickt_app', description: 'Logs events, gets roasts, or analyzes drama in the "Patrickt" saga.', schema: PatricktAgentInputSchema.pick({ action: true, eventDescription: true, eventCategory: true, chatInput: true }).partial() },
         { name: 'vin_diesel', description: 'Validates a Vehicle Identification Number (VIN).', schema: VinDieselInputSchema.pick({ vin: true }) },
@@ -151,9 +151,9 @@ export const specialistAgentMap: Record<string, (input: any, context: AgentConte
     wingman: (input: any, context: AgentContext) => consultWingman({ ...input, ...context }),
     kendra: (input: any, context: AgentContext) => consultKendra({ ...input, ...context }),
     orphean_oracle: (input: any, context: AgentContext) => consultOrpheanOracle({ ...input, ...context }),
-    lumbergh: (input: any, context: AgentContext) => analyzeInvite({ ...input, ...context }),
-    lucille_bluth: (input: any, context: AgentContext) => analyzeExpense({ ...input, ...context }),
-    pam_poovey: (input: any, context: AgentContext) => generatePamRant({ ...input, ...context }),
+    lumbergh: (input: any, context: AgentContext) => consultLumbergh({ ...input, ...context }),
+    lucille_bluth: (input: any, context: AgentContext) => consultLucille({ ...input, ...context }),
+    pam_poovey: (input: any, context: AgentContext) => consultPam({ ...input, ...context }),
     reno_mode: (input: any, context: AgentContext) => analyzeCarShame({ ...input, ...context }),
     patrickt_app: (input: any, context: AgentContext) => processPatricktAction({ ...input, ...context }),
     vin_diesel: (input: any, context: AgentContext) => validateVin({ ...input, ...context }),
