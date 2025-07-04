@@ -9,11 +9,8 @@ import { DrSyntaxInputSchema, DrSyntaxOutputSchema } from './dr-syntax-schemas';
 import { drSyntaxCritique } from './dr-syntax';
 import { langchainGroqComplex } from '../genkit';
 
-export const DrSyntaxAgentInputSchema = z.object({
-  query: z.string().describe("The user's natural language query asking for a critique."),
-  workspaceId: z.string(),
-  psyche: DrSyntaxInputSchema.shape.psyche,
-});
+// The input for this agent is the direct, structured input for the critique flow.
+export const DrSyntaxAgentInputSchema = DrSyntaxInputSchema;
 export type DrSyntaxAgentInput = z.infer<typeof DrSyntaxAgentInputSchema>;
 
 export const DrSyntaxAgentOutputSchema = z.object({
@@ -27,21 +24,10 @@ const consultDrSyntaxFlow = ai.defineFlow({
     name: 'consultDrSyntaxFlow',
     inputSchema: DrSyntaxAgentInputSchema,
     outputSchema: DrSyntaxAgentOutputSchema,
-}, async ({ query, workspaceId, psyche }) => {
-    
-    const structuredTriageModel = langchainGroqComplex.withStructuredOutput(
-        DrSyntaxInputSchema.pick({ content: true, contentType: true })
-    );
-
-    const triageResult = await structuredTriageModel.invoke(
-        `Parse the user's request to extract the content to be critiqued and its type (prompt, code, or copy). The user's query is: "${query}"`
-    );
-    
-    const report = await drSyntaxCritique({
-        ...triageResult,
-        workspaceId,
-        psyche,
-    });
+}, async (input) => {
+    // No more triage/parsing needed here. BEEP's router does that.
+    // We pass the structured input directly to the core logic function.
+    const report = await drSyntaxCritique(input);
     
     return { agent: 'dr-syntax', report };
 });

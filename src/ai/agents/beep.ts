@@ -34,6 +34,9 @@ import { consultVaultDaemon } from './vault-daemon';
 import { consultCrmAgent } from './crm-agent';
 import { consultDrSyntax } from './dr-syntax-agent';
 import { consultStonksBot } from './stonks-bot-agent';
+import { CrmActionSchema } from './crm-agent-schemas';
+import { DrSyntaxInputSchema } from './dr-syntax-schemas';
+import { StonksBotInputSchema } from './stonks-bot-schemas';
 
 
 import {
@@ -51,6 +54,28 @@ import { InsufficientCreditsError } from '@/lib/errors';
 import { recordInteraction } from '@/services/pulse-engine-service';
 import { logUserActivity } from '@/services/activity-log-service';
 
+// --- Router and State Schemas ---
+const RouterSchema = z.discriminatedUnion("route", [
+    z.object({ route: z.literal("dispatcher") }),
+    z.object({ route: z.literal("reasoner") }),
+    z.object({ route: z.literal("inventory_daemon"), params: z.object({ query: z.string() }) }),
+    z.object({ route: z.literal("burn_bridge_protocol") }),
+    z.object({ route: z.literal("vault_daemon") }),
+    z.object({ 
+      route: z.literal("crm_agent"), 
+      params: CrmActionSchema.describe("The specific CRM action and parameters extracted from the user's command.") 
+    }),
+    z.object({ 
+      route: z.literal("dr_syntax"), 
+      params: DrSyntaxInputSchema.pick({ content: true, contentType: true }).describe("The content and its type to be critiqued.")
+    }),
+    z.object({ 
+      route: z.literal("stonks_bot"), 
+      params: StonksBotInputSchema.pick({ ticker: true, mode: true }).describe("The stock ticker and personality mode for the bot.")
+    }),
+]).describe("The routing decision. You must choose a route and, for specialist agents like crm_agent, extract all necessary parameters.");
+
+type RouterResult = z.infer<typeof RouterSchema>;
 
 // LangGraph State
 interface AgentState {
@@ -61,6 +86,7 @@ interface AgentState {
   psyche: UserPsyche;
   aegisReport: AegisAnomalyScanOutput | null;
   agentReports: z.infer<typeof AgentReportSchema>[];
+  routerResult: RouterResult | null;
 }
 
 const callAegis = async (state: AgentState): Promise<Partial<AgentState>> => {
@@ -71,7 +97,6 @@ const callAegis = async (state: AgentState): Promise<Partial<AgentState>> => {
     }
     const userCommand = humanMessage.content as string;
     
-    // Log the activity before scanning it
     await logUserActivity(userId, userCommand);
 
     let report: AegisAnomalyScanOutput;
@@ -85,7 +110,6 @@ const callAegis = async (state: AgentState): Promise<Partial<AgentState>> => {
         });
     } catch (error: any) {
         console.error(`[Aegis Node] Anomaly scan failed:`, error);
-        // Create a non-anomalous report to allow the graph to continue safely.
         report = {
             isAnomalous: false,
             anomalyExplanation: `Aegis security scan could not be completed due to an internal error: ${error.message || 'Unknown error'}. The command will proceed without security validation.`,
@@ -113,7 +137,6 @@ const callAegisOnToolOutput = async (state: AgentState): Promise<Partial<AgentSt
     const { messages, workspaceId, userId, role, psyche } = state;
     const toolMessage = messages.findLast(m => m instanceof ToolMessage);
 
-    // If there's no tool message, or it's the final answer, do nothing.
     if (!toolMessage || toolMessage.name === 'final_answer') {
         return {};
     }
@@ -122,7 +145,6 @@ const callAegisOnToolOutput = async (state: AgentState): Promise<Partial<AgentSt
         ? toolMessage.content 
         : JSON.stringify(toolMessage.content);
         
-    // Avoid scanning huge outputs to prevent high cost and latency
     const truncatedOutput = toolOutputContent.length > 2000 ? toolOutputContent.substring(0, 2000) + '...' : toolOutputContent;
 
     let report: AegisAnomalyScanOutput;
@@ -158,49 +180,44 @@ const callAegisOnToolOutput = async (state: AgentState): Promise<Partial<AgentSt
     };
 };
 
-
-const fastModelWithTools = langchainGroqFast.bind({ tools: [] });
-const complexModelWithTools = langchainGroqComplex.bind({ tools: [] });
+let fastModelWithTools: any;
+let complexModelWithTools: any;
 
 // The Router node decides which model to use or which specialist to delegate to.
-const router = async (state: AgentState) => {
+const router = async (state: AgentState): Promise<Partial<AgentState>> => {
     const { messages } = state;
     const lastMessage = messages[messages.length - 1];
     
     if (!(lastMessage instanceof HumanMessage) && !(lastMessage instanceof SystemMessage && lastMessage.content.includes('AEGIS_INTERNAL_REPORT'))) {
         console.log("[BEEP Router] Tool output received, routing to reasoner to process.");
-        return 'reasoner';
+        return { routerResult: { route: 'reasoner' }};
     }
     
-    const routingSchema = z.object({
-        route: z.enum(["dispatcher", "reasoner", "inventory_daemon", "burn_bridge_protocol", "vault_daemon", "crm_agent", "dr_syntax", "stonks_bot"])
-            .describe(`Choose 'dispatcher' for simple app launches, greetings, or direct commands.
-Choose 'reasoner' for complex requests involving analysis or multi-step tool use.
-Choose 'inventory_daemon' for any request about stock levels, product inventory, or purchase orders.
-Choose 'burn_bridge_protocol' for explicit requests to "burn the bridge" or conduct a full-spectrum investigation on a person.
-Choose 'vault_daemon' for any request about finances, revenue, profit, spending, or where money is being wasted.
-Choose 'crm_agent' for any request about contacts (creating, listing, updating, deleting).
-Choose 'dr_syntax' for any request involving critique, review, or feedback on text, code, or prompts.
-Choose 'stonks_bot' for any request about stock prices or financial "advice".`)
-    });
+    const routingModel = langchainGroqFast.withStructuredOutput(RouterSchema);
     
-    const routingModel = langchainGroqFast.withStructuredOutput(routingSchema);
-    
-    const routingPrompt = `You are an expert at routing a user's request to the correct specialist agent or model.
+    const routingPrompt = `You are an expert at routing a user's request to the correct specialist agent or model. You MUST determine the route and also extract all necessary parameters for the specialist agent from the user's command into the \`params\` object.
 
-    Based on the conversation so far, classify the user's latest request.
+    Routes:
+    - 'dispatcher': For simple app launches, greetings, or direct commands that don't need complex reasoning.
+    - 'reasoner': For complex requests involving analysis, planning, or multi-step tool use.
+    - 'inventory_daemon': For any request about stock levels, product inventory, or purchase orders.
+    - 'burn_bridge_protocol': For explicit requests to "burn the bridge" or conduct a full-spectrum investigation on a person.
+    - 'vault_daemon': For any request about finances, revenue, profit, spending, or where money is being wasted.
+    - 'crm_agent': For any request about contacts (creating, listing, updating, deleting). You MUST extract the crm_action and all its parameters.
+    - 'dr_syntax': For any request involving critique, review, or feedback on text, code, or prompts. You MUST extract the content and contentType.
+    - 'stonks_bot': For any request about stock prices or financial "advice". You MUST extract the ticker and mode.
 
     Conversation History:
     ${messages.map(m => `${m._getType()}: ${m.content}`).join('\n')}
     `;
 
     try {
-        const { route } = await routingModel.invoke(routingPrompt);
-        console.log(`[BEEP Router] Decision: ${route}`);
-        return route;
+        const result = await routingModel.invoke(routingPrompt);
+        console.log(`[BEEP Router] Decision:`, result);
+        return { routerResult: result };
     } catch (e) {
         console.error("[BEEP Router] Routing failed, defaulting to reasoner:", e);
-        return 'reasoner'; // Default to the more powerful model on failure
+        return { routerResult: { route: 'reasoner' } };
     }
 };
 
@@ -218,10 +235,11 @@ const callReasonerModel = async (state: AgentState) => {
 
 const callInventoryDaemon = async (state: AgentState): Promise<Partial<AgentState>> => {
     console.log('[BEEP] Delegating to Inventory Daemon.');
-    const { messages } = state;
-    const lastMessage = messages[messages.length - 1];
+    const { routerResult } = state;
     
-    const daemonResponse = await consultInventoryDaemon({ query: lastMessage.content as string });
+    if(routerResult?.route !== 'inventory_daemon') throw new Error("Invalid route for inventory daemon");
+
+    const daemonResponse = await consultInventoryDaemon(routerResult.params);
 
     const finalAnswerToolCall = {
         name: 'final_answer',
@@ -311,11 +329,12 @@ const callVaultDaemon = async (state: AgentState): Promise<Partial<AgentState>> 
 
 const callCrmAgent = async (state: AgentState): Promise<Partial<AgentState>> => {
     console.log('[BEEP] Delegating to CRM Daemon.');
-    const { messages, workspaceId, userId } = state;
-    const lastMessage = messages[messages.length - 1];
+    const { workspaceId, userId, routerResult } = state;
+
+    if (routerResult?.route !== 'crm_agent') throw new Error("Invalid route for CRM agent");
 
     const daemonInput = {
-        query: lastMessage.content as string,
+        ...routerResult.params,
         workspaceId,
         userId
     };
@@ -344,11 +363,12 @@ const callCrmAgent = async (state: AgentState): Promise<Partial<AgentState>> => 
 
 const callDrSyntax = async (state: AgentState): Promise<Partial<AgentState>> => {
     console.log('[BEEP] Delegating to Dr. Syntax Daemon.');
-    const { messages, workspaceId, psyche } = state;
-    const lastMessage = messages[messages.length - 1];
+    const { workspaceId, psyche, routerResult } = state;
+    
+    if (routerResult?.route !== 'dr_syntax') throw new Error("Invalid route for Dr. Syntax");
 
     const daemonResponse = await consultDrSyntax({ 
-        query: lastMessage.content as string, 
+        ...routerResult.params,
         workspaceId,
         psyche,
     });
@@ -374,11 +394,12 @@ const callDrSyntax = async (state: AgentState): Promise<Partial<AgentState>> => 
 
 const callStonksBot = async (state: AgentState): Promise<Partial<AgentState>> => {
     console.log('[BEEP] Delegating to Stonks Bot Daemon.');
-    const { messages, workspaceId, userId } = state;
-    const lastMessage = messages[messages.length - 1];
+    const { workspaceId, userId, routerResult } = state;
+
+    if (routerResult?.route !== 'stonks_bot') throw new Error("Invalid route for Stonks Bot");
 
     const daemonResponse = await consultStonksBot({ 
-        query: lastMessage.content as string, 
+        ...routerResult.params,
         workspaceId,
         userId,
     });
@@ -498,7 +519,6 @@ const executeTools = async (state: AgentState): Promise<Partial<AgentState>> => 
             agentReports.push(report);
         } catch (e) {
             // It's common for tool outputs not to be AgentReportSchema, so we can ignore parsing errors.
-            // console.warn(`[BEEP Tool Executor] Failed to parse tool message content for tool "${toolMessage.name}":`, e);
         }
     }
     
@@ -516,53 +536,29 @@ const shouldContinue = (state: AgentState) => {
     lastMessage.tool_calls &&
     lastMessage.tool_calls.length > 0
   ) {
-    // If the model decides to call the final_answer tool, we end the graph.
     if (lastMessage.tool_calls.some(tc => tc.name === 'final_answer')) {
         return 'end';
     }
-    // Otherwise, we call the requested tools.
     return 'tools';
   }
-  // If there are no tool calls, we end the graph.
   return 'end';
 };
 
-// We create a single instance of the model and the graph to be reused.
 const workflow = new StateGraph<AgentState>({
   channels: {
-    messages: {
-      value: (x, y) => x.concat(y),
-      default: () => [],
-    },
-    workspaceId: {
-        value: (x, y) => y,
-        default: () => '',
-    },
-    userId: {
-        value: (x, y) => y,
-        default: () => '',
-    },
-    role: {
-        value: (x, y) => y,
-        default: () => UserRole.OPERATOR,
-    },
-    psyche: {
-        value: (x, y) => y,
-        default: () => UserPsyche.ZEN_ARCHITECT,
-    },
-    aegisReport: {
-        value: (x, y) => y,
-        default: () => null,
-    },
-    agentReports: {
-        value: (x, y) => x.concat(y),
-        default: () => [],
-    },
+    messages: { value: (x, y) => x.concat(y), default: () => [] },
+    workspaceId: { value: (x, y) => y, default: () => '' },
+    userId: { value: (x, y) => y, default: () => '' },
+    role: { value: (x, y) => y, default: () => UserRole.OPERATOR },
+    psyche: { value: (x, y) => y, default: () => UserPsyche.ZEN_ARCHITECT },
+    aegisReport: { value: (x, y) => y, default: () => null },
+    agentReports: { value: (x, y) => x.concat(y), default: () => [] },
+    routerResult: { value: (x, y) => y, default: () => null },
   },
 });
 
 workflow.addNode('aegis', callAegis);
-workflow.addNode('router', router as any); // The router itself decides the next step, so it doesn't return state
+workflow.addNode('router', router as any);
 workflow.addNode('agent_dispatcher', callDispatcherModel);
 workflow.addNode('agent_reasoner', callReasonerModel);
 workflow.addNode('inventory_daemon_node', callInventoryDaemon);
@@ -587,7 +583,7 @@ workflow.addConditionalEdges('aegis', routeAfterAegis, {
 workflow.addEdge('handle_threat', 'tools');
 workflow.addEdge('warn_and_continue', 'router');
 
-workflow.addConditionalEdges('router', (state: AgentState) => router(state), {
+workflow.addConditionalEdges('router', (state: AgentState) => state.routerResult?.route || 'reasoner', {
     dispatcher: 'agent_dispatcher',
     reasoner: 'agent_reasoner',
     inventory_daemon: 'inventory_daemon_node',
@@ -633,7 +629,7 @@ workflow.addConditionalEdges('stonks_bot_node', shouldContinue, {
 
 
 workflow.addEdge('tools', 'scan_tool_output');
-workflow.addEdge('scan_tool_output', 'agent_reasoner'); // Always go to reasoner after tool output
+workflow.addEdge('scan_tool_output', 'agent_reasoner');
 
 const app = workflow.compile();
 
@@ -661,10 +657,8 @@ export async function processUserCommand(input: UserCommandInput): Promise<UserC
   const { userId, workspaceId, psyche, role, activeAppContext } = input;
   
   try {
-    // Dynamically get the toolset for this specific context.
     const tools = await getTools({ userId, workspaceId, psyche, role });
 
-    // Re-bind the models with the schemas from the dynamically created tools for this request.
     const toolSchemas = tools.map(tool => ({
         type: 'function',
         function: {
@@ -674,8 +668,8 @@ export async function processUserCommand(input: UserCommandInput): Promise<UserC
         },
     }));
     
-    fastModelWithTools.kwargs.tools = toolSchemas;
-    complexModelWithTools.kwargs.tools = toolSchemas;
+    fastModelWithTools = langchainGroqFast.bind({ tools: toolSchemas });
+    complexModelWithTools = langchainGroqComplex.bind({ tools: toolSchemas });
     
     const workspace = await prisma.workspace.findUnique({
         where: { id: workspaceId },
@@ -683,7 +677,7 @@ export async function processUserCommand(input: UserCommandInput): Promise<UserC
     });
     const isOwner = workspace?.ownerId === userId;
 
-    let personaInstruction = psychePrompts[psyche] || psychePrompts.ZEN_ARCHITECT; // Default to psyche
+    let personaInstruction = psychePrompts[psyche] || psychePrompts.ZEN_ARCHITECT;
     if (activeAppContext && appPersonaPrompts[activeAppContext]) {
         personaInstruction = appPersonaPrompts[activeAppContext];
         console.log(`[BEEP] Adopting persona for active app: ${activeAppContext}`);
@@ -741,8 +735,8 @@ Your purpose is to be the invisible, silent orchestrator of true automation. Now
       role: input.role,
       psyche: input.psyche,
       agentReports: [],
+      routerResult: null,
     }).catch(error => {
-        // Catch errors from the graph execution itself.
         if (error instanceof InsufficientCreditsError) {
             return {
                 messages: [
@@ -764,20 +758,16 @@ Your purpose is to be the invisible, silent orchestrator of true automation. Now
                 agentReports: [],
             };
         }
-        // Re-throw other errors
         throw error;
     });
 
-    // Save the full conversation history for the next turn.
     const finalMessages = result.messages;
     await saveConversationHistory(input.userId, input.workspaceId, finalMessages);
     
-    // Find the last AIMessage that contains the 'final_answer' tool call.
     const lastMessage = result.messages.findLast(m => m._getType() === 'ai' && m.tool_calls && m.tool_calls.some(tc => tc.name === 'final_answer')) as AIMessage | undefined;
 
     if (!lastMessage || !lastMessage.tool_calls) {
          await recordInteraction(userId, 'failure');
-         // Final fallback if the model fails to call the final_answer tool.
          return {
           responseText: "My apologies, I was unable to produce a valid response.",
           appsToLaunch: [],
@@ -806,7 +796,6 @@ Your purpose is to be the invisible, silent orchestrator of true automation. Now
     } catch (e) {
         console.error("Failed to parse final_answer tool arguments:", e);
         await recordInteraction(userId, 'failure');
-        // Fallback if parsing the arguments fails
         return {
             responseText: "I apologize, but I encountered an issue constructing the final response.",
             appsToLaunch: [],
@@ -818,13 +807,12 @@ Your purpose is to be the invisible, silent orchestrator of true automation. Now
   } catch (err) {
     console.error(`[BEEP Agent Error] Failed to process user command for user ${userId}:`, err);
     await recordInteraction(userId, 'failure');
-    // Return a structured error to the user
     return {
       responseText: "My apologies, a critical error occurred while processing your command. The system's Architect has been notified.",
       appsToLaunch: [],
       agentReports: [],
       suggestedCommands: ["Try your command again", "Check system status"],
-      responseAudioUri: '', // Ensure all fields are present for type safety
+      responseAudioUri: '',
     };
   }
 }
