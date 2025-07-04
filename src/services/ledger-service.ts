@@ -10,7 +10,7 @@ import cache from '@/lib/cache';
 import { z } from 'zod';
 import { Prisma, Transaction, TransactionStatus, TransactionType } from '@prisma/client';
 import { InsufficientCreditsError } from '@/lib/errors';
-import { CreateManualTransactionInputSchema, TransmuteCreditsInputSchema } from '@/ai/tools/ledger-schemas';
+import { CreateManualTransactionInputSchema, TransmuteCreditsInputSchema, type TransmuteCreditsOutput } from '@/ai/tools/ledger-schemas';
 import { differenceInMinutes } from 'date-fns';
 import { artifactManifests } from '@/config/artifacts';
 import { createHmac } from 'crypto';
@@ -67,7 +67,7 @@ async function createTransaction(input: CreateTransactionInput) {
                 amount: new Prisma.Decimal(amount).toFixed(8),
                 description,
                 timestamp: new Date().toISOString(),
-                userId, instrumentId, agentId
+                userId, agentId, instrumentId
             };
             const signature = createHmac('sha256', signatureSecret)
                 .update(JSON.stringify(transactionDataForSigning))
@@ -344,7 +344,7 @@ export async function transmuteCredits(
   input: z.infer<typeof TransmuteCreditsInputSchema>,
   workspaceId: string,
   userId: string
-): Promise<z.infer<typeof TransmuteCreditsOutputSchema>> {
+): Promise<TransmuteCreditsOutput> {
   const { amount, vendor, currency } = TransmuteCreditsInputSchema.parse(input);
   const signatureSecret = process.env.AEGIS_SIGNING_SECRET || 'default_secret_for_dev';
   

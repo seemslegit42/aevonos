@@ -2,6 +2,7 @@
 import { PrismaClient, AgentStatus, SecurityRiskLevel, TransactionType, PlanTier, UserRole, UserPsyche, Prisma, ChaosCardClass, PurchaseOrderStatus } from '@prisma/client'
 import { artifactManifests } from '../src/config/artifacts';
 import prisma from '../src/lib/prisma';
+import { createHmac } from 'crypto';
 
 async function main() {
   console.log(`Start seeding ...`)
@@ -109,15 +110,19 @@ async function main() {
   });
   console.log(`Created default Pulse Engine config for workspace ${newWorkspace.id}`);
 
+  const genesisDescription = "Initial workspace credit grant for Artisan plan.";
+  const genesisSignature = createHmac('sha256', 'seed-secret').update(genesisDescription).digest('hex');
+
   // Seed the genesis transaction for the initial credits, which were granted at workspace creation.
   await prisma.transaction.create({
     data: {
         workspaceId: newWorkspace.id,
         type: TransactionType.CREDIT,
         amount: new Prisma.Decimal(1000.0),
-        description: "Initial workspace credit grant for Artisan plan.",
+        description: genesisDescription,
         userId: adminUser.id,
-        status: 'COMPLETED'
+        status: 'COMPLETED',
+        aegisSignature: genesisSignature,
     }
   });
   console.log('Seeded genesis credit transaction log.');

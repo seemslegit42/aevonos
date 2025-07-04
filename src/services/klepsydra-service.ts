@@ -146,6 +146,7 @@ export async function processFollyTribute(
                     amount: new Prisma.Decimal(cost),
                     description: `Ritual Boon Acquired: ${instrumentManifest!.name}`,
                     status: 'COMPLETED',
+                    aegisSignature: 'mock_signature_for_boon_purchase', // Placeholder
                 }
             });
             
