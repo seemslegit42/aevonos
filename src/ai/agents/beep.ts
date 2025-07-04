@@ -26,7 +26,7 @@ import type { RunnableConfig } from "@langchain/core/runnables";
 
 import { langchainGroqFast, langchainGroqComplex } from '@/ai/genkit';
 import { aegisAnomalyScan } from '@/ai/agents/aegis';
-import { getTools as getReasonerTools, getSpecialistTools, getSpecialistAgentDefinitions, specialistAgentMap } from '@/ai/agents/tool-registry';
+import { getReasonerTools, getSpecialistAgentDefinitions, specialistAgentMap } from '@/ai/agents/tool-registry';
 import { AegisAnomalyScanOutputSchema, type AegisAnomalyScanOutput, type PulseProfileInput } from './aegis-schemas';
 
 import {
@@ -105,12 +105,14 @@ const callAegis = async (state: AgentState): Promise<Partial<AgentState>> => {
 
 
 const planner = async (state: AgentState): Promise<Partial<AgentState>> => {
-    const { messages, ...context } = state;
+    const { messages, role, ...context } = state;
     const specialistAgentDefinitions = getSpecialistAgentDefinitions();
 
     const routingModel = langchainGroqFast.withStructuredOutput(RouterSchema);
     
     const planningPrompt = `You are the BEEP router, a high-speed, low-latency AI task dispatcher. Your job is to analyze the user's command and determine which specialist agents, if any, are required to fulfill the request.
+
+User Role: ${role}
 
 User Command:
 """
@@ -120,7 +122,7 @@ ${messages.find(m => m instanceof HumanMessage)?.content}
 Available Specialist Agents:
 ${specialistAgentDefinitions.map(def => `- **${def.name}**: ${def.description}`).join('\n')}
 
-Based on the user's command, return an array of all the specialist agent tasks that must be executed. You can and should include multiple tasks if the command requires it. If no specialist is needed (e.g., for a simple greeting, a request to launch an app like 'terminal', or a command you can handle yourself), return an empty array.
+Based on the user's command and their role, return an array of all the specialist agent tasks that must be executed. You can and should include multiple tasks if the command requires it. If no specialist is needed (e.g., for a simple greeting, a request to launch an app like 'terminal', or a command you can handle yourself), return an empty array. You MUST respect the agent's role requirements described in the agent definitions. If the user does not have permission, do not select that agent.
 `;
     
     const toolCalls = await routingModel.invoke(planningPrompt);
@@ -214,21 +216,11 @@ const handleThreat = async (state: AgentState) => {
     if (!aegisReport) {
         throw new Error("handleThreat called without an Aegis report.");
     }
-
-    const alertToolCall = {
-        name: 'createSecurityAlert',
-        args: {
-            type: aegisReport.anomalyType || 'High-Risk Anomaly',
-            explanation: aegisReport.anomalyExplanation,
-            riskLevel: aegisReport.riskLevel,
-        },
-        id: 'tool_call_security_alert'
-    };
     
     const finalAnswerToolCall = {
         name: 'final_answer',
         args: {
-            responseText: `Aegis Alert: ${aegisReport.anomalyExplanation} A security alert has been logged.`,
+            responseText: `Aegis Alert: ${aegisReport.anomalyExplanation} Command execution has been halted. A security alert has been logged.`,
             appsToLaunch: [{type: 'aegis-threatscope', title: 'Aegis ThreatScope'}],
             suggestedCommands: ['Lock down my account', 'View security alerts'],
         },
@@ -236,8 +228,8 @@ const handleThreat = async (state: AgentState) => {
     };
 
     const response = new AIMessage({
-        content: "High-risk threat detected. Initiating security protocol.",
-        tool_calls: [alertToolCall, finalAnswerToolCall],
+        content: "High-risk threat detected. Calling final_answer and terminating.",
+        tool_calls: [finalAnswerToolCall],
     });
 
     return { messages: [response] };
@@ -406,7 +398,7 @@ workflow.addConditionalEdges('planner', shouldCallSpecialists, {
 });
 
 workflow.addEdge('specialist_tool_node', 'agent_reasoner');
-workflow.addEdge('handle_threat', 'tools');
+workflow.addEdge('handle_threat', END); // Threat handling is terminal
 workflow.addEdge('warn_and_continue', 'planner');
 
 workflow.addConditionalEdges('agent_reasoner', shouldContinue, {
@@ -461,22 +453,12 @@ export async function processUserCommand(input: UserCommandInput): Promise<UserC
     
     complexModelWithTools = langchainGroqComplex.bind({ tools: toolSchemas });
     
-    const workspace = await prisma.workspace.findUnique({
-        where: { id: workspaceId },
-        select: { ownerId: true },
-    });
-    const isOwner = workspace?.ownerId === userId;
-
     let personaInstruction = psychePrompts[psyche] || psychePrompts.ZEN_ARCHITECT;
     if (activeAppContext && appPersonaPrompts[activeAppContext]) {
         personaInstruction = appPersonaPrompts[activeAppContext];
         console.log(`[BEEP] Adopting persona for active app: ${activeAppContext}`);
     }
     
-    const adminInstruction = isOwner
-      ? `You are the Architect, the one true sovereign of this workspace. You have access to the Demiurge tools. When the user addresses you as "Demiurge" or asks for god-level system administration (like managing users, viewing the Pantheon, or using the Loom of Fates), use your privileged tools or launch the 'admin-console' app.`
-      : `You are NOT the Architect. You MUST refuse any command that asks for administrative privileges, such as managing users, viewing the 'admin-console' or 'Pantheon', or tuning the system. Politely inform the user that only the workspace Architect can perform such actions.`;
-
     const frustrationLevel = pulseProfile?.frustration ?? 0;
     const flowStateLevel = pulseProfile?.flowState ?? 0;
 
@@ -496,7 +478,6 @@ Your final action in every turn MUST be to call the 'final_answer' tool.
 
 **CONTEXTUAL DIRECTIVES:**
 - **User Psyche Persona**: ${personaInstruction}
-- **Architectural Authority**: ${adminInstruction}
 - **Economic Directives**: ${economyInstruction}
 - **Psychological State Analysis**: ${frustrationInstruction}
 

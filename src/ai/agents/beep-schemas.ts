@@ -35,6 +35,7 @@ import { RenoModeAnalysisOutputSchema, RenoModeAnalysisInputSchema } from './ren
 import { PatricktAgentOutputSchema, PatricktAgentInputSchema } from './patrickt-agent-schemas';
 import { InventoryDaemonOutputSchema } from './inventory-daemon-schemas';
 import { SystemStatusSchema, FindUsersByVowOutputSchema, ManageSyndicateOutputSchema } from '@/ai/tools/demiurge-schemas';
+import { DemiurgeActionSchema, DemiurgeAgentReportPayloadSchema } from './demiurge-agent-schemas';
 import { RitualQuestOutputSchema, RitualQuestInputSchema } from './ritual-quests-schemas';
 import { TransmuteCreditsOutputSchema } from '@/ai/tools/proxy-schemas';
 import { VaultAnalysisOutputSchema } from './vault-daemon-schemas';
@@ -153,21 +154,6 @@ const LedgerAgentReportSchema = z.object({
     action: z.literal('create_manual_transaction'),
     report: TransactionSchema.describe('The details of the manually created transaction.'),
 });
-
-const DemiurgeAgentReportSchema = z.discriminatedUnion('action', [
-    z.object({
-        action: z.literal('get_system_status'),
-        report: SystemStatusSchema
-    }),
-    z.object({
-        action: z.literal('find_users_by_vow'),
-        report: FindUsersByVowOutputSchema
-    }),
-    z.object({
-        action: z.literal('manage_syndicate_access'),
-        report: ManageSyndicateOutputSchema
-    }),
-]);
 
 const ProxyAgentReportSchema = z.object({
     action: z.literal('transmute'),
@@ -322,7 +308,7 @@ export const AgentReportSchema = z.discriminatedUnion('agent', [
   }),
   z.object({
     agent: z.literal('demiurge'),
-    report: DemiurgeAgentReportSchema,
+    report: DemiurgeAgentReportPayloadSchema,
   }),
   z.object({
       agent: z.literal('ritual-quests'),
@@ -438,6 +424,10 @@ const RouteActionSchema = z.discriminatedUnion("route", [
     z.object({
         route: z.literal('ritual_quests'),
         params: RitualQuestInputSchema.pick({}).partial(),
+    }),
+    z.object({ 
+      route: z.literal("demiurge"), 
+      params: DemiurgeActionSchema.describe("The specific administrative action and parameters.") 
     }),
 ]).describe("A single task to be executed by a specialist agent.");
 

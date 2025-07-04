@@ -48,6 +48,8 @@ import '@/ai/flows/tts-flow.ts';
 import '@/ai/tools/inventory-tools.ts';
 import '@/ai/agents/inventory-daemon.ts';
 import '@/ai/tools/demiurge-tools.ts';
+import '@/ai/agents/demiurge-agent-schemas.ts';
+import '@/ai/agents/demiurge-agent.ts';
 import '@/services/pulse-engine-service.ts';
 import '@/services/klepsydra-service.ts';
 import '@/ai/agents/burn-bridge-agent.ts';

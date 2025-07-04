@@ -16,12 +16,7 @@ import {
 } from '../agents/beep-schemas';
 
 // Tool Service Imports
-import { getUsageDetailsForAgent, requestCreditTopUpInDb } from '@/services/billing-service';
-import { getDatingProfile } from '@/ai/tools/dating-tools';
 import { createSecurityAlertInDb } from '@/ai/tools/security-tools';
-import { createManualTransaction } from '@/services/ledger-service';
-import { getSystemStatus, findUsersByVow, manageSyndicateAccess } from '@/ai/tools/demiurge-tools';
-import { transmuteCredits } from '@/ai/tools/proxy-tools';
 
 // Specialist Agent Imports
 import { consultDrSyntax, DrSyntaxAgentInputSchema } from './dr-syntax-agent';
@@ -51,15 +46,11 @@ import { consultInventoryDaemon } from './inventory-daemon';
 import { generateRitualQuests, RitualQuestInputSchema } from './ritual-quests-agent';
 import { executeBurnBridgeProtocol, BurnBridgeInputSchema } from './burn-bridge-agent';
 import { consultVaultDaemon, VaultQueryInputSchema } from './vault-daemon';
+import { consultDemiurge, DemiurgeActionSchema } from './demiurge-agent';
 
 
 // Tool Schema Imports
-import { RequestCreditTopUpInputSchema } from '@/ai/tools/billing-schemas';
-import { DatingProfileInputSchema } from '@/ai/tools/dating-schemas';
 import { CreateSecurityAlertInputSchema } from '@/ai/tools/security-schemas';
-import { CreateManualTransactionInputSchema } from '@/ai/tools/ledger-schemas';
-import { FindUsersByVowInputSchema, ManageSyndicateInputSchema } from '@/ai/tools/demiurge-schemas';
-import { TransmuteCreditsInputSchema } from '../tools/proxy-schemas';
 
 
 // Context for multi-tenancy and personalization
@@ -86,53 +77,15 @@ class FinalAnswerTool extends Tool {
 
 /**
  * Creates and returns a context-aware array of tools for the BEEP agent's REASONER.
- * The Reasoner should only have access to essential tools, not tools that duplicate
- * the functionality of specialist agents.
  * @param context The current agent execution context.
  * @returns An array of LangChain Tool instances.
  */
 export async function getReasonerTools(context: AgentContext): Promise<Tool[]> {
-    const { userId, workspaceId, psyche, role } = context;
-
+    // The reasoner's only job is to synthesize the final answer.
+    // All other actions should be handled by specialist agents.
     const allTools: Tool[] = [
         new FinalAnswerTool(),
-        
-        new Tool({
-            name: 'createSecurityAlert',
-            description: 'Creates a security alert in the Aegis system. Use this when the Aegis anomaly scan returns a positive result for a threat. You must provide the type, explanation, and risk level of the alert based on the Aegis report.',
-            schema: CreateSecurityAlertInputSchema,
-            func: (toolInput) => createSecurityAlertInDb(toolInput, workspaceId, userId),
-        }),
     ];
-
-    const workspace = await prisma.workspace.findUnique({
-        where: { id: workspaceId },
-        select: { ownerId: true }
-    });
-    const isOwner = workspace?.ownerId === userId;
-
-    if (isOwner) {
-        allTools.push(
-            new Tool({
-                name: 'getSystemStatus',
-                description: "Retrieves the current operational status of the entire ΛΞVON OS, including system load and agent performance. Only for the Architect.",
-                schema: z.object({}),
-                func: getSystemStatus,
-            }),
-            new Tool({
-                name: 'findUsersByVow',
-                description: "Finds users based on a keyword from their 'founding vow' or 'sacrifice' made during the Rite of Invocation. Only for the Architect.",
-                schema: FindUsersByVowInputSchema,
-                func: findUsersByVow,
-            }),
-             new Tool({
-                name: 'manageSyndicateAccess',
-                description: "Performs high-level administrative actions on a group of users (a 'Syndicate' or 'Covenant'). Only for the Architect.",
-                schema: ManageSyndicateInputSchema,
-                func: manageSyndicateAccess,
-            })
-        );
-    }
     
     return allTools;
 }
@@ -172,6 +125,11 @@ export function getSpecialistAgentDefinitions(): SpecialistAgentDefinition[] {
         { name: 'ritual_quests', description: 'Gets the user their current ritual quests to guide their journey.', schema: RitualQuestInputSchema.omit({ workspaceId: true }) },
         { name: 'burn_bridge_protocol', description: 'Performs a full-spectrum investigation (OSINT, analysis, decoy) on a person.', schema: BurnBridgeInputSchema.omit({ workspaceId: true, userId: true }) },
         { name: 'vault_daemon', description: 'Handles requests about finance, revenue, profit, or spending.', schema: VaultQueryInputSchema.omit({ workspaceId: true, userId: true }) },
+        {
+            name: 'demiurge',
+            description: "Performs god-level administrative actions on the workspace, such as querying system status or finding users by their vows. Only available to the workspace Architect.",
+            schema: DemiurgeActionSchema,
+        },
     ];
 }
 
@@ -203,28 +161,5 @@ export const specialistAgentMap: Record<string, (input: any, context: AgentConte
     ritual_quests: (input: any, context: AgentContext) => generateRitualQuests({ ...input, ...context }),
     burn_bridge_protocol: (input: any, context: AgentContext) => executeBurnBridgeProtocol({ ...input, ...context }),
     vault_daemon: (input: any, context: AgentContext) => consultVaultDaemon({ ...input, ...context }),
+    demiurge: (input: any, context: AgentContext) => consultDemiurge({ ...input, ...context }),
 };
-
-
-/**
- * Creates and returns a context-aware array of LangChain Tools for all specialist agents.
- * This is used by the BEEP planner to route commands.
- * @param context The current agent execution context.
- * @returns An array of LangChain Tool instances.
- */
-export async function getSpecialistTools(context: AgentContext): Promise<Tool[]> {
-    const definitions = getSpecialistAgentDefinitions();
-    const tools = definitions.map(def => {
-        const func = specialistAgentMap[def.name];
-        if (!func) {
-            throw new Error(`No implementation found for specialist agent: ${def.name}`);
-        }
-        return new Tool({
-            name: def.name,
-            description: def.description,
-            schema: def.schema,
-            func: (input: any) => func(input, context),
-        });
-    });
-    return tools;
-}
