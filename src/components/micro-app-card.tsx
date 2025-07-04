@@ -10,6 +10,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { getAppIcon, getAppContent } from './micro-app-registry';
 import { cn } from '@/lib/utils';
 import { ResizableBox } from 'react-resizable';
+import { motion } from 'framer-motion';
 
 interface MicroAppCardProps {
   app: MicroApp;
@@ -95,7 +96,18 @@ function MicroAppCard({ app }: MicroAppCardProps) {
   );
 
   return (
-    <div ref={setNodeRef} style={style} className="group" onPointerDown={handlePointerDown} data-app-type={app.type}>
+    <motion.div
+        ref={setNodeRef}
+        style={style}
+        className="group"
+        onPointerDown={handlePointerDown}
+        data-app-type={app.type}
+        layoutId={app.id}
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.8 }}
+        transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+    >
         <ResizableBox
             width={app.size.width}
             height={app.size.height}
@@ -111,7 +123,7 @@ function MicroAppCard({ app }: MicroAppCardProps) {
         >
             {cardElement}
         </ResizableBox>
-    </div>
+    </motion.div>
   );
 }
 

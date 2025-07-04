@@ -5,7 +5,7 @@ import { getActiveEffectsForWorkspace } from '@/services/effects-service';
 
 /**
  * @fileOverview API endpoint to retrieve active system effects (e.g., from Chaos Cards) for the current workspace.
- * This is used by the main layout to apply dynamic themes.
+ * This is used by the main layout to apply dynamic themes or other global UI changes.
  */
 
 export async function GET(request: Request) {

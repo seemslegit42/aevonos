@@ -40,11 +40,14 @@ type AuthenticatedUser = {
 const CACHE_TTL_SECONDS = 60; // Cache user/workspace data for 1 minute
 
 /**
- * A server-side helper to get the authenticated user and their workspace.
+ * A server-side helper to get the authenticated user and their workspace from the session cookie.
  * It verifies the Firebase session cookie and fetches corresponding Prisma records if they exist.
  * This function is central to the auth flow and does NOT throw an error if the Prisma user/workspace is not found,
- * allowing calling services (like onboarding) to handle that specific case.
- * @returns An object containing the decoded Firebase token, and the (potentially null) Prisma user and workspace.
+ * allowing calling services (like onboarding) to handle that specific case. It uses a cache-aside
+ * pattern to reduce database load for frequent requests.
+ * 
+ * @returns {Promise<AuthenticatedUser>} An object containing the decoded Firebase token, and the (potentially null) Prisma user and workspace.
+ * @throws {Error} Throws an error if the session is invalid or the Firebase Admin SDK is not initialized.
  */
 export async function getAuthenticatedUser(): Promise<AuthenticatedUser> {
   // If admin is not initialized, we cannot authenticate the user.

@@ -33,6 +33,13 @@ const effectToTheme: Record<string, string> = {
 };
 
 
+/**
+ * MainLayout is the core client-side layout component.
+ * It handles authentication state changes, routing for unauthenticated users,
+ * and dynamic theme application based on user's Covenant and active Chaos Card effects.
+ * @param {MainLayoutProps} props The props for the component.
+ * @returns {React.ReactNode} The rendered layout.
+ */
 export function MainLayout({ children, user: dbUser, workspace, initialVas }: MainLayoutProps) {
   const pathname = usePathname();
   const router = useRouter();
@@ -55,7 +62,7 @@ export function MainLayout({ children, user: dbUser, workspace, initialVas }: Ma
   }, [authLoading, firebaseUser, isPublicPage, isAuthActionPage, needsOnboarding, pathname, router]);
 
 
-  // Effect for fetching active system effects
+  // Effect for fetching active system effects from Chaos Cards
   useEffect(() => {
     if (!dbUser) return;
 
@@ -78,6 +85,7 @@ export function MainLayout({ children, user: dbUser, workspace, initialVas }: Ma
   }, [dbUser]);
 
 
+  // Effect to apply the correct theme to the root HTML element
   useEffect(() => {
     // Determine the active theme, with system effects taking priority
     const activeEffectKey = activeEffects[0]?.cardKey; // Get the most recent active effect

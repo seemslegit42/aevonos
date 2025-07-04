@@ -1,18 +1,21 @@
 
 'use server';
-
+/**
+ * @fileOverview Service for managing active, temporary system-wide effects, such as those from Chaos Cards.
+ */
 import prisma from '@/lib/prisma';
 import type { ActiveSystemEffect } from '@prisma/client';
 
 /**
  * Retrieves all active system effects for a given workspace.
+ * It also automatically prunes any expired effects from the database.
  * @param workspaceId The ID of the workspace.
  * @returns A promise that resolves to an array of active effects.
  */
 export async function getActiveEffectsForWorkspace(workspaceId: string): Promise<ActiveSystemEffect[]> {
   const now = new Date();
   // It's good practice to clean up expired effects periodically.
-  // A cron job would be more efficient, but this is simple.
+  // A cron job would be more efficient, but this is simple and effective.
   await prisma.activeSystemEffect.deleteMany({
     where: {
       expiresAt: {
