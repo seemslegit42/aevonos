@@ -220,7 +220,7 @@ export async function getWorkspaceTransactions(workspaceId: string, limit = 20):
     take: limit,
   });
 
-  return txs.map(tx => ({ ...tx, amount: Number(tx.amount) }));
+  return txs.map(tx => ({ ...tx, amount: Number(tx.amount), tributeAmount: tx.tributeAmount ? Number(tx.tributeAmount) : null, boonAmount: tx.boonAmount ? Number(tx.boonAmount) : null }));
 }
 
 /**
@@ -328,7 +328,8 @@ export async function getTransmutationQuote(
         costInX,
         tithe,
         total,
-        isSufficient
+        isSufficient,
+        titheRate: transmutationTitheRate,
     };
 }
 

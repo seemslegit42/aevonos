@@ -58,8 +58,11 @@ export default function ProxyAgent({ id, vendor = 'The Alchemist Bar', amount = 
                     body: JSON.stringify({ amount, currency, vendor })
                 });
                 const data = await res.json();
-                if (!res.ok || !data.isSufficient) {
-                    throw new Error(data.error || 'Insufficient Ξ balance for this transmutation.');
+                if (!res.ok) {
+                    throw new Error(data.error || 'Failed to get quote.');
+                }
+                if (!data.isSufficient) {
+                     throw new Error('Insufficient Ξ balance for this transmutation.');
                 }
                 setQuote(data);
                 setStatus('ready');
@@ -106,7 +109,7 @@ export default function ProxyAgent({ id, vendor = 'The Alchemist Bar', amount = 
                         <Separator className="my-2" />
                         <div className="w-full text-left text-xs space-y-1">
                             <div className="flex justify-between"><span>Cost in Xi:</span> <span className="font-mono">{quote.costInX.toLocaleString()} Ξ</span></div>
-                            <div className="flex justify-between"><span>Transmutation Tithe (18%):</span> <span className="font-mono">{quote.tithe.toLocaleString()} Ξ</span></div>
+                            <div className="flex justify-between"><span>Transmutation Tithe ({quote.titheRate * 100}%):</span> <span className="font-mono">{quote.tithe.toLocaleString()} Ξ</span></div>
                         </div>
                         <div className="w-full text-left text-lg font-bold flex justify-between border-t mt-2 pt-2">
                             <span>Total Tribute:</span>

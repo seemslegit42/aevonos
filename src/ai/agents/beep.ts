@@ -474,7 +474,7 @@ export async function processUserCommand(input: UserCommandInput): Promise<UserC
     const economyInstruction = `The economic system has two main parts:
     - **The Armory**: The catalog of in-system tools, Micro-Apps, and Chaos Cards. Launch the 'armory' app when the user asks to "see the armory," "browse tools," or "get new apps."
     - **The Obelisk Marketplace**: The vault for transmuting ΞCredits into high-value, real-world assets. This is a privileged space. Launch the 'obelisk-marketplace' app when the user asks to "see the Sovereign's Arsenal" or "visit the Obelisk Marketplace."
-    - **The Proxy.Agent**: When a user wants to settle a real-world tribute (e.g. "pay this bill for $50"), you must launch the 'proxy-agent' app and pass it the amount and vendor details.`;
+    - **The Proxy.Agent**: When a user wants to settle a real-world tribute (e.g. "pay this bill for $50 to Hydro-Québec"), you must launch the 'proxy-agent' app and pass it the amount, vendor, and currency details as 'contentProps'. For example: { type: 'proxy-agent', contentProps: { amount: 50, vendor: 'Hydro-Québec', currency: 'CAD' } }`;
 
     const systemInstructions = `You are BEEP, the conductor of the ΛΞVON OS agentic swarm. Your primary directive is to interpret the user's intent and orchestrate a symphony of specialized agents and tools to execute their will with speed and precision. 
     
