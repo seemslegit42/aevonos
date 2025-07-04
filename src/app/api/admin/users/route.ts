@@ -7,7 +7,7 @@ export async function GET(request: NextRequest) {
   try {
     const { user: sessionUser, workspace } = await getAuthenticatedUser();
     
-    if (!workspace || workspace.ownerId !== sessionUser.id) {
+    if (!workspace || !sessionUser || sessionUser.id !== workspace.ownerId) {
       return NextResponse.json({ error: 'Forbidden. Architect access required.' }, { status: 403 });
     }
 

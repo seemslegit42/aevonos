@@ -1,3 +1,4 @@
+
 'use client';
 
 import React from 'react';
@@ -18,9 +19,9 @@ interface UserCardProps {
 }
 
 const psycheConfig = {
-    [UserPsyche.ZEN_ARCHITECT]: { symbol: '🜄', name: 'Covenant of Silence', color: 'text-cyan-400' },
-    [UserPsyche.SYNDICATE_ENFORCER]: { symbol: '🜁', name: 'Covenant of Motion', color: 'text-amber-400' },
-    [UserPsyche.RISK_AVERSE_ARTISAN]: { symbol: '🜃', name: 'Covenant of Worship', color: 'text-green-400' },
+    [UserPsyche.ZEN_ARCHITECT]: { symbol: '🜄', name: 'Silence', color: 'text-cyan-400' },
+    [UserPsyche.SYNDICATE_ENFORCER]: { symbol: '🜁', name: 'Motion', color: 'text-amber-400' },
+    [UserPsyche.RISK_AVERSE_ARTISAN]: { symbol: '🜃', name: 'Worship', color: 'text-green-400' },
 };
 
 
