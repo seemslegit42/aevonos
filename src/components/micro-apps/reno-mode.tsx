@@ -86,7 +86,7 @@ export default function RenoMode(props: RenoModeAnalysisOutput | {}) {
                         <Input type="file" accept="image/*" ref={fileInputRef} onChange={handleFileChange} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
                     </div>
                     <Button className="w-full" onClick={handleScan} disabled={!preview || isLoading}>
-                        {isLoading ? <Loader2 className="animate-spin" /> : <><Sparkles className="mr-2" />Analyze My Filth</>}
+                        {isLoading ? <Loader2 className="animate-spin" /> : <><Sparkles className="mr-2" />Analyze My Mess</>}
                     </Button>
                 </CardContent>
             </Card>
@@ -124,7 +124,7 @@ export default function RenoMode(props: RenoModeAnalysisOutput | {}) {
 
                         <Accordion type="single" collapsible className="w-full">
                             <AccordionItem value="item-1">
-                                <AccordionTrigger>Filthmatch™ Local Specialists</AccordionTrigger>
+                                <AccordionTrigger>Dirtmatch™ Local Specialists</AccordionTrigger>
                                 <AccordionContent>
                                     <div className="space-y-2">
                                         {mockSpecialists.map(specialist => (
