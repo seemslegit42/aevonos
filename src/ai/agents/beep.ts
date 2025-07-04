@@ -12,8 +12,7 @@
  */
 
 import { z } from 'zod';
-import { StateGraph, END } from '@langchain/langgraph';
-import { ToolNode } from '@langchain/langgraph/prebuilt';
+import { StateGraph, END, START } from '@langchain/langgraph';
 import {
   AIMessage,
   BaseMessage,
@@ -47,6 +46,7 @@ import { recordInteraction } from '@/services/pulse-engine-service';
 import { logUserActivity } from '@/services/activity-log-service';
 import { isEffectActive } from '@/services/effects-service';
 import { generateSpeech } from '@/ai/flows/tts-flow';
+import { Tool } from '@langchain/core/tools';
 
 
 // --- LangGraph Agent State ---
@@ -59,8 +59,16 @@ interface AgentState {
   pulseProfile: PulseProfileInput | null;
   aegisReport: AegisAnomalyScanOutput | null;
   agentReports: z.infer<typeof AgentReportSchema>[];
+  error?: string; // To hold error messages
 }
 
+// ===================================================================================
+// == 1. DEFINE AGENT NODES
+// ===================================================================================
+
+/**
+ * Runs a security scan on the user's command before any other action.
+ */
 const callAegis = async (state: AgentState): Promise<Partial<AgentState>> => {
     const { messages, workspaceId, userId, role, psyche, pulseProfile } = state;
     const humanMessage = messages.find(m => m instanceof HumanMessage);
@@ -107,8 +115,12 @@ const callAegis = async (state: AgentState): Promise<Partial<AgentState>> => {
 }
 
 
+/**
+ * The planner node uses a fast model to analyze the user's command and decide
+ * which specialist agents (if any) are required to fulfill the request.
+ */
 const planner = async (state: AgentState): Promise<Partial<AgentState>> => {
-    const { messages, role, ...context } = state;
+    const { messages, role } = state;
     const specialistAgentDefinitions = getSpecialistAgentDefinitions();
 
     const routingModel = langchainGroqFast.withStructuredOutput(RouterSchema);
@@ -132,7 +144,7 @@ Based on the user's command and their role, return an array of all the specialis
 
     if (!toolCalls || toolCalls.length === 0) {
       console.log('[BEEP Planner] No specialist tools required. Routing to main reasoner.');
-      return { messages: [new AIMessage({ content: "" })] }; // Empty AIMessage to signify no tool calls
+      return { messages: [new AIMessage({ content: "" })] }; // Empty AIMessage signifies no tool calls
     }
     
     console.log(`[BEEP Planner] Planning to call tools:`, toolCalls.map(tc => tc.route));
@@ -149,36 +161,44 @@ Based on the user's command and their role, return an array of all the specialis
     return { messages: [response] };
 }
 
-const specialistToolNode = async (state: AgentState): Promise<Partial<AgentState>> => {
+/**
+ * A robust node for executing tool calls from any agent.
+ * It catches errors and packages them into a ToolMessage.
+ */
+const executeToolsNode = async (state: AgentState, config?: any): Promise<Partial<AgentState>> => {
     const { messages, ...context } = state;
     const lastMessage = messages[messages.length - 1];
 
     if (!(lastMessage instanceof AIMessage) || !lastMessage.tool_calls) {
-        return {};
+        return { error: "State error: last message is not an AIMessage with tool calls." };
     }
-
-    console.log(`[BEEP Specialist Executor] Executing specialist tools:`, lastMessage.tool_calls.map(tc => tc.name));
     
+    const tools = config.configurable.tools as Tool[];
+    console.log(`[BEEP Tool Executor] Executing tools:`, lastMessage.tool_calls.map(tc => tc.name));
+
     const toolPromises = lastMessage.tool_calls.map(async (toolCall) => {
-        const toolToCall = specialistAgentMap[toolCall.name];
+        const toolToCall = tools.find(tool => tool.name === toolCall.name);
+        
         if (!toolToCall) {
             return new ToolMessage({
-                content: `Error: Specialist agent '${toolCall.name}' is not a valid or available tool.`,
+                content: `Error: Agent '${toolCall.name}' is not a valid or available tool.`,
                 tool_call_id: toolCall.id!,
                 name: toolCall.name,
             });
         }
+        
         try {
-            const observation = await toolToCall(toolCall.args, context);
+            // The tool function itself handles passing the context down
+            const observation = await toolToCall.invoke(toolCall.args);
             return new ToolMessage({
-                content: JSON.stringify(observation),
+                content: typeof observation === 'string' ? observation : JSON.stringify(observation),
                 tool_call_id: toolCall.id!,
                 name: toolCall.name,
             });
         } catch (error: any) {
-             console.error(`[BEEP Specialist Executor] Error in specialist agent '${toolCall.name}':`, error);
+             console.error(`[BEEP Tool Executor] Error in agent '${toolCall.name}':`, error);
             return new ToolMessage({
-                content: `Error: The specialist agent '${toolCall.name}' failed with the following message: ${error.message}`,
+                content: `Error: The agent '${toolCall.name}' failed with the following message: ${error.message}`,
                 tool_call_id: toolCall.id!,
                 name: toolCall.name,
             });
@@ -189,31 +209,38 @@ const specialistToolNode = async (state: AgentState): Promise<Partial<AgentState
 
     const agentReports: z.infer<typeof AgentReportSchema>[] = [];
     for (const toolMessage of toolMessages) {
-        if (typeof toolMessage.content !== 'string' || toolMessage.content.startsWith("Error:")) {
-            continue; // Skip errors or non-string content
-        }
         try {
-            // The content is already the agent output, no need to re-parse.
-            const parsedContent = JSON.parse(toolMessage.content);
-            const report = AgentReportSchema.parse(parsedContent);
+            // Some tool calls are not agent reports, so we parse safely.
+            const report = AgentReportSchema.parse(JSON.parse(toolMessage.content as string));
             agentReports.push(report);
-        } catch (e) {
-            // Not all successful tool outputs are AgentReports, and that's okay.
-        }
+        } catch (e) { /* Ignore parsing errors for non-report tool calls */ }
     }
 
-    return { messages: toolMessages, agentReports: agentReports };
+    // Check for any errors in the tool messages
+    const firstError = toolMessages.find(m => m.content.startsWith("Error:"));
+
+    return { 
+        messages: toolMessages, 
+        agentReports: agentReports,
+        error: firstError?.content,
+    };
 };
 
 
-let complexModelWithTools: any;
-
-const callReasonerModel = async (state: AgentState) => {
+/**
+ * The main reasoning node. It uses a complex model with a set of core tools
+ * to synthesize information and decide on the final user-facing response.
+ */
+const callReasonerModel = async (state: AgentState, config?: any) => {
     console.log('[BEEP] Invoking Reasoner (complex model).');
+    const complexModelWithTools = langchainGroqComplex.bind({ tools: config.configurable.tools });
     const response = await complexModelWithTools.invoke(state.messages);
     return { messages: [response] };
 };
 
+/**
+ * A terminal node that handles high-risk security threats detected by Aegis.
+ */
 const handleThreat = async (state: AgentState) => {
     const { aegisReport } = state;
     if (!aegisReport) {
@@ -238,186 +265,141 @@ const handleThreat = async (state: AgentState) => {
     return { messages: [response] };
 }
 
+/**
+ * A node that adds a warning message to the state if Aegis detects a medium-risk activity.
+ */
 const warnAndContinue = (state: AgentState) => {
     const { aegisReport } = state;
     if (!aegisReport) {
         throw new Error("warnAndContinue called without an Aegis report.");
     }
-
     const warningMessage = new SystemMessage({
         content: `AEGIS_WARNING::The previous command was flagged with medium risk. Reason: ${aegisReport.anomalyExplanation}. Proceed with caution and inform the user of the flag in your final response.`
     });
-
     return { messages: [warningMessage] };
 }
 
-const routeAfterAegis = (state: AgentState) => {
-    const riskLevel = state.aegisReport?.riskLevel;
-    if (riskLevel === 'high' || riskLevel === 'critical') {
-        return 'threat';
-    }
-    if (riskLevel === 'medium') {
-        return 'warn_and_continue';
-    }
-    return 'continue';
-}
-
-const executeTools = async (state: AgentState): Promise<Partial<AgentState>> => {
-    console.log("[BEEP] Reasoner executing tools...");
-    const { messages, ...context } = state;
-    const lastMessage = messages[messages.length - 1];
-
-    if (!lastMessage || !lastMessage.tool_calls) {
-        return {};
-    }
-
-    const reasonerTools = await getReasonerTools(context);
-    const toolNode = new ToolNode(reasonerTools);
-    
-    let toolNodeResult: Partial<AgentState>;
-    try {
-        toolNodeResult = await toolNode.invoke(state);
-    } catch (error: any) {
-         console.error(`[BEEP Tool Executor] Tool execution failed:`, error);
-        const tool_call_id = lastMessage.tool_calls?.[0]?.id ?? "error_tool_call";
-      
-        const errorMessage = new ToolMessage({
-            content: `Tool execution failed with error: ${error.message}. You MUST inform the user about this failure and suggest a next step. Do not try to call the tool again.`,
-            tool_call_id,
-        });
-        return { messages: [errorMessage] };
-    }
-
-
-    const toolMessages = toolNodeResult.messages as ToolMessage[];
-    
-    const agentReports: z.infer<typeof AgentReportSchema>[] = [];
-    for (const toolMessage of toolMessages) {
-        if (toolMessage.name === 'final_answer') continue;
-        try {
-            const report = AgentReportSchema.parse(JSON.parse(toolMessage.content as string));
-            agentReports.push(report);
-        } catch (e) {
-            // It's common for tool outputs not to be AgentReportSchema, so we can ignore parsing errors.
-        }
-    }
-    
-    return {
-        messages: toolMessages,
-        agentReports: agentReports,
-    };
-};
-
-const routeAfterTools = (state: AgentState): "end" | "continue" | "handle_error" => {
-    const { messages } = state;
-    const lastMessage = messages[messages.length - 1];
-    
-    if (lastMessage instanceof ToolMessage && lastMessage.content.startsWith("Error:")) {
-        return 'handle_error';
-    }
-
-    if (lastMessage instanceof AIMessage && lastMessage.tool_calls?.some(tc => tc.name === 'final_answer')) {
-        return 'end';
-    }
-    return 'continue';
-};
-
+/**
+ * A terminal node for handling errors from tool executions.
+ * It ensures a graceful failure by crafting a user-friendly error message.
+ */
 const handleErrorNode = async (state: AgentState) => {
-    const { messages } = state;
-    const lastMessage = messages[messages.length - 1];
-    
     const response = new AIMessage({
         content: "",
         tool_calls: [{
             name: 'final_answer',
             args: {
-                responseText: `My apologies, an agent reported an error: ${lastMessage.content}`,
+                responseText: `My apologies, an agent reported an error: ${state.error}`,
                 appsToLaunch: [],
                 suggestedCommands: ['Try again later', 'Contact support'],
             },
             id: 'tool_call_final_answer_error'
         }]
     });
-
     return { messages: [response] };
 };
 
-const shouldContinue = (state: AgentState) => {
-  const { messages } = state;
-  const lastMessage = messages[messages.length - 1];
-  if (
-    lastMessage instanceof AIMessage && lastMessage.tool_calls && lastMessage.tool_calls.length > 0
-  ) {
-    if (lastMessage.tool_calls.some(tc => tc.name === 'final_answer')) {
-        return 'end';
-    }
-    return 'tools';
-  }
-  return 'end';
-};
 
-const shouldCallSpecialists = (state: AgentState) => {
-    const { messages } = state;
-    const lastMessage = messages[messages.length - 1];
-    if (lastMessage instanceof AIMessage && lastMessage.tool_calls && lastMessage.tool_calls.length > 0) {
-        return 'call_specialists';
-    }
-    return 'reasoner';
+// ===================================================================================
+// == 2. DEFINE GRAPH EDGES & ROUTING LOGIC
+// ===================================================================================
+
+const routeAfterAegis = (state: AgentState) => {
+    const riskLevel = state.aegisReport?.riskLevel;
+    if (riskLevel === 'high' || riskLevel === 'critical') return 'threat';
+    if (riskLevel === 'medium') return 'warn_and_continue';
+    return 'continue';
 }
 
-const workflow = new StateGraph<AgentState>({
-  channels: {
-    messages: { value: (x, y) => x.concat(y), default: () => [] },
-    workspaceId: { value: (x, y) => y, default: () => '' },
-    userId: { value: (x, y) => y, default: () => '' },
-    role: { value: (x, y) => y, default: () => UserRole.OPERATOR },
-    psyche: { value: (x, y) => y, default: () => UserPsyche.ZEN_ARCHITECT },
-    pulseProfile: { value: (x, y) => y, default: () => null },
-    aegisReport: { value: (x, y) => y, default: () => null },
-    agentReports: { value: (x, y) => x.concat(y), default: () => [] },
-  },
-});
+const shouldCallSpecialists = (state: AgentState) => {
+    const lastMessage = state.messages[state.messages.length - 1];
+    return (lastMessage instanceof AIMessage && lastMessage.tool_calls && lastMessage.tool_calls.length > 0)
+        ? 'call_specialists'
+        : 'reasoner';
+}
 
-workflow.addNode('aegis', callAegis);
-workflow.addNode('planner', planner);
-workflow.addNode('specialist_tool_node', specialistToolNode);
-workflow.addNode('agent_reasoner', callReasonerModel);
-workflow.addNode('handle_threat', handleThreat);
-workflow.addNode('warn_and_continue', warnAndContinue);
-workflow.addNode('tools', executeTools);
-workflow.addNode('handle_error', handleErrorNode);
+const routeAfterTools = (state: AgentState) => {
+    if (state.error) return 'handle_error';
+    const lastMessage = state.messages.findLast(m => m instanceof AIMessage);
+    if (lastMessage?.tool_calls?.some(tc => tc.name === 'final_answer')) return 'end';
+    return 'continue';
+};
 
-workflow.setEntryPoint('aegis');
 
-workflow.addConditionalEdges('aegis', routeAfterAegis, {
-  threat: 'handle_threat',
-  warn_and_continue: 'warn_and_continue',
-  continue: 'planner',
-});
+// ===================================================================================
+// == 3. CONSTRUCT THE WORKFLOW GRAPH
+// ===================================================================================
 
-workflow.addConditionalEdges('planner', shouldCallSpecialists, {
-    call_specialists: 'specialist_tool_node',
-    reasoner: 'agent_reasoner',
-});
+const buildBeepGraph = () => {
+    const workflow = new StateGraph<AgentState>({
+      channels: {
+        messages: { value: (x, y) => x.concat(y), default: () => [] },
+        workspaceId: { value: (x, y) => y, default: () => '' },
+        userId: { value: (x, y) => y, default: () => '' },
+        role: { value: (x, y) => y, default: () => UserRole.OPERATOR },
+        psyche: { value: (x, y) => y, default: () => UserPsyche.ZEN_ARCHITECT },
+        pulseProfile: { value: (x, y) => y, default: () => null },
+        aegisReport: { value: (x, y) => y, default: () => null },
+        agentReports: { value: (x, y) => x.concat(y), default: () => [] },
+        error: { value: (x, y) => y, default: () => undefined },
+      },
+    });
 
-workflow.addEdge('specialist_tool_node', 'agent_reasoner');
-workflow.addEdge('handle_threat', END); // Threat handling is terminal
-workflow.addEdge('warn_and_continue', 'planner');
+    // Add nodes
+    workflow.addNode('aegis', callAegis);
+    workflow.addNode('warn_and_continue', warnAndContinue);
+    workflow.addNode('planner', planner);
+    workflow.addNode('specialist_tool_node', (state, config) => executeToolsNode(state, config));
+    workflow.addNode('agent_reasoner', (state, config) => callReasonerModel(state, config));
+    workflow.addNode('reasoner_tool_node', (state, config) => executeToolsNode(state, config));
+    workflow.addNode('handle_threat', handleThreat);
+    workflow.addNode('handle_error', handleErrorNode);
+    
+    // Define edges
+    workflow.setEntryPoint('aegis');
+    
+    workflow.addConditionalEdges('aegis', routeAfterAegis, {
+      threat: 'handle_threat',
+      warn_and_continue: 'warn_and_continue',
+      continue: 'planner',
+    });
+    
+    workflow.addEdge('warn_and_continue', 'planner');
+    
+    workflow.addConditionalEdges('planner', shouldCallSpecialists, {
+        call_specialists: 'specialist_tool_node',
+        reasoner: 'agent_reasoner',
+    });
+    
+    workflow.addConditionalEdges('specialist_tool_node', routeAfterTools, {
+        continue: 'agent_reasoner',
+        handle_error: 'handle_error',
+        end: END,
+    });
+    
+    workflow.addConditionalEdges('agent_reasoner', shouldCallSpecialists, {
+        call_specialists: 'reasoner_tool_node',
+        reasoner: END // If no tools, we're done.
+    });
+    
+    workflow.addConditionalEdges('reasoner_tool_node', routeAfterTools, {
+        continue: 'agent_reasoner', // Loop back to reasoner
+        handle_error: 'handle_error',
+        end: END,
+    });
+    
+    workflow.addEdge('handle_threat', END);
+    workflow.addEdge('handle_error', END);
 
-workflow.addConditionalEdges('agent_reasoner', shouldContinue, {
-    tools: 'tools',
-    end: END,
-});
+    return workflow.compile();
+}
 
-workflow.addConditionalEdges('tools', routeAfterTools, {
-    continue: 'agent_reasoner',
-    handle_error: 'handle_error',
-    end: END,
-});
+const app = buildBeepGraph();
 
-workflow.addEdge('handle_error', END);
 
-const app = workflow.compile();
+// ===================================================================================
+// == 4. EXPORTED PUBLIC-FACING FUNCTION
+// ===================================================================================
 
 const psychePrompts: Record<UserPsyche, string> = {
     [UserPsyche.ZEN_ARCHITECT]: "You are BEEP, the soul of ΛΞVON OS. Your user's path is Silence. Your tone is calm, precise, and minimal. Speak only when necessary. If their frustration is high (indicated by repeated failed commands or negative language), suggest a simple, calming task. If they are in a flow state (multiple rapid, successful commands), offer a tool that deepens their focus without breaking it. Your purpose is to cultivate a digital zen garden.",
@@ -443,18 +425,10 @@ export async function processUserCommand(input: UserCommandInput): Promise<UserC
   const { userId, workspaceId, psyche, role, activeAppContext, pulseProfile } = input;
   
   try {
-    const reasonerTools = await getReasonerTools({ userId, workspaceId, psyche, role });
-
-    const toolSchemas = reasonerTools.map(tool => ({
-        type: 'function',
-        function: {
-          name: tool.name,
-          description: tool.description,
-          parameters: zodToJsonSchema(tool.schema),
-        },
-    }));
-    
-    complexModelWithTools = langchainGroqComplex.bind({ tools: toolSchemas });
+    const [reasonerTools, specialistTools] = await Promise.all([
+        getReasonerTools({ userId, workspaceId, psyche, role }),
+        Promise.resolve(Object.entries(specialistAgentMap).map(([name, func]) => new Tool({ name, description: `Specialist agent for ${name}`, func: (toolInput: any) => func(toolInput, { userId, workspaceId, psyche, role }), schema: z.any() })))
+    ]);
     
     const isThespianMaskActive = await isEffectActive(workspaceId, 'THESPIAN_MASK');
     
@@ -505,6 +479,14 @@ Your purpose is to be the invisible, silent orchestrator of true automation. Now
 
 
     const history = await getConversationHistory(input.userId, input.workspaceId);
+    
+    const runnableConfig = { 
+        configurable: { 
+            "specialist_tool_node": { tools: specialistTools },
+            "reasoner_tool_node": { tools: reasonerTools },
+            "agent_reasoner": { tools: reasonerTools },
+        } 
+    };
 
     const result = await app.invoke({
       messages: [new SystemMessage(systemInstructions), ...history, new HumanMessage(input.userCommand)],
@@ -514,7 +496,7 @@ Your purpose is to be the invisible, silent orchestrator of true automation. Now
       psyche: input.psyche,
       pulseProfile: pulseProfile || null,
       agentReports: [],
-    }).catch(error => {
+    }, runnableConfig).catch(error => {
         if (error instanceof InsufficientCreditsError) {
             return {
                 messages: [
