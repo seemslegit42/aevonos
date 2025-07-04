@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useState, useEffect, useMemo, Suspense } from 'react';
-import { User } from '@prisma/client';
+import { User, UserPsyche } from '@prisma/client';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Stars, Html } from '@react-three/drei';
 
@@ -18,47 +18,68 @@ import UserRosterTable from './UserRosterTable';
 type UserData = Pick<User, 'id' | 'email' | 'firstName' | 'lastName' | 'role' | 'lastLoginAt' | 'psyche' | 'agentAlias'>;
 type ViewMode = 'pantheon' | 'roster';
 
+const generateSpherePositions = (count: number, radius: number, center: [number, number, number]): [number, number, number][] => {
+    const points: [number, number, number][] = [];
+    if (count === 0) return points;
+    
+    for (let i = 0; i < count; i++) {
+        const phi = Math.acos(-1 + (2 * i) / (count-1 || 1));
+        const theta = Math.sqrt((count-1 || 1) * Math.PI) * phi;
+        
+        const x = center[0] + radius * Math.cos(theta) * Math.sin(phi);
+        const y = center[1] + radius * Math.sin(theta) * Math.sin(phi);
+        const z = center[2] + radius * Math.cos(phi);
+        points.push([x, y, z]);
+    }
+    return points;
+};
+
 const PantheonView = ({ users, onActionComplete, currentUserId }: { users: UserData[], onActionComplete: () => void, currentUserId: string }) => {
     const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
 
-    const positions = useMemo(() => {
-        const temp: [number, number, number][] = [];
-        const numUsers = users.length;
-        if (numUsers === 0) return temp;
-        
-        for (let i = 0; i < numUsers; i++) {
-            const phi = Math.acos(-1 + (2 * i) / (numUsers-1));
-            const theta = Math.sqrt(numUsers * Math.PI) * phi;
-            const r = 5 + (i/numUsers) * 5;
-            temp.push([r * Math.cos(theta) * Math.sin(phi), r * Math.sin(theta) * Math.sin(phi), r * Math.cos(phi)]);
-        }
-        return temp;
+    const { motionUsers, worshipUsers, silenceUsers } = useMemo(() => {
+        const groups: { motion: UserData[], worship: UserData[], silence: UserData[] } = { motion: [], worship: [], silence: [] };
+        users.forEach(user => {
+            if (user.psyche === UserPsyche.SYNDICATE_ENFORCER) groups.motion.push(user);
+            else if (user.psyche === UserPsyche.RISK_AVERSE_ARTISAN) groups.worship.push(user);
+            else groups.silence.push(user);
+        });
+        return { motionUsers: groups.motion, worshipUsers: groups.worship, silenceUsers: groups.silence };
     }, [users]);
+
+    const motionPositions = useMemo(() => generateSpherePositions(motionUsers.length, 3, [-8, 2, 0]), [motionUsers]);
+    const worshipPositions = useMemo(() => generateSpherePositions(worshipUsers.length, 3, [8, 2, 0]), [worshipUsers]);
+    const silencePositions = useMemo(() => generateSpherePositions(silenceUsers.length, 3, [0, -6, 0]), [silenceUsers]);
+
+    const allPositionedUsers = [
+        ...motionUsers.map((u, i) => ({ user: u, position: motionPositions[i] })),
+        ...worshipUsers.map((u, i) => ({ user: u, position: worshipPositions[i] })),
+        ...silenceUsers.map((u, i) => ({ user: u, position: silencePositions[i] })),
+    ];
     
-    const selectedUser = useMemo(() => users.find(u => u.id === selectedUserId), [users, selectedUserId]);
-    const selectedUserIndex = useMemo(() => users.findIndex(u => u.id === selectedUserId), [users, selectedUserId]);
+    const selectedUser = useMemo(() => allPositionedUsers.find(pu => pu.user.id === selectedUserId), [allPositionedUsers, selectedUserId]);
 
     return (
-       <Canvas camera={{ position: [0, 0, 15], fov: 75 }}>
+       <Canvas camera={{ position: [0, 0, 20], fov: 75 }}>
            <Suspense fallback={null}>
                 <ambientLight intensity={0.2} />
                 <pointLight position={[0, 0, 0]} intensity={1} />
                 <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade />
 
-                {users.map((user, i) => (
-                    <UserStar
+                {allPositionedUsers.map(({ user, position }) => (
+                     <UserStar
                         key={user.id}
                         user={user}
-                        position={positions[i]}
+                        position={position}
                         isSelected={selectedUserId === user.id}
                         onClick={() => setSelectedUserId(user.id)}
                     />
                 ))}
                 
-                {selectedUser && selectedUserIndex !== -1 && (
-                    <Html position={positions[selectedUserIndex]} center>
-                        <div className="w-80 -translate-x-1/2 translate-y-12">
-                            <UserCard user={selectedUser} currentUserId={currentUserId} onActionComplete={() => {
+                {selectedUser && (
+                    <Html position={selectedUser.position as any} center>
+                        <div className="w-80 -translate-x-1/2 translate-y-48">
+                            <UserCard user={selectedUser.user} currentUserId={currentUserId} onActionComplete={() => {
                                 setSelectedUserId(null);
                                 onActionComplete();
                             }} />

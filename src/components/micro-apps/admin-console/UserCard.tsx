@@ -8,7 +8,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { User as UserIcon } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
-import UserActions from './UserActions'; // Import the new component
+import UserActions from './UserActions';
 
 type UserData = Pick<User, 'id' | 'email' | 'firstName' | 'lastName' | 'role' | 'lastLoginAt' | 'psyche' | 'agentAlias'>;
 
