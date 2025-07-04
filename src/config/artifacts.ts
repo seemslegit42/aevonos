@@ -861,7 +861,7 @@ export const artifactManifests: ArtifactManifest[] = [
     imageUrl: 'https://placehold.co/400x560.png',
     imageHint: 'stone tablet',
   },
-   // --- RITUAL BOONS (MERCENARY CARDS) ---
+  // --- RITUAL BOONS (MERCENARY CARDS) ---
   {
     id: 'LOADED_DIE',
     type: 'CHAOS_CARD',
@@ -911,5 +911,3 @@ export const artifactManifests: ArtifactManifest[] = [
     imageHint: 'skull coin',
   },
 ];
-
-    

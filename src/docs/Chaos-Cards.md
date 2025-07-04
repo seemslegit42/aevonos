@@ -1,4 +1,3 @@
-
 # ΛΞVON OS: Economy - Chaos Card Deck Specification
 
 ## 1. Introduction: The Currency of Madness
@@ -30,7 +29,7 @@ Impact: Low cost, temporary UI/UX modifications. These are subtle shifts in real
 - **Card**: Noctua's Gaze
   - **Cost**: 75 Ξ
   - **Description**: "Adopt the vision of Athena's owl. See clarity in the darkness."
-  - **System Effect**: Applies a `theme-noctuas-gaze` class to the root element, activating a "dark mode" that is pure black with text glowing in a soft, silver light.
+  - **System Effect**: Activates a pure black 'dark mode' that is pure black, with text glowing in a soft, silver light. All non-essential UI elements fade unless hovered over.
 - **Card**: Fractal Bloom
   - **Cost**: 100 Ξ
   - **Description**: "The universe's geometry, revealed in a flash. The math of nature, made manifest."
@@ -38,7 +37,7 @@ Impact: Low cost, temporary UI/UX modifications. These are subtle shifts in real
 - **Card**: Weeping Glass
   - **Cost**: 50 Ξ
   - **Description**: "For a short time, the hard edges of your OS soften and flow. A reminder that even structure is fluid."
-  - **System Effect**: For 15 minutes, a `theme-weeping-glass` class is applied, causing UI elements on the Canvas to develop a slow, "dripping" animation, as if made of liquid glass. Purely cosmetic, utterly beautiful.
+  - **System Effect**: For 15 minutes, UI elements on the Canvas develop a slow, "dripping" animation, as if made of liquid glass. Purely cosmetic, utterly beautiful.
 
 ### 3.2. Class II: Agentic Whims (Whispers of Myth)
 Impact: Medium cost, directly influence agent behavior. For the user who enjoys a conversation with the machine, especially when the machine gets ideas of its own. These are functional but flavored disruptions that challenge the user to adapt.
@@ -114,6 +113,28 @@ Impact: Highest cost and power. These cards weave your fate with others, designe
   - **Cost**: 1200 Ξ (Syndicate Pool)
   - **Description**: "Some languages are impossible for one mind to translate. But together, you can decipher the code of your enemy."
   - **System Effect**: Provides a critical clue to a member\'s "Glitch in the Glass." The clue is delivered in three different fragments to three different Syndicate members, who must collaborate to piece it together.
+
+### 3.5. Class V: Ritual Boons (Mercenary Cards)
+Impact: Variable cost, single-use power-ups. These are not random effects; they are strategic purchases that directly manipulate the underlying mechanics of fate.
+
+**Cards:**
+- **Card**: Loaded Die
+  - **Cost**: 250 Ξ
+  - **Description**: "Subtly bend the laws of probability. Grants a slight, invisible buff to your next 3 tributes."
+  - **System Effect**: The user's `loadedDieBuffCount` is incremented. The Klepsydra Engine applies a bonus to win probabilities when this buff is active.
+- **Card**: Sisyphus's Reprieve
+  - **Cost**: 150 Ξ
+  - **Description**: "Even the gods show mercy, sometimes. Guarantees your next tribute to Sisyphus will not result in a loss."
+  - **System Effect**: Sets the `nextTributeGuaranteedWin` flag on the user's PulseProfile to true.
+- **Card**: Oracle's Insight
+  - **Cost**: 500 Ξ
+  - **Description**: "For a brief time, the Oracle reveals the true payout probabilities, letting you see the hidden machinery of fate."
+  - **System Effect**: A temporary system effect is applied that would alter the UI of Folly Instruments to show probabilities.
+- **Card**: Hades' Bargain
+  - **Cost**: 100 Ξ
+  - **Description**: "A pact with the underworld. Doubles your next tribute, for double the potential boon... or double the fall."
+  - **System Effect**: Sets the `hadesBargainActive` flag on the user's PulseProfile. The Klepsydra Engine doubles the next tribute amount if this is active.
+
 
 ## 4. Development Directives
 - **KLEPSYDRA Integration**: All Chaos Card triggers and effects must be meticulously integrated with the klepsydra-service for precise tracking, cost deduction, and outcome modulation based on the user's Pulse Profile.
