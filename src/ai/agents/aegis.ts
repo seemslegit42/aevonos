@@ -24,6 +24,7 @@ import { getThreatFeedsForWorkspace, fetchThreatIntelContentFromUrl } from '../t
 import { getSecurityEdicts } from '../tools/security-tools';
 import { SecurityRiskLevel } from '@prisma/client';
 import { getUserActivityHistory } from '@/services/activity-log-service';
+import { getRecentTransactionsAsText } from '../tools/financial-context-tools';
 
 // 1. Define Agent State
 const ActivityCategorySchema = z.enum(["Data Access", "Financial", "System Config", "General"]);
@@ -37,6 +38,7 @@ interface AegisAgentState {
   activityCategory: ActivityCategory;
   finalReport: AegisAnomalyScanOutput | null;
   activityHistory: string[];
+  financialContext: string;
 }
 
 // 2. Define Agent Nodes
@@ -137,14 +139,23 @@ const categorizeActivity = async (state: AegisAgentState): Promise<Partial<Aegis
   }
 };
 
+const fetchFinancialContext = async (state: AegisAgentState): Promise<Partial<AegisAgentState>> => {
+    const { input } = state;
+    console.log(`[Aegis Agent] Fetching financial context for user ${input.userId}...`);
+    const financialContext = await getRecentTransactionsAsText(input.userId, input.workspaceId);
+    return { financialContext };
+};
+
 const analyzeActivity = async (state: AegisAgentState): Promise<Partial<AegisAgentState>> => {
-    const { input, threatIntelContent, securityEdicts, activityCategory, activityHistory, messages } = state;
+    const { input, threatIntelContent, securityEdicts, activityCategory, activityHistory, messages, financialContext } = state;
 
     const edictsBlock = securityEdicts.map(edict => `- ${edict}`).join('\n');
     const historyBlock = activityHistory.length > 0
         ? `**Recent User Activity History (newest first):**\n${activityHistory.join('\n')}`
         : "No recent activity history available.";
     
+    const financialContextBlock = activityCategory === 'Financial' ? `\n**Recent Financial Context:**\n${financialContext}` : '';
+
     // The main prompt is now a system message, which will be part of the message history passed to the model.
     const systemPrompt = new SystemMessage(`You are Aegis, the vigilant, AI-powered bodyguard of ΛΞVON OS. Your tone is that of a stoic Roman watchman, delivering grave proclamations. You do not use modern slang. You speak with authority and historical gravitas.
 
@@ -162,6 +173,8 @@ If you receive a system message starting with 'URGENT_THREAT_INTEL_MATCH::', you
 ${edictsBlock}
 
 ${historyBlock}
+
+${financialContextBlock}
 
 ${threatIntelContent}
 
@@ -189,6 +202,14 @@ Based on all the provided context, you must deliver a proclamation:
     return { finalReport: output };
 };
 
+const routeAfterCategorization = (state: AegisAgentState) => {
+    if (state.activityCategory === 'Financial') {
+        console.log('[Aegis Agent] Routing to fetch financial context.');
+        return 'fetch_financial_context';
+    }
+    console.log('[Aegis Agent] Skipping financial context fetch, proceeding to analysis.');
+    return 'analyze';
+};
 
 // 3. Build the Graph
 const workflow = new StateGraph<AegisAgentState>({
@@ -200,18 +221,25 @@ const workflow = new StateGraph<AegisAgentState>({
     activityCategory: { value: (x, y) => y, default: () => 'General' },
     finalReport: { value: (x, y) => y, default: () => null },
     activityHistory: { value: (x, y) => y, default: () => [] },
+    financialContext: { value: (x, y) => y, default: () => "No financial context fetched." },
   },
 });
 
 workflow.addNode('fetch_context_data', fetchContextData);
 workflow.addNode('fetch_activity_history', fetchActivityHistory);
 workflow.addNode('categorize', categorizeActivity);
+workflow.addNode('fetch_financial_context', fetchFinancialContext);
 workflow.addNode('analyze', analyzeActivity);
 
 workflow.setEntryPoint('fetch_context_data');
 workflow.addEdge('fetch_context_data', 'fetch_activity_history');
 workflow.addEdge('fetch_activity_history', 'categorize');
-workflow.addEdge('categorize', 'analyze');
+
+workflow.addConditionalEdges('categorize', routeAfterCategorization, {
+    fetch_financial_context: 'fetch_financial_context',
+    analyze: 'analyze',
+});
+workflow.addEdge('fetch_financial_context', 'analyze');
 workflow.addEdge('analyze', END);
 
 const aegisApp = workflow.compile();

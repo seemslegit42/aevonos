@@ -73,3 +73,4 @@ import '@/app/api/agents/[agentId]/route.ts';
 import '@/services/activity-log-service.ts';
 import '@/ai/agents/dr-syntax-agent.ts';
 import '@/ai/agents/stonks-bot-agent.ts';
+import '@/ai/tools/financial-context-tools.ts';

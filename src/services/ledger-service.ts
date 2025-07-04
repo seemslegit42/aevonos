@@ -205,7 +205,7 @@ export async function processMicroAppPurchase(
  * @param limit The maximum number of transactions to return.
  * @returns A list of recent transaction records.
  */
-export async function getWorkspaceTransactions(workspaceId: string, limit = 20) {
+export async function getWorkspaceTransactions(workspaceId: string, limit = 20): Promise<Transaction[]> {
   if (!workspaceId) {
     throw new Error('Workspace ID is required to fetch transactions.');
   }
@@ -217,6 +217,28 @@ export async function getWorkspaceTransactions(workspaceId: string, limit = 20) 
   });
 }
 
+/**
+ * Retrieves the most recent transactions for a given user.
+ * @param userId The ID of the user.
+ * @param workspaceId The ID of the workspace for scoping.
+ * @param limit The maximum number of transactions to return.
+ * @returns A list of recent transaction records for the user.
+ */
+export async function getRecentTransactionsForUser(userId: string, workspaceId: string, limit = 5): Promise<Transaction[]> {
+  if (!userId || !workspaceId) {
+    throw new Error('User ID and Workspace ID are required.');
+  }
+  return prisma.transaction.findMany({
+    where: {
+      userId,
+      workspaceId,
+    },
+    orderBy: {
+      createdAt: 'desc',
+    },
+    take: limit,
+  });
+}
 
 /**
  * Atomically confirms a pending credit transaction, updating its status
