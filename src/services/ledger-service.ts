@@ -272,6 +272,36 @@ export async function confirmPendingTransaction(transactionId: string, workspace
 }
 
 /**
+ * Calculates the cost of a real-world transmutation.
+ * @returns An object with the cost breakdown.
+ */
+export async function getTransmutationQuote(
+  input: Omit<z.infer<typeof TransmuteCreditsInputSchema>, 'vendor'>,
+  workspaceId: string
+) {
+    const costInX = Math.ceil(input.amount / XI_TO_CAD_EXCHANGE_RATE);
+    const tithe = Math.ceil(costInX * TRANSMUTATION_TITHE_RATE);
+    const total = costInX + tithe;
+
+    const workspace = await prisma.workspace.findUnique({
+      where: { id: workspaceId },
+      select: { credits: true },
+    });
+    
+    const isSufficient = workspace && Number(workspace.credits) >= total;
+
+    return {
+        realWorldAmount: input.amount,
+        currency: input.currency,
+        costInX,
+        tithe,
+        total,
+        isSufficient
+    };
+}
+
+
+/**
  * Atomically processes a real-world payment tribute via the Proxy.Agent.
  * @param input The details of the transmutation.
  * @param workspaceId The user's workspace.
@@ -286,42 +316,39 @@ export async function transmuteCredits(
   const { amount, vendor, currency } = TransmuteCreditsInputSchema.parse(input);
   const signatureSecret = process.env.AEGIS_SIGNING_SECRET || 'default_secret_for_dev';
   
-  const baseCost = amount / XI_TO_CAD_EXCHANGE_RATE;
-  const tithe = baseCost * TRANSMUTATION_TITHE_RATE;
-  const totalDebit = baseCost + tithe;
-
+  const quote = await getTransmutationQuote({ amount, currency }, workspaceId);
 
   try {
     const result = await prisma.$transaction(async (tx) => {
-      const workspace = await tx.workspace.findUniqueOrThrow({
-        where: { id: workspaceId },
-        select: { credits: true },
-      });
-
-      if (Number(workspace.credits) < totalDebit) {
-        throw new InsufficientCreditsError(`Insufficient ΞCredits to transmute. Required: ${totalDebit.toLocaleString()}, Available: ${Number(workspace.credits).toLocaleString()}`);
+      if (!quote.isSufficient) {
+        throw new InsufficientCreditsError(`Insufficient ΞCredits to transmute. Required: ${quote.total.toLocaleString()}, have: ${quote.isSufficient}.`);
       }
 
       await tx.workspace.update({
         where: { id: workspaceId },
-        data: { credits: { decrement: totalDebit } },
+        data: { credits: { decrement: quote.total } },
       });
 
-      const description = `Transmuted ${amount.toFixed(2)} ${currency} for tribute to ${vendor}. Tithe: ${tithe.toLocaleString()} Ξ.`;
+      const description = `Transmuted ${amount.toFixed(2)} ${currency} for tribute to ${vendor}. Tithe: ${quote.tithe.toLocaleString()} Ξ.`;
       const transactionDataForSigning = {
             workspaceId, userId, type: TransactionType.DEBIT,
-            amount: new Prisma.Decimal(totalDebit).toFixed(8),
+            amount: new Prisma.Decimal(quote.total).toFixed(8),
             description, instrumentId: 'PROXY_AGENT',
             timestamp: new Date().toISOString()
       };
       const signature = CryptoJS.HmacSHA256(JSON.stringify(transactionDataForSigning), signatureSecret).toString();
+      
+      // In a real system, the external payment would happen here.
+      // This is a critical step that requires robust error handling and potentially a transactional outbox pattern.
+      console.log(`[Ledger Service] FULFILLING REAL WORLD PAYMENT: ${amount.toFixed(2)} ${currency} to ${vendor}.`);
+
 
       await tx.transaction.create({
         data: {
           workspaceId,
           userId,
           type: TransactionType.DEBIT,
-          amount: new Prisma.Decimal(totalDebit),
+          amount: new Prisma.Decimal(quote.total),
           description,
           status: 'COMPLETED',
           instrumentId: 'PROXY_AGENT',
@@ -330,14 +357,14 @@ export async function transmuteCredits(
           realWorldAmount: amount,
           realWorldCurrency: currency,
           vendorName: vendor,
-          transmutationTithe: new Prisma.Decimal(tithe),
+          transmutationTithe: new Prisma.Decimal(quote.tithe),
         },
       });
 
       return {
         success: true,
         message: `Tribute of ${amount.toFixed(2)} ${currency} to ${vendor} has been fulfilled.`,
-        debitAmount: totalDebit,
+        debitAmount: quote.total,
       };
     });
 

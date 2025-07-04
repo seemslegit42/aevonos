@@ -1,17 +1,12 @@
 
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Fingerprint, Check, Loader2 } from 'lucide-react';
+import { Fingerprint, Check, Loader2, AlertTriangle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Separator } from '../ui/separator';
 import { useAppStore } from '@/store/app-store';
-import { transmuteCreditsViaProxy } from '@/app/actions';
-
-const XI_TO_CAD_EXCHANGE_RATE = 0.00025; // 1 CAD = 4000 Xi
-const TRANSMUTATION_TITHE_RATE = 0.18;
 
 interface ProxyAgentProps {
   id: string; // app instance id
@@ -20,85 +15,141 @@ interface ProxyAgentProps {
   currency?: string;
 }
 
+const PhysicalPayoutSigil = () => (
+    <svg viewBox="0 0 100 100" width="120" height="120">
+        <defs>
+            <filter id="glow">
+                <feGaussianBlur stdDeviation="2.5" result="coloredBlur" />
+                <feMerge>
+                    <feMergeNode in="coloredBlur" />
+                    <feMergeNode in="SourceGraphic" />
+                </feMerge>
+            </filter>
+        </defs>
+        <g filter="url(#glow)">
+            <path d="M 50 10 L 90 50 L 50 90 L 10 50 Z" fill="none" stroke="#6A0DAD" strokeWidth="2">
+                <animateTransform attributeName="transform" type="rotate" from="0 50 50" to="360 50 50" dur="10s" repeatCount="indefinite" />
+            </path>
+            <path d="M 50 10 L 90 50 L 50 90 L 10 50 Z" fill="none" stroke="#3EB991" strokeWidth="1.5" transform="rotate(45 50 50)">
+                 <animateTransform attributeName="transform" type="rotate" from="45 50 50" to="405 50 50" dur="12s" repeatCount="indefinite" />
+            </path>
+             <circle cx="50" cy="50" r="20" fill="none" stroke="#20B2AA" strokeWidth="1">
+                 <animate attributeName="r" from="20" to="30" dur="1.5s" begin="0s" repeatCount="indefinite" values="20; 30; 20" keyTimes="0; 0.5; 1" />
+                 <animate attributeName="opacity" from="1" to="0" dur="1.5s" begin="0s" repeatCount="indefinite" values="1; 0.2; 1" keyTimes="0; 0.5; 1" />
+            </circle>
+        </g>
+    </svg>
+);
+
+
 export default function ProxyAgent({ id, vendor = 'The Alchemist Bar', amount = 175, currency = 'CAD' }: ProxyAgentProps) {
-  const { closeApp } = useAppStore();
-  const { toast } = useToast();
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [isAuthorized, setIsAuthorized] = useState(false);
+    const { closeApp } = useAppStore();
+    const { toast } = useToast();
+    const [status, setStatus] = useState<'quoting' | 'ready' | 'authorizing' | 'complete' | 'error'>('quoting');
+    const [quote, setQuote] = useState<any>(null);
+    const [error, setError] = useState('');
 
-  const baseCost = amount / XI_TO_CAD_EXCHANGE_RATE;
-  const tithe = baseCost * TRANSMUTATION_TITHE_RATE;
-  const totalDebit = baseCost + tithe;
+    useEffect(() => {
+        const getQuote = async () => {
+            try {
+                const res = await fetch('/api/proxy/initiate_transmutation', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ amount, currency, vendor })
+                });
+                const data = await res.json();
+                if (!res.ok || !data.isSufficient) {
+                    throw new Error(data.error || 'Insufficient Ξ balance for this transmutation.');
+                }
+                setQuote(data);
+                setStatus('ready');
+            } catch (err: any) {
+                setError(err.message);
+                setStatus('error');
+            }
+        };
+        getQuote();
+    }, [vendor, amount, currency]);
 
-  const handleAuthorize = async () => {
-    setIsProcessing(true);
+    const handleAuthorize = async () => {
+        setStatus('authorizing');
+        try {
+            const res = await fetch('/api/proxy/execute_transmutation', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ quote })
+            });
+            if (!res.ok) {
+                 const data = await res.json();
+                 throw new Error(data.error || 'Authorization failed.');
+            }
+            setStatus('complete');
+            setTimeout(() => closeApp(id), 2500); // Close panel after animation
+        } catch (err: any) {
+            setError(err.message);
+            setStatus('error');
+        }
+    };
     
-    const result = await transmuteCreditsViaProxy({ amount, vendor, currency });
+    const renderContent = () => {
+        switch (status) {
+            case 'quoting':
+                return <div className="text-center p-8"><Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" /><p className="mt-2 text-sm">Contacting the Proxy...</p></div>;
+            case 'ready':
+                return (
+                    <>
+                        <h2 className="text-xl font-headline text-primary">Authorize Tribute</h2>
+                        <p className="text-sm text-muted-foreground">To: {vendor}</p>
+                        <p className="text-3xl font-bold text-accent">
+                            {amount.toFixed(2)} {currency}
+                        </p>
+                        <Separator className="my-2" />
+                        <div className="w-full text-left text-xs space-y-1">
+                            <div className="flex justify-between"><span>Cost in Xi:</span> <span className="font-mono">{quote.costInX.toLocaleString()} Ξ</span></div>
+                            <div className="flex justify-between"><span>Transmutation Tithe (18%):</span> <span className="font-mono">{quote.tithe.toLocaleString()} Ξ</span></div>
+                        </div>
+                        <div className="w-full text-left text-lg font-bold flex justify-between border-t mt-2 pt-2">
+                            <span>Total Tribute:</span>
+                            <span className="font-mono">{quote.total.toLocaleString()} Ξ</span>
+                        </div>
+                        <Button size="lg" className="w-full" onClick={handleAuthorize}>
+                            <Fingerprint className="mr-2" />
+                            AUTHORIZE
+                        </Button>
+                        <Button variant="outline" className="w-full" onClick={() => closeApp(id)}>
+                            Deny
+                        </Button>
+                    </>
+                );
+            case 'authorizing':
+                 return <div className="text-center p-8"><Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" /><p className="mt-2 text-sm">Performing the Ritual...</p></div>;
+            case 'complete':
+                return (
+                    <>
+                        <h2 className="text-xl font-headline text-accent">Transmutation Complete</h2>
+                        <PhysicalPayoutSigil />
+                        <p className="text-sm">The tribute has been accepted.</p>
+                    </>
+                );
+            case 'error':
+                return (
+                     <>
+                        <h2 className="text-xl font-headline text-destructive">Transmutation Failed</h2>
+                        <AlertTriangle className="h-10 w-10 text-destructive my-4" />
+                        <p className="text-sm">{error}</p>
+                         <Button variant="secondary" className="w-full" onClick={() => closeApp(id)}>
+                            Close
+                        </Button>
+                    </>
+                );
+        }
+    };
 
-    if (result.success) {
-        setIsAuthorized(true);
-        toast({
-            title: "Tribute Authorized",
-            description: result.message,
-        });
-        setTimeout(() => closeApp(id), 2500);
-    } else {
-        toast({
-            variant: 'destructive',
-            title: "Tribute Failed",
-            description: result.error,
-        });
-    }
-
-    setIsProcessing(false);
-  };
-
-  if (isAuthorized) {
-      return (
-          <div className="p-4 h-full flex flex-col items-center justify-center text-center">
-              <Check className="w-16 h-16 text-accent mb-4" />
-              <h3 className="text-xl font-headline">Tribute Complete</h3>
-              <p className="text-muted-foreground text-sm">The mundane has been settled.</p>
-          </div>
-      )
-  }
-
-  return (
-    <div className="p-2 h-full flex flex-col justify-center">
-        <Card className="bg-background/50 border-primary/30">
-            <CardHeader className="text-center p-4">
-                <CardTitle className="font-headline text-lg tracking-widest text-primary">TRIBUTE REQUESTED</CardTitle>
-            </CardHeader>
-            <CardContent className="p-4 pt-0 space-y-2 text-sm text-center">
-                <div>
-                    <p className="text-muted-foreground">Vendor</p>
-                    <p className="text-lg font-semibold">{vendor}</p>
-                </div>
-                 <div>
-                    <p className="text-muted-foreground">Amount</p>
-                    <p className="text-lg font-semibold">${amount.toFixed(2)} {currency}</p>
-                </div>
-                <Separator className="my-4" />
-                 <div className="space-y-1 text-xs">
-                     <div className="flex justify-between">
-                         <span>Cost in Xi:</span>
-                         <span className="font-mono">{baseCost.toLocaleString()} Ξ</span>
-                     </div>
-                      <div className="flex justify-between">
-                         <span>Transmutation Tithe (18%):</span>
-                         <span className="font-mono">{tithe.toLocaleString()} Ξ</span>
-                     </div>
-                      <div className="flex justify-between font-bold text-base border-t pt-1 mt-1">
-                         <span>Total Sovereignty Cost:</span>
-                         <span className="font-mono">{totalDebit.toLocaleString()} Ξ</span>
-                     </div>
-                </div>
-                <Button size="lg" className="w-full mt-4" onClick={handleAuthorize} disabled={isProcessing}>
-                    {isProcessing ? <Loader2 className="animate-spin" /> : <Fingerprint className="mr-2" />}
-                    AUTHORIZE WITH BIOMETRIC SIGNATURE
-                </Button>
-            </CardContent>
-        </Card>
-    </div>
-  );
+    return (
+        <div className="p-4 h-full">
+            <div className="w-full h-full flex flex-col items-center justify-center gap-4 text-center">
+                {renderContent()}
+            </div>
+        </div>
+    );
 }
