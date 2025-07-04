@@ -5,6 +5,8 @@
 /**
  * @fileOverview This file defines the BEEP agent kernel using LangGraph.
  * BEEP (Behavioral Event & Execution Processor) is the central orchestrator of ΛΞVON OS.
+ * It now functions as a hierarchical swarm router, using a high-speed triage node to
+ * delegate tasks to specialized sub-routers for improved efficiency and reliability.
  *
  * - processUserCommand - The function to call to process the command.
  * - UserCommandInput - The input type for the processUserCommand function.
@@ -26,7 +28,7 @@ import type { RunnableConfig } from "@langchain/core/runnables";
 
 import { langchainGroqFast, langchainGroqComplex } from '@/ai/genkit';
 import { aegisAnomalyScan } from '@/ai/agents/aegis';
-import { getReasonerTools, getSpecialistAgentDefinitions, specialistAgentMap, FinalAnswerTool } from '@/ai/agents/tool-registry';
+import { getCategorizedSpecialistAgentDefinitions, getSpecialistAgentDefinitions, specialistAgentMap, FinalAnswerTool } from '@/ai/agents/tool-registry';
 import { AegisAnomalyScanOutputSchema, type AegisAnomalyScanOutput, type PulseProfileInput } from './aegis-schemas';
 
 import {
@@ -35,6 +37,8 @@ import {
     type UserCommandOutput,
     AgentReportSchema,
     RouterSchema,
+    TriageCategorySchema,
+    type TriageCategory,
 } from './beep-schemas';
 import {
     getConversationHistory,
@@ -59,7 +63,8 @@ interface AgentState {
   pulseProfile: PulseProfileInput | null;
   aegisReport: AegisAnomalyScanOutput | null;
   agentReports: z.infer<typeof AgentReportSchema>[];
-  error?: string; // To hold error messages
+  category: TriageCategory | null; // NEW: To hold the triage result
+  error?: string;
 }
 
 // ===================================================================================
@@ -116,44 +121,102 @@ const callAegis = async (state: AgentState): Promise<Partial<AgentState>> => {
 
 
 /**
- * The planner node uses a fast model to analyze the user's command and decide
- * which action to take:
- * 1. Respond directly if it's a simple query (by calling 'final_answer').
- * 2. Route to specialist agents if complex capabilities are needed.
+ * NEW: Uses a fast model to categorize the user's command into a specific domain.
+ * This is the first step in the hierarchical routing process.
  */
-const planner = async (state: AgentState): Promise<Partial<AgentState>> => {
-    const { messages, role } = state;
+const triage = async (state: AgentState): Promise<Partial<AgentState>> => {
+  const { messages } = state;
+  const triagePrompt = new HumanMessage(`Your task is to categorize the user's command to route it to the correct specialist department. Choose the single best category.
 
-    // The planner needs to know about the tools it can call.
+- CRM: For managing contacts (create, list, update, delete).
+- FINANCE: For financial analysis, stock market "advice", expense tracking, and auditing.
+- CONTENT_ANALYSIS: For critiquing, rewriting, or generating creative or social content.
+- ADMINISTRATION: For productivity tasks, compliance checks, and internal monitoring.
+- ENTERTAINMENT: For fun, satirical, or game-like interactions.
+- WORKSPACE_MANAGEMENT: For high-level system administration, user management, and agent/workflow configuration.
+- GENERAL_UTILITY: For general problem-solving, information retrieval, or complex multi-domain tasks that don't fit a single category.
+- NOT_APPLICABLE: For simple greetings, chit-chat, or commands that don't require a specialist tool.
+
+User command:
+"""
+${messages.find(m => m instanceof HumanMessage)?.content}
+"""`);
+
+  const triageModel = langchainGroqFast.withStructuredOutput(z.object({ category: TriageCategorySchema }));
+  try {
+    const { category } = await triageModel.invoke([triagePrompt]);
+    console.log(`[BEEP Triage] Categorized command as: ${category}`);
+    return { category };
+  } catch (e) {
+    console.error('[BEEP Triage] Triage failed, defaulting to GENERAL_UTILITY:', e);
+    return { category: 'GENERAL_UTILITY' };
+  }
+};
+
+
+/**
+ * NEW: A factory function to create specialist router nodes. Each router is an LLM
+ * call that is only aware of the tools within its specific domain, making its
+ * decision much faster and more accurate.
+ * @param category The TriageCategory this router is responsible for.
+ * @param definitions The tool definitions for this category.
+ * @returns An async function that acts as a LangGraph node.
+ */
+const createSpecialistRouterNode = (category: TriageCategory, definitions: ReturnType<typeof getSpecialistAgentDefinitions>) => {
+    return async (state: AgentState): Promise<Partial<AgentState>> => {
+        const { messages, role } = state;
+        const tools = definitions.map(def => new Tool({
+            name: def.name,
+            description: def.description,
+            schema: def.schema,
+            func: async () => `This is a stub for the ${def.name} specialist agent. The tool execution node will handle the actual call.`,
+        }));
+
+        const routerModel = langchainGroqFast.bind({ tools: [...tools, new FinalAnswerTool()] });
+
+        const prompt = new HumanMessage(`You are a specialist routing agent for the ${category} domain. Your job is to select the correct tool(s) from your limited toolset to handle the user's command. If no tool is appropriate, call \`final_answer\` to escalate to the main reasoner.
+
+Domain: **${category}**
+Available Tools:
+${definitions.map(def => `- **${def.name}**: ${def.description}`).join('\n')}
+
+User Role: ${role}
+User Command:
+"""
+${messages.find(m => m instanceof HumanMessage)?.content}
+"""`);
+        
+        console.log(`[BEEP Router] Invoking ${category} specialist router.`);
+        const response = await routerModel.invoke([prompt]);
+        console.log(`[BEEP Router] ${category} router decided to call:`, response.tool_calls?.map(tc => tc.name));
+        return { messages: [response] };
+    };
+};
+
+/**
+ * The general-purpose planner node (the old 'planner'). It is now a fallback for commands
+ * that don't fit into a neat category.
+ */
+const generalPlanner = async (state: AgentState): Promise<Partial<AgentState>> => {
+    const { messages, role } = state;
     const specialistAgentTools = getSpecialistAgentDefinitions()
       .map(def => new Tool({
         name: def.name,
         description: def.description,
         schema: def.schema,
-        // The planner only *routes* to the tool. It doesn't execute it.
-        // The function is just a stub.
         func: async () => `This is a stub. The specialist tool node will execute the real function.`,
       }));
       
     const plannerTools = [...specialistAgentTools, new FinalAnswerTool()];
-
     const routingModel = langchainGroqFast.bind({ tools: plannerTools });
     
-    const planningPrompt = new HumanMessage(`You are BEEP, the master conductor of a swarm of specialist AI agents. Your primary goal is to determine the correct action for a user's command.
+    const planningPrompt = new HumanMessage(`You are BEEP, the master conductor of a swarm of specialist AI agents. The command was too general for a specialist router. Your primary goal is to determine the correct action for the user's command from the full list of available agents.
 
 **Core Directive:** Analyze the user's intent. You have two options:
 1.  **Simple Response:** If the command is a simple greeting, a question you can answer directly, or does not require a specialist, you MUST call the \`final_answer\` tool with the appropriate response.
 2.  **Complex Task:** If the command requires a specific capability, you MUST call one or more of the specialist agent tools. You can call multiple tools in parallel if the tasks are independent.
 
-**Example Simple Response:**
-- User Command: "Hello"
-- Your Action: Call \`final_answer\` with responseText: "Hello there! How may I assist you today?" and empty arrays for other fields.
-
-**Example Complex Task:**
-- User Command: "analyze my expenses and find a good alibi for this afternoon"
-- Your Action: Call the 'auditor' tool AND the 'vandelay' tool in parallel.
-
-**Available Specialist Agents (Your Swarm):**
+**Available Specialist Agents (Full Swarm):**
 ${getSpecialistAgentDefinitions().map(def => `- **${def.name}**: ${def.description}`).join('\n')}
 
 Now, analyze the user command and call the appropriate tool(s).
@@ -162,13 +225,10 @@ User Role: ${role}
 User Command:
 """
 ${messages.find(m => m instanceof HumanMessage)?.content}
-"""
-`);
+"""`);
     
     const response = await routingModel.invoke([planningPrompt]);
-
-    console.log('[BEEP Planner] Planner decided to call tools:', response.tool_calls?.map(tc => tc.name));
-
+    console.log('[BEEP General Planner] Planner decided to call tools:', response.tool_calls?.map(tc => tc.name));
     return { messages: [response] };
 }
 
@@ -200,7 +260,6 @@ const executeToolsNode = async (state: AgentState, config?: any): Promise<Partia
         }
         
         try {
-            // The tool function itself handles passing the context down
             const observation = await toolToCall.invoke(toolCall.args);
             return new ToolMessage({
                 content: typeof observation === 'string' ? observation : JSON.stringify(observation),
@@ -228,7 +287,6 @@ const executeToolsNode = async (state: AgentState, config?: any): Promise<Partia
         } catch (e) { /* Ignore parsing errors for non-report tool calls */ }
     }
 
-    // Check for any errors in the tool messages
     const firstError = toolMessages.find(m => m.content.startsWith("Error:"));
 
     return { 
@@ -323,20 +381,39 @@ const routeAfterAegis = (state: AgentState) => {
     return 'continue';
 }
 
-const routeAfterPlanner = (state: AgentState) => {
+/**
+ * NEW: Routes the command to the appropriate specialist router based on the triage category.
+ */
+const routeAfterTriage = (state: AgentState): string => {
+  const { category } = state;
+  switch (category) {
+    case 'CRM': return 'crmRouter';
+    case 'FINANCE': return 'financeRouter';
+    case 'CONTENT_ANALYSIS': return 'contentAnalysisRouter';
+    case 'ADMINISTRATION': return 'administrationRouter';
+    case 'ENTERTAINMENT': return 'entertainmentRouter';
+    case 'WORKSPACE_MANAGEMENT': return 'workspaceManagementRouter';
+    case 'GENERAL_UTILITY': return 'generalPlanner';
+    case 'NOT_APPLICABLE': return 'agent_reasoner';
+    default: return 'generalPlanner';
+  }
+};
+
+
+const routeAfterSpecialistRouter = (state: AgentState) => {
     const lastMessage = state.messages[state.messages.length - 1];
 
     if (!(lastMessage instanceof AIMessage) || !lastMessage.tool_calls || lastMessage.tool_calls.length === 0) {
-        console.log("[BEEP Router] Planner did not specify a tool. Escalating to reasoner.");
+        console.log("[BEEP Router] Specialist router did not specify a tool. Escalating to reasoner.");
         return 'reasoner';
     }
 
     if (lastMessage.tool_calls.some(tc => tc.name === 'final_answer')) {
-        console.log("[BEEP Router] Planner provided a final answer. Ending execution.");
+        console.log("[BEEP Router] Specialist router provided a final answer. Ending execution.");
         return 'end'; 
     }
     
-    console.log("[BEEP Router] Planner dispatched to specialist agents.");
+    console.log("[BEEP Router] Specialist router dispatched to tool executor.");
     return 'call_specialists';
 }
 
@@ -363,37 +440,70 @@ const buildBeepGraph = () => {
         pulseProfile: { value: (x, y) => y, default: () => null },
         aegisReport: { value: (x, y) => y, default: () => null },
         agentReports: { value: (x, y) => x.concat(y), default: () => [] },
+        category: { value: (x, y) => y, default: () => null },
         error: { value: (x, y) => y, default: () => undefined },
       },
     });
 
+    const categorizedAgentDefs = getCategorizedSpecialistAgentDefinitions();
+
     // Add nodes
     workflow.addNode('aegis', callAegis);
     workflow.addNode('warn_and_continue', warnAndContinue);
-    workflow.addNode('planner', planner);
+    workflow.addNode('triage', triage);
+    workflow.addNode('generalPlanner', generalPlanner);
+    workflow.addNode('crmRouter', createSpecialistRouterNode('CRM', categorizedAgentDefs.CRM));
+    workflow.addNode('financeRouter', createSpecialistRouterNode('FINANCE', categorizedAgentDefs.FINANCE));
+    workflow.addNode('contentAnalysisRouter', createSpecialistRouterNode('CONTENT_ANALYSIS', categorizedAgentDefs.CONTENT_ANALYSIS));
+    workflow.addNode('administrationRouter', createSpecialistRouterNode('ADMINISTRATION', categorizedAgentDefs.ADMINISTRATION));
+    workflow.addNode('entertainmentRouter', createSpecialistRouterNode('ENTERTAINMENT', categorizedAgentDefs.ENTERTAINMENT));
+    workflow.addNode('workspaceManagementRouter', createSpecialistRouterNode('WORKSPACE_MANAGEMENT', categorizedAgentDefs.WORKSPACE_MANAGEMENT));
     workflow.addNode('specialist_tool_node', (state, config) => executeToolsNode(state, config));
     workflow.addNode('agent_reasoner', (state, config) => callReasonerModel(state, config));
     workflow.addNode('reasoner_tool_node', (state, config) => executeToolsNode(state, config));
     workflow.addNode('handle_threat', handleThreat);
     workflow.addNode('handle_error', handleErrorNode);
     
-    // Define edges
+    // Define entrypoint and core security flow
     workflow.setEntryPoint('aegis');
-    
     workflow.addConditionalEdges('aegis', routeAfterAegis, {
       threat: 'handle_threat',
       warn_and_continue: 'warn_and_continue',
-      continue: 'planner',
+      continue: 'triage',
     });
-    
-    workflow.addEdge('warn_and_continue', 'planner');
-    
-    workflow.addConditionalEdges('planner', routeAfterPlanner, {
+    workflow.addEdge('warn_and_continue', 'triage');
+
+    // Add triage and routing to specialist routers
+    workflow.addEdge('triage', 'routeAfterTriage');
+    workflow.addConditionalEdges('triage', routeAfterTriage, {
+        CRM: 'crmRouter',
+        FINANCE: 'financeRouter',
+        CONTENT_ANALYSIS: 'contentAnalysisRouter',
+        ADMINISTRATION: 'administrationRouter',
+        ENTERTAINMENT: 'entertainmentRouter',
+        WORKSPACE_MANAGEMENT: 'workspaceManagementRouter',
+        GENERAL_UTILITY: 'generalPlanner',
+        NOT_APPLICABLE: 'agent_reasoner'
+    });
+
+    // Add edges from each specialist router
+    const specialistRouters: TriageCategory[] = ["CRM", "FINANCE", "CONTENT_ANALYSIS", "ADMINISTRATION", "ENTERTAINMENT", "WORKSPACE_MANAGEMENT"];
+    specialistRouters.forEach(routerName => {
+        workflow.addConditionalEdges(`${routerName.toLowerCase()}Router` as any, routeAfterSpecialistRouter, {
+            call_specialists: 'specialist_tool_node',
+            reasoner: 'agent_reasoner',
+            end: END
+        });
+    });
+
+    // Add edges for the general planner (fallback)
+     workflow.addConditionalEdges('generalPlanner', routeAfterSpecialistRouter, {
         call_specialists: 'specialist_tool_node',
         reasoner: 'agent_reasoner',
         end: END
     });
-    
+
+    // Add edges for tool execution and final reasoning
     workflow.addConditionalEdges('specialist_tool_node', routeAfterTools, {
         continue: 'agent_reasoner',
         handle_error: 'handle_error',
@@ -418,6 +528,7 @@ const buildBeepGraph = () => {
         end: END,
     });
     
+    // Add terminal nodes
     workflow.addEdge('handle_threat', END);
     workflow.addEdge('handle_error', END);
 
@@ -457,7 +568,6 @@ export async function processUserCommand(input: UserCommandInput): Promise<UserC
   try {
     const reasonerTools = await getReasonerTools({ userId, workspaceId, psyche, role });
     
-    // We can resolve the specialist tools here once, as the context doesn't change during the graph run.
     const specialistTools = Object.entries(specialistAgentMap).map(([name, func]) => {
         const agentDefinition = getSpecialistAgentDefinitions().find(def => def.name === name);
         if (!agentDefinition) {
@@ -545,6 +655,7 @@ Your purpose is to be the invisible, silent orchestrator of true automation. Now
       psyche: input.psyche,
       pulseProfile: pulseProfile || null,
       agentReports: [],
+      category: null,
     }, runnableConfig).catch(error => {
         if (error instanceof InsufficientCreditsError) {
             return {

@@ -42,6 +42,21 @@ import { VaultAnalysisOutputSchema } from './vault-daemon-schemas';
 import { CrmActionSchema } from './crm-agent-schemas';
 
 
+// --- NEW ---
+export const TriageCategorySchema = z.enum([
+    "CRM", 
+    "FINANCE", 
+    "CONTENT_ANALYSIS", 
+    "ADMINISTRATION", 
+    "ENTERTAINMENT", 
+    "WORKSPACE_MANAGEMENT", 
+    "GENERAL_UTILITY", 
+    "NOT_APPLICABLE"
+]);
+export type TriageCategory = z.infer<typeof TriageCategorySchema>;
+// --- END NEW ---
+
+
 // Schemas from the original BEEP agent, preserved for the public contract.
 const LaunchableAppTypeSchema = z.enum([
   'file-explorer',
