@@ -1,25 +1,26 @@
 
-import type { LucilleBluthOutput } from './lucille-bluth-schemas';
+import type { LucilleBluthOutput, LucilleBluthInput } from './lucille-bluth-schemas';
+import cache from '@/lib/cache';
 
-/**
- * A pre-computed cache for The Lucille Bluth's judgments on common expenses.
- * This demonstrates a simple caching strategy to reduce LLM calls for frequent, deterministic inputs.
- */
-export const lucilleBluthCache: Record<string, LucilleBluthOutput> = {
-  'coffee-7-beverages': {
-    judgmentalRemark: "It's one coffee, Michael. What could it cost, ten dollars?",
-    categorization: 'Frivolous Beverages',
-  },
-  'taco-15-takeout': {
-    judgmentalRemark: "Tacos? I don't understand the question, and I won't respond to it.",
-    categorization: 'Peasant Food',
-  },
-  'sandwich-12-lunch': {
-    judgmentalRemark: 'Oh, a sandwich. How... proletarian. You get a meal and a smile for that where I come from.',
-    categorization: 'Midday Sustenance',
-  },
-  'gas-50-transportation': {
-    judgmentalRemark: "You're putting *fifty dollars* of gasoline into a car? Are you trying to fly it to the moon?",
-    categorization: 'Internal Combustion',
-  },
-};
+const CACHE_TTL_SECONDS = 60 * 60; // 1 hour
+
+const getCacheKey = (input: Pick<LucilleBluthInput, 'expenseDescription' | 'expenseAmount' | 'category'>): string => {
+  const desc = input.expenseDescription.toLowerCase().trim().replace(/\s+/g, '-');
+  return `lucille-bluth-take:${desc}:${input.expenseAmount}:${input.category}`;
+}
+
+export async function getCachedLucilleTake(input: Pick<LucilleBluthInput, 'expenseDescription' | 'expenseAmount' | 'category'>): Promise<LucilleBluthOutput | null> {
+  const key = getCacheKey(input);
+  const cachedData = await cache.get(key);
+  if (cachedData) {
+      console.log(`[Lucille Cache] Cache hit for ${key}.`);
+      return cachedData as LucilleBluthOutput;
+  }
+  return null;
+}
+
+export async function setCachedLucilleTake(input: Pick<LucilleBluthInput, 'expenseDescription' | 'expenseAmount' | 'category'>, take: LucilleBluthOutput): Promise<void> {
+  const key = getCacheKey(input);
+  console.log(`[Lucille Cache] Caching take for ${key}.`);
+  await cache.set(key, take, 'EX', CACHE_TTL_SECONDS);
+}

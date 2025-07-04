@@ -12,29 +12,7 @@ import {
     type LucilleBluthOutput
 } from './lucille-bluth-schemas';
 import { authorizeAndDebitAgentActions } from '@/services/billing-service';
-
-/**
- * A pre-computed cache for The Lucille Bluth's judgments on common expenses.
- * This demonstrates a simple caching strategy to reduce LLM calls for frequent, deterministic inputs.
- */
-const lucilleBluthStaticResponses: Record<string, LucilleBluthOutput> = {
-  'coffee-7-beverages': {
-    judgmentalRemark: "It's one coffee, Michael. What could it cost, ten dollars?",
-    categorization: 'Frivolous Beverages',
-  },
-  'taco-15-takeout': {
-    judgmentalRemark: "Tacos? I don't understand the question, and I won't respond to it.",
-    categorization: 'Peasant Food',
-  },
-  'sandwich-12-lunch': {
-    judgmentalRemark: 'Oh, a sandwich. How... proletarian. You get a meal and a smile for that where I come from.',
-    categorization: 'Midday Sustenance',
-  },
-  'gas-50-transportation': {
-    judgmentalRemark: "You're putting *fifty dollars* of gasoline into a car? Are you trying to fly it to the moon?",
-    categorization: 'Internal Combustion',
-  },
-};
+import { getCachedLucilleTake, setCachedLucilleTake } from './lucille-bluth-cache';
 
 
 const analyzeExpenseFlow = ai.defineFlow(
@@ -43,17 +21,17 @@ const analyzeExpenseFlow = ai.defineFlow(
     inputSchema: LucilleBluthInputSchema,
     outputSchema: LucilleBluthOutputSchema,
   },
-  async ({ expenseDescription, expenseAmount, category, workspaceId }) => {
-    // Check for a static response first to avoid LLM call for common items.
-    const staticResponseKey = `${expenseDescription.toLowerCase().trim()}-${expenseAmount}-${category.toLowerCase().trim()}`;
-    if (lucilleBluthStaticResponses[staticResponseKey]) {
-      console.log(`[Lucille Bluth Agent] Static response hit for key: ${staticResponseKey}.`);
-      // We still bill for the action, as the value is in the witty response, not the computation.
-      await authorizeAndDebitAgentActions({ workspaceId, actionType: 'SIMPLE_LLM' });
-      return lucilleBluthStaticResponses[staticResponseKey];
-    }
+  async (input) => {
+    const { expenseDescription, expenseAmount, category, workspaceId } = input;
     
-    console.log(`[Lucille Bluth Agent] Static response miss for key: ${staticResponseKey}. Calling LLM.`);
+    // --- CACHING LOGIC ---
+    const cachedTake = await getCachedLucilleTake(input);
+    if (cachedTake) {
+      // Even with a cache hit, we must bill for the action. The value is in the result.
+      await authorizeAndDebitAgentActions({ workspaceId, actionType: 'SIMPLE_LLM' });
+      return cachedTake;
+    }
+    // --- END CACHING LOGIC ---
     
     await authorizeAndDebitAgentActions({ workspaceId, actionType: 'SIMPLE_LLM' });
 
@@ -75,6 +53,10 @@ const analyzeExpenseFlow = ai.defineFlow(
       output: { schema: LucilleBluthOutputSchema },
       model: 'googleai/gemini-1.5-flash-latest',
     });
+    
+    if (output) {
+      await setCachedLucilleTake(input, output);
+    }
 
     return output!;
   }
