@@ -3,7 +3,7 @@
 import { z } from 'zod';
 import { SecurityRiskLevel, UserPsyche, UserRole } from '@prisma/client';
 import { DrSyntaxOutputSchema } from './dr-syntax-schemas';
-import { AegisAnomalyScanOutputSchema } from './aegis-schemas';
+import { AegisAnomalyScanOutputSchema, PulseProfileSchema } from './aegis-schemas';
 import { ContactSchema, DeleteContactOutputSchema } from '@/ai/tools/crm-schemas';
 import { BillingUsageSchema, RequestCreditTopUpOutputSchema } from '@/ai/tools/billing-schemas';
 import { DatingProfileSchema } from '@/ai/tools/dating-schemas';
@@ -455,6 +455,7 @@ export const UserCommandInputSchema = z.object({
   psyche: z.nativeEnum(UserPsyche),
   role: z.nativeEnum(UserRole),
   activeAppContext: z.string().optional().describe('The type of the currently active Micro-App, for contextual persona shifting.'),
+  pulseProfile: PulseProfileSchema.optional().describe("The user's current psychological state from their Pulse Profile."),
 });
 export type UserCommandInput = z.infer<typeof UserCommandInputSchema>;
 
@@ -469,5 +470,3 @@ export type UserCommandOutput = z.infer<typeof UserCommandOutputSchema>;
     
 
     
-
-

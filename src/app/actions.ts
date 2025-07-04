@@ -23,6 +23,10 @@ export async function handleCommand(command: string, activeAppContext?: string):
   if (!user || !workspace) {
     throw new Error('User or workspace not found. Onboarding may be incomplete.');
   }
+  
+  const pulseProfile = await prisma.pulseProfile.findUnique({
+      where: { userId: user.id },
+  });
 
   if (command.toLowerCase().trim() === 'the tendies are coming') {
     return {
@@ -41,6 +45,7 @@ export async function handleCommand(command: string, activeAppContext?: string):
         psyche: user.psyche,
         role: user.role,
         activeAppContext,
+        pulseProfile: pulseProfile || undefined,
     });
     revalidatePath('/');
     return result;

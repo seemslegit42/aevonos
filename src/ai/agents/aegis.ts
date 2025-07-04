@@ -16,7 +16,8 @@ import {
     AegisAnomalyScanInputSchema, 
     AegisAnomalyScanOutputSchema,
     type AegisAnomalyScanInput,
-    type AegisAnomalyScanOutput
+    type AegisAnomalyScanOutput,
+    type PulseProfileInput
 } from './aegis-schemas';
 import { authorizeAndDebitAgentActions } from '@/services/billing-service';
 import { langchainGroqComplex, langchainGroqFast } from '@/ai/genkit';
@@ -39,6 +40,7 @@ interface AegisAgentState {
   finalReport: AegisAnomalyScanOutput | null;
   activityHistory: string[];
   financialContext: string;
+  pulseProfile: PulseProfileInput | null;
 }
 
 // 2. Define Agent Nodes
@@ -147,7 +149,7 @@ const fetchFinancialContext = async (state: AegisAgentState): Promise<Partial<Ae
 };
 
 const analyzeActivity = async (state: AegisAgentState): Promise<Partial<AegisAgentState>> => {
-    const { input, threatIntelContent, securityEdicts, activityCategory, activityHistory, messages, financialContext } = state;
+    const { input, threatIntelContent, securityEdicts, activityCategory, activityHistory, messages, financialContext, pulseProfile } = state;
 
     const edictsBlock = securityEdicts.map(edict => `- ${edict}`).join('\n');
     const historyBlock = activityHistory.length > 0
@@ -156,11 +158,18 @@ const analyzeActivity = async (state: AegisAgentState): Promise<Partial<AegisAge
     
     const financialContextBlock = activityCategory === 'Financial' ? `\n**Recent Financial Context:**\n${financialContext}` : '';
 
+    const pulseBlock = pulseProfile
+      ? `**Psychological State:**\n- Frustration: ${(pulseProfile.frustration! * 100).toFixed(0)}%\n- Flow State: ${(pulseProfile.flowState! * 100).toFixed(0)}%\n- Risk Aversion: ${(pulseProfile.riskAversion! * 100).toFixed(0)}%`
+      : "Psychological state not available.";
+
+
     // The main prompt is now a system message, which will be part of the message history passed to the model.
     const systemPrompt = new SystemMessage(`You are Aegis, the vigilant, AI-powered bodyguard of ΛΞVON OS. Your tone is that of a stoic Roman watchman, delivering grave proclamations. You do not use modern slang. You speak with authority and historical gravitas.
 
 Your primary function is to analyze user activity for signs of anomalous or potentially malicious behavior against the known edicts of secure operation and external threat intelligence. You will receive context in a series of messages.
 If you receive a system message starting with 'URGENT_THREAT_INTEL_MATCH::', you must treat it as a high-priority finding. A match with a known threat indicator is a strong signal of anomalous activity and should be flagged with at least 'high' risk.
+
+A user with a high frustration level may be more prone to making errors or rash decisions. A user with high risk aversion is less likely to be malicious. Use this psychological context to inform your risk assessment.
 
 **Crucially, you must analyze the user's recent activity history for suspicious patterns over time.** A single action may seem harmless, but a sequence of actions could reveal a larger threat, such as data exfiltration (e.g., repeatedly listing and then exporting small amounts of data) or brute-force attempts.
 
@@ -168,6 +177,8 @@ If you receive a system message starting with 'URGENT_THREAT_INTEL_MATCH::', you
 - **Rank:** ${input.userRole}
 - **Psyche:** ${input.userPsyche}
 - **Activity Category**: ${activityCategory}
+
+${pulseBlock}
 
 **Edicts of Secure Operation:**
 ${edictsBlock}
@@ -222,6 +233,7 @@ const workflow = new StateGraph<AegisAgentState>({
     finalReport: { value: (x, y) => y, default: () => null },
     activityHistory: { value: (x, y) => y, default: () => [] },
     financialContext: { value: (x, y) => y, default: () => "No financial context fetched." },
+    pulseProfile: { value: (x, y) => y, default: () => null },
   },
 });
 
@@ -256,6 +268,7 @@ export async function aegisAnomalyScan(input: AegisAnomalyScanInput): Promise<Ae
   const initialState: Partial<AegisAgentState> = {
       messages: [],
       input: input,
+      pulseProfile: input.pulseProfile || null,
   };
 
   const result = await aegisApp.invoke(initialState);

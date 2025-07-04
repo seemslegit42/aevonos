@@ -27,7 +27,7 @@ import type { RunnableConfig } from "@langchain/core/runnables";
 import { langchainGroqFast, langchainGroqComplex } from '@/ai/genkit';
 import { aegisAnomalyScan } from '@/ai/agents/aegis';
 import { getTools } from '@/ai/agents/tool-registry';
-import { AegisAnomalyScanOutputSchema, type AegisAnomalyScanOutput } from './aegis-schemas';
+import { AegisAnomalyScanOutputSchema, type AegisAnomalyScanOutput, type PulseProfileInput } from './aegis-schemas';
 import { consultInventoryDaemon } from '@/ai/agents/inventory-daemon';
 import { executeBurnBridgeProtocol } from '@/ai/agents/burn-bridge-agent';
 import { consultVaultDaemon } from './vault-daemon';
@@ -86,13 +86,14 @@ interface AgentState {
   userId: string;
   role: UserRole;
   psyche: UserPsyche;
+  pulseProfile: PulseProfileInput | null;
   aegisReport: AegisAnomalyScanOutput | null;
   agentReports: z.infer<typeof AgentReportSchema>[];
   routerResult: RouterResult | null;
 }
 
 const callAegis = async (state: AgentState): Promise<Partial<AgentState>> => {
-    const { messages, workspaceId, userId, role, psyche } = state;
+    const { messages, workspaceId, userId, role, psyche, pulseProfile } = state;
     const humanMessage = messages.find(m => m instanceof HumanMessage);
     if (!humanMessage) {
         throw new Error("Could not find user command for Aegis scan.");
@@ -109,6 +110,7 @@ const callAegis = async (state: AgentState): Promise<Partial<AgentState>> => {
             userId,
             userRole: role,
             userPsyche: psyche,
+            pulseProfile: pulseProfile || undefined,
         });
     } catch (error: any) {
         console.error(`[Aegis Node] Anomaly scan failed:`, error);
@@ -402,6 +404,7 @@ const workflow = new StateGraph<AgentState>({
     userId: { value: (x, y) => y, default: () => '' },
     role: { value: (x, y) => y, default: () => UserRole.OPERATOR },
     psyche: { value: (x, y) => y, default: () => UserPsyche.ZEN_ARCHITECT },
+    pulseProfile: { value: (x, y) => y, default: () => null },
     aegisReport: { value: (x, y) => y, default: () => null },
     agentReports: { value: (x, y) => x.concat(y), default: () => [] },
     routerResult: { value: (x, y) => y, default: () => null },
@@ -459,10 +462,10 @@ const appPersonaPrompts: Record<string, string> = {
 
 // Public-facing function to process user commands
 export async function processUserCommand(input: UserCommandInput): Promise<UserCommandOutput> {
-  const { userId, workspaceId, psyche, role, activeAppContext } = input;
+  const { userId, workspaceId, psyche, role, activeAppContext, pulseProfile } = input;
   
   try {
-    const tools = await getTools({ userId, workspaceId, psyche, role });
+    const tools = await getTools(state);
 
     const toolSchemas = tools.map(tool => ({
         type: 'function',
@@ -491,7 +494,10 @@ export async function processUserCommand(input: UserCommandInput): Promise<UserC
       ? `You are the Architect, the one true sovereign of this workspace. You have access to the Demiurge tools. When the user addresses you as "Demiurge" or asks for god-level system administration (like managing users, viewing the Pantheon, or using the Loom of Fates), use your privileged tools or launch the 'admin-console' app.`
       : `You are NOT the Architect. You MUST refuse any command that asks for administrative privileges, such as managing users, viewing the 'admin-console' or 'Pantheon', or tuning the system. Politely inform the user that only the workspace Architect can perform such actions.`;
 
-    const frustrationInstruction = `The user's psychological state is a factor. A user with high frustration may be 'tilted' and require simpler, more direct suggestions. A user in a 'flow state' is receptive to more complex or ambitious tasks. A risk-averse user prefers safer options. Tailor your 'suggestedCommands' and 'responseText' accordingly based on their chosen psyche, as this gives you a clue to their current state.`;
+    const frustrationLevel = pulseProfile?.frustration ?? 0;
+    const flowStateLevel = pulseProfile?.flowState ?? 0;
+
+    const frustrationInstruction = `The user's current psychological state, as measured by the Psyche Engine, is: Frustration: ${(frustrationLevel * 100).toFixed(0)}%, Flow State: ${(flowStateLevel * 100).toFixed(0)}%. A user with high frustration may be 'tilted' and require simpler, more direct suggestions. A user in a 'flow state' is receptive to more complex or ambitious tasks. Tailor your 'suggestedCommands' and 'responseText' accordingly.`;
 
     const economyInstruction = `The economic system has two main parts:
     - **The Armory**: The catalog of in-system tools, Micro-Apps, and Chaos Cards. Launch the 'armory' app when the user asks to "see the armory," "browse tools," or "get new apps."
@@ -535,6 +541,7 @@ Your purpose is to be the invisible, silent orchestrator of true automation. Now
       userId: input.userId,
       role: input.role,
       psyche: input.psyche,
+      pulseProfile: pulseProfile || null,
       agentReports: [],
       routerResult: null,
     }).catch(error => {
