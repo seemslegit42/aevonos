@@ -8,7 +8,7 @@ export async function getRecentTransactionsAsText(userId: string, workspaceId: s
         if (transactions.length === 0) {
             return "No recent financial transactions found for this user.";
         }
-        const transactionText = `Recent financial transactions for user ${userId}:\n${transactions.map(tx => `- [${tx.createdAt.toISOString()}] ${tx.type}: ${tx.amount.toFixed(2)} - ${tx.description}`).join('\n')}`;
+        const transactionText = `Recent financial transactions for user ${userId}:\n${transactions.map(tx => `- [${tx.createdAt.toISOString()}] ${tx.type}: ${Number(tx.amount).toFixed(2)} - ${tx.description}`).join('\n')}`;
         return transactionText;
     } catch (e) {
         console.error("Failed to get recent transactions for user:", e);

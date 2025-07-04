@@ -214,11 +214,13 @@ export async function getWorkspaceTransactions(workspaceId: string, limit = 20):
     throw new Error('Workspace ID is required to fetch transactions.');
   }
 
-  return prisma.transaction.findMany({
+  const txs = await prisma.transaction.findMany({
     where: { workspaceId },
     orderBy: { createdAt: 'desc' },
     take: limit,
   });
+
+  return txs.map(tx => ({ ...tx, amount: Number(tx.amount) }));
 }
 
 /**
@@ -232,7 +234,7 @@ export async function getRecentTransactionsForUser(userId: string, workspaceId: 
   if (!userId || !workspaceId) {
     throw new Error('User ID and Workspace ID are required.');
   }
-  return prisma.transaction.findMany({
+  const txs = await prisma.transaction.findMany({
     where: {
       userId,
       workspaceId,
@@ -242,6 +244,7 @@ export async function getRecentTransactionsForUser(userId: string, workspaceId: 
     },
     take: limit,
   });
+  return txs.map(tx => ({ ...tx, amount: Number(tx.amount) }));
 }
 
 /**
@@ -294,7 +297,7 @@ export async function confirmPendingTransaction(transactionId: string, workspace
     }
 
 
-    return result;
+    return { ...result, amount: Number(result.amount) };
 }
 
 /**
