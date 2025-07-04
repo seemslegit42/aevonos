@@ -26,7 +26,7 @@ import type { RunnableConfig } from "@langchain/core/runnables";
 
 import { langchainGroqFast, langchainGroqComplex } from '@/ai/genkit';
 import { aegisAnomalyScan } from '@/ai/agents/aegis';
-import { getReasonerTools, getSpecialistAgentDefinitions, specialistAgentMap } from '@/ai/agents/tool-registry';
+import { getReasonerTools, getSpecialistAgentDefinitions, specialistAgentMap, FinalAnswerTool } from '@/ai/agents/tool-registry';
 import { AegisAnomalyScanOutputSchema, type AegisAnomalyScanOutput, type PulseProfileInput } from './aegis-schemas';
 
 import {
@@ -117,59 +117,61 @@ const callAegis = async (state: AgentState): Promise<Partial<AgentState>> => {
 
 /**
  * The planner node uses a fast model to analyze the user's command and decide
- * which specialist agents (if any) are required to fulfill the request.
+ * which action to take:
+ * 1. Respond directly if it's a simple query (by calling 'final_answer').
+ * 2. Route to specialist agents if complex capabilities are needed.
  */
 const planner = async (state: AgentState): Promise<Partial<AgentState>> => {
     const { messages, role } = state;
-    const specialistAgentDefinitions = getSpecialistAgentDefinitions();
 
-    const routingModel = langchainGroqFast.withStructuredOutput(RouterSchema);
+    // The planner needs to know about the tools it can call.
+    const specialistAgentTools = getSpecialistAgentDefinitions()
+      .map(def => new Tool({
+        name: def.name,
+        description: def.description,
+        schema: def.schema,
+        // The planner only *routes* to the tool. It doesn't execute it.
+        // The function is just a stub.
+        func: async () => `This is a stub. The specialist tool node will execute the real function.`,
+      }));
+      
+    const plannerTools = [...specialistAgentTools, new FinalAnswerTool()];
+
+    const routingModel = langchainGroqFast.bind({ tools: plannerTools });
     
-    const planningPrompt = `You are BEEP, the master conductor of a swarm of specialist AI agents. Your purpose is to act as a high-speed, parallel task router. You must deconstruct the user's command into a sequence of one or more tasks that can be executed by your specialist agents.
+    const planningPrompt = new HumanMessage(`You are BEEP, the master conductor of a swarm of specialist AI agents. Your primary goal is to determine the correct action for a user's command.
 
-**Core Directive:** Your primary goal is to maximize parallelism. If a command can be broken down into multiple independent steps, you MUST define them as separate tool calls to be executed concurrently.
+**Core Directive:** Analyze the user's intent. You have two options:
+1.  **Simple Response:** If the command is a simple greeting, a question you can answer directly, or does not require a specialist, you MUST call the \`final_answer\` tool with the appropriate response.
+2.  **Complex Task:** If the command requires a specific capability, you MUST call one or more of the specialist agent tools. You can call multiple tools in parallel if the tasks are independent.
+
+**Example Simple Response:**
+- User Command: "Hello"
+- Your Action: Call \`final_answer\` with responseText: "Hello there! How may I assist you today?" and empty arrays for other fields.
+
+**Example Complex Task:**
+- User Command: "analyze my expenses and find a good alibi for this afternoon"
+- Your Action: Call the 'auditor' tool AND the 'vandelay' tool in parallel.
+
+**Available Specialist Agents (Your Swarm):**
+${getSpecialistAgentDefinitions().map(def => `- **${def.name}**: ${def.description}`).join('\n')}
+
+Now, analyze the user command and call the appropriate tool(s).
 
 User Role: ${role}
-
 User Command:
 """
 ${messages.find(m => m instanceof HumanMessage)?.content}
 """
-
-Available Specialist Agents (Your Swarm):
-${specialistAgentDefinitions.map(def => `- **${def.name}**: ${def.description}`).join('\n')}
-
-**Task Decomposition Rules:**
-1.  **Analyze the User's Intent:** Understand the complete goal of the user's command.
-2.  **Deconstruct into Sub-Tasks:** Break the command down into the smallest logical sub-tasks that map to your available specialist agents.
-3.  **Identify Parallelism:** Determine which sub-tasks can be run simultaneously. For example, if a user asks to "analyze my expenses and find a good alibi for this afternoon," you should create two separate tool calls: one for the 'auditor' agent and one for the 'vandelay' agent.
-4.  **Construct Execution Plan:** Return a JSON array of agent tasks. This array is your execution plan. The OS will execute these tasks in parallel.
-5.  **Handle Simple Queries:** If no specialist is needed (e.g., for a simple greeting, or a request you can handle yourself), return an empty array.
-6.  **Respect Authority:** You MUST adhere to the role requirements for each agent. Do not dispatch an agent if the user's role does not permit it.
-
-Generate the execution plan now.
-`;
+`);
     
-    const toolCalls = await routingModel.invoke(planningPrompt);
+    const response = await routingModel.invoke([planningPrompt]);
 
-    if (!toolCalls || toolCalls.length === 0) {
-      console.log('[BEEP Planner] No specialist tools required. Routing to main reasoner.');
-      return { messages: [new AIMessage({ content: "" })] }; // Empty AIMessage signifies no tool calls
-    }
-    
-    console.log(`[BEEP Planner] Planning to call tools:`, toolCalls.map(tc => tc.route));
-    
-    const response = new AIMessage({
-        content: "",
-        tool_calls: toolCalls.map((tc, i) => ({
-            name: tc.route,
-            args: tc.params || {},
-            id: `tool_call_specialist_${i}`
-        }))
-    });
+    console.log('[BEEP Planner] Planner decided to call tools:', response.tool_calls?.map(tc => tc.name));
 
     return { messages: [response] };
 }
+
 
 /**
  * A robust node for executing tool calls from any agent.
@@ -321,11 +323,21 @@ const routeAfterAegis = (state: AgentState) => {
     return 'continue';
 }
 
-const shouldCallSpecialists = (state: AgentState) => {
+const routeAfterPlanner = (state: AgentState) => {
     const lastMessage = state.messages[state.messages.length - 1];
-    return (lastMessage instanceof AIMessage && lastMessage.tool_calls && lastMessage.tool_calls.length > 0)
-        ? 'call_specialists'
-        : 'reasoner';
+
+    if (!(lastMessage instanceof AIMessage) || !lastMessage.tool_calls || lastMessage.tool_calls.length === 0) {
+        console.log("[BEEP Router] Planner did not specify a tool. Escalating to reasoner.");
+        return 'reasoner';
+    }
+
+    if (lastMessage.tool_calls.some(tc => tc.name === 'final_answer')) {
+        console.log("[BEEP Router] Planner provided a final answer. Ending execution.");
+        return 'end'; 
+    }
+    
+    console.log("[BEEP Router] Planner dispatched to specialist agents.");
+    return 'call_specialists';
 }
 
 const routeAfterTools = (state: AgentState) => {
@@ -376,9 +388,10 @@ const buildBeepGraph = () => {
     
     workflow.addEdge('warn_and_continue', 'planner');
     
-    workflow.addConditionalEdges('planner', shouldCallSpecialists, {
+    workflow.addConditionalEdges('planner', routeAfterPlanner, {
         call_specialists: 'specialist_tool_node',
         reasoner: 'agent_reasoner',
+        end: END
     });
     
     workflow.addConditionalEdges('specialist_tool_node', routeAfterTools, {
@@ -387,9 +400,16 @@ const buildBeepGraph = () => {
         end: END,
     });
     
-    workflow.addConditionalEdges('agent_reasoner', shouldCallSpecialists, {
-        call_specialists: 'reasoner_tool_node',
-        reasoner: END // If no tools, we're done.
+    const shouldReasonerCallTools = (state: AgentState) => {
+        const lastMessage = state.messages[state.messages.length - 1];
+        return (lastMessage instanceof AIMessage && lastMessage.tool_calls && lastMessage.tool_calls.length > 0)
+            ? 'call_reasoner_tools'
+            : 'end';
+    }
+
+    workflow.addConditionalEdges('agent_reasoner', shouldReasonerCallTools, {
+        call_reasoner_tools: 'reasoner_tool_node',
+        end: END
     });
     
     workflow.addConditionalEdges('reasoner_tool_node', routeAfterTools, {

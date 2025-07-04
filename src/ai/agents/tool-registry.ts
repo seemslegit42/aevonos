@@ -54,7 +54,7 @@ interface AgentContext {
 
 // This tool is a container for the final structured output.
 // The model is instructed to call this tool when its work is complete.
-class FinalAnswerTool extends Tool {
+export class FinalAnswerTool extends Tool {
   name = 'final_answer';
   description = 'Call this tool when you have gathered all necessary information and are ready to provide the final response to the user. The output should conform to the UserCommandOutputSchema.';
   schema = UserCommandOutputSchema.omit({ agentReports: true, responseAudioUri: true }); // Agent reports are aggregated by the graph.
@@ -100,7 +100,7 @@ export function getSpecialistAgentDefinitions(): SpecialistAgentDefinition[] {
         { name: 'jroc', description: 'Generates a business name, tagline, and logo concept.', schema: JrocAgentInputSchema.pick({ businessType: true, logoStyle: true }) },
         { name: 'lahey_surveillance', description: 'Investigates a suspicious employee log entry.', schema: LaheyAgentInputSchema.pick({ logEntry: true }) },
         { name: 'foremanator', description: 'Processes a construction daily log.', schema: ForemanatorAgentInputSchema.pick({ logText: true }) },
-        { name: 'sterileish', description: 'Analyzes a cleanroom or compliance log.', schema: SterileishAgentInputSchema.pick({ logText: true, entryType: true }) },
+        { name: 'sterileish', description: 'Analyzes a cleanroom or compliance log.', schema: SterileishAnalysisInputSchema.pick({ logText: true, entryType: true }) },
         { name: 'paper_trail', description: 'Scans a receipt image for expense details.', schema: PaperTrailAgentInputSchema.pick({ receiptPhotoUri: true, caseFile: true }).partial() },
         { name: 'barbara', description: 'Processes administrative and compliance documents.', schema: BarbaraAgentInputSchema.pick({ documentText: true, task: true }) },
         { name: 'auditor', description: 'Performs a detailed audit on a list of financial transactions.', schema: AuditorAgentInputSchema.pick({ transactions: true }) },
