@@ -33,8 +33,8 @@ function CovenantColumn({ covenantName }: { covenantName: CovenantName }) {
             setError(null);
             try {
                 const [membersRes, leaderboardRes] = await Promise.all([
-                    fetch(`/api/covenants/${covenantName}/members`),
-                    fetch(`/api/covenants/${covenantName}/leaderboard`),
+                    fetch(`/api/admin/covenants/${covenantName}/members`),
+                    fetch(`/api/admin/covenants/${covenantName}/leaderboard`),
                 ]);
                 if (!membersRes.ok || !leaderboardRes.ok) throw new Error(`Failed to fetch data for ${covenantName}.`);
                 const membersData = await membersRes.json();
