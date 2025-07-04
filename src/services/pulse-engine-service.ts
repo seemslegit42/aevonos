@@ -7,20 +7,35 @@
  */
 
 import prisma from '@/lib/prisma';
+import cache from '@/lib/cache';
 import { pulseEngineConfig } from '@/config/pulse-engine-config';
 import { PulseProfile, PulsePhase, Prisma, PulseInteractionType } from '@prisma/client';
 
 type PrismaTransactionClient = Omit<Prisma.PrismaClient, "$connect" | "$disconnect" | "$on" | "$transaction" | "$use" | "$extends">;
 
+const PULSE_PROFILE_CACHE_KEY = (userId: string) => `pulse-profile:${userId}`;
+const PULSE_PROFILE_CACHE_TTL_SECONDS = 60 * 60; // 1 hour
+
 /**
  * Retrieves a user's Pulse Profile, creating a default one if it doesn't exist.
  * This ensures every user is part of the SRE from their first session.
+ * This function uses a cache-aside strategy for performance.
  * @param userId The ID of the user.
  * @param tx An optional Prisma transaction client for atomicity.
  * @returns The user's PulseProfile.
  */
 async function getPulseProfile(userId: string, tx?: PrismaTransactionClient): Promise<PulseProfile> {
   const prismaClient = tx || prisma;
+  const cacheKey = PULSE_PROFILE_CACHE_KEY(userId);
+
+  // Do not use cache if within a transaction
+  if (!tx) {
+    const cachedProfile = await cache.get(cacheKey);
+    if (cachedProfile) {
+        return cachedProfile as PulseProfile;
+    }
+  }
+
   let profile = await prismaClient.pulseProfile.findUnique({
     where: { userId },
   });
@@ -36,6 +51,10 @@ async function getPulseProfile(userId: string, tx?: PrismaTransactionClient): Pr
         frequency: 0.01,
       },
     });
+  }
+
+  if (!tx) {
+    await cache.set(cacheKey, profile, 'EX', PULSE_PROFILE_CACHE_TTL_SECONDS);
   }
 
   return profile;
@@ -90,7 +109,7 @@ function getPhaseFromValue(pulseValue: number, profile: PulseProfile): PulsePhas
 /**
  * Records a "win" for the user, resetting the time component and consecutive losses,
  * and updating their psychological profile.
- * Can be used within a larger Prisma transaction.
+ * Implements a write-through caching strategy.
  * @param userId The ID of the user who won.
  * @param tx An optional Prisma transaction client.
  */
@@ -100,7 +119,7 @@ export async function recordWin(userId: string, tx?: PrismaTransactionClient): P
     const pulseValue = await getCurrentPulseValue(userId, tx);
     const currentPhase = getPhaseFromValue(pulseValue, profile);
 
-    await prismaClient.pulseProfile.update({
+    const updatedProfile = await prismaClient.pulseProfile.update({
         where: { id: profile.id },
         data: {
             lastEventTimestamp: new Date(),
@@ -111,12 +130,16 @@ export async function recordWin(userId: string, tx?: PrismaTransactionClient): P
             flowState: Math.min(1, profile.flowState + 0.1),
         },
     });
+
+    if (!tx) {
+        await cache.set(PULSE_PROFILE_CACHE_KEY(userId), updatedProfile, 'EX', PULSE_PROFILE_CACHE_TTL_SECONDS);
+    }
 }
 
 /**
  * Records a "loss" for the user, incrementing the consecutive loss counter and
  * updating their psychological profile.
- * Can be used within a larger Prisma transaction.
+ * Implements a write-through caching strategy.
  * @param userId The ID of the user who lost.
  * @param tx An optional Prisma transaction client.
  */
@@ -126,7 +149,7 @@ export async function recordLoss(userId: string, tx?: PrismaTransactionClient): 
     const pulseValue = await getCurrentPulseValue(userId, tx);
     const currentPhase = getPhaseFromValue(pulseValue, profile);
 
-    await prismaClient.pulseProfile.update({
+    const updatedProfile = await prismaClient.pulseProfile.update({
         where: { id: profile.id },
         data: {
             lastEventTimestamp: new Date(),
@@ -139,6 +162,10 @@ export async function recordLoss(userId: string, tx?: PrismaTransactionClient): 
             flowState: Math.max(0, profile.flowState - 0.05),
         },
     });
+    
+    if (!tx) {
+        await cache.set(PULSE_PROFILE_CACHE_KEY(userId), updatedProfile, 'EX', PULSE_PROFILE_CACHE_TTL_SECONDS);
+    }
 }
 
 /**
@@ -178,6 +205,7 @@ export async function getUserPulseState(userId: string) {
 
 /**
  * Records a generic user interaction, updating psychological metrics.
+ * Implements a write-through caching strategy.
  * @param userId The ID of the user.
  * @param type The type of interaction outcome.
  * @param tx An optional Prisma transaction client.
@@ -186,8 +214,9 @@ export async function recordInteraction(userId: string, type: 'success' | 'failu
     const prismaClient = tx || prisma;
     const profile = await getPulseProfile(userId, tx);
 
+    let updatedProfile: PulseProfile;
     if (type === 'success') {
-        await prismaClient.pulseProfile.update({
+        updatedProfile = await prismaClient.pulseProfile.update({
             where: { id: profile.id },
             data: {
                 lastInteractionType: PulseInteractionType.COMMAND_SUCCESS,
@@ -196,7 +225,7 @@ export async function recordInteraction(userId: string, type: 'success' | 'failu
             },
         });
     } else { // failure
-        await prismaClient.pulseProfile.update({
+        updatedProfile = await prismaClient.pulseProfile.update({
             where: { id: profile.id },
             data: {
                 lastInteractionType: PulseInteractionType.COMMAND_FAILURE,
@@ -205,6 +234,8 @@ export async function recordInteraction(userId: string, type: 'success' | 'failu
             },
         });
     }
-}
-
     
+    if (!tx) {
+        await cache.set(PULSE_PROFILE_CACHE_KEY(userId), updatedProfile, 'EX', PULSE_PROFILE_CACHE_TTL_SECONDS);
+    }
+}
