@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { create } from 'zustand';
@@ -265,11 +264,13 @@ export const useAppStore = create<AppStore>()((set, get) => ({
         });
     }
 
-    // Process agent reports
+    // Process agent reports using the new handler
     if (result.agentReports) {
       for (const report of result.agentReports) {
+        // Look up the handler for the specific agent report type
         const handler = agentReportHandlers[report.agent as keyof typeof agentReportHandlers];
         if (handler) {
+          // Pass the specific report data and the entire store instance to the handler
           handler(report.report as any, get());
         }
       }

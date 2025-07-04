@@ -80,7 +80,7 @@ export const agentReportHandlers: AgentReportHandlers = {
         contentProps: report
     });
   },
-  'lahey-surveillance': (report: LaheyAnalysisOutput, store) => {
+  'lahey_surveillance': (report: LaheyAnalysisOutput, store) => {
     // Lahey app is a timeline, so we won't directly open a new one.
     // Future implementation could update a central timeline view.
   },
