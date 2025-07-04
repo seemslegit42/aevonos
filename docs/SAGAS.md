@@ -44,7 +44,7 @@ The Founder has reclaimed an entire day. She has moved from being a data janitor
 
 **Core Epics Enabling This Saga**:
 
-- **Agentic Workflows**: The ability for BEEP to execute multi-step, multi-service workflows (LangGraph).
+- **Agentic Workflows**: The ability for BEEP to execute multi-step, multi-service workflows (LangGraph on Groq).
 - **Data Integration**: Secure, API-level integration with third-party SaaS tools.
 - **The Scribe's Archive**: A unified data layer where all information is stored and can be reasoned over by AI agents.
 - **Contextual UI Generation**: The ability for BEEP to present the results of a workflow in a purpose-built, temporary Micro-App.
