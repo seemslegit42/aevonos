@@ -16,7 +16,7 @@ import prisma from '@/lib/prisma';
 import { InsufficientCreditsError } from '@/lib/errors';
 import { UserPsyche, TransactionType, Prisma, PulseProfile, PulseInteractionType } from '@prisma/client';
 import { differenceInMinutes } from 'date-fns';
-import CryptoJS from 'crypto-js';
+import { createHmac } from 'crypto';
 
 const AGE_OF_ASCENSION_ACTIVE = true;
 
@@ -276,7 +276,9 @@ export async function processFollyTribute(
             const potentialLogDataForSigning = {
                 workspaceId, userId, instrumentId, potentialAwarded: potentialAwarded.toString(), timestamp: new Date().toISOString()
             };
-            potentialSignature = CryptoJS.HmacSHA256(JSON.stringify(potentialLogDataForSigning), signatureSecret).toString();
+            potentialSignature = createHmac('sha256', signatureSecret)
+                .update(JSON.stringify(potentialLogDataForSigning))
+                .digest('hex');
 
 
             await tx.potentialAccrualLog.create({
@@ -312,7 +314,9 @@ export async function processFollyTribute(
             boonAmount: boonAmount.toFixed(8),
             timestamp: new Date().toISOString()
         };
-        const signature = CryptoJS.HmacSHA256(JSON.stringify(transactionDataForSigning), signatureSecret).toString();
+        const signature = createHmac('sha256', signatureSecret)
+                .update(JSON.stringify(transactionDataForSigning))
+                .digest('hex');
 
         await tx.transaction.create({
             data: {

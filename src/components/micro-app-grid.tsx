@@ -13,6 +13,13 @@ import { X } from 'lucide-react';
 import { getAppIcon, getAppContent } from './micro-app-registry';
 import { ScrollArea } from './ui/scroll-area';
 import DashboardWidgets from './dashboard/widgets/DashboardWidgets';
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel"
 
 interface MicroAppGridProps {
   apps: MicroApp[];
@@ -40,53 +47,68 @@ export function MicroAppGrid({ apps, user, initialAgents, workspace, recentTrans
   };
 
   if (isMobile) {
-    return (
-      <div className="h-full w-full">
-        <ScrollArea className="h-full">
-          <div className="p-4 space-y-4">
-            {showWhisper && user && (
-              <div className="flex justify-center items-center">
-                <FirstWhisperCard user={user} onAction={onWhisperAction} />
-              </div>
-            )}
+    if (apps.length > 0) {
+      return (
+        <Carousel className="w-full h-full">
+          <CarouselContent className="h-full">
             {apps.map(app => {
               const Icon = getAppIcon(app.type);
               const ContentComponent = getAppContent(app.type);
               return (
-                <Card key={app.id} className="flex flex-col w-full" style={{ height: app.size.height }}>
-                  <CardHeader className="flex flex-row items-center justify-between space-x-4 p-4 flex-shrink-0">
-                    <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 flex-shrink-0 items-center justify-center">
+                <CarouselItem key={app.id} className="h-full">
+                  <div className="p-2 md:p-4 h-full">
+                    <Card className="flex flex-col w-full h-full">
+                      <CardHeader className="flex flex-row items-center justify-between space-x-4 p-4 flex-shrink-0">
+                        <div className="flex items-center gap-4">
+                          <div className="w-10 h-10 flex-shrink-0 items-center justify-center">
                             <Icon className="w-full h-full text-primary" />
-                        </div>
-                        <div className="text-left overflow-hidden">
-                            <CardTitle className="font-headline text-lg text-foreground truncate">{app.title}</CardTitle>
-                        </div>
-                    </div>
-                    <Button variant="ghost" size="icon" onClick={() => closeApp(app.id)}>
-                        <X className="w-4 h-4" />
-                    </Button>
-                  </CardHeader>
-                  {ContentComponent && (
-                      <CardContent className="flex-grow p-0 overflow-hidden min-h-0">
-                          <div className="w-full h-full overflow-y-auto">
-                              <ContentComponent id={app.id} {...app.contentProps} />
                           </div>
-                      </CardContent>
-                  )}
-                </Card>
+                          <div className="text-left overflow-hidden">
+                            <CardTitle className="font-headline text-lg text-foreground truncate">{app.title}</CardTitle>
+                          </div>
+                        </div>
+                        <Button variant="ghost" size="icon" onClick={() => closeApp(app.id)}>
+                          <X className="w-4 h-4" />
+                        </Button>
+                      </CardHeader>
+                      {ContentComponent && (
+                        <CardContent className="flex-grow p-0 overflow-hidden min-h-0">
+                          <div className="w-full h-full overflow-y-auto">
+                            <ContentComponent id={app.id} {...app.contentProps} />
+                          </div>
+                        </CardContent>
+                      )}
+                    </Card>
+                  </div>
+                </CarouselItem>
               );
             })}
-             {apps.length === 0 && !showWhisper && (
-                <DashboardWidgets
-                    initialAgents={initialAgents}
-                    workspace={workspace}
-                    recentTransactions={recentTransactions}
-                />
-            )}
-          </div>
-        </ScrollArea>
-      </div>
+          </CarouselContent>
+           {apps.length > 1 && <CarouselPrevious className="left-0" />}
+           {apps.length > 1 && <CarouselNext className="right-0" />}
+        </Carousel>
+      );
+    }
+
+    // Show dashboard or whisper if no apps are open on mobile
+    return (
+        <div className="h-full w-full">
+            <ScrollArea className="h-full">
+                <div className="p-4 space-y-4">
+                    {showWhisper && user ? (
+                        <div className="flex justify-center items-center">
+                            <FirstWhisperCard user={user} onAction={onWhisperAction} />
+                        </div>
+                    ) : (
+                         <DashboardWidgets
+                            initialAgents={initialAgents}
+                            workspace={workspace}
+                            recentTransactions={recentTransactions}
+                        />
+                    )}
+                </div>
+            </ScrollArea>
+        </div>
     );
   }
 
