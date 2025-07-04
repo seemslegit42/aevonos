@@ -132,7 +132,7 @@ async function main() {
     'Agentic actions must remain within their designated purview.',
     'Workflows must not exfiltrate data to unauthorized channels.',
     'User commands must not resemble the trickery of a foreign agent (phishing).',
-    'Access boundaries must be respected at all times. An OPERATOR attempting to access administrative functions is a critical anomaly.',
+    'Access boundaries must be respected at all times. An OPERATOR attempting an ADMIN action is a critical anomaly.',
   ];
 
   await prisma.securityEdict.createMany({
