@@ -103,3 +103,5 @@ import '@/ai/agents/pam-poovey-agent.ts';
 import '@/ai/agents/vin-diesel-agent.ts';
 import '@/ai/agents/reno-mode-agent.ts';
 import '@/ai/agents/patrickt.ts';
+import '@/ai/agents/briefing-agent.ts';
+import '@/app/api/briefing/route.ts';
