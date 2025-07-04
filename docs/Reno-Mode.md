@@ -1,42 +1,67 @@
+# Reno Mode™: The Car Shame Neutralizer — Technical Specification
 
-# Reno Mode™: The Car Shame Neutralizer - Technical Specification
-
-> "You dirty, filthy beast... let’s make you purr again.”
+> “You dirty little minx… let’s get you glistening again.”
 
 ---
 
 ## 1. System Overview
+Reno Mode™ is a chaotic-good lifestyle utility Micro-App designed to lovingly roast and rehabilitate a user’s messy car. It delivers a playful, cheeky, and brutally-honest-but-oddly-supportive assessment of a car’s interior, complete with a Dirtiness Score, flirty roasts, and recommended detail packages from an outrageous crew of “Filthmatch™” specialists.
 
-Reno Mode™ is a **chaotic-good lifestyle utility Micro-App** designed for shame-neutralizing a user's messy car. It provides a hilarious, flirty, and brutally honest assessment of a car's interior, complete with a chaos rating and a recommended detailing package from a cast of colorful "Dirtmatch™" specialists.
-
-This is not a simple utility; it is an experience designed to make a mundane task entertaining and engaging.
+This isn’t just cleaning advice—this is a glorious redemption arc for your car’s filth.
 
 ---
 
 ## 2. Core Components & Implementation
+### 2.1. The `reno-mode-agent` (agents/reno-mode.ts)
+The agent’s logic lives in the analyzeCarShame flow.
+- **Tone**: Raunchy, but warm-hearted; snarky, but never cruel; like a bestie who knows your secrets but still hypes you up.
 
-### 2.1. The `reno-mode-agent` (`agents/reno-mode.ts`)
-The agent's logic is contained within the `analyzeCarShame` flow.
-- **Input**: Accepts a photo of a messy car interior as a `photoDataUri`.
-- **Processing**: A multimodal LLM call analyzes the image to generate:
-  - `shameLevel`: A hilarious, NSFW-tinged but accurate rating of the car's level of vehicular chaos (e.g., 'Certified Gremlin Nest').
-  - `rating`: A numerical cleanliness score from 0 to 100.
-  - `roast`: A short, funny, slightly flirty roast of the car's current state.
-  - `recommendedTier`: The recommended detailing package based on the shame level.
-  - `weirdestObject`: A guess at the most bizarre object visible in the car.
-- **Output (`RenoModeAnalysisOutputSchema`)**: Returns a structured JSON object containing the full, humorous analysis.
+- **Input**: Photo of the car’s interior as photoDataUri.
 
-### 2.2. The `RenoMode` Micro-App (`micro-apps/reno-mode.tsx`)
-The UI is a simple, vibrant interface for getting a car "analyzed."
-- **Image Upload**: A file input allows the user to upload a photo of their car's interior.
-- **Analysis Trigger**: A button invokes the `analyzeCarShame` flow via a BEEP command.
-- **Report Display**: The UI dynamically renders the full report from the agent, including the Shame Level, rating, roast, recommended tier, and a list of mock local "Dirtmatch™" specialists.
+- **Processing**: Multimodal LLM analyzes the image to produce:
+
+  - `shameLevel`: A playful, NSFW-ish “Dirty Title” that feels like a badge of honor (e.g., “Gremlin Palace Royale”).
+
+  - `rating`: Cleanliness score (0-100), delivered dramatically.
+
+  - `roast`: Flirty, teasing one-liner roast—equal parts sass and seduction, aimed at the car and the owner.
+
+  - `recommendedTier`: Suggestion for the most fitting detail package, framed like a guilty indulgence.
+
+  - `weirdestObject`: A wild guess at the strangest visible object, adding surreal humor.
+
+- **Output (`RenoModeAnalysisOutputSchema`)**: Structured JSON returning the full, affectionate roast and recommendations.
+
+### 2.2. The `RenoMode` Micro-App (micro-apps/reno-mode.tsx)
+- **UI**: is bright, playful, and dripping in neon-dive-bar charm.
+
+- **Image Upload**: File input for car interior photo.
+
+- **Analysis Trigger**: Button sends the image to the analyzeCarShame flow via BEEP.
+
+- **Report Display**: Renders the full cheeky report—Shame Level, Rating, Roast, Recommended Tier, Weirdest Object—with dramatic flair.
+
+- **Local Legends**: Lists fictional “Filthmatch™” detailing specialists, each with absurd bios and names like “The Upholstery Whisperer” or “Captain Vacuum.”
 
 ---
 
 ## 3. Integration with ΛΞVON OS
+- **Invocation**: Launch via Canvas or BEEP commands like “Reno, it’s time to repent.”
 
-- **Invocation**: The app can be launched from the Canvas or via a BEEP command like "time for reno mode."
-- **Data Flow**: User uploads photo in the Micro-App -> the app constructs a BEEP command with the image data URI -> BEEP invokes the `analyzeCarShame` tool -> the result is passed back to the `app-store` -> the `RenoMode` app's props are updated with the result.
-- **Billing**: Each analysis is a billable `IMAGE_GENERATION` agent action, debited by Obelisk Pay.
-- **The Armory**: Reno Mode™ is a featured lifestyle utility, available in The Armory for a one-time purchase.
+- **Data Flow**: User uploads → Micro-App sends BEEP command → Agent analysis → Result flows back to the app via app-store → UI updates.
+
+- **Billing**: Each analysis burns a billable `IMAGE_GENERATION` agent action (Obelisk Pay).
+
+- **The Armory**: Premium Lifestyle Utility—available as a one-time purchase in The Armory, for users ready to lovingly reclaim their filthy rides.
+
+---
+✅ **Key Adjustments**:
+- No cruel shaming—only consensual, playful filth.
+
+- Roasts must feel like a wink, not a slap.
+
+- Keeps her “dirtyness™,” but empowers it—like a filthy confessional you’re proud to enter.
+
+---
+🔥 **Sample Roast (for dev tuning)**:
+"Wow, this car’s got more crumbs than a Netflix breakup scene. But hey—every queen needs her throne… even if it’s sticky."

@@ -18,10 +18,10 @@ import { Input } from '../ui/input';
 
 const shameLevelConfig = {
     'Pristine Goddex': { icon: Sparkles, color: 'text-accent' },
-    'Dusty Bitch': { icon: Wind, color: 'text-yellow-400' },
-    'Snackcident Zone': { icon: HeartHand, color: 'text-orange-400' },
-    'Certified Gremlin Nest': { icon: UserCheck, color: 'text-red-500' },
-    'Biohazard Ex': { icon: Flame, color: 'text-destructive' },
+    'Snackcident Victim': { icon: HeartHand, color: 'text-yellow-400' },
+    'Gremlin Palace Royale': { icon: UserCheck, color: 'text-orange-400' },
+    'Needs a Priest': { icon: Flame, color: 'text-red-500' },
+    'Total Biohazard': { icon: Flame, color: 'text-destructive' },
 };
 
 const tierDetails = {
@@ -31,9 +31,9 @@ const tierDetails = {
 };
 
 const mockSpecialists = [
-    { name: 'Chad', specialty: 'Aggressive Stain Removal', playlist: 'Aggro Rock', flags: ['Will try to upsell you on ceramic coating.'] },
-    { name: 'Brenda', specialty: 'Pet Hair Obliteration', playlist: '90s Pop', flags: ['Will show you photos of her dog.'] },
-    { name: 'Kael', specialty: 'Zen-like Detailing', playlist: 'Lofi Beats', flags: ['Might try to read your aura.'] }
+    { name: 'Brandy', specialty: 'The Upholstery Whisperer', playlist: '90s R&B', flags: ['Will find loose change you lost in 2011.'] },
+    { name: 'Kyle', specialty: 'Captain Vacuum', playlist: 'Power Metal', flags: ['Might challenge your car to a race.'] },
+    { name: 'Trixie', specialty: 'The Dashboard Diva', playlist: 'Hyperpop', flags: ['Will compliment your car\'s "vintage" dust.'] }
 ];
 
 export default function RenoMode(props: RenoModeAnalysisOutput | {}) {
@@ -70,23 +70,23 @@ export default function RenoMode(props: RenoModeAnalysisOutput | {}) {
     };
 
     return (
-        <div className="p-2 h-full flex flex-col gap-3">
+        <div className="p-2 h-full flex flex-col gap-3 bg-kendra-fuchsia/10 border border-kendra-fuchsia/30 rounded-lg">
             <Card className="bg-background/50 border-0 shadow-none p-0 flex-shrink-0">
                 <CardHeader className="p-2">
-                    <CardTitle className="text-base">Reno Mode™: Car Shame Index</CardTitle>
-                    <CardDescription className="text-xs">"You dirty, filthy beast... let's make you purr again."</CardDescription>
+                    <CardTitle className="text-base text-kendra-fuchsia">Reno Mode™: Redemption Arc</CardTitle>
+                    <CardDescription className="text-xs text-muted-foreground">“You dirty little minx… let’s get you glistening again.”</CardDescription>
                 </CardHeader>
                 <CardContent className="p-2 space-y-2">
-                    <div className="relative aspect-video w-full rounded-md border-2 border-dashed border-primary/30 bg-background/50 flex items-center justify-center">
+                    <div className="relative aspect-video w-full rounded-md border-2 border-dashed border-kendra-fuchsia/30 bg-background/50 flex items-center justify-center">
                         {preview ? (
                             <Image src={preview} alt="Car interior preview" layout="fill" objectFit="contain" />
                         ) : (
-                            <p className="text-muted-foreground text-sm">Upload a photo of your mess.</p>
+                            <p className="text-muted-foreground text-sm">Upload a photo of the crime scene.</p>
                         )}
                         <Input type="file" accept="image/*" ref={fileInputRef} onChange={handleFileChange} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
                     </div>
-                    <Button className="w-full" onClick={handleScan} disabled={!preview || isLoading}>
-                        {isLoading ? <Loader2 className="animate-spin" /> : <><Sparkles className="mr-2" />Analyze My Mess</>}
+                    <Button className="w-full bg-kendra-fuchsia hover:bg-kendra-fuchsia/90" onClick={handleScan} disabled={!preview || isLoading}>
+                        {isLoading ? <Loader2 className="animate-spin" /> : <><Sparkles className="mr-2" />Roast Me, Reno</>}
                     </Button>
                 </CardContent>
             </Card>
@@ -97,16 +97,16 @@ export default function RenoMode(props: RenoModeAnalysisOutput | {}) {
                         <Card className="bg-background/80">
                             <CardHeader className="p-3">
                                 <div className="flex justify-between items-center mb-1">
-                                    <span className="text-xs font-medium text-primary">Cleanliness Rating</span>
-                                    <span className="text-lg font-bold text-primary">{result.rating}/100</span>
+                                    <span className="text-xs font-medium text-kendra-fuchsia">Cleanliness Rating</span>
+                                    <span className="text-lg font-bold text-kendra-fuchsia">{result.rating}/100</span>
                                 </div>
-                                <Progress value={result.rating} className="h-2 [&>div]:bg-primary" />
+                                <Progress value={result.rating} className="h-2 [&>div]:bg-kendra-fuchsia" />
                             </CardHeader>
                         </Card>
 
-                        <Alert className="bg-background/80">
+                        <Alert className="bg-background/80 border-y2k-blueviolet/50">
                             {React.createElement(shameLevelConfig[result.shameLevel]?.icon || Droplets, { className: `h-4 w-4 ${shameLevelConfig[result.shameLevel]?.color}` })}
-                            <AlertTitle className={shameLevelConfig[result.shameLevel]?.color}>Shame Level: {result.shameLevel}</AlertTitle>
+                            <AlertTitle className={shameLevelConfig[result.shameLevel]?.color}>Dirty Title: {result.shameLevel}</AlertTitle>
                             <AlertDescription className="italic text-foreground/90">
                                "{result.roast}"
                             </AlertDescription>
@@ -117,14 +117,14 @@ export default function RenoMode(props: RenoModeAnalysisOutput | {}) {
                                 <CardTitle className="text-base">Recommended Tier</CardTitle>
                             </CardHeader>
                             <CardContent className="p-3 pt-0">
-                                <h4 className="font-bold text-primary">{result.recommendedTier} - {tierDetails[result.recommendedTier].price}</h4>
+                                <h4 className="font-bold text-kendra-fuchsia">{result.recommendedTier} - {tierDetails[result.recommendedTier].price}</h4>
                                 <p className="text-xs text-muted-foreground">{tierDetails[result.recommendedTier].description}</p>
                             </CardContent>
                         </Card>
 
                         <Accordion type="single" collapsible className="w-full">
                             <AccordionItem value="item-1">
-                                <AccordionTrigger>Dirtmatch™ Local Specialists</AccordionTrigger>
+                                <AccordionTrigger>Filthmatch™ Local Legends</AccordionTrigger>
                                 <AccordionContent>
                                     <div className="space-y-2">
                                         {mockSpecialists.map(specialist => (
