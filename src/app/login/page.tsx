@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState } from 'react';
@@ -61,8 +60,8 @@ export default function LoginPage() {
               className="text-center space-y-4 p-8"
             >
               <MailCheck className="w-16 h-16 mx-auto text-accent" />
-              <h2 className="text-2xl font-bold font-headline">The Echo Has Been Sent</h2>
-              <p className="text-muted-foreground">Follow the echo sent to your designation to enter the Canvas.</p>
+              <h2 className="text-2xl font-bold font-headline">The Ether Has Heard Your Call</h2>
+              <p className="text-muted-foreground">Await the echo.</p>
             </motion.div>
           ) : (
             <motion.div key="form" initial={{opacity: 0}} animate={{opacity: 1}} exit={{opacity: 0}}>

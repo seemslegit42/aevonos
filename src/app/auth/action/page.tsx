@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useEffect, useState } from 'react';
@@ -41,7 +40,7 @@ export default function AuthActionPage() {
                     // Redirect after a short delay.
                     setTimeout(() => {
                         router.push('/');
-                    }, 1500);
+                    }, 2500);
                 } catch (err) {
                     console.error("Sign in with email link error:", err);
                     setError('The signature is invalid or has expired. Please try again.');
@@ -64,7 +63,7 @@ export default function AuthActionPage() {
                     <>
                         <CheckCircle className="w-16 h-16 text-accent" />
                         <h2 className="text-2xl font-bold font-headline">Signature Verified</h2>
-                        <p className="text-muted-foreground">The Canvas awakens. Redirecting...</p>
+                        <p className="text-muted-foreground">Your identity is being forged in the Nexus. Prepare to make your Vow.</p>
                     </>
                 );
             case 'error':
