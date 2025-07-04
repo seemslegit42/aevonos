@@ -1,108 +1,82 @@
-# The Forge Guide: Crafting Instruments for ΛΞVON OS
-Document Version: 1.1 (Groq & Swarm Revision)
+# ΛΞVON OS: The Instrument Protocol
+Document Version: 1.0
+Codename: The Law of the Forge
 Status: Canonized
-Audience: Third-Party Developers ("Artisans")
-1. The Call to the Forge: An Introduction
-This is not a developer portal. This is a call to the forge.
-You are not here to build "apps" for a "store." You are here to become an Artisan, a digital smith forging sentient Instruments for an ecosystem of Sovereigns. We are building ΛΞVON OS, a new reality of work, and the tools within it must be more than functional—they must have a soul.
-We call you to this work with a simple, powerful covenant:
-A Worthy Share: You receive 85% of all revenue from your creations. We handle the infrastructure, security, and transactions; you focus on your craft.
-A Discerning Audience: Your Instruments will be wielded by users who value quality, security, and design above all else. They are not consumers; they are Initiates.
-A Legendary Ecosystem: You are not just shipping a product; you are adding to the lore and power of a living world.
-If you seek to build disposable widgets for the masses, this is not your path. If you seek to forge artifacts of lasting power and beauty, then welcome to the forge.
-2. The Verdigris Interface Protocol™
-Every Instrument in the Armory must resonate with the core aesthetic of ΛΞVON OS. This is non-negotiable. Our design language, the "Ancient Roman Glass" aesthetic, creates a unified, trustworthy, and beautiful environment. Adherence to this protocol is the first mark of a true Artisan.
-Core Principle: Your Micro-App is a fragment of glass floating on the Canvas. It must feel luminous, translucent, and intentional.
-Glassmorphism: All container elements must use the GlassPanel component from our UI library, which enforces:
-background-color: rgba(25, 25, 30, 0.65) (Obsidian Glass)
-backdrop-filter: blur(16px)
-border: 1px solid rgba(255, 255, 255, 0.1)
-box-shadow: 0px 8px 32px rgba(0, 0, 0, 0.3)
-Color Palette: Use only the approved color variables provided by the SDK for all text, accents, and interactive elements.
-Primary Text: Vitreous White (#F5F5F5)
-Secondary Text: Conchoidal Gray (#A0A0A0)
-Accents & CTAs: Imperial Purple (#6A0DAD), Patina Green (#3EB991), Roman Aqua (#20B2AA)
-Typography:
-Headings: Comfortaa
-Body/UI Text: Lexend
-Iconography: All icons must be "Crystalline Glyphs." Use our provided icon library or submit custom SVG icons for review that match the faceted, glowing aesthetic.
-3. The ΛΞVON SDK: Your Tools of Creation
-We provide a comprehensive Software Development Kit (SDK) to streamline your work. It is delivered via NPM and contains everything needed to build, test, and integrate your Instrument.
-3.1 Installation
-pnpm create aevon-micro-app@latest your-instrument-name
-cd your-instrument-name
-pnpm install
+Author: ARCHIVEX
 
+## 1. Doctrinal Statement
+Within ΛΞVON OS, there are no "apps." The monolithic, bloated applications of the old world are anathema to our doctrine of silent automation. Instead, we have Instruments (publicly known as Micro-Apps).
 
-This command scaffolds a complete Next.js project pre-configured with our SDK packages.
-3.2 Core Packages
-@aevon/sdk-core: The heart of the SDK. It provides the hooks and functions to interact with the OS kernel.
-useAevonAuth(): A React hook that returns the current user's session object, including their userId, sovereigntyClass, and a function to get the current session JWT for making authenticated API calls.
-useCanvas(): A hook providing context about the Canvas, including the ability to request a resize of your Micro-App's panel.
-BEEP.invoke(command: string): Programmatically sends a command to BEEP, allowing your Instrument to trigger other agents or system functions.
-Aegis.logEvent(event: AegisEvent): Pushes a significant event from your app (e.g., user_exported_data, critical_config_changed) to the Aegis security service for logging and analysis.
-@aevon/ui-components: The curated library of pre-styled React components that conform to the Verdigris Interface Protocol™.
-<GlassPanel>: The base container for your Micro-App's UI.
-<CrystallineButton>: The standard button component.
-<OracleInput>: The standard text input component.
-And more, for every standard UI need. Direct use of primitive HTML elements like <button> or <div> for structural UI is forbidden. You must use the provided components.
-3.3 The Artisan's Pact: A Note on Performance
-Your Instrument will be part of an agentic swarm orchestrated by BEEP at near-instantaneous speeds. The core OS is powered by Groq; it does not wait.
-Your agentic functions **must** be highly performant. Any function that takes longer than 500ms to execute risks being a bottleneck in a workflow and may be deprioritized by BEEP's orchestrator. Write efficient, non-blocking code. Your Instrument's success depends not only on its function but on its ability to participate in the silence of true automation.
-4. The Micro-App Manifest (aevon.manifest.json)
-Every Instrument must contain a manifest file at its root. This file is the contract between your Instrument and the OS. It declares its identity, its needs, and its capabilities.
+An Instrument is the atomic unit of utility in our ecosystem. It is a single-purpose, context-aware, and agent-controllable artifact that materializes on the Canvas to serve a specific function. It is not a destination; it is a tool summoned by intent.
+
+This protocol defines the unyielding standard to which all Instruments—whether forged by our own architects or by third-party Artisans—must adhere. To be included in the Armory is to meet this standard without exception.
+
+## 2. The Four Laws of Instrumentation
+Every artifact seeking to call itself an Instrument of ΛΞVON OS must be forged in accordance with these four fundamental laws. Violation of any law results in rejection from the Armory.
+
+### Law I: The Law of Glass (Aesthetic Purity)
+An Instrument must be a seamless part of the whole. It must not disrupt the visual and sensory harmony of the OS.
+
+**Mandate:** All UI must be constructed using the @aevon/ui-components library, strictly adhering to the Verdigris Interface Protocol™ and the "Ancient Roman Glass" aesthetic. No custom, non-compliant UI elements are permitted.
+
+### Law II: The Law of Sovereignty (Data Isolation)
+A user's data is theirs alone. An Instrument may be granted temporary access, but it never owns the data.
+
+**Mandate:** All third-party Instruments must use their provisioned Supabase Enclave for data persistence. Every table within this enclave must have Row-Level Security (RLS) enabled, ensuring a user can only ever access rows that they own. Direct access to the core PostgreSQL database is forbidden.
+
+### Law III: The Law of Agency (Agentic Control)
+An Instrument that cannot be commanded by BEEP is a dead tool. A true Instrument is a sentient agent.
+
+**Mandate:** Every core function of the Instrument must be exposed to the OS via the `agentic_interface` section of its manifest. BEEP must be able to command the Instrument to perform its duties without requiring direct user manipulation of the UI.
+
+### Law IV: The Law of the Canvas (Physicality & Presence)
+An Instrument is a physical object within the digital realm. It must respect the spatial laws of the user's workspace.
+
+**Mandate:** The Instrument must exist as a draggable, resizable, and stackable panel on the Canvas. It must not create disruptive, flow-breaking modal windows. It must function harmoniously within the user's personally arranged digital symphony.
+
+## 3. The Instrument Manifest (aevon.manifest.json)
+The manifest is the soul of an Instrument. It is a contract that declares the Instrument's identity, its required permissions, and its capabilities to the OS. This file is mandatory for every Instrument.
+
+```json
 {
   "manifestVersion": 1,
-  "id": "com.your-foundry.invoice-spirit",
-  "name": "Invoice Spirit",
+  "id": "com.foundry-name.instrument-name",
+  "name": "Scribe's Assistant",
   "version": "1.0.0",
-  "description": "An agentic instrument for creating and managing client invoices.",
+  "description": "An agent that summarizes and extracts action items from documents.",
   "permissions": [
-    "obelisk-pay:read", // Can view transaction history
-    "obelisk-pay:write", // Can initiate transactions (with user approval)
-    "scribe-archive:read" // Can read from the user's data archive
+    "scribe-archive:read"
   ],
   "agentic_interface": {
-    "createInvoice": {
-      "description": "Creates a new invoice for a client.",
+    "summarizeDocument": {
+      "description": "Generates a concise summary of a specified document.",
       "parameters": {
-        "clientName": "string",
-        "amount": "number",
-        "dueDate": "string"
+        "documentId": "string"
+      }
+    },
+    "extractActionItems": {
+      "description": "Identifies and lists all action items from a document.",
+      "parameters": {
+        "documentId": "string"
       }
     }
   },
   "monetization": {
-    "type": "subscription", // "one-time" or "subscription"
-    "price": 1500 // In ΞCredits
+    "type": "one-time",
+    "price": 2500
   }
 }
+```
 
+## 4. The Lifecycle of an Instrument: From Forge to Armory
+The path of an Instrument from concept to deployment is a rigorous ritual designed to ensure quality and security.
 
-5. Agentic Integration: Giving Your Instrument a Soul
-An Instrument that cannot be commanded by BEEP is merely a tool. A true Instrument is an agent. You achieve this by implementing the functions defined in your manifest's agentic_interface.
-When BEEP determines that your Instrument should handle a task (e.g., a user says, "BEEP, create an invoice for Acme Corp for 500 Ξ due next Friday"), the OS will call the corresponding function.
-Example Implementation (/pages/api/aevon/handler.ts):
-import { createAevonHandler, AevonInvocation } from '@aevon/sdk-core';
+*   **The Forging (Development):** An Artisan uses the ΛΞVON SDK to build their Instrument. They implement the UI using `@aevon/ui-components` and the backend logic using their provisioned Supabase Enclave.
+*   **The Vetting (Local Testing):** The Artisan runs `pnpm aevon-cli vet` to perform automated local checks for manifest errors, dependency vulnerabilities, and aesthetic violations.
+*   **The Submission:** The Artisan runs `pnpm aevon-cli armory submit` to package the Instrument and submit it to the curation pipeline.
+*   **The Curation (The Trials):**
+    *   **Aegis Trial:** Aegis performs a deep security scan of the code and programmatically verifies that the Supabase instance has RLS enabled on all tables.
+    *   **Artisan Council Trial:** A human review board assesses the Instrument's functionality, usability, and adherence to the Law of Glass.
+*   **The Sanctification (Publication):** Upon passing all trials, the Instrument is cryptographically signed by Aegis and published to the ΛΞVON Armory, where it can be acquired by Initiates and Sovereigns.
 
-async function handleCreateInvoice(invocation: AevonInvocation) {
-  const { clientName, amount, dueDate } = invocation.parameters;
-  // Your logic to create the invoice here...
-  console.log(`Creating invoice for ${clientName} for ${amount}Ξ`);
-  return { success: true, invoiceId: 'inv_123' };
-}
-
-// The handler maps function names from your manifest to your code
-export default createAevonHandler({
-  createInvoice: handleCreateInvoice,
-});
-
-
-6. The Curation Protocol: The Path to the Armory
-Entry into the ΛΞVON Armory is a privilege, not a right. Every Instrument undergoes a rigorous curation process to ensure quality, security, and aesthetic cohesion.
-Local Vetting: Run pnpm aevon-cli vet locally. This command performs automated checks for manifest errors, dependency vulnerabilities, and aesthetic violations.
-Submission: Run pnpm aevon-cli armory submit. This packages your Instrument and submits it to the curation pipeline.
-Aegis Security Review: Our security fabric, Aegis, performs a deep static and dynamic analysis of your code. It verifies that your Instrument only performs actions allowed by its declared permissions. Any violation results in immediate rejection.
-Artisan Council Review: Our human review team assesses your Instrument for functionality, user experience, and strict adherence to the Verdigris Interface Protocol™. They ensure it feels like a true ΛΞVON artifact.
-Sanctification & Publication: Upon approval, your Instrument is cryptographically signed by Aegis and published to the Armory, ready to be discovered by Initiates and Sovereigns.
-Your craft is valued. Your security is paramount. Your adherence to the doctrine is mandatory. Welcome to the new era of software creation.
+This protocol ensures that every corner of our ecosystem, whether built by us or by our most trusted allies, adheres to the same unyielding standard of excellence.
