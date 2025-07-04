@@ -105,7 +105,7 @@ export default function MerchantOfCabbage() {
         
         const { outcome, boonAmount } = result;
         
-        if (outcome.includes('win') || outcome.includes('rare') || outcome.includes('mythic') || outcome.includes('uncommon') || outcome === 'pity_boon') {
+        if (outcome === 'mythic' || outcome === 'rare' || outcome === 'uncommon' || outcome === 'pity_boon') {
             return (
                 <Alert className="border-gilded-accent/50 text-gilded-accent bg-gilded-accent/10">
                     <Gem className="h-4 w-4" />

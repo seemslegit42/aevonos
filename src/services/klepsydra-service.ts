@@ -9,6 +9,7 @@ import {
   recordWin,
   recordLoss,
   shouldTriggerPityBoon,
+  getPulseProfile,
 } from './pulse-engine-service';
 import { artifactManifests } from '@/config/artifacts';
 import { follyInstrumentsConfig, type OutcomeTier, type Boon } from '@/config/folly-instruments';
@@ -28,7 +29,7 @@ const PSYCHE_MODIFIERS: Record<UserPsyche, { oddsFactor: number; boonFactor: num
 
 // Create a list of all card keys that are purely for aesthetic system effects.
 const aestheticEffectCardKeys = artifactManifests
-    .filter(artifact => artifact.type === 'CHAOS_CARD' && artifact.cardClass === 'AESTHETIC' && artifact.systemEffect?.includes('UI theme'))
+    .filter(artifact => artifact.type === 'CHAOS_CARD' && artifact.cardClass === 'AESTHETIC' && artifact.systemEffect)
     .map(artifact => artifact.id);
 
 // List of instruments that are pure gambles and should not be "owned".
@@ -38,33 +39,6 @@ const MERCENARY_CARDS = ['LOADED_DIE', 'SISYPHUS_REPRIEVE', 'HADES_BARGAIN', 'OR
 
 type PrismaTransactionClient = Omit<Prisma.PrismaClient, "$connect" | "$disconnect" | "$on" | "$transaction" | "$use" | "$extends">;
 
-/**
- * Retrieves a user's Pulse Profile, creating a default one if it doesn't exist.
- * @param userId The ID of the user.
- * @param tx An optional Prisma transaction client for atomicity.
- * @returns The user's PulseProfile.
- */
-async function getPulseProfile(userId: string, tx?: PrismaTransactionClient): Promise<PulseProfile> {
-  const prismaClient = tx || prisma;
-  let profile = await prismaClient.pulseProfile.findUnique({
-    where: { userId },
-  });
-
-  if (!profile) {
-    const phaseOffset = Math.random() * 2 * Math.PI;
-    profile = await prismaClient.pulseProfile.create({
-      data: {
-        userId,
-        phaseOffset,
-        baselineLuck: 0.4,
-        amplitude: 0.15,
-        frequency: 0.01,
-      },
-    });
-  }
-
-  return profile;
-}
 
 /**
  * A helper function to perform weighted random selection.
@@ -334,7 +308,7 @@ export async function processFollyTribute(
             }
         });
         
-        if (awardedCardKey && !PURE_FOLLY_INSTRUMENTS.includes(awardedCardKey)) {
+        if (awardedCardKey && !PURE_FOLLY_INSTRUMENTS.includes(awardedCardKey) && !aestheticEffectCardKeys.includes(awardedCardKey)) {
             if (!user.unlockedChaosCardKeys.includes(awardedCardKey)) {
                  await tx.user.update({
                     where: { id: userId },
@@ -370,5 +344,3 @@ export async function processFollyTribute(
         return { outcome, boonAmount: Number(boonAmount), aethericEcho: Number(aethericEcho) };
     });
 }
-
-    

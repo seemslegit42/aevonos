@@ -177,16 +177,17 @@ export async function recordLoss(userId: string, tx?: PrismaTransactionClient): 
  * @param userId The ID of the user.
  * @returns True if a Pity Boon should be triggered.
  */
-export async function shouldTriggerPityBoon(userId: string, workspaceId: string, tx?: PrismaTransactionClient): Promise<boolean> {
+export async function shouldTriggerPityBoon(userId: string, tx?: PrismaTransactionClient): Promise<boolean> {
     const profile = await getPulseProfile(userId, tx);
-    const config = await getPulseEngineConfig(workspaceId);
-    return profile.consecutiveLosses >= config.pityThreshold;
+    // In a real system, you might fetch workspace-specific config.
+    // Here we use a reasonable default.
+    const pityThreshold = 5; 
+    return profile.consecutiveLosses >= pityThreshold;
 }
 
 
 /**
  * Returns the full pulse state for a user, including narrative, phase, and value.
- * @param userId The ID of the user.
  * @returns An object with the user's full pulse state.
  */
 export async function getUserPulseState(userId: string) {

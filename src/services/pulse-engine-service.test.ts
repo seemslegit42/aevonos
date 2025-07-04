@@ -1,5 +1,5 @@
 
-import { getPulseProfile, getCurrentPulseValue, recordWin, recordLoss, shouldTriggerPityBoon, recordInteraction } from './pulse-engine-service';
+import { getPulseProfile, getCurrentPulseValue, recordWin, recordLoss, shouldTriggerPityBoon, recordInteraction, getUserPulseState } from './pulse-engine-service';
 import prisma from '@/lib/prisma';
 import cache from '@/lib/cache';
 import { PulseProfile, PulsePhase, PulseInteractionType } from '@prisma/client';
@@ -26,7 +26,6 @@ const mockGetPulseEngineConfig = getPulseEngineConfig as jest.Mock;
 
 describe('Pulse Engine Service', () => {
   const mockUserId = 'user-test-id';
-  const mockWorkspaceId = 'ws-test-id';
   let mockProfile: PulseProfile;
 
   beforeEach(() => {
@@ -141,17 +140,16 @@ describe('Pulse Engine Service', () => {
     it('should return true if consecutive losses are over the threshold', async () => {
       mockProfile.consecutiveLosses = 5;
       (cache.get as jest.Mock).mockResolvedValue(mockProfile);
-      const result = await shouldTriggerPityBoon(mockUserId, mockWorkspaceId);
+      const result = await shouldTriggerPityBoon(mockUserId);
       expect(result).toBe(true);
-      expect(mockGetPulseEngineConfig).toHaveBeenCalledWith(mockWorkspaceId);
+      // Pity boon threshold is hardcoded now, so no config call
     });
 
     it('should return false if consecutive losses are under the threshold', async () => {
       mockProfile.consecutiveLosses = 4;
       (cache.get as jest.Mock).mockResolvedValue(mockProfile);
-      const result = await shouldTriggerPityBoon(mockUserId, mockWorkspaceId);
+      const result = await shouldTriggerPityBoon(mockUserId);
       expect(result).toBe(false);
-      expect(mockGetPulseEngineConfig).toHaveBeenCalledWith(mockWorkspaceId);
     });
   });
 
@@ -178,5 +176,3 @@ describe('Pulse Engine Service', () => {
   });
 
 });
-
-    

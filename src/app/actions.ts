@@ -175,6 +175,8 @@ export async function makeFollyTribute(instrumentId: string, tributeAmount?: num
 
     if (outcome === 'pity_boon') {
         message = `The Obelisk acknowledges your persistence. A minor alignment of fate has granted you a boon of ${boonAmount.toFixed(2)} Ξ.`;
+    } else if (outcome === 'guaranteed_win') {
+        message = `As was decreed, your Reprieve guarantees a boon of ${boonAmount.toFixed(2)} Ξ.`;
     } else if (!isLoss) {
         message = `The tribute was accepted. You have been granted a boon of ${boonAmount.toFixed(2)} Ξ.`;
     } else {

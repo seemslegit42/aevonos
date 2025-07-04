@@ -5,6 +5,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { PulsePhase } from '@prisma/client';
 import { cn } from '@/lib/utils';
+import { getUserPulseState } from '@/services/pulse-engine-service';
 
 interface PulseState {
     narrative: string | null;
@@ -18,11 +19,8 @@ export default function PulseNarrativeDisplay() {
     useEffect(() => {
         const fetchNarrative = async () => {
             try {
-                const res = await fetch('/api/user/pulse');
-                if (res.ok) {
-                    const data = await res.json();
-                    setPulseState(data);
-                }
+                const data = await getUserPulseState();
+                setPulseState(data);
             } catch (error) {
                 // Silently fail, this is a non-critical feature
                 console.error("Failed to fetch pulse narrative:", error);
@@ -92,4 +90,3 @@ export default function PulseNarrativeDisplay() {
         </div>
     );
 }
-    

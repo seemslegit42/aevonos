@@ -51,14 +51,15 @@ export default function SisyphusAscent() {
     const spinReels = (outcome: string) => {
         let finalSymbols: [SymbolKey, SymbolKey, SymbolKey];
 
-        if (outcome === 'mythic') {
-            finalSymbols = ['PEAK', 'PEAK', 'PEAK'];
-        } else if (outcome === 'rare') {
-            finalSymbols = ['REST', 'REST', 'BOULDER'];
-        } else if (outcome === 'uncommon' || outcome === 'pity_boon') {
-            finalSymbols = ['BOULDER', 'BOULDER', 'REST'];
-        } else { // Loss
-            finalSymbols = ['BOULDER', 'SLIP', 'BOULDER'];
+        switch (outcome) {
+            case 'mythic': finalSymbols = ['PEAK', 'PEAK', 'PEAK']; break;
+            case 'rare': finalSymbols = ['REST', 'REST', 'BOULDER']; break;
+            case 'uncommon':
+            case 'pity_boon':
+            case 'guaranteed_win':
+                 finalSymbols = ['BOULDER', 'BOULDER', 'REST']; break;
+            default: // Loss
+                finalSymbols = ['BOULDER', 'SLIP', 'BOULDER']; break;
         }
 
         const newReels = Array(3).fill(0).map(() => 
@@ -106,7 +107,7 @@ export default function SisyphusAscent() {
         
         const { outcome, boonAmount } = result;
         
-        if (outcome.includes('win') || outcome.includes('rare') || outcome.includes('mythic') || outcome.includes('uncommon') || outcome === 'pity_boon') {
+        if (outcome !== 'common' && outcome !== 'loss') {
             return (
                 <Alert className="border-gilded-accent/50 text-gilded-accent bg-gilded-accent/10">
                     <Gem className="h-4 w-4" />

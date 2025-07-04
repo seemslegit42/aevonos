@@ -1,6 +1,3 @@
-
-'use client';
-
 import { NextRequest, NextResponse } from 'next/server';
 import { getAuthenticatedUser } from '@/lib/firebase/admin';
 import { getUserPulseState } from '@/services/pulse-engine-service';
@@ -21,4 +18,3 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Failed to retrieve pulse state.' }, { status: 500 });
   }
 }
-    

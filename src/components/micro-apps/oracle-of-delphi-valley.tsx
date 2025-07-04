@@ -48,17 +48,15 @@ export default function OracleOfDelphiValley() {
     const [echo, setEcho] = useState<{ amount: number; key: number } | null>(null);
     const { toast } = useToast();
 
-    const spinReels = (outcome: string, boonAmount: number) => {
+    const spinReels = (outcome: string) => {
         let finalSymbols: [SymbolKey, SymbolKey, SymbolKey];
 
-        if (outcome === 'win' && boonAmount > 200) {
-            finalSymbols = ['LAUREL', 'LAUREL', 'LAUREL']; // Jackpot
-        } else if (outcome === 'win') {
-            finalSymbols = ['UNICORN', 'UNICORN', 'UNICORN']; // Big Win
-        } else if (outcome === 'pity_boon') {
-            finalSymbols = ['ROCKS', 'ROCKS', 'SCROLL']; // Small win
-        } else { // Loss
-            finalSymbols = ['VOLCANO', 'VOLCANO', 'VOLCANO'];
+        switch (outcome) {
+            case 'mythic': finalSymbols = ['LAUREL', 'LAUREL', 'LAUREL']; break;
+            case 'rare': finalSymbols = ['UNICORN', 'UNICORN', 'UNICORN']; break;
+            case 'uncommon': finalSymbols = ['ROCKS', 'ROCKS', 'SCROLL']; break;
+            case 'pity_boon': finalSymbols = ['SCROLL', 'ROCKS', 'ROCKS']; break;
+            default: finalSymbols = ['VOLCANO', 'VOLCANO', 'VOLCANO']; break; // Loss
         }
 
         const newReels = Array(3).fill(0).map(() => 
@@ -91,7 +89,7 @@ export default function OracleOfDelphiValley() {
                 setEcho({ amount: tributeResult.aethericEcho, key: Date.now() });
             }
 
-            spinReels(tributeResult.outcome!, tributeResult.boonAmount!);
+            spinReels(tributeResult.outcome!);
             setTimeout(() => {
                 setResult({ outcome: tributeResult.outcome!, boonAmount: tributeResult.boonAmount! });
                 setIsLoading(false);
@@ -107,7 +105,7 @@ export default function OracleOfDelphiValley() {
         
         const { outcome, boonAmount } = result;
         
-        if(outcome.startsWith('win') || outcome === 'pity_boon') {
+        if(outcome !== 'common' && outcome !== 'loss') {
             return (
                 <Alert className="border-gilded-accent/50 text-gilded-accent bg-gilded-accent/10">
                     <Gem className="h-4 w-4" />
