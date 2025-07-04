@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import React from 'react';
@@ -13,12 +12,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { cn } from '@/lib/utils';
 import { artifactManifests } from '@/config/artifacts';
-
-const statusConfig: Record<TransactionStatus, { icon: React.ElementType, color: string, text: string }> = {
-  [TransactionStatus.PENDING]: { icon: Clock, color: 'text-yellow-400', text: 'Pending' },
-  [TransactionStatus.COMPLETED]: { icon: CheckCircle, color: 'text-accent', text: 'Completed' },
-  [TransactionStatus.FAILED]: { icon: AlertTriangle, color: 'text-destructive', text: 'Failed' },
-};
+import { Separator } from '@/components/ui/separator';
 
 const chaosCardMap = new Map(artifactManifests.filter(a => a.type === 'CHAOS_CARD').map(c => [c.id, c]));
 
@@ -28,6 +22,12 @@ interface RecentActivityFeedProps {
     error: string | null;
     onRefresh: () => void;
 }
+
+const statusConfig: Record<TransactionStatus, { icon: React.ElementType, color: string, text: string }> = {
+  [TransactionStatus.PENDING]: { icon: Clock, color: 'text-yellow-400', text: 'Pending' },
+  [TransactionStatus.COMPLETED]: { icon: CheckCircle, color: 'text-accent', text: 'Completed' },
+  [TransactionStatus.FAILED]: { icon: AlertTriangle, color: 'text-destructive', text: 'Failed' },
+};
 
 export default function RecentActivityFeed({ transactions, isLoading, error, onRefresh }: RecentActivityFeedProps) {
     const renderContent = () => {
@@ -60,6 +60,9 @@ export default function RecentActivityFeed({ transactions, isLoading, error, onR
         return (
             <div className="space-y-2">
                 {transactions.map(tx => {
+                    const statusInfo = statusConfig[tx.status];
+                    const Icon = statusInfo.icon;
+                
                     if (tx.type === TransactionType.TRIBUTE) {
                         const card = tx.instrumentId ? chaosCardMap.get(tx.instrumentId) : null;
                         const boonAmount = Number(tx.boonAmount ?? 0);
@@ -94,13 +97,13 @@ export default function RecentActivityFeed({ transactions, isLoading, error, onR
                     }
 
                     const isCredit = tx.type === TransactionType.CREDIT;
-                    const Icon = isCredit ? ArrowUpRight : ArrowDownLeft;
+                    const TxIcon = isCredit ? ArrowUpRight : ArrowDownLeft;
                     const colorClass = isCredit ? 'text-accent' : 'text-destructive';
 
                     return (
                         <div key={tx.id} className="flex items-center gap-3 p-2 border border-border/50 rounded-md bg-background/30">
                             <div className={`p-1.5 rounded-full bg-background border ${colorClass}`}>
-                                <Icon className="h-3 w-3" />
+                                <TxIcon className="h-3 w-3" />
                             </div>
                             <div className="flex-grow overflow-hidden">
                                 <p className="text-sm font-medium truncate">{tx.description}</p>
