@@ -23,6 +23,7 @@ import { handleLogout } from '@/app/auth/actions';
 import { getUserVas } from '@/app/user/actions';
 import { Tooltip, TooltipProvider, TooltipTrigger, TooltipContent } from '../ui/tooltip';
 import PsycheMatrix from '../profile/psyche-matrix';
+import { Progress } from '../ui/progress';
 
 type UserProp = Pick<User, 'id' | 'email' | 'firstName' | 'lastName' | 'role' | 'agentAlias' | 'psyche'> | null;
 
@@ -212,18 +213,25 @@ export default function TopBar({ user, workspace, initialVas }: TopBarProps) {
                  )}
                 <Tooltip>
                     <TooltipTrigger asChild>
-                         <Button variant="ghost" className="p-0 h-auto hover:bg-transparent text-foreground" onClick={() => upsertApp('ritual-quests', { id: 'singleton-ritual-quests' })}>
+                         <Button variant="ghost" className="p-2 h-auto hover:bg-transparent text-foreground flex-col gap-0.5" onClick={() => upsertApp('ritual-quests', { id: 'singleton-ritual-quests' })}>
                             <span className="flex items-center gap-1">
                                {user?.psyche && psycheToCovenantMap[user.psyche] ? (
                                     <span className="mr-1 text-lg">{psycheToCovenantMap[user.psyche].symbol}</span>
                                 ) : null}
                                 <span className="font-bold">{vas ?? '...'}</span>
-                                <span className="text-muted-foreground">VAS</span>
+                                <span className="text-muted-foreground text-xs">VAS</span>
                             </span>
+                             <Progress 
+                                value={vas ? (vas % 1000) / 10 : 0} 
+                                className="h-1 w-12 bg-primary/20" 
+                                indicatorClassName="bg-primary"
+                            />
                         </Button>
                     </TooltipTrigger>
                     <TooltipContent>
-                        <p>Vow Alignment Score</p>
+                        <p className="font-semibold">Vow Alignment Score</p>
+                        <p className="text-xs text-muted-foreground">Measures alignment with your chosen Covenant.</p>
+                        <p className="text-xs text-muted-foreground">Complete Ritual Quests to increase it.</p>
                     </TooltipContent>
                 </Tooltip>
             </TooltipProvider>
