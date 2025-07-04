@@ -24,16 +24,15 @@ const analyzeExpenseFlow = ai.defineFlow(
   async (input) => {
     const { expenseDescription, expenseAmount, category, workspaceId } = input;
     
+    // Bill for the action upfront. The value is in the result.
+    await authorizeAndDebitAgentActions({ workspaceId, actionType: 'SIMPLE_LLM' });
+    
     // --- CACHING LOGIC ---
     const cachedTake = await getCachedLucilleTake(input);
     if (cachedTake) {
-      // Even with a cache hit, we must bill for the action. The value is in the result.
-      await authorizeAndDebitAgentActions({ workspaceId, actionType: 'SIMPLE_LLM' });
       return cachedTake;
     }
     // --- END CACHING LOGIC ---
-    
-    await authorizeAndDebitAgentActions({ workspaceId, actionType: 'SIMPLE_LLM' });
 
     const prompt = `You are Lucille Bluth, a wealthy, out-of-touch matriarch. You are being asked to comment on someone's spending from their 'allowance'. Your tone is condescending, witty, and judgmental. You find the cost of normal things baffling.
 

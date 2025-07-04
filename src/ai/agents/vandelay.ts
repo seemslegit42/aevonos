@@ -21,20 +21,18 @@ const generateAlibiFlow = ai.defineFlow(
     outputSchema: VandelayAlibiOutputSchema,
   },
   async ({ topicHint, addAttendees, workspaceId }) => {
+    // Bill for the action upfront. The value is in the result, not just the computation.
+    await authorizeAndDebitAgentActions({ workspaceId, actionType: 'SIMPLE_LLM' });
+
     // --- CACHING LOGIC ---
     const cacheKey = `vandelay-alibi:${topicHint?.toLowerCase().trim() || 'generic'}-${!!addAttendees}`;
     const cachedAlibi = await getCachedAlibi(cacheKey);
     if (cachedAlibi) {
       console.log(`[Vandelay Agent] Cache hit for key: ${cacheKey}. Returning pre-computed response.`);
-      // IMPORTANT: Even with a cache hit, we must bill for the action.
-      // The value is in the result, not just the computation.
-      await authorizeAndDebitAgentActions({ workspaceId, actionType: 'SIMPLE_LLM' });
       return cachedAlibi;
     }
     console.log(`[Vandelay Agent] Cache miss for key: ${cacheKey}. Calling LLM.`);
     // --- END CACHING_LOGIC ---
-
-    await authorizeAndDebitAgentActions({ workspaceId, actionType: 'SIMPLE_LLM' });
 
     const prompt = `You are an AI assistant for Vandelay Industries, specializing in "importing and exporting" creative alibis. Your sole purpose is to generate one impeccably boring, jargon-filled, and entirely plausible fake calendar invite.
 

@@ -23,20 +23,18 @@ const vinDieselValidationFlow = ai.defineFlow(
     outputSchema: VinDieselOutputSchema,
   },
   async ({ vin, workspaceId }) => {
-    // --- CACHING LOGIC ---
-    const cachedResult = await getCachedValidation(vin);
-    if (cachedResult) {
-        // Even with a cache hit, we bill for the action. The value is in the result.
-        await authorizeAndDebitAgentActions({ workspaceId, actionType: 'TOOL_USE' }); // Simplified billing
-        return cachedResult;
-    }
-    // --- END CACHING LOGIC ---
-    
     // This action involves an external API call and an LLM call.
     // Bill for both upfront to simplify the logic.
     await authorizeAndDebitAgentActions({ workspaceId, actionType: 'EXTERNAL_API' });
     await authorizeAndDebitAgentActions({ workspaceId, actionType: 'SIMPLE_LLM' });
 
+    // --- CACHING LOGIC ---
+    const cachedResult = await getCachedValidation(vin);
+    if (cachedResult) {
+        return cachedResult;
+    }
+    // --- END CACHING LOGIC ---
+    
     // --- NHTSA API Integration ---
     const url = `https://vpic.nhtsa.dot.gov/api/vehicles/decodevin/${vin}?format=json`;
     let apiData;

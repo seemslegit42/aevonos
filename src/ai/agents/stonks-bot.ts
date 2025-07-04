@@ -196,17 +196,17 @@ const stonkBotApp = workflow.compile();
 export async function getStonksAdvice(input: StonksBotInput): Promise<StonksBotOutput> {
     const { ticker, mode, workspaceId, userId } = StonksBotInputSchema.parse(input);
 
-    // Check cache first for efficiency
-    const cachedAdvice = await getCachedAdvice(ticker, mode);
-    if (cachedAdvice) {
-        return cachedAdvice;
-    }
-
     // This flow uses an external tool and an LLM.
     // Bill for up to 2 API calls (if fallback is needed) + 1 LLM call.
     await authorizeAndDebitAgentActions({ workspaceId, userId, actionType: 'EXTERNAL_API' });
     await authorizeAndDebitAgentActions({ workspaceId, userId, actionType: 'EXTERNAL_API' });
     await authorizeAndDebitAgentActions({ workspaceId, userId, actionType: 'SIMPLE_LLM' });
+    
+    // Check cache first for efficiency
+    const cachedAdvice = await getCachedAdvice(ticker, mode);
+    if (cachedAdvice) {
+        return cachedAdvice;
+    }
 
     const result = await stonkBotApp.invoke({
         ticker,

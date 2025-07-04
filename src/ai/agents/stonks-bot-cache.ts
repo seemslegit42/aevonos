@@ -1,4 +1,6 @@
 
+'use server';
+
 import type { StonksBotOutput, StonksBotMode } from './stonks-bot-schemas';
 import cache from '@/lib/cache';
 

@@ -1,4 +1,6 @@
 
+'use server';
+
 import type { VinDieselOutput } from './vin-diesel-schemas';
 import cache from '@/lib/cache';
 

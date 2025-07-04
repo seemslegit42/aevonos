@@ -23,21 +23,18 @@ const generateBusinessKitFlow = ai.defineFlow(
   },
   async (input) => {
     const { businessType, logoStyle, workspaceId } = input;
+    
+    // This flow has two LLM calls, one for text and one for image gen.
+    // Bill for both actions upfront. The value is in the result, not just the computation.
+    await authorizeAndDebitAgentActions({ workspaceId, actionType: 'SIMPLE_LLM' });
+    await authorizeAndDebitAgentActions({ workspaceId, actionType: 'IMAGE_GENERATION' });
 
     // --- CACHING LOGIC ---
     const cachedKit = await getCachedBusinessKit(input);
     if (cachedKit) {
-      // Even with a cache hit, we must bill for the action. The value is in the result.
-      await authorizeAndDebitAgentActions({ workspaceId, actionType: 'SIMPLE_LLM' });
-      await authorizeAndDebitAgentActions({ workspaceId, actionType: 'IMAGE_GENERATION' });
       return cachedKit;
     }
     // --- END CACHING LOGIC ---
-
-    // This flow has two LLM calls, one for text and one for image gen.
-    // Bill for both actions.
-    await authorizeAndDebitAgentActions({ workspaceId, actionType: 'SIMPLE_LLM' });
-    await authorizeAndDebitAgentActions({ workspaceId, actionType: 'IMAGE_GENERATION' });
 
     const textGenerationPrompt = `You are J-ROC from Trailer Park Boys. You're helpin' your boy start a legit-as-frig business. Your language is full of "know'm sayin'?", "mafk", and other J-Roc slang. Keep it authentic.
 

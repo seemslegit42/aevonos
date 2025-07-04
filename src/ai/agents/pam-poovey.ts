@@ -94,20 +94,17 @@ const generatePamAudioFlow = ai.defineFlow(
 export async function generatePamRant(input: PamScriptInput): Promise<PamAudioOutput> {
     const { topic, workspaceId } = input;
     
+    // This is the main entry point. It has two LLM calls (script + TTS),
+    // so we bill for both actions upfront.
+    await authorizeAndDebitAgentActions({ workspaceId, actionType: 'SIMPLE_LLM' });
+    await authorizeAndDebitAgentActions({ workspaceId, actionType: 'TTS_GENERATION' });
+    
     // --- CACHING LOGIC ---
     const cachedRant = await getCachedPamRant(topic);
     if (cachedRant) {
-        // Bill for the cached result
-        await authorizeAndDebitAgentActions({ workspaceId, actionType: 'SIMPLE_LLM' });
-        await authorizeAndDebitAgentActions({ workspaceId, actionType: 'TTS_GENERATION' });
         return cachedRant;
     }
     // --- END CACHING LOGIC ---
-    
-    // This is the main entry point. It has two LLM calls (script + TTS),
-    // so we bill for both actions.
-    await authorizeAndDebitAgentActions({ workspaceId, actionType: 'SIMPLE_LLM' });
-    await authorizeAndDebitAgentActions({ workspaceId, actionType: 'TTS_GENERATION' });
     
     const { script } = await generatePamScriptFlow(input);
     const { audioDataUri } = await generatePamAudioFlow({ script });
