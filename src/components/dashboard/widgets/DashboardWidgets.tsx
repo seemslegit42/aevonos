@@ -1,21 +1,25 @@
+
 'use client';
 
 import React from 'react';
 import type { Agent, User, Workspace, Transaction } from '@prisma/client';
-import StatCard from './StatCard';
-import QuickAccess from './QuickAccess';
-import AgentStatusList from './AgentStatusList';
-import RecentActivityFeed from './RecentActivityFeed';
+import StatCard from './stat-card';
+import QuickAccess from './quick-access';
+import AgentStatusList from './agent-status-list';
+import RecentActivityFeed from './recent-activity-feed';
 import { CreditCard, Users, Bot } from 'lucide-react';
 import DailyBriefing from './DailyBriefing';
 
 interface DashboardWidgetsProps {
-  initialAgents: Agent[];
+  agents: Agent[];
   workspace: (Workspace & { membersCount: number }) | null;
-  initialTransactions: (Transaction & { amount: number })[];
+  transactions: (Transaction & { amount: number })[];
+  isLoading: boolean;
+  error: string | null;
+  onRefresh: () => void;
 }
 
-export default function DashboardWidgets({ initialAgents, workspace, initialTransactions }: DashboardWidgetsProps) {
+export default function DashboardWidgets({ agents, workspace, transactions, isLoading, error, onRefresh }: DashboardWidgetsProps) {
   return (
     <div className="p-4 w-full h-full max-w-7xl mx-auto flex flex-col gap-4">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -32,8 +36,8 @@ export default function DashboardWidgets({ initialAgents, workspace, initialTran
                  <StatCard
                     icon={Bot}
                     title="Active Agents"
-                    value={initialAgents.filter(a => a.status === 'active').length}
-                    description={`${initialAgents.length} agents total`}
+                    value={agents.filter(a => a.status === 'active').length}
+                    description={`${agents.length} agents total`}
                 />
             </div>
              <div className="space-y-4">
@@ -49,10 +53,15 @@ export default function DashboardWidgets({ initialAgents, workspace, initialTran
 
         <div className="flex-grow min-h-0 grid grid-cols-1 lg:grid-cols-3 gap-4">
             <div className="lg:col-span-1 h-full">
-                <AgentStatusList agents={initialAgents} />
+                <AgentStatusList agents={agents} isLoading={isLoading} />
             </div>
             <div className="lg:col-span-2 h-full">
-                <RecentActivityFeed initialTransactions={initialTransactions} />
+                <RecentActivityFeed 
+                    transactions={transactions} 
+                    isLoading={isLoading} 
+                    error={error}
+                    onRefresh={onRefresh}
+                />
             </div>
         </div>
     </div>
