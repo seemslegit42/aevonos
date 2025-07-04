@@ -44,12 +44,12 @@ Your toolkit should be a collection of obsidian knives, not a bloated suite of d
 
 ---
 
-### The Economy of Belief
+### The Economy of Belief: Project ΞPITOME
 
-ΛΞVON OS operates on a closed-loop economy powered by **ΞCredits**, the currency of sovereignty. Every Agent Action, every tribute to a Folly Instrument, every acquisition from the Armory is a transaction within your own digital nation, governed by two core engines:
+ΛΞVON OS operates on a sophisticated, closed-loop internal economy powered by **ΞCredits**, the currency of sovereignty. This system, codenamed **ΞPITOME**, is designed to measure and reward your belief in the OS itself.
 
 *   **Obelisk Pay:** Our sovereign, atomic, and utterly secure transaction engine. Zero third-party fees. Absolute integrity.
-*   **The KLEPSYDRA Engine:** The "Profit Pulse Engine" that dynamically modulates luck and outcomes in our gamified Micro-Apps, transforming monetization from a transaction into a ritual of economic participation.
+*   **The KLEPSYDRA Engine:** The "Profit Pulse Engine" that dynamically modulates luck and outcomes in our gamified "Folly Instruments" (e.g., Chaos Cards, Sisyphus's Ascent), transforming monetization from a transaction into a ritual of economic participation.
 
 This is more than a billing system. It is a game of consequence, designed to measure and reward your belief in the system itself.
 

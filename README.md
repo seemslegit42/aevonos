@@ -62,7 +62,7 @@ This document provides a concise, high-level overview of the ΛΞVON OS codebase
 
 *   **BEEP Agent**: The central conversational orchestrator that understands natural language and delegates tasks to a swarm of specialized agents.
 *   **Micro-App Canvas**: A dynamic, draggable, and resizable interface where modular applications are launched and managed.
-*   **Armory & Economy**: An in-app marketplace (`The Armory`) where users spend virtual currency (`ΞCredits`) to unlock new Micro-Apps and "Chaos Cards" (temporary system effects). This economy is managed by the `ledger-service` and `billing-service`.
+*   **ΞPITOME Economy**: A dual-layer economy. A predictable platform fee is paired with a closed-loop internal currency (`ΞCredits`) spent in The Armory and on gamified "Folly Instruments".
 *   **Klepsydra Engine**: A gamified "luck" system (`pulse-engine-service` and `folly-instruments.ts`) that modulates the outcomes of chance-based Micro-Apps.
 *   **Loom Studio**: A visual workflow editor for creating and managing agentic automations.
 
