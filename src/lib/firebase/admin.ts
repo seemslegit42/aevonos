@@ -1,4 +1,3 @@
-
 // src/lib/firebase/admin.ts
 import admin from 'firebase-admin';
 import { cookies } from 'next/headers';
@@ -80,7 +79,10 @@ export async function getAuthenticatedUser(): Promise<AuthenticatedUser> {
     let workspace: PrismaWorkspace | null = null;
     if (user) {
         const workspaceCacheKey = `workspace:user:${user.id}`;
-        workspace = await cache.get(workspaceCacheKey);
+        const cachedWorkspace = await cache.get(workspaceCacheKey);
+        if (cachedWorkspace) {
+            workspace = cachedWorkspace as PrismaWorkspace;
+        }
 
         if (!workspace) {
             workspace = await prisma.workspace.findFirst({
