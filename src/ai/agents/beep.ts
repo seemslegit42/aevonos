@@ -474,7 +474,6 @@ const buildBeepGraph = () => {
     workflow.addEdge('warn_and_continue', 'triage');
 
     // Add triage and routing to specialist routers
-    workflow.addEdge('triage', 'routeAfterTriage');
     workflow.addConditionalEdges('triage', routeAfterTriage, {
         CRM: 'crmRouter',
         FINANCE: 'financeRouter',
